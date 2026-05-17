@@ -1,16 +1,17 @@
 
 
 <!doctype html>
+<!-- Dutch Pay v12 mobile usability -->
 <!-- Dutch Pay v11 screenshot button fix -->
 <!-- v10 exact screenshot matches final report DOM -->
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <title>더치페이 계산기</title>
     <meta name="theme-color" content="#f5f5f7" />
     <meta name="description" content="모임 지출을 기록하고 더치페이를 자동 계산하는 Dutch Pay 앱" />
-    <link rel="manifest" href="./manifest.webmanifest?v=11" />
+    <link rel="manifest" href="./manifest.webmanifest?v=12" />
     <link rel="icon" href="./favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -1572,6 +1573,185 @@ button,
   justify-content: center;
 }
 
+
+/* v12 Mobile usability: 상단 버튼 정리, 더보기 메뉴, 홈 화면 추가 안내, 하단 빠른 실행 */
+.top-actions #resetButton,
+.top-actions #openGuideButton {
+  display: none;
+}
+
+.more-menu-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.more-menu-button {
+  width: 42px;
+  min-width: 42px;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.more-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 30;
+  display: grid;
+  min-width: 156px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.14);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+.more-menu[hidden] {
+  display: none;
+}
+
+.more-menu button {
+  min-height: 40px;
+  padding: 0 12px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  text-align: left;
+  font-weight: 760;
+}
+
+.more-menu button:hover {
+  background: var(--surface-soft);
+}
+
+.more-menu button.danger {
+  color: var(--danger);
+}
+
+.install-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px clamp(18px, 3vw, 44px) 0;
+  padding: 14px 16px;
+  background: rgba(29, 29, 31, 0.94);
+  color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(29, 29, 31, 0.18);
+}
+
+.install-prompt[hidden] {
+  display: none;
+}
+
+.install-prompt strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.install-prompt p {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.install-prompt button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 12px;
+  color: #1d1d1f;
+  background: #ffffff;
+  border: 0;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.mobile-bottom-actions {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .top-actions {
+    display: grid;
+    grid-template-columns: auto auto 44px;
+    gap: 8px;
+  }
+
+  .top-actions .report-button {
+    margin-left: 0;
+  }
+
+  #copySummaryButton,
+  #openReportButton {
+    min-height: 42px;
+    padding: 0 13px;
+  }
+
+  .install-prompt {
+    margin: 12px 12px 0;
+    border-radius: 12px;
+  }
+
+  .mobile-bottom-actions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 18;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(245, 245, 247, 0.82);
+    border-top: 1px solid var(--line);
+    backdrop-filter: saturate(180%) blur(22px);
+  }
+
+  .mobile-action-button {
+    min-height: 48px;
+    border: 0;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 850;
+  }
+
+  .mobile-action-button.primary {
+    color: #ffffff;
+    background: var(--ink);
+    box-shadow: 0 10px 24px rgba(29, 29, 31, 0.18);
+  }
+
+  .mobile-action-button.secondary {
+    color: #ffffff;
+    background: var(--primary);
+    box-shadow: 0 10px 24px rgba(0, 113, 227, 0.18);
+  }
+
+  body.report-open .mobile-bottom-actions,
+  body.guide-open .mobile-bottom-actions {
+    display: none;
+  }
+}
+
+@media all and (display-mode: standalone) {
+  .install-prompt {
+    display: none !important;
+  }
+}
+
     </style>
   </head>
   <body>
@@ -1583,11 +1763,28 @@ button,
         </div>
         <div class="top-actions">
           <button class="ghost-button danger" id="resetButton" type="button" aria-label="초기화">초기화</button>
-          <button class="ghost-button" id="copySummaryButton" type="button" aria-label="정산 요약 복사">복사</button>
+          <button class="ghost-button" id="copySummaryButton" type="button" aria-label="텍스트로 복사">텍스트 복사</button>
           <button class="ghost-button" id="openGuideButton" type="button" aria-label="사용자설명서 열기">사용법</button>
-          <button class="report-button" id="openReportButton" type="button" aria-label="최종 리포트 보기">최종리포트</button>
+          <button class="report-button" id="openReportButton" type="button" aria-label="정산 결과 보기">정산 결과</button>
+
+          <div class="more-menu-wrap">
+            <button class="ghost-button more-menu-button" id="moreMenuButton" type="button" aria-label="더보기 메뉴 열기" aria-expanded="false">⋯</button>
+            <div class="more-menu" id="moreMenu" hidden>
+              <button type="button" id="menuInstallButton">홈 화면 추가</button>
+              <button type="button" id="menuGuideButton">사용법</button>
+              <button type="button" class="danger" id="menuResetButton">초기화</button>
+            </div>
+          </div>
         </div>
       </header>
+
+      <section class="install-prompt" id="installPrompt" hidden>
+        <div>
+          <strong>앱처럼 사용하려면 홈 화면에 추가하세요</strong>
+          <p>Safari 공유 버튼에서 “홈 화면에 추가”를 누르면 더 편하게 사용할 수 있어요.</p>
+        </div>
+        <button type="button" id="installPromptButton">추가 방법</button>
+      </section>
 
       <main class="layout">
         <section class="workspace">
@@ -1748,6 +1945,44 @@ button,
         </div>
       </div>
     </div>
+
+
+    <div id="installGuideOverlay" class="guide-overlay" hidden>
+      <div class="guide-shell" role="dialog" aria-modal="true" aria-label="홈 화면 추가 방법">
+        <div class="guide-card">
+          <header class="guide-hero">
+            <div>
+              <p class="guide-kicker">Install Guide</p>
+              <h2>홈 화면에 추가</h2>
+              <p>설치하면 Safari 주소창 없이 앱처럼 더 편하게 사용할 수 있습니다.</p>
+            </div>
+            <button class="guide-close" id="closeInstallGuideButton" type="button" aria-label="홈 화면 추가 안내 닫기">×</button>
+          </header>
+
+          <section class="guide-steps" aria-label="홈 화면 추가 순서">
+            <div class="guide-step">
+              <span>iOS</span>
+              <div>
+                <strong>iPhone / Safari</strong>
+                <p>하단 공유 버튼 → “홈 화면에 추가” → 추가를 누르세요.</p>
+              </div>
+            </div>
+            <div class="guide-step">
+              <span>AOS</span>
+              <div>
+                <strong>Android / Chrome</strong>
+                <p>오른쪽 위 메뉴 → “앱 설치” 또는 “홈 화면에 추가”를 누르세요.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <nav class="mobile-bottom-actions" aria-label="빠른 실행">
+      <button class="mobile-action-button secondary" id="mobileAddExpenseButton" type="button">+ 지출 추가</button>
+      <button class="mobile-action-button primary" id="mobileOpenReportButton" type="button">정산 결과</button>
+    </nav>
 
     <div id="reportOverlay" class="report-overlay" hidden>
       <div class="report-toolbar">
@@ -3125,7 +3360,7 @@ render();
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js?v=11").catch(() => {});
+          navigator.serviceWorker.register("./sw.js?v=12").catch(() => {});
         });
       }
     </script>
@@ -3375,5 +3610,109 @@ render();
         }).catch(() => {});
       }
     </script>
+
+    <script>
+      (function setupV12MobileUsability() {
+        const $v12 = (selector) => document.querySelector(selector);
+        const moreButton = $v12("#moreMenuButton");
+        const moreMenu = $v12("#moreMenu");
+        const installPrompt = $v12("#installPrompt");
+        const installPromptButton = $v12("#installPromptButton");
+        const installGuideOverlay = $v12("#installGuideOverlay");
+
+        function isStandaloneMode() {
+          return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+        }
+
+        function openMoreMenu() {
+          if (!moreMenu || !moreButton) return;
+          moreMenu.hidden = false;
+          moreButton.setAttribute("aria-expanded", "true");
+        }
+
+        function closeMoreMenu() {
+          if (!moreMenu || !moreButton) return;
+          moreMenu.hidden = true;
+          moreButton.setAttribute("aria-expanded", "false");
+        }
+
+        function openInstallGuide() {
+          if (!installGuideOverlay) return;
+          installGuideOverlay.hidden = false;
+          document.body.classList.add("guide-open");
+          closeMoreMenu();
+        }
+
+        function closeInstallGuide() {
+          if (!installGuideOverlay) return;
+          installGuideOverlay.hidden = true;
+          document.body.classList.remove("guide-open");
+        }
+
+        moreButton?.addEventListener("click", (event) => {
+          event.stopPropagation();
+          if (moreMenu?.hidden) openMoreMenu();
+          else closeMoreMenu();
+        });
+
+        document.addEventListener("click", (event) => {
+          if (!event.target.closest?.(".more-menu-wrap")) closeMoreMenu();
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeMoreMenu();
+            closeInstallGuide();
+          }
+        });
+
+        $v12("#menuInstallButton")?.addEventListener("click", openInstallGuide);
+        $v12("#installPromptButton")?.addEventListener("click", openInstallGuide);
+        $v12("#closeInstallGuideButton")?.addEventListener("click", closeInstallGuide);
+        installGuideOverlay?.addEventListener("click", (event) => {
+          if (event.target === installGuideOverlay) closeInstallGuide();
+        });
+
+        $v12("#menuGuideButton")?.addEventListener("click", () => {
+          closeMoreMenu();
+          $v12("#openGuideButton")?.click();
+        });
+
+        $v12("#menuResetButton")?.addEventListener("click", () => {
+          closeMoreMenu();
+          $v12("#resetButton")?.click();
+        });
+
+        $v12("#mobileAddExpenseButton")?.addEventListener("click", () => {
+          $v12("#addExpenseButton")?.click();
+          setTimeout(() => {
+            const rows = document.querySelectorAll("#expenseRows tr");
+            rows[rows.length - 1]?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 80);
+        });
+
+        $v12("#mobileOpenReportButton")?.addEventListener("click", () => {
+          $v12("#openReportButton")?.click();
+        });
+
+        if (installPrompt && !isStandaloneMode()) {
+          const dismissed = localStorage.getItem("dutch-pay-install-prompt-dismissed") === "1";
+          if (!dismissed) installPrompt.hidden = false;
+        }
+      })();
+    </script>
+
+
+    <script>
+      window.DUTCH_PAY_APP_VERSION = "v12-mobile-usability";
+      if ("caches" in window) {
+        caches.keys().then((keys) => {
+          keys
+            .filter((key) => key.startsWith("dutch-pay") && key !== "dutch-pay-v12-mobile-usability")
+            .forEach((key) => caches.delete(key));
+        }).catch(() => {});
+      }
+    </script>
+
   </body>
 </html>

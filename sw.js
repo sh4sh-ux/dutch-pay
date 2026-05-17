@@ -1,4 +1,4 @@
-const CACHE_NAME = "dutch-pay-v11-screenshot-button-fix";
+const CACHE_NAME = "dutch-pay-v12-mobile-usability";
 const ASSETS = [
   "./",
   "./index.html",
