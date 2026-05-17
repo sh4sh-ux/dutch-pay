@@ -1,4 +1,4 @@
-const CACHE_NAME = "dutch-pay-rollback-original-form";
+const CACHE_NAME = "dutch-pay-summary-box-center-v3";
 const ASSETS = [
   "./",
   "./index.html",
