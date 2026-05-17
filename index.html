@@ -578,8 +578,9 @@ select:focus {
 }
 
 .metric {
-  display: grid;
-  align-content: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   min-height: 82px;
   padding: 14px;
   background: var(--surface-raised);
@@ -1097,14 +1098,14 @@ body.guide-open {
 }
 
 .report-total {
-  display: grid;
-  align-content: center;
-  align-items: center;
-  justify-items: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
   gap: 13px;
   min-height: 120px;
   height: 120px;
-  padding: 18px 18px 20px;
+  padding: 18px;
   background:
     linear-gradient(#202a38, #202a38) padding-box,
     linear-gradient(135deg, rgba(122, 194, 255, 0.95), rgba(255, 255, 255, 0.16) 48%, rgba(95, 160, 255, 0.92)) border-box;
@@ -1173,11 +1174,10 @@ body.guide-open {
 }
 
 .report-stats div {
-  display: grid;
-  align-content: center;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-items: center;
-  place-content: center;
+  justify-content: center;
   gap: 6px;
   min-height: 70px;
   padding: 12px;
@@ -1499,9 +1499,8 @@ body.guide-open {
   .report-stats div {
     min-height: 64px;
     padding: 10px;
-    align-content: center;
+    justify-content: center;
     align-items: center;
-    place-content: center;
   }
 
   .report-stats strong {
@@ -2575,7 +2574,7 @@ async function makeReportScreenshotBlob() {
   const transfers = result.transfers;
   const width = 720;
   const padding = 40;
-  const heroHeight = 430;
+  const heroHeight = 510;
   const statsHeight = 150;
   const sectionTop = heroHeight + statsHeight;
   const transferRowHeight = 96;
@@ -2655,7 +2654,7 @@ function drawReportImageHero(context, data) {
   const cardX = padding;
   const cardY = 232;
   const cardW = width - padding * 2;
-  const cardH = 160;
+  const cardH = 220;
   drawRoundRect(context, cardX, cardY, cardW, cardH, 10, "rgba(32, 42, 56, 0.82)");
   const borderGradient = context.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
   borderGradient.addColorStop(0, "rgba(122, 194, 255, 0.95)");
@@ -2664,8 +2663,8 @@ function drawReportImageHero(context, data) {
   strokeRoundRect(context, cardX, cardY, cardW, cardH, 10, borderGradient, 2);
 
   const cardCenterY = cardY + cardH / 2;
-  const labelY = cardCenterY - 28;
-  const amountY = cardCenterY + 42;
+  const labelY = cardCenterY - 42;
+  const amountY = cardCenterY + 52;
   setCanvasText(context, 20, 800, "rgba(255, 255, 255, 0.72)");
   context.fillText("총 지출", cardX + 26, labelY);
 
@@ -2712,7 +2711,7 @@ function drawReportImageStats(context, data) {
     drawRoundRect(context, x, cardY, cardWidth, cardH, 8, "#ffffff", "rgba(0, 0, 0, 0.08)");
     context.textAlign = "center";
     setCanvasText(context, 18, 720, "rgba(110, 110, 115, 0.68)");
-    context.fillText(label, centerX, centerY - 15);
+    context.fillText(label, centerX, centerY - 14);
     setCanvasText(context, 30, 780, "rgba(29, 29, 31, 0.82)");
     drawFittedText(context, value, centerX, centerY + 30, cardWidth - 40, 30, "center");
     context.textAlign = "left";
