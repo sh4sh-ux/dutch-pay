@@ -9,12 +9,12 @@
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="모임 지출을 기록하고 더치페이를 자동 계산하는 Dutch Pay 앱" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="icon" href="./favicon-v3.png" type="image/png" />
-    <link rel="apple-touch-icon" href="./icons/apple-touch-icon-v3.png" />
+    <link rel="icon" href="./favicon-v4.png" type="image/png" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon-v4.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Dutch Pay" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <style>
 :root {
   --bg: #f5f5f7;
@@ -1529,6 +1529,22 @@ body.guide-open {
 
   .settlement-result strong {
     font-size: 21px;
+  }
+}
+
+
+/* PWA app mode spacing fix: Safari보다 앱 화면에서 상단이 답답해 보이는 문제 보정 */
+@media all and (display-mode: standalone) {
+  .topbar {
+    padding-top: max(34px, calc(22px + env(safe-area-inset-top)));
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  @media all and (display-mode: standalone) {
+    .topbar {
+      padding-top: max(38px, calc(24px + env(safe-area-inset-top)));
+    }
   }
 }
 

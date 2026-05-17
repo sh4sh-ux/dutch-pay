@@ -1,13 +1,13 @@
-const CACHE_NAME = "dutch-pay-pwa-original-v3";
+const CACHE_NAME = "dutch-pay-pwa-v4-spacing-icon";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./favicon-v3.png",
+  "./favicon-v4.png",
   "./favicon.png",
-  "./icons/icon-192-v3.png",
-  "./icons/icon-512-v3.png",
-  "./icons/apple-touch-icon-v3.png",
+  "./icons/icon-192-v4.png",
+  "./icons/icon-512-v4.png",
+  "./icons/apple-touch-icon-v4.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png"
