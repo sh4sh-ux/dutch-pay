@@ -32,7 +32,7 @@
     <title>더치페이 계산기</title>
     <meta name="theme-color" content="#f5f5f7" />
     <meta name="description" content="모임 지출을 기록하고 더치페이를 자동 계산하는 Dutch Pay 앱" />
-    <link rel="manifest" href="./manifest.webmanifest?v=2.18" />
+    <link rel="manifest" href="./manifest.webmanifest?v=2.19" />
     <link rel="icon" href="./favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -6333,7 +6333,823 @@ body {
       }
     </style>
 
-  </head>
+  
+<style id="v2-19-dashboard-refresh">
+  /* v2.19 clean dashboard refresh */
+  #installPrompt { display: none !important; }
+
+  @media (max-width: 1180px) {
+    #installPrompt[hidden] { display: none !important; }
+  }
+
+  @media (min-width: 1181px) {
+    body.home-dashboard-mode .dashboard-home-page {
+      display: block !important;
+      grid-column: 2;
+      padding: 22px 26px 54px 8px !important;
+    }
+
+    body.home-dashboard-mode .topbar,
+    body.home-dashboard-mode .install-prompt,
+    body.home-dashboard-mode .layout {
+      display: none !important;
+    }
+
+    .dashboard-input-actions {
+      display: none !important;
+    }
+
+    .dashboard-home-page .dashboard-hero {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 24px;
+      margin-bottom: 24px !important;
+    }
+
+    .dashboard-hero-copy {
+      max-width: 640px;
+    }
+
+    .dashboard-kicker {
+      margin: 0 0 8px !important;
+      color: #8c8d95 !important;
+      font-size: 14px !important;
+      font-weight: 800 !important;
+      letter-spacing: -0.03em !important;
+    }
+
+    .dashboard-home-page .dashboard-hero h1 {
+      margin: 0 !important;
+      max-width: 540px;
+      color: #111113 !important;
+      font-size: clamp(34px, 4vw, 58px) !important;
+      font-weight: 900 !important;
+      line-height: 1.08 !important;
+      letter-spacing: -0.065em !important;
+    }
+
+    .dashboard-home-page .dashboard-hero p:last-child {
+      margin: 14px 0 0 !important;
+      color: #8a8b92 !important;
+      font-size: 15px !important;
+      font-weight: 650 !important;
+      line-height: 1.55 !important;
+    }
+
+    .dashboard-hero-actions {
+      display: flex !important;
+      flex-direction: column-reverse;
+      align-items: flex-end;
+      gap: 14px !important;
+      margin-top: 0 !important;
+      padding-top: 2px;
+    }
+
+    .hero-primary-button {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 12px !important;
+      min-height: 58px !important;
+      padding: 0 22px !important;
+      border-radius: 16px !important;
+      border: 1px solid #121214 !important;
+      background: #121214 !important;
+      color: #fff !important;
+      font-size: 15px !important;
+      font-weight: 800 !important;
+      box-shadow: 0 10px 22px rgba(18,18,20,.12) !important;
+    }
+
+    .hero-primary-button span {
+      font-size: 22px !important;
+      line-height: 1 !important;
+    }
+
+    .hero-icon-button {
+      width: 42px !important;
+      height: 42px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      color: #777a81 !important;
+      font-size: 21px !important;
+      padding: 0 !important;
+    }
+
+    .dashboard-stat-grid {
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px !important;
+      margin-bottom: 26px !important;
+    }
+
+    .dashboard-stat-card {
+      position: relative;
+      min-height: 166px;
+      padding: 26px 24px 24px !important;
+      border-radius: 26px !important;
+      background: #fff !important;
+      border: 1px solid rgba(17,17,19,.07) !important;
+      box-shadow: 0 12px 34px rgba(17,17,19,.035) !important;
+      overflow: hidden;
+    }
+
+    .dashboard-stat-card span {
+      display: block;
+      color: #8d8e95 !important;
+      font-size: 14px !important;
+      font-weight: 750 !important;
+      letter-spacing: -0.02em !important;
+    }
+
+    .dashboard-stat-card strong {
+      display: block;
+      margin-top: 26px !important;
+      color: #111113 !important;
+      font-size: 22px !important;
+      font-weight: 850 !important;
+      line-height: 1.08 !important;
+      letter-spacing: -0.05em !important;
+    }
+
+    .dashboard-stat-card.emphasis strong {
+      font-size: 32px !important;
+      margin-top: 30px !important;
+    }
+
+    .dashboard-stat-card small {
+      display: block;
+      margin-top: 12px !important;
+      color: #a1a2aa !important;
+      font-size: 13px !important;
+      font-weight: 650 !important;
+    }
+
+    .dashboard-stat-card::after {
+      content: "";
+      position: absolute;
+      right: 24px;
+      bottom: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #f0f0f4;
+      box-shadow: inset 0 0 0 1px rgba(17,17,19,.04);
+    }
+
+    .dashboard-section-card {
+      padding: 28px 24px !important;
+      border-radius: 28px !important;
+      background: #fff !important;
+      border: 1px solid rgba(17,17,19,.07) !important;
+      box-shadow: 0 12px 34px rgba(17,17,19,.03) !important;
+      margin-bottom: 18px !important;
+    }
+
+    .dashboard-section-head {
+      display: flex !important;
+      align-items: flex-start !important;
+      justify-content: space-between !important;
+      gap: 20px !important;
+      margin-bottom: 18px !important;
+    }
+
+    .dashboard-section-head h2 {
+      margin: 0 0 6px !important;
+      color: #111113 !important;
+      font-size: 18px !important;
+      font-weight: 850 !important;
+      letter-spacing: -0.035em !important;
+    }
+
+    .dashboard-section-head p {
+      margin: 0 !important;
+      color: #8b8c94 !important;
+      font-size: 14px !important;
+      font-weight: 650 !important;
+      line-height: 1.45 !important;
+    }
+
+    .dashboard-section-side {
+      display: flex !important;
+      align-items: center !important;
+      gap: 18px !important;
+      flex-wrap: nowrap;
+    }
+
+    .dashboard-inline-amount {
+      position: relative;
+      min-width: 152px;
+      padding-top: 18px;
+      color: #111113 !important;
+      font-size: 16px !important;
+      font-weight: 850 !important;
+      line-height: 1.2 !important;
+      letter-spacing: -0.04em !important;
+    }
+
+    .dashboard-inline-amount::before {
+      content: "총 정산 금액";
+      position: absolute;
+      top: 0;
+      left: 0;
+      color: #8f9097;
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+    }
+
+    .dashboard-inline-button {
+      min-height: 52px !important;
+      padding: 0 22px !important;
+      border-radius: 14px !important;
+      border: 1px solid #111113 !important;
+      background: #111113 !important;
+      color: #fff !important;
+      font-size: 15px !important;
+      font-weight: 800 !important;
+      box-shadow: 0 10px 20px rgba(17,17,19,.1) !important;
+    }
+
+    .dashboard-home-page .transfer-summary,
+    .dashboard-home-page .person-summary,
+    .dashboard-home-page .round-summary {
+      display: grid;
+      gap: 14px;
+    }
+
+    .dashboard-home-page .transfer-row,
+    .dashboard-home-page .summary-row,
+    .dashboard-home-page .settlement-card {
+      background: #fff !important;
+      border: 1px solid rgba(17,17,19,.07) !important;
+      border-radius: 20px !important;
+      box-shadow: none !important;
+    }
+
+    .dashboard-home-page .transfer-row {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 16px !important;
+      padding: 22px 20px !important;
+    }
+
+    .dashboard-home-page .transfer-row > div strong,
+    .dashboard-home-page .transfer-row > strong {
+      font-size: 16px !important;
+      font-weight: 800 !important;
+      color: #22242a !important;
+      letter-spacing: -0.03em !important;
+    }
+
+    .dashboard-home-page .settlement-card {
+      padding: 18px 18px 16px !important;
+      min-height: 132px !important;
+    }
+
+    .dashboard-home-page .settlement-name {
+      font-size: 18px !important;
+      font-weight: 850 !important;
+      letter-spacing: -0.03em !important;
+    }
+
+    .dashboard-home-page .settlement-meta {
+      margin-top: 10px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 8px !important;
+    }
+
+    .dashboard-home-page .settlement-meta span,
+    .dashboard-home-page .settlement-meta strong,
+    .dashboard-home-page .settlement-result span,
+    .dashboard-home-page .settlement-result strong {
+      letter-spacing: -0.03em !important;
+    }
+
+    .dashboard-home-page .settlement-result {
+      min-width: 164px !important;
+      align-items: flex-end !important;
+      justify-content: center !important;
+    }
+
+    .dashboard-home-page .round-summary .summary-row {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) auto !important;
+      gap: 18px !important;
+      align-items: center !important;
+      padding: 20px 18px !important;
+    }
+
+    .dashboard-home-page .round-summary .summary-row strong:last-child,
+    .dashboard-home-page .round-summary .summary-row > strong {
+      font-size: 18px !important;
+      font-weight: 850 !important;
+      color: #111113 !important;
+    }
+
+    .dashboard-home-page .empty-state {
+      padding: 28px 20px !important;
+      text-align: center;
+      color: #9a9ba3 !important;
+      font-size: 14px !important;
+      font-weight: 650 !important;
+      background: #fafafc !important;
+      border: 1px dashed rgba(17,17,19,.08) !important;
+      border-radius: 20px !important;
+    }
+  }
+
+  .quick-create-overlay[hidden] {
+    display: none !important;
+  }
+
+  .quick-create-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(17,17,19,.36);
+    backdrop-filter: blur(10px);
+  }
+
+  .quick-create-modal {
+    width: min(760px, calc(100vw - 32px));
+    max-height: calc(100vh - 40px);
+    overflow: auto;
+    border-radius: 32px;
+    background: #ffffff;
+    border: 1px solid rgba(17,17,19,.06);
+    box-shadow: 0 28px 80px rgba(0,0,0,.18);
+    padding: 28px;
+  }
+
+  .quick-create-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+
+  .quick-create-head p {
+    margin: 0 0 6px;
+    color: #8f9097;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .quick-create-head h2 {
+    margin: 0;
+    color: #111113;
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: -0.05em;
+  }
+
+  .quick-create-head small {
+    display: block;
+    margin-top: 10px;
+    color: #8a8b92;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .quick-create-close {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    border: 1px solid rgba(17,17,19,.08);
+    background: #fff;
+    color: #5f6169;
+    font-size: 22px;
+    cursor: pointer;
+  }
+
+  .quick-create-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .quick-create-field,
+  .quick-create-field-full {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .quick-create-field-full {
+    grid-column: 1 / -1;
+  }
+
+  .quick-create-label {
+    color: #7f8088;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .quick-create-field input,
+  .quick-create-field select,
+  .quick-create-add-row input {
+    width: 100%;
+    min-height: 58px;
+    padding: 0 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(17,17,19,.08);
+    background: #fcfcfd;
+    color: #111113;
+    font-size: 16px;
+    font-weight: 700;
+    outline: none;
+  }
+
+  .quick-create-field input:focus,
+  .quick-create-field select:focus,
+  .quick-create-add-row input:focus {
+    border-color: rgba(17,17,19,.18);
+    box-shadow: 0 0 0 4px rgba(17,17,19,.04);
+  }
+
+  .quick-create-people-box {
+    border: 1px solid rgba(17,17,19,.08);
+    background: #fcfcfd;
+    border-radius: 22px;
+    padding: 16px;
+  }
+
+  .quick-create-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 18px;
+  }
+
+  .quick-create-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: #f4f4f7;
+    border: 1px solid rgba(17,17,19,.05);
+    color: #22242a;
+    font-size: 14px;
+    font-weight: 750;
+  }
+
+  .quick-create-chip button {
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(17,17,19,.08);
+    color: #666973;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .quick-create-chip-empty {
+    color: #a0a1a8;
+    font-size: 14px;
+    font-weight: 650;
+    padding: 6px 2px;
+  }
+
+  .quick-create-add-row {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .quick-create-add-row button,
+  .quick-create-actions .primary,
+  .quick-create-actions .secondary {
+    border-radius: 16px;
+    min-height: 54px;
+    padding: 0 18px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .quick-create-add-row button,
+  .quick-create-actions .primary {
+    border: 1px solid #111113;
+    background: #111113;
+    color: #fff;
+  }
+
+  .quick-create-actions .secondary {
+    border: 1px solid rgba(17,17,19,.08);
+    background: #fff;
+    color: #22242a;
+  }
+
+  .quick-create-helper {
+    margin-top: 10px;
+    color: #9a9ba3;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.45;
+  }
+
+  .quick-create-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .report-overlay {
+    background: #f4f4f6 !important;
+  }
+
+  .report-toolbar {
+    width: min(1040px, calc(100vw - 32px));
+    margin: 18px auto 14px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .report-toolbar .ghost-button {
+    min-height: 48px;
+    padding: 0 18px;
+    border-radius: 14px;
+    border: 1px solid rgba(17,17,19,.08);
+    background: #fff;
+    color: #22242a;
+    font-weight: 750;
+    box-shadow: 0 8px 24px rgba(17,17,19,.04);
+  }
+
+  .final-report {
+    width: min(1040px, calc(100vw - 32px)) !important;
+    margin: 0 auto 42px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .report-hero {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 16px !important;
+    align-items: stretch !important;
+  }
+
+  .report-hero-main,
+  .report-total,
+  .report-stats > div,
+  .report-section {
+    background: #fff !important;
+    border: 1px solid rgba(17,17,19,.07) !important;
+    box-shadow: 0 12px 32px rgba(17,17,19,.035) !important;
+  }
+
+  .report-hero-main {
+    border-radius: 28px !important;
+    padding: 28px !important;
+  }
+
+  .report-brand-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .report-kicker {
+    margin: 0 !important;
+    color: #8c8d95 !important;
+    font-size: 13px !important;
+    font-weight: 850 !important;
+    letter-spacing: -0.02em !important;
+    text-transform: none !important;
+  }
+
+  .report-seal {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 34px !important;
+    padding: 0 12px !important;
+    border-radius: 999px !important;
+    background: #f4f5f8 !important;
+    color: #60636d !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+  }
+
+  .report-hero h2 {
+    margin: 0 !important;
+    color: #111113 !important;
+    font-size: clamp(34px, 4vw, 48px) !important;
+    font-weight: 900 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.06em !important;
+  }
+
+  .report-date {
+    margin: 14px 0 0 !important;
+    color: #8b8d94 !important;
+    font-size: 16px !important;
+    font-weight: 750 !important;
+  }
+
+  .report-total {
+    border-radius: 28px !important;
+    padding: 26px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+
+  .report-total > span {
+    color: #8c8d95 !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+  }
+
+  .report-total-line {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    margin-top: 16px !important;
+  }
+
+  .report-total-line strong {
+    color: #111113 !important;
+    font-size: 40px !important;
+    font-weight: 900 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.06em !important;
+  }
+
+  .report-total-line small,
+  #reportDeductionNote {
+    color: #9a9ba2 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+  }
+
+  .report-stats {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    margin: 18px 0 !important;
+  }
+
+  .report-stats > div {
+    border-radius: 22px !important;
+    padding: 22px !important;
+  }
+
+  .report-stats span {
+    display: block !important;
+    color: #8c8d95 !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+  }
+
+  .report-stats strong {
+    display: block !important;
+    margin-top: 14px !important;
+    color: #111113 !important;
+    font-size: 28px !important;
+    font-weight: 850 !important;
+    letter-spacing: -0.05em !important;
+  }
+
+  .report-section {
+    border-radius: 28px !important;
+    padding: 24px !important;
+  }
+
+  .report-section + .report-section {
+    margin-top: 16px !important;
+  }
+
+  .report-section-heading {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    margin-bottom: 18px !important;
+  }
+
+  .report-section-heading h3 {
+    margin: 0 !important;
+    color: #111113 !important;
+    font-size: 20px !important;
+    font-weight: 850 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  .report-section-heading span {
+    color: #8c8d95 !important;
+    font-size: 13px !important;
+    font-weight: 750 !important;
+  }
+
+  .report-item,
+  .report-settlement-card {
+    background: #fff !important;
+    border: 1px solid rgba(17,17,19,.07) !important;
+    border-radius: 20px !important;
+    box-shadow: none !important;
+  }
+
+  .report-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 18px !important;
+    padding: 18px !important;
+  }
+
+  .report-item + .report-item,
+  .report-settlement-card + .report-settlement-card {
+    margin-top: 12px !important;
+  }
+
+  .report-item-main {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+  }
+
+  .report-index {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+    background: #f2f5fb !important;
+    color: #2c68d5 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 15px !important;
+    font-weight: 850 !important;
+  }
+
+  .report-item strong,
+  .report-item .amount {
+    color: #111113 !important;
+    font-size: 16px !important;
+    font-weight: 850 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  .report-item small,
+  .report-empty {
+    color: #9a9ba2 !important;
+    font-size: 13px !important;
+    font-weight: 650 !important;
+  }
+
+  .report-settlement-card {
+    padding: 18px !important;
+  }
+
+  .report-empty {
+    padding: 24px !important;
+    text-align: center !important;
+    border-radius: 18px !important;
+    background: #fafafc !important;
+    border: 1px dashed rgba(17,17,19,.08) !important;
+  }
+
+  @media (max-width: 960px) {
+    .quick-create-grid,
+    .report-hero,
+    .report-stats {
+      grid-template-columns: 1fr !important;
+    }
+
+    .quick-create-modal,
+    .final-report,
+    .report-toolbar {
+      width: min(100%, calc(100vw - 24px)) !important;
+    }
+  }
+</style>
+
+</head>
   <body>
     <div class="app-shell">
 
@@ -6793,6 +7609,56 @@ body {
         <span class="mobile-tab-label">설정</span>
       </button>
     </nav>
+
+
+    
+<div id="quickCreateOverlay" class="quick-create-overlay" hidden>
+  <div class="quick-create-modal" role="dialog" aria-modal="true" aria-label="새 모임 만들기">
+    <div class="quick-create-head">
+      <div>
+        <p>New Meeting</p>
+        <h2>새 모임 만들기</h2>
+        <small>모임명, 일자, 인원, 차수를 먼저 정리하면 이후 지출 입력과 정산이 훨씬 빨라집니다.</small>
+      </div>
+      <button type="button" class="quick-create-close" id="quickCreateCloseButton" aria-label="새 모임 만들기 닫기">×</button>
+    </div>
+    <div class="quick-create-grid">
+      <label class="quick-create-field">
+        <span class="quick-create-label">모임명</span>
+        <input id="quickCreateMeetingTitle" type="text" placeholder="예: 주말 저녁 모임" />
+      </label>
+      <label class="quick-create-field">
+        <span class="quick-create-label">일자</span>
+        <input id="quickCreateMeetingDate" type="date" />
+      </label>
+      <div class="quick-create-field-full">
+        <span class="quick-create-label">인원</span>
+        <div class="quick-create-people-box">
+          <div id="quickCreatePeopleList" class="quick-create-chip-list"></div>
+          <div class="quick-create-add-row">
+            <input id="quickCreatePersonInput" type="text" placeholder="이름을 입력하고 Enter를 누르세요" />
+            <button type="button" id="quickCreateAddPersonButton">추가</button>
+          </div>
+          <div class="quick-create-helper">쉼표(,) 또는 줄바꿈으로 여러 이름을 한 번에 넣을 수도 있어요.</div>
+        </div>
+      </div>
+      <label class="quick-create-field">
+        <span class="quick-create-label">차수</span>
+        <input id="quickCreateRoundCount" type="number" min="1" max="10" step="1" value="1" />
+      </label>
+      <div class="quick-create-field">
+        <span class="quick-create-label">미리보기</span>
+        <div class="quick-create-people-box">
+          <div class="quick-create-helper" id="quickCreatePreviewText">참여 인원 0명 · 차수 1개로 시작합니다.</div>
+        </div>
+      </div>
+    </div>
+    <div class="quick-create-actions">
+      <button type="button" class="secondary" id="quickCreateCancelButton">취소</button>
+      <button type="button" class="primary" id="quickCreateSubmitButton">모임 만들기</button>
+    </div>
+  </div>
+</div>
 
 
     <div id="reportOverlay" class="report-overlay" hidden>
@@ -8171,7 +9037,7 @@ render();
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js?v=2.18").catch(() => {});
+          navigator.serviceWorker.register("./sw.js?v=2.19").catch(() => {});
         });
       }
     </script>
@@ -9447,5 +10313,200 @@ render();
       }
     </script>
 
-  </body>
+  
+<script>
+(function setupV219DashboardRefresh() {
+  const overlay = document.getElementById('quickCreateOverlay');
+  const meetingTitleInput = document.getElementById('quickCreateMeetingTitle');
+  const meetingDateInput = document.getElementById('quickCreateMeetingDate');
+  const personInput = document.getElementById('quickCreatePersonInput');
+  const roundCountInput = document.getElementById('quickCreateRoundCount');
+  const peopleList = document.getElementById('quickCreatePeopleList');
+  const previewText = document.getElementById('quickCreatePreviewText');
+  const openButtons = [document.getElementById('dashboardNewMeetingButton'), document.getElementById('resetButton')].filter(Boolean);
+  const closeButtons = [document.getElementById('quickCreateCloseButton'), document.getElementById('quickCreateCancelButton')].filter(Boolean);
+  const addPersonButton = document.getElementById('quickCreateAddPersonButton');
+  const submitButton = document.getElementById('quickCreateSubmitButton');
+  const reportButton = document.getElementById('dashboardReportButton');
+  const heroBellButton = document.getElementById('dashboardBellButton');
+  let tempPeople = [];
+
+  function moneyLocal(value) {
+    try {
+      return money(Number(value || 0));
+    } catch (error) {
+      return `${Number(value || 0).toLocaleString('ko-KR')}원`;
+    }
+  }
+
+  function parseNames(raw) {
+    return String(raw || '')
+      .split(/[\n,]/)
+      .map((name) => name.trim())
+      .filter(Boolean);
+  }
+
+  function updatePreview() {
+    const count = tempPeople.length;
+    const rounds = Math.max(1, Math.min(10, Number(roundCountInput?.value || 1) || 1));
+    if (previewText) previewText.textContent = `참여 인원 ${count}명 · 차수 ${rounds}개로 시작합니다.`;
+  }
+
+  function renderPeople() {
+    if (!peopleList) return;
+    if (!tempPeople.length) {
+      peopleList.innerHTML = '<div class="quick-create-chip-empty">아직 추가된 인원이 없습니다.</div>';
+    } else {
+      peopleList.innerHTML = tempPeople.map((name, index) => `
+        <span class="quick-create-chip">
+          <span>${escapeHtml(name)}</span>
+          <button type="button" data-remove-index="${index}" aria-label="${escapeHtml(name)} 삭제">×</button>
+        </span>
+      `).join('');
+    }
+    updatePreview();
+  }
+
+  function addNamesFromInput() {
+    if (!personInput) return;
+    const names = parseNames(personInput.value);
+    if (!names.length) return;
+    names.forEach((name) => {
+      if (!tempPeople.includes(name)) tempPeople.push(name);
+    });
+    personInput.value = '';
+    renderPeople();
+    personInput.focus();
+  }
+
+  function openQuickCreate() {
+    tempPeople = state.people.map((person) => String(person.name || '').trim()).filter(Boolean);
+    meetingTitleInput.value = '';
+    meetingDateInput.value = state.meetingDate || today;
+    roundCountInput.value = String(Math.max(1, state.rounds.filter((round) => round !== deductionRound).length || 1));
+    renderPeople();
+    overlay.hidden = false;
+    document.body.classList.add('guide-open');
+    setTimeout(() => meetingTitleInput.focus(), 10);
+  }
+
+  function closeQuickCreate() {
+    overlay.hidden = true;
+    document.body.classList.remove('guide-open');
+  }
+
+  function createMeetingFromQuickCreate() {
+    addNamesFromInput();
+    const meetingTitle = meetingTitleInput.value.trim();
+    const meetingDate = meetingDateInput.value || today;
+    const roundCount = Math.max(1, Math.min(10, Number(roundCountInput.value || 1) || 1));
+
+    if (!tempPeople.length) {
+      alert('참여 인원을 1명 이상 추가해 주세요.');
+      personInput?.focus();
+      return;
+    }
+
+    state = clone(sampleState);
+    state.meetingTitle = meetingTitle;
+    state.meetingDate = meetingDate;
+    state.activeRound = overallRound;
+    state.people = tempPeople.map((name) => ({ id: newId('p'), name }));
+    state.rounds = Array.from({ length: roundCount }, (_, index) => `${index + 1}차`);
+    state.expenses = state.rounds.map((round) => ({
+      id: newId('e'),
+      round,
+      date: meetingDate,
+      place: '',
+      amount: 0,
+      payer: state.people[0]?.id || '',
+      participants: state.people.map((person) => person.id),
+    }));
+
+    saveAndRender();
+    closeQuickCreate();
+    document.querySelector('[data-nav-target="home"]')?.click();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateDashboardTransferAmount() {
+    const target = document.getElementById('dashboardTransferHeadline');
+    if (!target || typeof calculate !== 'function') return;
+    const result = calculate();
+    const totalTransfer = (result.transfers || []).reduce((sum, transfer) => sum + Number(transfer.amount || 0), 0);
+    target.textContent = moneyLocal(totalTransfer);
+  }
+
+  function installDesktopBehavior() {
+    openButtons.forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation?.();
+        openQuickCreate();
+      }, true);
+    });
+
+    if (heroBellButton) {
+      heroBellButton.innerHTML = `
+        <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"/>
+          <path d="M10 20a2 2 0 0 0 4 0"/>
+        </svg>
+      `;
+    }
+
+    if (reportButton) {
+      reportButton.textContent = '송금하기';
+    }
+
+    [document.getElementById('transferSummary'), document.getElementById('personSummary'), document.getElementById('roundSummary'), document.getElementById('totalExpense')]
+      .filter(Boolean)
+      .forEach((node) => new MutationObserver(updateDashboardTransferAmount).observe(node, { childList: true, subtree: true, characterData: true }));
+
+    updateDashboardTransferAmount();
+  }
+
+  closeButtons.forEach((button) => button.addEventListener('click', closeQuickCreate));
+  overlay?.addEventListener('click', (event) => {
+    if (event.target === overlay) closeQuickCreate();
+  });
+  addPersonButton?.addEventListener('click', addNamesFromInput);
+  personInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault();
+      addNamesFromInput();
+    }
+  });
+  personInput?.addEventListener('blur', () => {
+    if (personInput.value.includes(',') || personInput.value.includes('\n')) addNamesFromInput();
+  });
+  peopleList?.addEventListener('click', (event) => {
+    const removeButton = event.target.closest('[data-remove-index]');
+    if (!removeButton) return;
+    const index = Number(removeButton.getAttribute('data-remove-index'));
+    tempPeople.splice(index, 1);
+    renderPeople();
+  });
+  roundCountInput?.addEventListener('input', updatePreview);
+  submitButton?.addEventListener('click', createMeetingFromQuickCreate);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && overlay && !overlay.hidden) closeQuickCreate();
+  });
+
+  installDesktopBehavior();
+})();
+</script>
+<script>
+  window.DUTCH_PAY_APP_VERSION = "v2.19-clean-dashboard-main";
+  if ("caches" in window) {
+    caches.keys().then((keys) => {
+      keys
+        .filter((key) => key.startsWith("dutch-pay") && key !== "dutch-pay-v2-19-clean-dashboard-main")
+        .forEach((key) => caches.delete(key));
+    }).catch(() => {});
+  }
+</script>
+
+</body>
 </html>
