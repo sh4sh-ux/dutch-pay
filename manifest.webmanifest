@@ -3,7 +3,7 @@
   "short_name": "Dutch Pay",
   "description": "모임 지출을 기록하고 더치페이를 자동 계산하는 앱",
   "lang": "ko-KR",
-  "start_url": "./?v=2.03",
+  "start_url": "./?v=2.05",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
