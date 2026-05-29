@@ -712,7 +712,7 @@ function saveToHistory(){
 function roundRectPath(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();}
 
 const iconImgCache=new Map();
-async function loadIconImage(svgStr,color){const key=svgStr+'|'+color;if(iconImgCache.has(key))return iconImgCache.get(key);const colored=svgStr.replace(/currentColor/g,color);const blob=new Blob([colored],{type:'image/svg+xml;charset=utf-8'});const url=URL.createObjectURL(blob);try{const img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=url;});iconImgCache.set(key,img);return img;}finally{setTimeout(()=>URL.revokeObjectURL(url),1000);}}
+async function loadIconImage(svgStr,color){const key=svgStr+'|'+color;if(iconImgCache.has(key))return iconImgCache.get(key);const colored=svgStr.replace(/currentColor/g,color);const withNs=colored.includes('xmlns')?colored:colored.replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"');const blob=new Blob([withNs],{type:'image/svg+xml;charset=utf-8'});const url=URL.createObjectURL(blob);try{const img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=url;});iconImgCache.set(key,img);return img;}finally{setTimeout(()=>URL.revokeObjectURL(url),1000);}}
 
 async function generateSettleCanvas(){
   const total=items.reduce((s,it)=>s+(+it.amount||0),0);const{paid,owes,hasRounding}=computeShares();const txns=calcTxns(paid,owes);const validItems=items.filter(it=>+it.amount!==0);
