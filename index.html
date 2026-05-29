@@ -380,7 +380,7 @@ svg{display:block;flex-shrink:0;}
 <div class="mobile-shell">
   <div class="mob-header">
     <div class="mob-title-row">
-      <span class="mob-title">더치페이</span>
+      <span class="mob-title">더치페이<span class="app-version" id="appVersionM" style="font-size:11px;color:var(--label3);margin-left:6px;font-weight:400"></span></span>
       <span id="mTotal" style="font-size:18px;font-weight:700">0원</span>
     </div>
     <div style="margin-bottom:14px;display:flex;gap:6px;align-items:center;justify-content:space-between">
@@ -403,8 +403,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.09';
-const BUILD_TIME='2026-05-29 23:36';
+const APP_VERSION='v1.10';
+const BUILD_TIME='2026-05-29 23:44';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -523,10 +523,20 @@ async function syncFromDropbox(){
   try{
     const remote=await _dbxDownload(token,DBX_MAIN_FILE);
     if(!remote||!Array.isArray(remote.groups)||!remote.groups.length){await syncToDropbox();return;}
-    const localIds=new Set(groups.map(g=>g.id));
-    let changed=false;
-    remote.groups.forEach(rg=>{if(!localIds.has(rg.id)){groups.push(rg);changed=true;}});
-    if(changed){saveState();renderAll();toast(`Dropbox에서 ${remote.groups.filter(rg=>!localIds.has(rg.id)).length}개 그룹을 불러왔어요`,{type:'success'});}
+    // last-write-wins: remote가 더 최신이면 통째로 교체 (삭제도 정상 반영)
+    const localLast=localStorage.getItem(DBX_LASTSYNC_MAIN)||'';
+    const remoteAt=remote.syncedAt||'';
+    if(remoteAt && remoteAt > localLast){
+      groups=remote.groups;
+      currentGroupId=remote.currentGroupId||groups[0].id;
+      const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);
+      localStorage.setItem(STORAGE_KEY,JSON.stringify({version:2,groups,currentGroupId}));
+      localStorage.setItem(DBX_LASTSYNC_MAIN,remoteAt);
+      _updateSyncBadge();renderAll();
+      toast('Dropbox에서 최신 데이터를 불러왔어요',{type:'success'});
+      return;
+    }
+    // 로컬이 더 최신이거나 동일 → 업로드
     await syncToDropbox();
   }catch(e){}
 }
@@ -813,7 +823,7 @@ async function shareSettleImage(){
 
 loadState();
 renderAll();
-(()=>{const v=document.getElementById('appVersionD');if(v)v.textContent=APP_VERSION;})();
+(()=>{['appVersionD','appVersionM'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{try{navigator.serviceWorker.register('sw.js').then(reg=>{reg.update();reg.addEventListener('updatefound',()=>{const nw=reg.installing;if(!nw)return;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0071e3;color:#fff;padding:12px 18px;border-radius:24px;font:600 13px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 4px 16px rgba(0,113,227,.4);z-index:99999;cursor:pointer;';t.textContent='새 버전이 있어요 · 탭해서 새로고침';t.onclick=()=>location.reload();document.body.appendChild(t);}});});}).catch(()=>{});}catch(e){}});}
