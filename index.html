@@ -402,7 +402,9 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.06';
+const APP_VERSION='v1.07';
+const BUILD_TIME='2026-05-29 23:14';
+window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
 let dTab='input',mTab='input';
@@ -811,7 +813,7 @@ renderAll();
 (()=>{const v=document.getElementById('appVersionD');if(v)v.textContent=APP_VERSION;})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{try{navigator.serviceWorker.register('sw.js').catch(()=>{});}catch(e){}});}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{try{navigator.serviceWorker.register('sw.js').then(reg=>{reg.update();reg.addEventListener('updatefound',()=>{const nw=reg.installing;if(!nw)return;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0071e3;color:#fff;padding:12px 18px;border-radius:24px;font:600 13px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 4px 16px rgba(0,113,227,.4);z-index:99999;cursor:pointer;';t.textContent='새 버전이 있어요 · 탭해서 새로고침';t.onclick=()=>location.reload();document.body.appendChild(t);}});});}).catch(()=>{});}catch(e){}});}
 </script>
 </body>
 </html>
