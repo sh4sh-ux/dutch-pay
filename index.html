@@ -433,8 +433,9 @@ function showDataMenu(anchorEl,ev){
   if(ev){ev.stopPropagation();ev.preventDefault();}
   document.querySelectorAll('.icon-pop,.rounder-pop,.group-pop,.data-pop').forEach(el=>el.remove());
   const pop=document.createElement('div');pop.className='data-pop';
-  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="exportCsv">현재 그룹 CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version">더치페이 ${APP_VERSION}</div>`;
-  pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='exportCsv')exportCurrentGroupCsv();else if(action==='export')exportData();else if(action==='import')importData();else if(action==='reset')resetAllData();pop.remove();});
+  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">현재 그룹 CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version">더치페이 ${APP_VERSION}</div>`;
+  pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='openHistory'){window.open('history.html','_blank');pop.remove();}
+    else if(action==='exportCsv')exportCurrentGroupCsv();else if(action==='export')exportData();else if(action==='import')importData();else if(action==='reset')resetAllData();pop.remove();});
   document.body.appendChild(pop);_positionPopover(pop,anchorEl,true);
   setTimeout(()=>{const h=(e3)=>{if(!pop.contains(e3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=(e3)=>{if(e3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);
 }
@@ -585,7 +586,7 @@ function renderMobileBody(){
     const validItems=items.filter(it=>+it.amount!==0);
     if(validItems.length){const payRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';return `<div class="pay-row"><div class="pay-name-wrap"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><span class="pay-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><span class="pay-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');html+=`<div class="pay-section-title">결제 내역</div><div class="txn-card">${payRows}</div>`;}
     if(txns.length&&hasRounding)html+='<div class="notice">차액은 결제자에게 우선 부담돼요</div>';
-    html+=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button><button class="share-hist-btn" onclick="saveToHistory()">${svgBookmark} 기록 보관함에 저장</button></div>`;
+    html+=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button><button class="share-hist-btn" onclick="saveToHistory()">${svgBookmark} 기록 보관함에 저장</button><div style="text-align:center;margin-top:10px"><a href="history.html" target="_blank" style="font-size:12px;color:var(--label3);text-decoration:none">기록 보관함 열기 →</a></div></div>`;
     el.innerHTML=html;return;
   }
   // input tab
@@ -657,7 +658,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const validItems=items.filter(it=>+it.amount!==0);
   const paySection=validItems.length?`<div class="pay-section-title">결제 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';return `<div class="pay-row"><div class="pay-name-wrap"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><span class="pay-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><span class="pay-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('')}</div>`:'';
   const noticeHtml=txns.length&&hasRounding?'<div class="notice">차액은 결제자에게 우선 부담돼요</div>':'';
-  const shareBtn=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button><button class="share-hist-btn" onclick="saveToHistory()">${svgBookmark} 기록 보관함에 저장</button></div>`;
+  const shareBtn=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button><button class="share-hist-btn" onclick="saveToHistory()">${svgBookmark} 기록 보관함에 저장</button><div style="text-align:center;margin-top:10px"><a href="history.html" target="_blank" style="font-size:12px;color:var(--label3);text-decoration:none">기록 보관함 열기 →</a></div></div>`;
   body.innerHTML=dateRow+hero+txnSection+paySection+noticeHtml+shareBtn;
 }
 
