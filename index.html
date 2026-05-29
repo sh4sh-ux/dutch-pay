@@ -221,10 +221,10 @@ svg{display:block;flex-shrink:0;}
 .group-pop{position:absolute;background:var(--card);border:1px solid var(--sep);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:8px;z-index:200;min-width:300px;max-width:360px;}
 .group-pop-hd{font-size:11px;font-weight:600;color:var(--label3);text-transform:uppercase;padding:6px 8px 8px;}
 .group-list{display:flex;flex-direction:column;gap:4px;max-height:380px;overflow-y:auto;}
-.group-card{display:flex;flex-direction:column;border:1px solid var(--sep);border-radius:10px;overflow:hidden;background:var(--card);transition:all .12s;}
+.group-card{display:flex;align-items:stretch;border:1px solid var(--sep);border-radius:10px;overflow:hidden;background:var(--card);transition:all .12s;}
 .group-card:hover{border-color:var(--sep2);background:var(--fill2);}
 .group-card.on{border-color:var(--blue);background:var(--blue-bg);}
-.group-card-main{display:flex;align-items:center;gap:10px;padding:12px;border:none;background:transparent;cursor:pointer;font-family:inherit;text-align:left;width:100%;}
+.group-card-main{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:12px;border:none;background:transparent;cursor:pointer;font-family:inherit;text-align:left;}
 .group-card-dot{width:8px;height:8px;border-radius:50%;background:var(--sep2);flex-shrink:0;}
 .group-card.on .group-card-dot{background:var(--blue);}
 .group-card-info{flex:1;min-width:0;}
@@ -235,14 +235,15 @@ svg{display:block;flex-shrink:0;}
 .group-card-date{flex-shrink:0;}
 .group-card-amt{font-size:13px;font-weight:700;color:var(--label2);flex-shrink:0;margin-left:8px;}
 .group-card.on .group-card-amt{color:var(--blue-txt);}
-.group-card-acts{display:flex !important;border-top:1px solid var(--sep);background:var(--fill2);position:relative;z-index:1;visibility:visible !important;opacity:1 !important;min-height:34px;}
-.group-card.on .group-card-acts{border-top-color:rgba(0,113,227,.2);background:rgba(255,255,255,.5);}
-.group-card-act{flex:1;border:none;background:transparent;color:var(--label2);cursor:pointer;padding:9px 8px;font-size:12px;font-weight:500;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:5px;border-right:1px solid var(--sep);}
-.group-card-act:last-child{border-right:none;}
-.group-card-act:hover{background:var(--card);color:var(--label);}
-.group-card-act.danger{color:var(--red);}
-.group-card-act.danger:hover{background:var(--red-bg);color:var(--red);}
-.group-card.on .group-card-act{border-right-color:rgba(0,113,227,.2);}
+.group-card-more{flex-shrink:0;border:none;background:transparent;color:var(--label3);cursor:pointer;padding:0 14px;font-size:20px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;border-left:1px solid var(--sep);transition:background .12s,color .12s;letter-spacing:1px;line-height:1;}
+.group-card-more:hover{background:var(--fill2);color:var(--label);}
+.group-card.on .group-card-more{border-left-color:rgba(0,113,227,.2);color:var(--blue-txt);}
+.group-card.on .group-card-more:hover{background:rgba(255,255,255,.4);}
+.group-more-pop{position:fixed;background:var(--card);border:1px solid var(--sep);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:4px;z-index:300;min-width:140px;}
+.group-more-opt{display:flex;width:100%;text-align:left;align-items:center;gap:8px;border:none;background:transparent;padding:9px 10px;font-size:13px;cursor:pointer;border-radius:6px;color:var(--label);font-family:inherit;}
+.group-more-opt:hover{background:var(--fill);}
+.group-more-opt.danger{color:var(--red);}
+.group-more-opt.danger:hover{background:var(--red-bg);}
 .group-add{display:block;width:100%;text-align:center;border:1px dashed var(--sep2);background:transparent;padding:12px;font-size:13px;cursor:pointer;border-radius:10px;color:var(--green);font-family:inherit;font-weight:600;margin-top:6px;}
 .group-add:hover{background:var(--green-bg);border-color:var(--green);}
 .data-pop{position:absolute;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.15);padding:6px;z-index:200;min-width:220px;}
@@ -402,8 +403,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.08';
-const BUILD_TIME='2026-05-29 23:28';
+const APP_VERSION='v1.09';
+const BUILD_TIME='2026-05-29 23:36';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -431,14 +432,16 @@ function showGroupManager(anchorEl,ev){
   if(ev){ev.stopPropagation();ev.preventDefault();}
   document.querySelectorAll('.icon-pop,.rounder-pop,.group-pop,.data-pop').forEach(el=>el.remove());
   const pop=document.createElement('div');pop.className='group-pop';
-  const cardsHtml=groups.map(g=>{const s=_groupSummary(g);const on=g.id===currentGroupId;return `<div class="group-card${on?' on':''}"><button class="group-card-main" data-action="switch" data-id="${e(g.id)}"><span class="group-card-dot"></span><span class="group-card-info"><span class="group-card-name">${e(g.name)}</span><span class="group-card-meta"><span class="group-card-people">${e(s.peopleText)}</span>${s.dateText?`<span class="group-card-date">${e(s.dateText)}</span>`:''}</span></span><span class="group-card-amt">${s.totalText}</span></button><div class="group-card-acts"><button class="group-card-act" data-action="duplicate" data-id="${e(g.id)}">${svgCopy}<span>복사</span></button><button class="group-card-act" data-action="rename" data-id="${e(g.id)}">${svgPencil}<span>이름</span></button>${groups.length>1?`<button class="group-card-act danger" data-action="delete" data-id="${e(g.id)}">${svgTrash}<span>삭제</span></button>`:''}</div></div>`;}).join('');
+  const cardsHtml=groups.map(g=>{const s=_groupSummary(g);const on=g.id===currentGroupId;return `<div class="group-card${on?' on':''}"><button class="group-card-main" data-action="switch" data-id="${e(g.id)}"><span class="group-card-dot"></span><span class="group-card-info"><span class="group-card-name">${e(g.name)}</span><span class="group-card-meta"><span class="group-card-people">${e(s.peopleText)}</span>${s.dateText?`<span class="group-card-date">${e(s.dateText)}</span>`:''}</span></span><span class="group-card-amt">${s.totalText}</span></button><button class="group-card-more" data-action="more" data-id="${e(g.id)}" aria-label="더보기">⋯</button></div>`;}).join('');
   pop.innerHTML=`<div class="group-pop-hd">정산 그룹</div><div class="group-list">${cardsHtml}</div><button class="group-add" data-action="add">＋ 새 그룹</button>`;
-  pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action,id=btn.dataset.id;if(action==='switch'){switchGroup(id);pop.remove();}else if(action==='rename'){const g=groups.find(g=>g.id===id);const newName=prompt('새 이름:',g?g.name:'');if(newName&&newName.trim())renameGroup(id,newName);pop.remove();}else if(action==='delete'){const g=groups.find(g=>g.id===id);if(g&&confirm(`'${g.name}' 그룹을 삭제할까요?`)){deleteGroup(id);}pop.remove();}else if(action==='add'){const name=prompt('새 그룹 이름:','');if(name&&name.trim())createGroup(name.trim());pop.remove();}else if(action==='duplicate'){duplicateGroup(id);pop.remove();}});
+  pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action,id=btn.dataset.id;if(action==='switch'){switchGroup(id);pop.remove();}else if(action==='more'){e2.preventDefault();_openGroupMorePop(btn,id,pop);}else if(action==='rename'){const g=groups.find(g=>g.id===id);const newName=prompt('새 이름:',g?g.name:'');if(newName&&newName.trim())renameGroup(id,newName);pop.remove();}else if(action==='delete'){const g=groups.find(g=>g.id===id);if(g&&confirm(`'${g.name}' 그룹을 삭제할까요?`)){deleteGroup(id);}pop.remove();}else if(action==='add'){const name=prompt('새 그룹 이름:','');if(name&&name.trim())createGroup(name.trim());pop.remove();}else if(action==='duplicate'){duplicateGroup(id);pop.remove();}});
   document.body.appendChild(pop);_positionPopover(pop,anchorEl);
   setTimeout(()=>{const h=(e3)=>{if(!pop.contains(e3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=(e3)=>{if(e3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);
 }
 
 function _positionPopover(pop,anchorEl,rightAlign){const r=anchorEl.getBoundingClientRect();pop.style.top=(r.bottom+window.scrollY+6)+'px';const isMobile=window.innerWidth<700;if(isMobile){pop.style.left='12px';pop.style.right='12px';pop.style.width='auto';pop.style.maxWidth='none';}else{pop.style.right='auto';pop.style.width='auto';const pr=pop.getBoundingClientRect();let left=rightAlign?r.right-pr.width+window.scrollX:r.left+window.scrollX;if(left+pr.width>window.innerWidth-8)left=window.innerWidth-pr.width-8;pop.style.left=Math.max(8,left)+'px';}}
+
+function _openGroupMorePop(anchorBtn,id,parentPop){document.querySelectorAll('.group-more-pop').forEach(el=>el.remove());const g=groups.find(x=>x.id===id);if(!g)return;const canDelete=groups.length>1;const menu=document.createElement('div');menu.className='group-more-pop';menu.innerHTML=`<button class="group-more-opt" data-mact="duplicate">${svgCopy}<span>복사</span></button><button class="group-more-opt" data-mact="rename">${svgPencil}<span>이름 변경</span></button>${canDelete?`<button class="group-more-opt danger" data-mact="delete">${svgTrash}<span>삭제</span></button>`:''}`;document.body.appendChild(menu);const r=anchorBtn.getBoundingClientRect();const mr=menu.getBoundingClientRect();let top=r.bottom+4;if(top+mr.height>window.innerHeight-8)top=r.top-mr.height-4;let left=r.right-mr.width;if(left<8)left=8;menu.style.top=top+'px';menu.style.left=left+'px';menu.addEventListener('click',(e2)=>{e2.stopPropagation();const b=e2.target.closest('[data-mact]');if(!b)return;const mact=b.dataset.mact;menu.remove();if(parentPop&&parentPop.remove)parentPop.remove();if(mact==='duplicate'){duplicateGroup(id);}else if(mact==='rename'){const newName=prompt('새 이름:',g.name);if(newName&&newName.trim())renameGroup(id,newName);}else if(mact==='delete'){if(confirm(`'${g.name}' 그룹을 삭제할까요?`))deleteGroup(id);}});setTimeout(()=>{const close=(ev)=>{if(!menu.contains(ev.target)){menu.remove();document.removeEventListener('click',close);document.removeEventListener('keydown',esc);}};const esc=(ev)=>{if(ev.key==='Escape'){menu.remove();document.removeEventListener('click',close);document.removeEventListener('keydown',esc);}};document.addEventListener('click',close);document.addEventListener('keydown',esc);},0);}
 
 function showDataMenu(anchorEl,ev){
   if(ev){ev.stopPropagation();ev.preventDefault();}
