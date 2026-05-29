@@ -282,7 +282,7 @@ svg{display:block;flex-shrink:0;}
 .detail-amt{font-size:15px;font-weight:700;flex-shrink:0;}
 .pay-ic{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .share-date-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:0 4px;flex-wrap:wrap;}
-.share-date-inp{font-size:13px;padding:6px 10px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label);font-family:inherit;outline:none;cursor:pointer;}
+.share-date-inp{font-size:13px;padding:6px 10px;border:1px solid var(--sep2);border-radius:8px;background-color:var(--card);color:var(--label);font-family:inherit;outline:none;cursor:pointer;}
 .share-date-inp:hover{border-color:var(--label3);}
 .share-date-inp:focus{border-color:var(--blue);}
 .share-date-sep{color:var(--label3);font-size:13px;}
@@ -321,7 +321,7 @@ svg{display:block;flex-shrink:0;}
         <button class="tab" id="dTSettle" onclick="dSetTab('settle')">공유</button>
       </div>
       <div style="margin-bottom:14px;">
-        <input type="date" id="meetingDateInp" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 10px;font-size:13px;background:var(--card);color:var(--label);outline:none;cursor:pointer;font-family:inherit;" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/>
+        <input type="date" id="meetingDateInp" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 10px;font-size:13px;background-color:var(--card);color:var(--label);outline:none;cursor:pointer;font-family:inherit;" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/>
       </div>
       <div class="people-wrap">
         <div class="sec-label-row">
@@ -403,8 +403,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.12';
-const BUILD_TIME='2026-05-30 00:11';
+const APP_VERSION='v1.13';
+const BUILD_TIME='2026-05-30 00:15';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -676,7 +676,7 @@ function renderMobileBody(){
     el.innerHTML=html;return;
   }
   // input tab
-  let html=`<div class="mob-section" style="margin-bottom:12px;padding:12px 16px;"><input type="date" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 11px;font-size:13px;background:var(--bg);color:var(--label);outline:none;font-family:inherit;" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/></div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">참여자</span><button class="mob-clear-btn" onclick="clearAll()">전체 삭제</button></div><div class="mob-pin-wrap"><div class="mob-pin-row"><input id="mPInp" placeholder="홍길동, 홍길순, 아무개"/><button class="mob-add-btn" onclick="mFlush()">추가</button></div><div class="mob-hint">쉼표(,)로 구분하면 여러 명을 한 번에 추가할 수 있어요</div></div>`;
+  let html=`<div class="mob-section" style="margin-bottom:12px;padding:12px 16px;"><input type="date" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 11px;font-size:13px;background-color:var(--bg);color:var(--label);outline:none;font-family:inherit;" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/></div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">참여자</span><button class="mob-clear-btn" onclick="clearAll()">전체 삭제</button></div><div class="mob-pin-wrap"><div class="mob-pin-row"><input id="mPInp" placeholder="홍길동, 홍길순, 아무개"/><button class="mob-add-btn" onclick="mFlush()">추가</button></div><div class="mob-hint">쉼표(,)로 구분하면 여러 명을 한 번에 추가할 수 있어요</div></div>`;
   if(people.length){html+=`<div class="mob-pills">${people.map(p=>`<span class="pill">${e(p)}<button class="pill-x" onclick="removePerson(${ja(p)})">${svgX}</button></span>`).join('')}</div>`;}else{html+=`<div class="mob-empty-pills">이름을 입력하세요</div>`;}
   html+=`</div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">지출</span><button class="mob-clear-btn" onclick="clearAllItems()">전체 삭제</button></div><div id="mItemRows">${items.map(it=>`<div class="mob-item-row${it.id===selectedId?' sel':''}" onclick="selectItemMob(${it.id})"><div class="mob-item-dot"></div><div class="mob-item-info"><div class="mob-item-name">${e(it.name)||'(이름 없음)'}</div><div class="mob-item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="mob-item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('')}</div><div class="mob-add-item-row" onclick="addItem()"><div class="mob-add-ic">+</div><span class="mob-add-txt">지출 추가</span></div></div>`;
   el.innerHTML=html;mSetupInput();updateTotals();
