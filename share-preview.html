@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>이미지 공유 디자인 시안 — 더치페이</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR",sans-serif;background:#f5f5f7;color:#1d1d1f;padding:40px 20px;line-height:1.4;}
+.wrap{max-width:1400px;margin:0 auto;}
+.page-title{font-size:28px;font-weight:700;margin-bottom:8px;}
+.page-sub{font-size:14px;color:#6e6e73;margin-bottom:40px;}
+.designs{display:grid;gap:24px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));}
+.design{display:flex;flex-direction:column;}
+.design-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+.design-desc{font-size:13px;color:#6e6e73;margin-bottom:16px;}
+.canvas-wrap{background:#fff;border:1px solid #e5e5ea;border-radius:12px;padding:20px;}
+
+/* ===== 시안 1: 노트 ===== */
+.c1{background:#FBF9F4;border-radius:8px;padding:36px 28px;color:#1a1a1a;font-family:-apple-system,"Noto Sans KR",sans-serif;}
+.c1-hdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid #d4cfc4;}
+.c1-brand{font-size:11px;font-weight:700;letter-spacing:3px;color:#8e8a7e;}
+.c1-date{font-size:12px;color:#8e8a7e;}
+.c1-total-label{font-size:11px;color:#8e8a7e;letter-spacing:2px;margin-bottom:6px;}
+.c1-total{font-size:44px;font-weight:700;letter-spacing:-1.5px;line-height:1;margin-bottom:32px;}
+.c1-section{font-size:11px;color:#8e8a7e;letter-spacing:1.5px;margin-bottom:8px;}
+.c1-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;font-size:14px;}
+.c1-row+.c1-row{border-top:1px dashed #d4cfc4;}
+.c1-row-l{color:#3a3a3a;}
+.c1-row-r{font-weight:600;font-variant-numeric:tabular-nums;}
+.c1-arrow{color:#a8a499;margin:0 8px;font-weight:300;}
+.c1-items{margin-top:24px;}
+.c1-item{display:flex;justify-content:space-between;padding:7px 0;font-size:12px;color:#6a6a6a;}
+.c1-foot{margin-top:24px;padding-top:14px;border-top:1px solid #d4cfc4;text-align:center;font-size:10px;color:#a8a499;letter-spacing:2px;}
+
+/* ===== 시안 2: 토스 카드 ===== */
+.c2{background:#f5f5f7;border-radius:18px;padding:18px;font-family:-apple-system,"Noto Sans KR",sans-serif;}
+.c2-hdr-card{background:linear-gradient(135deg,#3182f6 0%,#1d6dee 100%);border-radius:18px;padding:24px;color:white;margin-bottom:12px;}
+.c2-hdr-label{font-size:12px;font-weight:500;opacity:.85;margin-bottom:6px;}
+.c2-hdr-date{font-size:13px;opacity:.92;margin-bottom:16px;}
+.c2-hdr-total{font-size:34px;font-weight:800;letter-spacing:-1px;}
+.c2-section{font-size:13px;font-weight:700;color:#1a1a1a;margin:14px 4px 8px;}
+.c2-card{background:white;border-radius:16px;padding:14px 18px;margin-bottom:8px;}
+.c2-row{display:flex;align-items:center;padding:8px 0;gap:10px;font-size:14px;}
+.c2-row+.c2-row{border-top:1px solid #f4f4f7;}
+.c2-row-from{color:#4a4a4a;font-weight:500;}
+.c2-arr{background:#eaf2ff;color:#3182f6;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700;}
+.c2-row-to{color:#1a1a1a;font-weight:600;flex:1;}
+.c2-row-amt{font-weight:700;color:#1a1a1a;font-variant-numeric:tabular-nums;}
+.c2-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:13px;}
+.c2-item+.c2-item{border-top:1px solid #f4f4f7;}
+.c2-item-amt{font-weight:700;font-variant-numeric:tabular-nums;}
+.c2-foot{text-align:center;font-size:11px;color:#8e8e93;margin-top:14px;}
+
+/* ===== 시안 3: 영수증 ===== */
+.c3-stage{background:#f5f5f7;padding:24px 12px;border-radius:12px;}
+.c3{background:white;max-width:320px;margin:0 auto;padding:26px 22px;font-family:"Noto Sans KR","SF Mono",monospace,-apple-system,sans-serif;color:#1a1a1a;box-shadow:0 4px 16px rgba(0,0,0,.08);border-radius:4px;}
+.c3-hdr{text-align:center;padding-bottom:14px;border-bottom:2px dashed #d4d4d4;}
+.c3-brand{font-size:13px;font-weight:800;letter-spacing:4px;margin-bottom:6px;font-family:"SF Mono",monospace;}
+.c3-sub{font-size:10px;color:#888;letter-spacing:2px;font-family:"SF Mono",monospace;}
+.c3-date{text-align:center;font-size:11px;color:#555;padding:12px 0;border-bottom:1px dashed #d4d4d4;font-family:"SF Mono",monospace;}
+.c3-total-block{text-align:center;padding:20px 0;border-bottom:2px dashed #d4d4d4;}
+.c3-total-label{font-size:10px;letter-spacing:3px;color:#888;margin-bottom:8px;font-family:"SF Mono",monospace;}
+.c3-total{font-size:30px;font-weight:800;letter-spacing:-0.5px;}
+.c3-section{font-size:10px;letter-spacing:3px;color:#888;padding:12px 0 6px;text-align:center;font-family:"SF Mono",monospace;}
+.c3-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;}
+.c3-row-l{color:#333;}
+.c3-row-r{font-weight:700;font-variant-numeric:tabular-nums;font-family:"SF Mono",monospace;}
+.c3-divider{border-top:1px dashed #d4d4d4;margin:4px 0;}
+.c3-foot{text-align:center;font-size:10px;color:#888;margin-top:16px;padding-top:12px;border-top:2px dashed #d4d4d4;letter-spacing:2px;font-family:"SF Mono",monospace;}
+.c3-foot-star{letter-spacing:6px;margin-bottom:6px;}
+
+@media (max-width:740px){.designs{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="page-title">이미지 공유 — 디자인 시안 3개</h1>
+  <p class="page-sub">동일한 정산 데이터(301,000원 · 4명 · 3건)로 3가지 스타일 렌더링. 마음에 드는 번호를 알려주세요.</p>
+
+  <div class="designs">
+
+    <!-- 시안 1: 노트 -->
+    <div class="design">
+      <div class="design-title">시안 1 — 노트</div>
+      <div class="design-desc">따뜻한 종이 톤. 정갈한 타이포 + 잉크 라인.</div>
+      <div class="canvas-wrap">
+        <div class="c1">
+          <div class="c1-hdr">
+            <span class="c1-brand">DUTCH PAY</span>
+            <span class="c1-date">2026. 05. 23.</span>
+          </div>
+          <div class="c1-total-label">TOTAL</div>
+          <div class="c1-total">301,000원</div>
+
+          <div class="c1-section">송금</div>
+          <div class="c1-row"><span class="c1-row-l">최원석<span class="c1-arrow">→</span>조상현</span><span class="c1-row-r">76,583원</span></div>
+          <div class="c1-row"><span class="c1-row-l">이영환<span class="c1-arrow">→</span>조상현</span><span class="c1-row-r">76,583원</span></div>
+          <div class="c1-row"><span class="c1-row-l">남수희<span class="c1-arrow">→</span>조상현</span><span class="c1-row-r">55,250원</span></div>
+          <div class="c1-row"><span class="c1-row-l">최지인<span class="c1-arrow">→</span>조상현</span><span class="c1-row-r">16,000원</span></div>
+
+          <div class="c1-items">
+            <div class="c1-section">결제 내역</div>
+            <div class="c1-item"><span>청불천막집포차 신논현점</span><span>64,000원</span></div>
+            <div class="c1-item"><span>속초오징어시장 논현점</span><span>157,000원</span></div>
+            <div class="c1-item"><span>축제노래방</span><span>80,000원</span></div>
+          </div>
+
+          <div class="c1-foot">DUTCH PAY · APP</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 시안 2: 토스 카드 -->
+    <div class="design">
+      <div class="design-title">시안 2 — 토스 카드</div>
+      <div class="design-desc">친근한 컬러 헤더 + 흰 카드. 큰 숫자, 명확한 정보 위계.</div>
+      <div class="canvas-wrap">
+        <div class="c2">
+          <div class="c2-hdr-card">
+            <div class="c2-hdr-label">총 정산 금액</div>
+            <div class="c2-hdr-date">2026. 05. 23.</div>
+            <div class="c2-hdr-total">301,000원</div>
+          </div>
+
+          <div class="c2-section">이렇게 송금해주세요</div>
+          <div class="c2-card">
+            <div class="c2-row"><span class="c2-row-from">최원석</span><span class="c2-arr">송금</span><span class="c2-row-to">조상현</span><span class="c2-row-amt">76,583원</span></div>
+            <div class="c2-row"><span class="c2-row-from">이영환</span><span class="c2-arr">송금</span><span class="c2-row-to">조상현</span><span class="c2-row-amt">76,583원</span></div>
+            <div class="c2-row"><span class="c2-row-from">남수희</span><span class="c2-arr">송금</span><span class="c2-row-to">조상현</span><span class="c2-row-amt">55,250원</span></div>
+            <div class="c2-row"><span class="c2-row-from">최지인</span><span class="c2-arr">송금</span><span class="c2-row-to">조상현</span><span class="c2-row-amt">16,000원</span></div>
+          </div>
+
+          <div class="c2-section">결제 내역</div>
+          <div class="c2-card">
+            <div class="c2-item"><span>🍻 청불천막집포차 신논현점</span><span class="c2-item-amt">64,000원</span></div>
+            <div class="c2-item"><span>🍴 속초오징어시장 논현점</span><span class="c2-item-amt">157,000원</span></div>
+            <div class="c2-item"><span>🎤 축제노래방</span><span class="c2-item-amt">80,000원</span></div>
+          </div>
+
+          <div class="c2-foot">더치페이 · dutchpay.app</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 시안 3: 영수증 -->
+    <div class="design">
+      <div class="design-title">시안 3 — 영수증</div>
+      <div class="design-desc">실제 영수증 메타포. 점선 + 모노스페이스로 재미 + 명확.</div>
+      <div class="canvas-wrap">
+        <div class="c3-stage">
+          <div class="c3">
+            <div class="c3-hdr">
+              <div class="c3-brand">DUTCH PAY</div>
+              <div class="c3-sub">★ R E C E I P T ★</div>
+            </div>
+            <div class="c3-date">2026. 05. 23.</div>
+
+            <div class="c3-total-block">
+              <div class="c3-total-label">T O T A L</div>
+              <div class="c3-total">301,000원</div>
+            </div>
+
+            <div class="c3-section">─ 송 금 ─</div>
+            <div class="c3-row"><span class="c3-row-l">최원석 → 조상현</span><span class="c3-row-r">76,583</span></div>
+            <div class="c3-row"><span class="c3-row-l">이영환 → 조상현</span><span class="c3-row-r">76,583</span></div>
+            <div class="c3-row"><span class="c3-row-l">남수희 → 조상현</span><span class="c3-row-r">55,250</span></div>
+            <div class="c3-row"><span class="c3-row-l">최지인 → 조상현</span><span class="c3-row-r">16,000</span></div>
+
+            <div class="c3-divider"></div>
+
+            <div class="c3-section">─ 결 제 내 역 ─</div>
+            <div class="c3-row"><span class="c3-row-l">청불천막집포차 신논현점</span><span class="c3-row-r">64,000</span></div>
+            <div class="c3-row"><span class="c3-row-l">속초오징어시장 논현점</span><span class="c3-row-r">157,000</span></div>
+            <div class="c3-row"><span class="c3-row-l">축제노래방</span><span class="c3-row-r">80,000</span></div>
+
+            <div class="c3-foot">
+              <div class="c3-foot-star">★ ★ ★</div>
+              <div>THANK YOU</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
+</content>
+</invoke>
