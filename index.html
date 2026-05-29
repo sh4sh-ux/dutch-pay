@@ -309,8 +309,7 @@ svg{display:block;flex-shrink:0;}
     <div class="left-top">
       <div class="app-label">Dutch Pay <span class="app-version" id="appVersionD"></span></div>
       <div class="app-title">더치페이</div>
-      <div style="margin-bottom:16px;display:flex;gap:6px;align-items:center;justify-content:space-between">
-        <button class="group-switcher" onclick="showGroupManager(this,event)"><span class="group-switcher-name">기본 정산</span><span class="group-switcher-arrow">▼</span></button>
+      <div style="margin-bottom:16px;display:flex;gap:6px;align-items:center;justify-content:flex-end">
         <button class="data-menu-btn" onclick="showDataMenu(this,event)"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
       </div>
       <div class="tab-row">
@@ -318,9 +317,8 @@ svg{display:block;flex-shrink:0;}
         <button class="tab" id="dTResult" onclick="dSetTab('result')">내역</button>
         <button class="tab" id="dTSettle" onclick="dSetTab('settle')">공유</button>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-        <span class="sec-label" style="margin-bottom:0;flex-shrink:0">모임 일자</span>
-        <input type="date" id="meetingDateInp" style="flex:1;border:1px solid var(--sep2);border-radius:var(--rs);padding:6px 10px;font-size:13px;background:var(--card);color:var(--label);outline:none;cursor:pointer;" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/>
+      <div style="margin-bottom:14px;">
+        <input type="date" id="meetingDateInp" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 10px;font-size:13px;background:var(--card);color:var(--label);outline:none;cursor:pointer;font-family:inherit;" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/>
       </div>
       <div class="people-wrap">
         <div class="sec-label-row">
@@ -383,8 +381,7 @@ svg{display:block;flex-shrink:0;}
       <span class="mob-title">더치페이<span class="app-version" id="appVersionM" style="font-size:11px;color:var(--label3);margin-left:6px;font-weight:400"></span></span>
       <span id="mTotal" style="font-size:18px;font-weight:700">0원</span>
     </div>
-    <div style="margin-bottom:14px;display:flex;gap:6px;align-items:center;justify-content:space-between">
-      <button class="group-switcher" onclick="showGroupManager(this,event)"><span class="group-switcher-name">기본 정산</span><span class="group-switcher-arrow">▼</span></button>
+    <div style="margin-bottom:14px;display:flex;gap:6px;align-items:center;justify-content:flex-end">
       <button class="data-menu-btn" onclick="showDataMenu(this,event)"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
     </div>
     <div class="mob-tabs">
@@ -403,8 +400,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.10';
-const BUILD_TIME='2026-05-29 23:44';
+const APP_VERSION='v1.11';
+const BUILD_TIME='2026-05-30 00:01';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -449,7 +446,7 @@ function showDataMenu(anchorEl,ev){
   const pop=document.createElement('div');pop.className='data-pop';
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결하기';
-  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">현재 그룹 CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version">더치페이 ${APP_VERSION}</div>`;
+  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version">더치페이 ${APP_VERSION}</div>`;
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
       if(dbxGetToken()){syncFromDropbox();toast('Dropbox 동기화 중...');}
       else{window.open('history.html','_blank');toast('기록 보관함에서 Dropbox를 먼저 연결해주세요');}
@@ -676,7 +673,7 @@ function renderMobileBody(){
     el.innerHTML=html;return;
   }
   // input tab
-  let html=`<div class="mob-section" style="margin-bottom:12px;padding:12px 16px;display:flex;align-items:center;gap:12px"><span class="mob-section-title" style="flex-shrink:0">모임 일자</span><input type="date" style="flex:1;min-width:0;border:1px solid var(--sep2);border-radius:var(--rs);padding:7px 10px;font-size:13px;background:var(--bg);color:var(--label);outline:none;" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/></div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">참여자</span><button class="mob-clear-btn" onclick="clearAll()">전체 삭제</button></div><div class="mob-pin-wrap"><div class="mob-pin-row"><input id="mPInp" placeholder="홍길동, 홍길순, 아무개"/><button class="mob-add-btn" onclick="mFlush()">추가</button></div><div class="mob-hint">쉼표(,)로 구분하면 여러 명을 한 번에 추가할 수 있어요</div></div>`;
+  let html=`<div class="mob-section" style="margin-bottom:12px;padding:12px 16px;"><input type="date" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 11px;font-size:13px;background:var(--bg);color:var(--label);outline:none;font-family:inherit;" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/></div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">참여자</span><button class="mob-clear-btn" onclick="clearAll()">전체 삭제</button></div><div class="mob-pin-wrap"><div class="mob-pin-row"><input id="mPInp" placeholder="홍길동, 홍길순, 아무개"/><button class="mob-add-btn" onclick="mFlush()">추가</button></div><div class="mob-hint">쉼표(,)로 구분하면 여러 명을 한 번에 추가할 수 있어요</div></div>`;
   if(people.length){html+=`<div class="mob-pills">${people.map(p=>`<span class="pill">${e(p)}<button class="pill-x" onclick="removePerson(${ja(p)})">${svgX}</button></span>`).join('')}</div>`;}else{html+=`<div class="mob-empty-pills">이름을 입력하세요</div>`;}
   html+=`</div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">지출</span><button class="mob-clear-btn" onclick="clearAllItems()">전체 삭제</button></div><div id="mItemRows">${items.map(it=>`<div class="mob-item-row${it.id===selectedId?' sel':''}" onclick="selectItemMob(${it.id})"><div class="mob-item-dot"></div><div class="mob-item-info"><div class="mob-item-name">${e(it.name)||'(이름 없음)'}</div><div class="mob-item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="mob-item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('')}</div><div class="mob-add-item-row" onclick="addItem()"><div class="mob-add-ic">+</div><span class="mob-add-txt">지출 추가</span></div></div>`;
   el.innerHTML=html;mSetupInput();updateTotals();
