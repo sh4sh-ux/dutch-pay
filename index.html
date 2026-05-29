@@ -355,6 +355,7 @@ svg{display:block;flex-shrink:0;}
         <span class="foot-lbl">합계</span>
         <span class="foot-val" id="dTotal">0원</span>
       </div>
+      <div id="dbxSyncBadge" style="font-size:11px;color:var(--label3);text-align:right;margin-top:5px;min-height:14px"></div>
     </div>
   </div>
   <div class="right">
@@ -437,8 +438,14 @@ function showDataMenu(anchorEl,ev){
   if(ev){ev.stopPropagation();ev.preventDefault();}
   document.querySelectorAll('.icon-pop,.rounder-pop,.group-pop,.data-pop').forEach(el=>el.remove());
   const pop=document.createElement('div');pop.className='data-pop';
-  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">현재 그룹 CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version">더치페이 ${APP_VERSION}</div>`;
-  pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='openHistory'){window.open('history.html','_blank');pop.remove();}
+  const dbxConnected=!!dbxGetToken();
+  const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결하기';
+  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">현재 그룹 CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version">더치페이 ${APP_VERSION}</div>`;
+  pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
+      if(dbxGetToken()){syncFromDropbox();toast('Dropbox 동기화 중...');}
+      else{window.open('history.html','_blank');toast('기록 보관함에서 Dropbox를 먼저 연결해주세요');}
+      pop.remove();
+    }else if(action==='openHistory'){window.open('history.html','_blank');pop.remove();}
     else if(action==='exportCsv')exportCurrentGroupCsv();else if(action==='export')exportData();else if(action==='import')importData();else if(action==='reset')resetAllData();pop.remove();});
   document.body.appendChild(pop);_positionPopover(pop,anchorEl,true);
   setTimeout(()=>{const h=(e3)=>{if(!pop.contains(e3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=(e3)=>{if(e3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);
@@ -466,7 +473,62 @@ function openInExternalBrowser(){const t=detectInAppBrowser();const url=location
 const STORAGE_KEY='dutchpay_v1';
 const HISTORY_KEY='dutchpay_history';
 
-function saveState(){try{syncCurrentToGroup();localStorage.setItem(STORAGE_KEY,JSON.stringify({version:2,groups,currentGroupId}));}catch(e){}}
+// ── Dropbox 자동 동기화 ──
+const DBX_MAIN_FILE='/dutch-pay_data.json';
+const DBX_LASTSYNC_MAIN='dutchpay_dbx_lastsync_main';
+// history.html과 동일한 localStorage 키 공유 (같은 도메인 = 같은 계정)
+function dbxGetToken(){return localStorage.getItem('dutchpay_dbx_token');}
+async function _dbxRefreshToken(){
+  const refresh=localStorage.getItem('dutchpay_dbx_refresh');
+  const appKey=localStorage.getItem('dutchpay_dbx_appkey');
+  if(!refresh||!appKey)return null;
+  try{const res=await fetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh,client_id:appKey})});const data=await res.json();if(data.access_token){localStorage.setItem('dutchpay_dbx_token',data.access_token);return data.access_token;}return null;}catch(e){return null;}
+}
+async function _dbxUpload(token,path,content){
+  const res=await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':JSON.stringify({path,mode:'overwrite',autorename:false,mute:true})},body:content});
+  if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxUpload(t,path,content);}
+  return res.ok;
+}
+async function _dbxDownload(token,path){
+  const res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':JSON.stringify({path})}});
+  if(res.status===409)return null;if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownload(t,path);return null;}if(!res.ok)return null;
+  try{return JSON.parse(await res.text());}catch(e){return null;}
+}
+let _syncTimer=null,_syncing=false;
+function _scheduleSyncToDropbox(){
+  if(!dbxGetToken())return;
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(()=>syncToDropbox(),3000);
+}
+async function syncToDropbox(){
+  if(_syncing||!dbxGetToken())return;
+  _syncing=true;
+  try{
+    syncCurrentToGroup();
+    const ok=await _dbxUpload(dbxGetToken(),DBX_MAIN_FILE,JSON.stringify({version:2,groups,currentGroupId,syncedAt:new Date().toISOString()}));
+    if(ok){localStorage.setItem(DBX_LASTSYNC_MAIN,new Date().toISOString());_updateSyncBadge();}
+  }catch(e){}finally{_syncing=false;}
+}
+async function syncFromDropbox(){
+  const token=dbxGetToken();if(!token)return;
+  try{
+    const remote=await _dbxDownload(token,DBX_MAIN_FILE);
+    if(!remote||!Array.isArray(remote.groups)||!remote.groups.length){await syncToDropbox();return;}
+    const localIds=new Set(groups.map(g=>g.id));
+    let changed=false;
+    remote.groups.forEach(rg=>{if(!localIds.has(rg.id)){groups.push(rg);changed=true;}});
+    if(changed){saveState();renderAll();toast(`Dropbox에서 ${remote.groups.filter(rg=>!localIds.has(rg.id)).length}개 그룹을 불러왔어요`,{type:'success'});}
+    await syncToDropbox();
+  }catch(e){}
+}
+function _updateSyncBadge(){
+  const el=document.getElementById('dbxSyncBadge');if(!el)return;
+  const last=localStorage.getItem(DBX_LASTSYNC_MAIN);
+  if(!last||!dbxGetToken()){el.textContent='';return;}
+  try{const d=new Date(last);el.textContent=`☁ ${d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 동기화됨`;}catch(e){}
+}
+
+function saveState(){try{syncCurrentToGroup();localStorage.setItem(STORAGE_KEY,JSON.stringify({version:2,groups,currentGroupId}));_scheduleSyncToDropbox();}catch(e){}}
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if(d.version===2&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
 function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?'))return;const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
 
@@ -743,6 +805,8 @@ async function shareSettleImage(){
 loadState();
 renderAll();
 (()=>{const v=document.getElementById('appVersionD');if(v)v.textContent=APP_VERSION;})();
+_updateSyncBadge();
+if(dbxGetToken())syncFromDropbox();
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{try{navigator.serviceWorker.register('sw.js').catch(()=>{});}catch(e){}});}
 </script>
 </body>
