@@ -313,6 +313,10 @@ svg{display:block;flex-shrink:0;}
         <button class="tab" id="dTResult" onclick="dSetTab('result')">내역</button>
         <button class="tab" id="dTSettle" onclick="dSetTab('settle')">공유</button>
       </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+        <span class="sec-label" style="margin-bottom:0;flex-shrink:0">모임 일자</span>
+        <input type="date" id="meetingDateInp" style="flex:1;border:1px solid var(--sep2);border-radius:var(--rs);padding:6px 10px;font-size:13px;background:var(--card);color:var(--label);outline:none;cursor:pointer;" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/>
+      </div>
       <div class="people-wrap">
         <div class="sec-label-row">
           <span class="sec-label">참여자</span>
@@ -466,6 +470,7 @@ function saveState(){try{syncCurrentToGroup();localStorage.setItem(STORAGE_KEY,J
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if(d.version===2&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
 function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?'))return;const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
 
+function updateMeetingDate(val){settleDateStart=val||new Date().toISOString().slice(0,10);saveState();}
 function fmtDate(iso){if(!iso)return '';const[y,m,d]=iso.split('-');return `${y}.${m}.${d}`;}
 function getSettleDateStr(){const s=fmtDate(settleDateStart);if(settleDateEnd&&settleDateEnd!==settleDateStart)return `${s} ~ ${fmtDate(settleDateEnd)}`;return s;}
 function updateSettleDate(which,val){if(which==='start')settleDateStart=val||new Date().toISOString().slice(0,10);else settleDateEnd=val||null;if(settleDateEnd&&settleDateEnd<settleDateStart){const t=settleDateEnd;settleDateEnd=settleDateStart;settleDateStart=t;}saveState();renderDesktopRight();renderMobileBody();}
@@ -553,7 +558,7 @@ function dSetTab(t){dTab=t;['input','result','settle'].forEach(n=>{document.getE
 function mSetTab(t){mTab=t;['input','result','settle'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n===t?' on':'');});renderMobileBody();}
 function cap(s){return s[0].toUpperCase()+s.slice(1);}
 
-function renderAll(){renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();saveState();}
+function renderAll(){renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();const di=document.getElementById('meetingDateInp');if(di)di.value=settleDateStart;saveState();}
 
 function renderPills(){const el=document.getElementById('dPills');if(!people.length){el.innerHTML='<span class="pills-empty">이름을 입력하세요</span>';return;}el.innerHTML=people.map(p=>`<span class="pill">${e(p)}<button class="pill-x" onclick="removePerson(${ja(p)})">${svgX}</button></span>`).join('');}
 
@@ -590,7 +595,7 @@ function renderMobileBody(){
     el.innerHTML=html;return;
   }
   // input tab
-  let html=`<div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">참여자</span><button class="mob-clear-btn" onclick="clearAll()">전체 삭제</button></div><div class="mob-pin-wrap"><div class="mob-pin-row"><input id="mPInp" placeholder="홍길동, 홍길순, 아무개"/><button class="mob-add-btn" onclick="mFlush()">추가</button></div><div class="mob-hint">쉼표(,)로 구분하면 여러 명을 한 번에 추가할 수 있어요</div></div>`;
+  let html=`<div class="mob-section" style="margin-bottom:12px"><div class="mob-section-hd"><span class="mob-section-title">모임 일자</span></div><div style="padding:12px 16px"><input type="date" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 12px;font-size:14px;background:var(--bg);color:var(--label);outline:none;" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/></div></div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">참여자</span><button class="mob-clear-btn" onclick="clearAll()">전체 삭제</button></div><div class="mob-pin-wrap"><div class="mob-pin-row"><input id="mPInp" placeholder="홍길동, 홍길순, 아무개"/><button class="mob-add-btn" onclick="mFlush()">추가</button></div><div class="mob-hint">쉼표(,)로 구분하면 여러 명을 한 번에 추가할 수 있어요</div></div>`;
   if(people.length){html+=`<div class="mob-pills">${people.map(p=>`<span class="pill">${e(p)}<button class="pill-x" onclick="removePerson(${ja(p)})">${svgX}</button></span>`).join('')}</div>`;}else{html+=`<div class="mob-empty-pills">이름을 입력하세요</div>`;}
   html+=`</div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">지출</span><button class="mob-clear-btn" onclick="clearAllItems()">전체 삭제</button></div><div id="mItemRows">${items.map(it=>`<div class="mob-item-row${it.id===selectedId?' sel':''}" onclick="selectItemMob(${it.id})"><div class="mob-item-dot"></div><div class="mob-item-info"><div class="mob-item-name">${e(it.name)||'(이름 없음)'}</div><div class="mob-item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="mob-item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('')}</div><div class="mob-add-item-row" onclick="addItem()"><div class="mob-add-ic">+</div><span class="mob-add-txt">지출 추가</span></div></div>`;
   el.innerHTML=html;mSetupInput();updateTotals();
@@ -689,6 +694,7 @@ function saveToHistory(){
     dateEnd:settleDateEnd,
     people:[...people],
     total,
+    items:JSON.parse(JSON.stringify(items)),
     txns
   };
   try{

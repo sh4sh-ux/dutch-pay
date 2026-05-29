@@ -38,20 +38,33 @@ a{color:var(--blue);text-decoration:none;}
 /* Record cards */
 .record-list{display:flex;flex-direction:column;gap:10px;}
 .record-card{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;}
-.rc-hd{padding:14px 16px;border-bottom:1px solid var(--sep);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.rc-hd{padding:14px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;cursor:pointer;transition:background .12s;}
+.rc-hd:hover{background:var(--fill2);}
 .rc-meta{flex:1;min-width:0;}
 .rc-date{font-size:11px;color:var(--label3);margin-bottom:3px;}
 .rc-name{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
 .rc-people{font-size:12px;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rc-total-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.rc-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
 .rc-total{font-size:18px;font-weight:700;white-space:nowrap;}
 .rc-total.neg{color:var(--red);}
-.rc-txns{padding:8px 16px;}
-.rc-txn-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sep);font-size:13px;}
+.rc-chevron{font-size:11px;color:var(--label3);transition:transform .2s;}
+.rc-chevron.open{transform:rotate(180deg);}
+.rc-body{border-top:1px solid var(--sep);display:none;}
+.rc-body.open{display:block;}
+.rc-section-title{font-size:11px;font-weight:600;color:var(--label2);letter-spacing:.3px;text-transform:uppercase;padding:10px 16px 6px;}
+.rc-item-row{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--sep);gap:10px;}
+.rc-item-row:last-child{border-bottom:none;}
+.rc-item-info{flex:1;min-width:0;}
+.rc-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rc-item-meta{font-size:11px;color:var(--label3);margin-top:1px;}
+.rc-item-amt{font-size:13px;font-weight:600;flex-shrink:0;}
+.rc-item-amt.neg{color:var(--red);}
+.rc-txns{padding:0 0 4px;}
+.rc-txn-row{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--sep);font-size:13px;}
 .rc-txn-row:last-child{border-bottom:none;}
 .rc-txn-people{display:flex;align-items:center;gap:6px;color:var(--label);}
 .rc-txn-amt{font-weight:600;flex-shrink:0;}
-.rc-no-txn{font-size:13px;color:var(--green);padding:10px 0;text-align:center;}
+.rc-no-txn{font-size:13px;color:var(--green);padding:10px 16px;text-align:center;}
 .rc-foot{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--fill2);border-top:1px solid var(--sep);}
 .rc-saved-at{font-size:11px;color:var(--label3);}
 .rc-del-btn{font-size:12px;color:var(--red);border:none;background:transparent;font-weight:500;padding:0;}
@@ -186,6 +199,14 @@ function deleteRecord(id){
 }
 
 // ── 렌더 ──
+function toggleCard(id){
+  const body=document.getElementById('rcb_'+id);
+  const chev=document.getElementById('rcc_'+id);
+  if(!body)return;
+  const open=body.classList.toggle('open');
+  if(chev)chev.className='rc-chevron'+(open?' open':'');
+}
+
 function render(){
   const records=loadHistory();
   const el=document.getElementById('recordList');
@@ -207,33 +228,56 @@ function render(){
     return;
   }
   el.innerHTML=`<div class="record-list">${records.map(r=>{
+    const sid=r.id.replace(/[^a-zA-Z0-9]/g,'');
     const dateStr=r.dateEnd&&r.dateEnd!==r.dateStart
       ?`${fmtDateShort(r.dateStart)} ~ ${fmtDateShort(r.dateEnd)}`
       :fmtDate(r.dateStart);
     const people=(r.people||[]).join(' · ');
     const txns=r.txns||[];
+    const rcItems=r.items||[];
+
+    // 품목 내역
+    const itemsHtml=rcItems.length
+      ?`<div class="rc-section-title">품목</div>`+rcItems.filter(it=>+it.amount!==0).map(it=>{
+          const mems=(it.members&&it.members.length)?it.members.join(', '):(r.people||[]).join(', ');
+          const isNegIt=+it.amount<0;
+          return `<div class="rc-item-row">
+            <div class="rc-item-info">
+              <div class="rc-item-name">${e(it.name||'(이름 없음)')}</div>
+              <div class="rc-item-meta">${e(it.payer||'')} 결제 · ${e(mems)}</div>
+            </div>
+            <span class="rc-item-amt${isNegIt?' neg':''}">${fmt(+it.amount)}원</span>
+          </div>`;
+        }).join('')
+      :'';
+
+    // 송금 내역
     const txnHtml=txns.length
-      ?txns.map(t=>`<div class="rc-txn-row">
+      ?`<div class="rc-section-title">송금</div>`+`<div class="rc-txns">`+txns.map(t=>`<div class="rc-txn-row">
           <div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrow}<span>${e(t.to)}</span></div>
           <span class="rc-txn-amt">${fmt(t.amt)}원</span>
-        </div>`).join('')
+        </div>`).join('')+`</div>`
       :`<div class="rc-no-txn">모두 정산 완료 ✓</div>`;
+
     const isNeg=r.total<0;
     return `<div class="record-card">
-      <div class="rc-hd">
+      <div class="rc-hd" onclick="toggleCard('${sid}')">
         <div class="rc-meta">
           <div class="rc-date">${e(dateStr)}</div>
           <div class="rc-name">${e(r.groupName)||'더치페이 정산'}</div>
           <div class="rc-people">${e(people)}</div>
         </div>
-        <div class="rc-total-wrap">
+        <div class="rc-right">
           <div class="rc-total${isNeg?' neg':''}">${fmt(r.total)}원</div>
-          <div style="font-size:11px;color:var(--label3)">${(r.people||[]).length}명</div>
+          <span class="rc-chevron" id="rcc_${sid}">▼</span>
         </div>
       </div>
-      <div class="rc-txns">${txnHtml}</div>
+      <div class="rc-body" id="rcb_${sid}">
+        ${itemsHtml}
+        ${txnHtml}
+      </div>
       <div class="rc-foot">
-        <span class="rc-saved-at">${fmtSavedAt(r.savedAt)} 저장</span>
+        <span class="rc-saved-at">${fmtSavedAt(r.savedAt)} 저장 · ${(r.people||[]).length}명</span>
         <button class="rc-del-btn" onclick="deleteRecord('${e(r.id)}')">삭제</button>
       </div>
     </div>`;
