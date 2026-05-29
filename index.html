@@ -221,10 +221,10 @@ svg{display:block;flex-shrink:0;}
 .group-pop{position:absolute;background:var(--card);border:1px solid var(--sep);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:8px;z-index:200;min-width:300px;max-width:360px;}
 .group-pop-hd{font-size:11px;font-weight:600;color:var(--label3);text-transform:uppercase;padding:6px 8px 8px;}
 .group-list{display:flex;flex-direction:column;gap:4px;max-height:380px;overflow-y:auto;}
-.group-card{display:flex;align-items:stretch;border:1px solid var(--sep);border-radius:10px;overflow:hidden;background:var(--card);transition:all .12s;}
+.group-card{display:flex;flex-direction:column;border:1px solid var(--sep);border-radius:10px;overflow:hidden;background:var(--card);transition:all .12s;}
 .group-card:hover{border-color:var(--sep2);background:var(--fill2);}
 .group-card.on{border-color:var(--blue);background:var(--blue-bg);}
-.group-card-main{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:12px;border:none;background:transparent;cursor:pointer;font-family:inherit;text-align:left;}
+.group-card-main{display:flex;align-items:center;gap:10px;padding:12px;border:none;background:transparent;cursor:pointer;font-family:inherit;text-align:left;width:100%;}
 .group-card-dot{width:8px;height:8px;border-radius:50%;background:var(--sep2);flex-shrink:0;}
 .group-card.on .group-card-dot{background:var(--blue);}
 .group-card-info{flex:1;min-width:0;}
@@ -235,10 +235,14 @@ svg{display:block;flex-shrink:0;}
 .group-card-date{flex-shrink:0;}
 .group-card-amt{font-size:13px;font-weight:700;color:var(--label2);flex-shrink:0;margin-left:8px;}
 .group-card.on .group-card-amt{color:var(--blue-txt);}
-.group-card-acts{display:flex;flex-direction:column;justify-content:center;border-left:1px solid var(--sep);background:rgba(255,255,255,.4);padding:4px;}
-.group-card.on .group-card-acts{border-left-color:rgba(0,113,227,.2);}
-.group-card-act{border:none;background:transparent;color:var(--label3);cursor:pointer;padding:5px 8px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;}
+.group-card-acts{display:flex;border-top:1px solid var(--sep);background:var(--fill2);}
+.group-card.on .group-card-acts{border-top-color:rgba(0,113,227,.2);background:rgba(255,255,255,.5);}
+.group-card-act{flex:1;border:none;background:transparent;color:var(--label2);cursor:pointer;padding:9px 8px;font-size:12px;font-weight:500;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:5px;border-right:1px solid var(--sep);}
+.group-card-act:last-child{border-right:none;}
 .group-card-act:hover{background:var(--card);color:var(--label);}
+.group-card-act.danger{color:var(--red);}
+.group-card-act.danger:hover{background:var(--red-bg);color:var(--red);}
+.group-card.on .group-card-act{border-right-color:rgba(0,113,227,.2);}
 .group-add{display:block;width:100%;text-align:center;border:1px dashed var(--sep2);background:transparent;padding:12px;font-size:13px;cursor:pointer;border-radius:10px;color:var(--green);font-family:inherit;font-weight:600;margin-top:6px;}
 .group-add:hover{background:var(--green-bg);border-color:var(--green);}
 .data-pop{position:absolute;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.15);padding:6px;z-index:200;min-width:220px;}
@@ -398,7 +402,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.04';
+const APP_VERSION='v1.05';
 
 let people=[],items=[],idc=0,selectedId=null;
 let dTab='input',mTab='input';
@@ -425,7 +429,7 @@ function showGroupManager(anchorEl,ev){
   if(ev){ev.stopPropagation();ev.preventDefault();}
   document.querySelectorAll('.icon-pop,.rounder-pop,.group-pop,.data-pop').forEach(el=>el.remove());
   const pop=document.createElement('div');pop.className='group-pop';
-  const cardsHtml=groups.map(g=>{const s=_groupSummary(g);const on=g.id===currentGroupId;return `<div class="group-card${on?' on':''}"><button class="group-card-main" data-action="switch" data-id="${e(g.id)}"><span class="group-card-dot"></span><span class="group-card-info"><span class="group-card-name">${e(g.name)}</span><span class="group-card-meta"><span class="group-card-people">${e(s.peopleText)}</span>${s.dateText?`<span class="group-card-date">${e(s.dateText)}</span>`:''}</span></span><span class="group-card-amt">${s.totalText}</span></button><div class="group-card-acts"><button class="group-card-act" data-action="duplicate" data-id="${e(g.id)}">${svgCopy}</button><button class="group-card-act" data-action="rename" data-id="${e(g.id)}">${svgPencil}</button>${groups.length>1?`<button class="group-card-act" data-action="delete" data-id="${e(g.id)}">${svgTrash}</button>`:''}</div></div>`;}).join('');
+  const cardsHtml=groups.map(g=>{const s=_groupSummary(g);const on=g.id===currentGroupId;return `<div class="group-card${on?' on':''}"><button class="group-card-main" data-action="switch" data-id="${e(g.id)}"><span class="group-card-dot"></span><span class="group-card-info"><span class="group-card-name">${e(g.name)}</span><span class="group-card-meta"><span class="group-card-people">${e(s.peopleText)}</span>${s.dateText?`<span class="group-card-date">${e(s.dateText)}</span>`:''}</span></span><span class="group-card-amt">${s.totalText}</span></button><div class="group-card-acts"><button class="group-card-act" data-action="duplicate" data-id="${e(g.id)}">${svgCopy}<span>복사</span></button><button class="group-card-act" data-action="rename" data-id="${e(g.id)}">${svgPencil}<span>이름</span></button>${groups.length>1?`<button class="group-card-act danger" data-action="delete" data-id="${e(g.id)}">${svgTrash}<span>삭제</span></button>`:''}</div></div>`;}).join('');
   pop.innerHTML=`<div class="group-pop-hd">정산 그룹</div><div class="group-list">${cardsHtml}</div><button class="group-add" data-action="add">＋ 새 그룹</button>`;
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action,id=btn.dataset.id;if(action==='switch'){switchGroup(id);pop.remove();}else if(action==='rename'){const g=groups.find(g=>g.id===id);const newName=prompt('새 이름:',g?g.name:'');if(newName&&newName.trim())renameGroup(id,newName);pop.remove();}else if(action==='delete'){const g=groups.find(g=>g.id===id);if(g&&confirm(`'${g.name}' 그룹을 삭제할까요?`)){deleteGroup(id);}pop.remove();}else if(action==='add'){const name=prompt('새 그룹 이름:','');if(name&&name.trim())createGroup(name.trim());pop.remove();}else if(action==='duplicate'){duplicateGroup(id);pop.remove();}});
   document.body.appendChild(pop);_positionPopover(pop,anchorEl);
