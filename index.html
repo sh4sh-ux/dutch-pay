@@ -474,8 +474,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.20';
-const BUILD_TIME='2026-06-03 14:00';
+const APP_VERSION='v1.21';
+const BUILD_TIME='2026-06-03 15:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1132,7 +1132,7 @@ async function generateSettleCanvas(){
   });
   const iconMap=new Map();for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#0055B8'));}catch(e){iconMap.set(svg,null);}}}
   const W=1080,PAD=42,TOP_PAD=56,cardX=PAD,cardW=W-PAD*2;
-  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=230,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78;
+  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=230,TXN_ROW_H=108,ITEM_ROW_H=172,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78;
   const txnCardH=txns.length?txns.length*TXN_ROW_H:EMPTY_CARD_H;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
   const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;
@@ -1157,7 +1157,7 @@ async function generateSettleCanvas(){
   y=drawSectionLabel('총 지출금액',y);
   drawCard(cardX,y,cardW,TOTAL_CARD_H);
   const totalDividerY=y+130;
-  const totalAmountY=y+TOTAL_CARD_H/4+10;
+  const totalAmountY=y+76;
   {
     const totalText=(total<0?'−':'')+fmt(Math.abs(total))+'원';
     ctx.textBaseline='middle';ctx.textAlign='center';
