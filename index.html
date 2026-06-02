@@ -474,8 +474,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.22';
-const BUILD_TIME='2026-06-03 16:00';
+const APP_VERSION='v1.23';
+const BUILD_TIME='2026-06-03 17:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1137,7 +1137,7 @@ async function generateSettleCanvas(){
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
   const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;
   const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');
-  const FF="-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Helvetica Neue',Arial,sans-serif";
+  const FF="-apple-system,'SF Pro Text','Apple SD Gothic Neo','Helvetica Neue',Arial,sans-serif";
   const setFont=(s,w)=>{ctx.font=`${w||'normal'} ${s}px ${FF}`;};
   const C={bg:'#F4F4F6',card:'#FFFFFF',text:'#111111',muted:'#8E8E93',label:'#666666',line:'#E9E9EC',blue:'#0071E3',blueBg:'#EBF3FF',red:'#E53E3E'};
   const drawCard=(x,y,w,h)=>{ctx.save();ctx.shadowColor='rgba(17,17,17,.035)';ctx.shadowBlur=8;ctx.shadowOffsetY=2;ctx.fillStyle=C.card;roundRectPath(ctx,x,y,w,h,28);ctx.fill();ctx.restore();ctx.strokeStyle=C.line;ctx.lineWidth=1.5;roundRectPath(ctx,x,y,w,h,28);ctx.stroke();};
