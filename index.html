@@ -43,7 +43,7 @@ svg{display:block;flex-shrink:0;}
   .mob-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
   .mob-title{font-size:22px;font-weight:700;letter-spacing:-.4px;}
   .mob-tabs{display:flex;gap:0;}
-  .mob-tab{flex:1;border:none;background:transparent;font-size:14px;font-weight:500;color:var(--label2);padding:10px 0 12px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+  .mob-tab{flex:1;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--label2);padding:10px 0 12px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
   .mob-tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
   .mob-body{padding:16px 16px 100px;}
   .mob-section{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:12px;}
@@ -302,6 +302,74 @@ svg{display:block;flex-shrink:0;}
 .empty-icon{margin-bottom:12px;display:flex;justify-content:center;color:var(--label3);}
 .empty p{font-size:14px;line-height:1.7;}
 .empty-sm{text-align:center;padding:24px 16px;color:var(--label3);font-size:13px;line-height:1.6;}
+
+/* ── 기록 보관함 ── */
+.hist-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;}
+.hist-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--label3);padding:5px 10px;border:1px solid var(--sep);background:var(--fill2);border-radius:20px;white-space:nowrap;}
+.hist-badge.connected{color:var(--green-txt);border-color:var(--green);background:var(--green-bg);}
+.hist-badge.syncing{color:var(--blue-txt);border-color:var(--blue);background:var(--blue-bg);}
+.hist-dbx-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--label2);padding:5px 10px;border:1px solid var(--sep);background:var(--fill2);border-radius:20px;cursor:pointer;white-space:nowrap;}
+.hist-dbx-btn:hover{background:var(--fill);color:var(--label);}
+.record-list{display:flex;flex-direction:column;gap:10px;}
+.record-card{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;}
+.rc-hd{padding:14px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;cursor:pointer;transition:background .12s;}
+.rc-hd:hover{background:var(--fill2);}
+.rc-meta{flex:1;min-width:0;}
+.rc-date{font-size:11px;color:var(--label3);margin-bottom:3px;}
+.rc-name{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
+.rc-people{font-size:12px;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rc-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+.rc-total{font-size:18px;font-weight:700;white-space:nowrap;}
+.rc-total.neg{color:var(--red);}
+.rc-chevron{font-size:11px;color:var(--label3);transition:transform .2s;}
+.rc-chevron.open{transform:rotate(180deg);}
+.rc-body{border-top:1px solid var(--sep);display:none;}
+.rc-body.open{display:block;}
+.rc-section-title{font-size:11px;font-weight:600;color:var(--label2);letter-spacing:.3px;text-transform:uppercase;padding:10px 16px 6px;}
+.rc-item-row{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--sep);gap:10px;}
+.rc-item-row:last-child{border-bottom:none;}
+.rc-item-info{flex:1;min-width:0;}
+.rc-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rc-item-meta{font-size:11px;color:var(--label3);margin-top:1px;}
+.rc-item-amt{font-size:13px;font-weight:600;flex-shrink:0;}
+.rc-item-amt.neg{color:var(--red);}
+.rc-txns{padding:0 0 4px;}
+.rc-txn-row{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--sep);font-size:13px;}
+.rc-txn-row:last-child{border-bottom:none;}
+.rc-txn-people{display:flex;align-items:center;gap:6px;color:var(--label);}
+.rc-txn-amt{font-weight:600;flex-shrink:0;}
+.rc-no-txn{font-size:13px;color:var(--green);padding:10px 16px;text-align:center;}
+.rc-foot{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--fill2);border-top:1px solid var(--sep);}
+.rc-saved-at{font-size:11px;color:var(--label3);}
+.rc-del-btn{font-size:12px;color:var(--red);border:none;background:transparent;font-weight:500;padding:0;}
+.rc-del-btn:hover{opacity:.7;}
+.sync-info{font-size:12px;color:var(--label3);text-align:center;margin-top:14px;padding-bottom:4px;}
+/* Dropbox panel */
+.dbx-panel{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;margin-bottom:16px;}
+.dbx-panel-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none;}
+.dbx-panel-hd:hover{background:var(--fill2);}
+.dbx-panel-title{font-size:13px;font-weight:600;color:var(--label);}
+.dbx-panel-sub{font-size:12px;color:var(--label3);margin-top:1px;}
+.dbx-chevron{color:var(--label3);font-size:11px;transition:transform .2s;flex-shrink:0;}
+.dbx-chevron.open{transform:rotate(180deg);}
+.dbx-panel-body{padding:16px;border-top:1px solid var(--sep);}
+.dbx-field{margin-bottom:14px;}
+.dbx-label{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;}
+.dbx-inp{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 12px;font-size:14px;background:var(--bg);color:var(--label);outline:none;font-family:inherit;}
+.dbx-inp:focus{border-color:var(--blue);}
+.dbx-guide{font-size:12px;color:var(--label3);line-height:1.65;margin-top:6px;}
+.dbx-guide code{font-size:11px;background:var(--fill);padding:2px 5px;border-radius:4px;font-family:monospace;word-break:break-all;}
+.dbx-btn{width:100%;border:none;border-radius:var(--rs);padding:11px;font-size:14px;font-weight:600;background:var(--label);color:#fff;cursor:pointer;transition:opacity .12s;font-family:inherit;}
+.dbx-btn:hover{opacity:.88;}
+.dbx-btn.secondary{background:var(--fill);color:var(--label);border:1px solid var(--sep2);}
+.dbx-btn.secondary:hover{background:var(--fill2);}
+.dbx-account{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--green-bg);border:1px solid var(--green);border-radius:var(--rs);margin-bottom:12px;}
+.dbx-account-info{flex:1;min-width:0;}
+.dbx-account-name{font-size:13px;font-weight:600;color:var(--green-txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dbx-account-email{font-size:11px;color:var(--green-txt);opacity:.8;}
+.dbx-disconnect{font-size:12px;color:var(--red);border:none;background:transparent;font-weight:500;flex-shrink:0;cursor:pointer;font-family:inherit;}
+.dbx-btn-row{display:flex;gap:8px;}
+.dbx-btn-row .dbx-btn{flex:1;padding:9px;}
 </style>
 </head>
 <body>
@@ -320,6 +388,7 @@ svg{display:block;flex-shrink:0;}
         <button class="tab on" id="dTInput" onclick="dSetTab('input')">입력</button>
         <button class="tab" id="dTResult" onclick="dSetTab('result')">내역</button>
         <button class="tab" id="dTSettle" onclick="dSetTab('settle')">공유</button>
+        <button class="tab" id="dTHistory" onclick="dSetTab('history')">기록</button>
       </div>
       <div style="margin-bottom:14px;">
         <input type="date" id="meetingDateInp" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 10px;font-size:13px;background-color:var(--card);color:var(--label);outline:none;cursor:pointer;font-family:inherit;" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/>
@@ -392,6 +461,7 @@ svg{display:block;flex-shrink:0;}
       <button class="mob-tab on" id="mTInput" onclick="mSetTab('input')">입력</button>
       <button class="mob-tab" id="mTResult" onclick="mSetTab('result')">내역</button>
       <button class="mob-tab" id="mTSettle" onclick="mSetTab('settle')">공유</button>
+      <button class="mob-tab" id="mTHistory" onclick="mSetTab('history')">기록</button>
     </div>
   </div>
   <div class="mob-body" id="mBody"></div>
@@ -449,13 +519,13 @@ function showDataMenu(anchorEl,ev){
   document.querySelectorAll('.icon-pop,.rounder-pop,.group-pop,.data-pop').forEach(el=>el.remove());
   const pop=document.createElement('div');pop.className='data-pop';
   const dbxConnected=!!dbxGetToken();
-  const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결하기';
+  const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
   pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version">더치페이 ${APP_VERSION}</div>`;
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
       if(dbxGetToken()){syncFromDropbox();toast('Dropbox 동기화 중...');}
-      else{window.open('history.html','_blank');toast('기록 보관함에서 Dropbox를 먼저 연결해주세요');}
+      else{goToHistory();}
       pop.remove();
-    }else if(action==='openHistory'){window.open('history.html','_blank');pop.remove();}
+    }else if(action==='openHistory'){goToHistory();pop.remove();}
     else if(action==='exportCsv')exportCurrentGroupCsv();else if(action==='export')exportData();else if(action==='import')importData();else if(action==='reset')resetAllData();pop.remove();});
   document.body.appendChild(pop);_positionPopover(pop,anchorEl,true);
   setTimeout(()=>{const h=(e3)=>{if(!pop.contains(e3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=(e3)=>{if(e3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);
@@ -623,8 +693,8 @@ function addItem(){const isMobile=window.matchMedia('(max-width:700px)').matches
 
 function removeItem(id){const idx=items.findIndex(it=>it.id===id);if(idx<0)return;const snap={item:items[idx],idx};items=items.filter(it=>it.id!==id);if(selectedId===id)selectedId=null;closeSheet();renderAll();const name=snap.item.name||'(이름 없음)';toast(`'${name}' 삭제됨`,{action:()=>{items.splice(snap.idx,0,snap.item);renderAll();},actionLabel:'되돌리기'});}
 
-function selectItem(id){selectedId=id;if(dTab!=='input'){dTab='input';['input','result','settle'].forEach(n=>{document.getElementById('dT'+cap(n)).className='tab'+(n==='input'?' on':'');});}renderAll();}
-function selectItemMob(id){selectedId=id;if(mTab!=='input'){mTab='input';['input','result','settle'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n==='input'?' on':'');});renderMobileBody();}openSheet(id);}
+function selectItem(id){selectedId=id;if(dTab!=='input'){dTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('dT'+cap(n)).className='tab'+(n==='input'?' on':'');});}renderAll();}
+function selectItemMob(id){selectedId=id;if(mTab!=='input'){mTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n==='input'?' on':'');});renderMobileBody();}openSheet(id);}
 
 function updateField(id,field,val){const it=items.find(i=>i.id===id);if(!it)return;it[field]=val;renderItemLists();refreshMobItems();updateTotals();if(field==='name'){document.getElementById('dREye').textContent='지출 편집';document.getElementById('dRTitle').textContent=val||'새 지출';const mst=document.getElementById('mSheetTitle');if(mst)mst.textContent=val||'새 지출';}saveState();}
 
@@ -636,8 +706,9 @@ function openSheet(id){const sheet=document.getElementById('mSheet');const overl
 function closeSheet(){document.getElementById('mSheet').classList.remove('open');document.getElementById('mOverlay').classList.remove('open');}
 function renderSheetBody(id){const it=items.find(i=>i.id===id);if(!it)return;const opts=people.map(p=>`<option value="${e(p)}"${it.payer===p?' selected':''}>${e(p)}</option>`).join('');const memOpts=(it.members.length?it.members:people);const rounderOpts='<option value="">자동 (결제자 우선)</option>'+memOpts.map(p=>`<option value="${ea(p)}"${it.rounderOverride===p?' selected':''}>${e(p)}</option>`).join('');document.getElementById('mSheetBody').innerHTML=`<div class="field-g"><div class="field-lbl">지출 이름</div><input class="field-inp" id="sfname" placeholder="예: 저녁식사" value="${ea(it.name)}" oninput="updateField(${id},'name',this.value)"/></div><div class="field-g"><div class="field-lbl">금액</div><div class="amt-wrap"><button type="button" class="amt-sign-btn${(+it.amount<0)?' on':''}" onclick="toggleAmtSign(${id})">−</button><input class="field-inp" type="text" inputmode="numeric" placeholder="0" value="${fmtAmt(it.amount)}" onkeydown="handleAmtKeydown(event)" oninput="handleAmtInput(${id},this)"/><span class="amt-unit">원</span></div></div><div class="field-g"><div class="field-lbl">결제자</div><select class="field-sel" onchange="updateField(${id},'payer',this.value)">${opts}</select></div><div class="field-g"><div class="field-lbl">참여자</div><div class="chips">${people.map(p=>`<button class="chip${it.members.includes(p)?' on':''}" onclick="toggleMember(${id},${ja(p)},this)">${e(p)}</button>`).join('')}</div></div><div class="field-g"><div class="field-lbl">차액 부담자</div><select class="field-sel" onchange="updateField(${id},'rounderOverride',this.value||null)">${rounderOpts}</select></div><button class="confirm-btn" onclick="closeSheet()">확인</button><button class="del-btn" onclick="removeItem(${id})">${svgTrash} 지출 삭제</button><div style="height:20px"></div>`;}
 
-function dSetTab(t){dTab=t;['input','result','settle'].forEach(n=>{document.getElementById('dT'+cap(n)).className='tab'+(n===t?' on':'');});renderDesktopRight();}
-function mSetTab(t){mTab=t;['input','result','settle'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n===t?' on':'');});renderMobileBody();}
+function dSetTab(t){dTab=t;['input','result','settle','history'].forEach(n=>{document.getElementById('dT'+cap(n)).className='tab'+(n===t?' on':'');});renderDesktopRight();}
+function mSetTab(t){mTab=t;['input','result','settle','history'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n===t?' on':'');});renderMobileBody();}
+function goToHistory(){dSetTab('history');mSetTab('history');}
 function cap(s){return s[0].toUpperCase()+s.slice(1);}
 
 function renderAll(){renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();const di=document.getElementById('meetingDateInp');if(di)di.value=settleDateStart;saveState();}
@@ -648,12 +719,13 @@ function renderItemLists(){const el=document.getElementById('dItemRows');const t
 
 function updateTotals(){const t=items.reduce((s,it)=>s+(+it.amount||0),0);const neg=t<0;const dEl=document.getElementById('dTotal');dEl.textContent=fmt(t)+'원';dEl.classList.toggle('amt-neg',neg);const mEl=document.getElementById('mTotal');if(mEl){mEl.textContent=fmt(t)+'원';mEl.classList.toggle('amt-neg',neg);}}
 
-function renderDesktopRight(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');return;}document.getElementById('dREye').textContent='시작하기';if(!people.length){document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{document.getElementById('dRTitle').textContent='지출을 선택하거나 추가하세요';document.getElementById('dRSub').textContent='왼쪽 목록에서 지출을 클릭하거나 + 지출 추가를 눌러보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p>지출을 선택하거나 추가하면<br>여기서 편집할 수 있어요</p></div>`;}}
+function renderDesktopRight(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='history'){renderHistoryView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');return;}document.getElementById('dREye').textContent='시작하기';if(!people.length){document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{document.getElementById('dRTitle').textContent='지출을 선택하거나 추가하세요';document.getElementById('dRSub').textContent='왼쪽 목록에서 지출을 클릭하거나 + 지출 추가를 눌러보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p>지출을 선택하거나 추가하면<br>여기서 편집할 수 있어요</p></div>`;}}
 
 function renderEditor(id,eyeId,titleId,subId,bodyId){const it=items.find(i=>i.id===id);if(!it)return;document.getElementById(eyeId).textContent='지출 편집';document.getElementById(titleId).textContent=it.name||'새 지출';document.getElementById(subId).textContent='금액과 결제자, 참여자를 입력하세요.';const opts=people.map(p=>`<option value="${ea(p)}"${it.payer===p?' selected':''}>${e(p)}</option>`).join('');const memOpts=(it.members.length?it.members:people);const rounderOpts='<option value="">자동 (결제자 우선)</option>'+memOpts.map(p=>`<option value="${ea(p)}"${it.rounderOverride===p?' selected':''}>${e(p)}</option>`).join('');document.getElementById(bodyId).innerHTML=`<div class="field-g"><div class="field-lbl">지출 이름</div><input class="field-inp" id="fname" placeholder="예: 저녁식사, 택시비" value="${ea(it.name)}" oninput="updateField(${id},'name',this.value)"/></div><div class="field-g"><div class="field-lbl">금액</div><div class="amt-wrap"><button type="button" class="amt-sign-btn${(+it.amount<0)?' on':''}" onclick="toggleAmtSign(${id})">−</button><input class="field-inp" type="text" inputmode="numeric" placeholder="0" value="${fmtAmt(it.amount)}" onkeydown="handleAmtKeydown(event)" oninput="handleAmtInput(${id},this)"/><span class="amt-unit">원</span></div></div><div class="field-g"><div class="field-lbl">결제자</div><select class="field-sel" onchange="updateField(${id},'payer',this.value)">${opts}</select></div><div class="field-g"><div class="field-lbl">참여자 <span style="font-size:11px;font-weight:400;text-transform:none;color:var(--label3)">· 클릭으로 포함/제외</span></div><div class="chips">${people.map(p=>`<button class="chip${it.members.includes(p)?' on':''}" onclick="toggleMember(${id},${ja(p)},this)">${e(p)}</button>`).join('')}</div></div><div class="field-g"><div class="field-lbl">차액 부담자 <span style="font-size:11px;font-weight:400;text-transform:none;color:var(--label3)">· 차액 발생 시</span></div><select class="field-sel" onchange="updateField(${id},'rounderOverride',this.value||null)">${rounderOpts}</select></div><button class="del-btn" onclick="removeItem(${id})">${svgTrash} 지출 삭제</button>`;}
 
 function renderMobileBody(){
   const el=document.getElementById('mBody');if(!el)return;
+  if(mTab==='history'){renderHistoryBody(el);return;}
   if(mTab==='result'){
     let html='';const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);const vc=items.filter(it=>+it.amount!==0).length;
     if(!vc){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>금액이 입력된 지출이 없어요</p></div>';return;}
@@ -673,7 +745,7 @@ function renderMobileBody(){
     const validItems=items.filter(it=>+it.amount!==0);
     if(validItems.length){const payRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';return `<div class="pay-row"><div class="pay-name-wrap"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><span class="pay-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><span class="pay-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');html+=`<div class="pay-section-title">결제 내역</div><div class="txn-card">${payRows}</div>`;}
     if(txns.length&&hasRounding)html+='<div class="notice">차액은 결제자에게 우선 부담돼요</div>';
-    html+=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button><button class="share-hist-btn" onclick="saveToHistory()">${svgBookmark} 기록 보관함에 저장</button><div style="text-align:center;margin-top:10px"><a href="history.html" target="_blank" style="font-size:12px;color:var(--label3);text-decoration:none">기록 보관함 열기 →</a></div></div>`;
+    html+=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button><button class="share-hist-btn" onclick="saveToHistory()">${svgBookmark} 기록 보관함에 저장</button><div style="text-align:center;margin-top:10px"><a href="#" onclick="goToHistory();return false;" style="font-size:12px;color:var(--label3);text-decoration:none">기록 보관함 열기 →</a></div></div>`;
     el.innerHTML=html;return;
   }
   // input tab
@@ -745,7 +817,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const validItems=items.filter(it=>+it.amount!==0);
   const paySection=validItems.length?`<div class="pay-section-title">결제 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';return `<div class="pay-row"><div class="pay-name-wrap"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><span class="pay-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><span class="pay-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('')}</div>`:'';
   const noticeHtml=txns.length&&hasRounding?'<div class="notice">차액은 결제자에게 우선 부담돼요</div>':'';
-  const shareBtn=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button><button class="share-hist-btn" onclick="saveToHistory()">${svgBookmark} 기록 보관함에 저장</button><div style="text-align:center;margin-top:10px"><a href="history.html" target="_blank" style="font-size:12px;color:var(--label3);text-decoration:none">기록 보관함 열기 →</a></div></div>`;
+  const shareBtn=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button><button class="share-hist-btn" onclick="saveToHistory()">${svgBookmark} 기록 보관함에 저장</button><div style="text-align:center;margin-top:10px"><a href="#" onclick="goToHistory();return false;" style="font-size:12px;color:var(--label3);text-decoration:none">기록 보관함 열기 →</a></div></div>`;
   body.innerHTML=dateRow+hero+txnSection+paySection+noticeHtml+shareBtn;
 }
 
@@ -784,11 +856,231 @@ function saveToHistory(){
     const arr=raw?JSON.parse(raw):[];
     arr.unshift(record);
     localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
-    toast('기록 보관함에 저장됐어요 ✓',{type:'success'});
+    toast('기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+    if(hDbxGetToken())hSyncDropbox(true);
   }catch(err){
     toast('저장에 실패했어요',{type:'error'});
   }
 }
+
+// ── 기록 보관함 (SPA) ──
+const DBX_H_APPKEY='dutchpay_dbx_appkey';
+const DBX_H_TOKEN='dutchpay_dbx_token';
+const DBX_H_REFRESH='dutchpay_dbx_refresh';
+const DBX_H_ACCOUNT='dutchpay_dbx_account';
+const DBX_H_LASTSYNC='dutchpay_dbx_lastsync';
+const DBX_H_FILE='/dutch-pay_history.json';
+const svgArrowH='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+
+function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JSON.parse(r):[];}catch(e){return [];}}
+function saveHistory(arr){localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));}
+
+function deleteHistoryRecord(id){
+  if(!confirm('이 기록을 삭제할까요?'))return;
+  saveHistory(loadHistory().filter(r=>r.id!==id));
+  toast('기록이 삭제됐어요');
+  if(hDbxGetToken())hSyncDropbox(true);
+  if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
+  if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
+}
+
+function toggleHistoryCard(sid){
+  const body=document.getElementById('rcb_'+sid);
+  const chev=document.getElementById('rcc_'+sid);
+  if(!body)return;
+  const open=body.classList.toggle('open');
+  if(chev)chev.className='rc-chevron'+(open?' open':'');
+}
+
+function _buildRecordCardHtml(r){
+  const sid=r.id.replace(/[^a-zA-Z0-9]/g,'');
+  const dateStr=r.dateEnd&&r.dateEnd!==r.dateStart
+    ?`${r.dateStart.slice(2).replace(/-/g,'.')} ~ ${r.dateEnd.slice(2).replace(/-/g,'.')}`
+    :r.dateStart?r.dateStart.replace(/-/g,'.'):'';
+  const ppl=(r.people||[]).join(' · ');
+  const txns=r.txns||[];
+  const rcItems=(r.items||[]).filter(it=>+it.amount!==0);
+  const itemsHtml=rcItems.length
+    ?`<div class="rc-section-title">품목</div>`+rcItems.map(it=>{
+        const mems=(it.members&&it.members.length)?it.members.join(', '):(r.people||[]).join(', ');
+        return `<div class="rc-item-row"><div class="rc-item-info"><div class="rc-item-name">${e(it.name||'(이름 없음)')}</div><div class="rc-item-meta">${e(it.payer||'')} 결제 · ${e(mems)}</div></div><span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>`;
+      }).join(''):'';
+  const txnHtml=txns.length
+    ?`<div class="rc-section-title">송금</div><div class="rc-txns">`+txns.map(t=>`<div class="rc-txn-row"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`).join('')+`</div>`
+    :`<div class="rc-no-txn">모두 정산 완료 ✓</div>`;
+  const savedAtStr=(()=>{try{const d=new Date(r.savedAt);return d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e2){return '';}})();
+  return `<div class="record-card">
+    <div class="rc-hd" onclick="toggleHistoryCard('${sid}')">
+      <div class="rc-meta">
+        <div class="rc-date">${e(dateStr)}</div>
+        <div class="rc-name">${e(r.groupName)||'더치페이 정산'}</div>
+        <div class="rc-people">${e(ppl)}</div>
+      </div>
+      <div class="rc-right">
+        <div class="rc-total${r.total<0?' neg':''}">${fmt(r.total)}원</div>
+        <span class="rc-chevron" id="rcc_${sid}">▼</span>
+      </div>
+    </div>
+    <div class="rc-body" id="rcb_${sid}">${itemsHtml}${txnHtml}</div>
+    <div class="rc-foot">
+      <span class="rc-saved-at">${savedAtStr} 저장 · ${(r.people||[]).length}명</span>
+      <button class="rc-del-btn" onclick="deleteHistoryRecord('${e(r.id)}')">삭제</button>
+    </div>
+  </div>`;
+}
+
+function _buildHistoryInnerHtml(){
+  const records=loadHistory();
+  const connected=!!hDbxGetToken();
+  const badgeCls=connected?'hist-badge connected':'hist-badge';
+  const badgeTxt=connected?'☁ Dropbox 연결됨':'☁ Dropbox 미연결';
+  let html=`<div class="hist-top">
+    <div class="${badgeCls}" id="hDbxBadge">${badgeTxt}</div>
+    <button class="hist-dbx-btn" onclick="toggleHDbxPanel()">Dropbox 설정</button>
+  </div>
+  <div id="hDbxPanel" style="display:none"></div>
+  <div class="sync-info" id="hSyncInfo"></div>`;
+  if(!records.length){
+    html+=`<div class="empty" style="padding:60px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>공유 탭에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
+  }else{
+    html+=`<div class="record-list">${records.map(_buildRecordCardHtml).join('')}</div>`;
+  }
+  return html;
+}
+
+function renderHistoryView(eyeId,titleId,subId,bodyId){
+  document.getElementById(eyeId).textContent='기록 보관함';
+  document.getElementById(titleId).textContent='정산 기록';
+  document.getElementById(subId).textContent='저장된 더치페이 정산 기록을 확인하세요.';
+  const body=document.getElementById(bodyId);
+  if(body)body.classList.remove('settle-mode');
+  body.innerHTML=_buildHistoryInnerHtml();
+  _updateHSyncInfo();_updateHDbxBadge();
+}
+
+function renderHistoryBody(el){
+  el.innerHTML=_buildHistoryInnerHtml();
+  _updateHSyncInfo();_updateHDbxBadge();
+}
+
+// Dropbox (기록 보관함 전용)
+function hDbxGetToken(){return localStorage.getItem(DBX_H_TOKEN);}
+
+function _updateHDbxBadge(){
+  const el=document.getElementById('hDbxBadge');if(!el)return;
+  const connected=!!hDbxGetToken();
+  el.className=connected?'hist-badge connected':'hist-badge';
+  el.textContent=connected?'☁ Dropbox 연결됨':'☁ Dropbox 미연결';
+}
+
+function _updateHSyncInfo(){
+  const el=document.getElementById('hSyncInfo');if(!el)return;
+  const last=localStorage.getItem(DBX_H_LASTSYNC);
+  if(!last){el.textContent='';return;}
+  try{const d=new Date(last);el.textContent=`마지막 동기화 ${d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}`;}catch(e2){}
+}
+
+let _hPanelOpen=false;
+function toggleHDbxPanel(){
+  _hPanelOpen=!_hPanelOpen;
+  const panel=document.getElementById('hDbxPanel');if(!panel)return;
+  if(_hPanelOpen){panel.style.display='block';_renderHDbxPanel();}
+  else{panel.style.display='none';}
+}
+
+function _renderHDbxPanel(){
+  const panel=document.getElementById('hDbxPanel');if(!panel)return;
+  const token=hDbxGetToken();
+  const appKey=localStorage.getItem(DBX_H_APPKEY)||'';
+  let acHtml='';
+  if(token){
+    try{const ac=JSON.parse(localStorage.getItem(DBX_H_ACCOUNT)||'{}');if(ac.name){acHtml=`<div class="dbx-account"><div class="dbx-account-info"><div class="dbx-account-name">${e(ac.name)}</div><div class="dbx-account-email">${e(ac.email)}</div></div><button class="dbx-disconnect" onclick="hDbxDisconnect()">연결 해제</button></div>`;}}catch(e2){}
+    panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body">${acHtml}<div class="dbx-btn-row"><button class="dbx-btn secondary" onclick="hSyncDropbox()">지금 동기화</button></div><div style="font-size:11px;color:var(--label3);margin-top:10px;text-align:center">파일: dutch-pay_history.json</div></div></div>`;
+  }else{
+    const redirectUri=location.origin+location.pathname;
+    panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body"><div class="dbx-field"><div class="dbx-label">Dropbox App Key</div><input class="dbx-inp" id="hDbxAppKey" placeholder="앱 키 입력" value="${e(appKey)}"/><div class="dbx-guide">1. Dropbox 개발자 콘솔에서 앱 생성<br>2. Permission: files.content.write, files.content.read<br>3. Redirect URI: <code>${redirectUri}</code><br>4. App Key 복사 후 위에 입력</div></div><button class="dbx-btn" onclick="hDbxConnect()">Dropbox 연결하기</button></div></div>`;
+  }
+}
+
+async function hDbxConnect(){
+  const appKey=(document.getElementById('hDbxAppKey')?.value||'').trim();
+  if(!appKey){toast('App Key를 입력해주세요',{type:'error'});return;}
+  localStorage.setItem(DBX_H_APPKEY,appKey);
+  const verifier=_hRandomStr(64);
+  const challenge=await _hSha256b64url(verifier);
+  sessionStorage.setItem('h_dbx_verifier',verifier);
+  const redirectUri=location.origin+location.pathname;
+  const params=new URLSearchParams({client_id:appKey,redirect_uri:redirectUri,response_type:'code',code_challenge:challenge,code_challenge_method:'S256',token_access_type:'offline'});
+  location.href=`https://www.dropbox.com/oauth2/authorize?${params}`;
+}
+
+async function hDbxHandleCallback(){
+  const params=new URLSearchParams(location.search);
+  const code=params.get('code');
+  if(!code)return;
+  history.replaceState({},'',location.pathname);
+  const verifier=sessionStorage.getItem('h_dbx_verifier');
+  if(!verifier)return;
+  sessionStorage.removeItem('h_dbx_verifier');
+  const appKey=localStorage.getItem(DBX_H_APPKEY);
+  const redirectUri=location.origin+location.pathname;
+  try{
+    const res=await fetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({code,grant_type:'authorization_code',client_id:appKey,redirect_uri:redirectUri,code_verifier:verifier})});
+    const data=await res.json();
+    if(data.error)throw new Error(data.error_description||data.error);
+    localStorage.setItem(DBX_H_TOKEN,data.access_token);
+    if(data.refresh_token)localStorage.setItem(DBX_H_REFRESH,data.refresh_token);
+    try{const acRes=await fetch('https://api.dropboxapi.com/2/users/get_current_account',{method:'POST',headers:{Authorization:`Bearer ${data.access_token}`}});const ac=await acRes.json();localStorage.setItem(DBX_H_ACCOUNT,JSON.stringify({name:ac.name?.display_name||'',email:ac.email||''}));}catch(e2){}
+    toast('Dropbox 연결됐어요!',{type:'success'});
+    goToHistory();
+  }catch(err){toast('연결 실패: '+err.message,{type:'error'});}
+}
+
+async function _hDbxRefreshToken(){
+  const refresh=localStorage.getItem(DBX_H_REFRESH);const appKey=localStorage.getItem(DBX_H_APPKEY);
+  if(!refresh||!appKey)return null;
+  try{const res=await fetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh,client_id:appKey})});const data=await res.json();if(data.access_token){localStorage.setItem(DBX_H_TOKEN,data.access_token);return data.access_token;}return null;}catch(e){return null;}
+}
+
+function hDbxDisconnect(){
+  if(!confirm('Dropbox 연결을 해제할까요?'))return;
+  [DBX_H_TOKEN,DBX_H_REFRESH,DBX_H_ACCOUNT,DBX_H_LASTSYNC].forEach(k=>localStorage.removeItem(k));
+  toast('Dropbox 연결 해제됨');
+  if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
+  if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
+}
+
+let _hSyncing=false;
+async function hSyncDropbox(uploadOnly=false){
+  const token=hDbxGetToken();if(!token)return;
+  if(_hSyncing)return;_hSyncing=true;
+  const badge=document.getElementById('hDbxBadge');if(badge){badge.className='hist-badge syncing';badge.textContent='동기화 중...';}
+  try{
+    const local=loadHistory();
+    if(!uploadOnly){
+      const res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE})}});
+      if(res.ok){
+        const remote=JSON.parse(await res.text());
+        if(Array.isArray(remote)){
+          const map=new Map();[...remote,...local].forEach(r=>{const ex=map.get(r.id);if(!ex||(r.savedAt||'')>(ex.savedAt||''))map.set(r.id,r);});
+          const merged=Array.from(map.values()).sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));
+          saveHistory(merged);
+        }
+      }
+    }
+    const toUpload=loadHistory();
+    let uploadToken=hDbxGetToken();
+    const uploadRes=await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${uploadToken}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE,mode:'overwrite',autorename:false,mute:true})},body:JSON.stringify(toUpload,null,2)});
+    if(uploadRes.status===401){uploadToken=await _hDbxRefreshToken();if(uploadToken)await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${uploadToken}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE,mode:'overwrite',autorename:false,mute:true})},body:JSON.stringify(toUpload,null,2)});}
+    localStorage.setItem(DBX_H_LASTSYNC,new Date().toISOString());
+    if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
+    if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
+  }catch(err){toast('동기화 실패: '+err.message,{type:'error'});_updateHDbxBadge();}
+  finally{_hSyncing=false;}
+}
+
+async function _hSha256b64url(str){const data=new TextEncoder().encode(str);const hash=await crypto.subtle.digest('SHA-256',data);return btoa(String.fromCharCode(...new Uint8Array(hash))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function _hRandomStr(len){const arr=new Uint8Array(len);crypto.getRandomValues(arr);return btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'').slice(0,len);}
 
 // ── 이미지 공유 ──
 function roundRectPath(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();}
@@ -941,6 +1233,7 @@ renderAll();
 (()=>{['appVersionD','appVersionM'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
+hDbxHandleCallback().then(()=>{if(hDbxGetToken())hSyncDropbox();});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{try{navigator.serviceWorker.register('sw.js').then(reg=>{reg.update();reg.addEventListener('updatefound',()=>{const nw=reg.installing;if(!nw)return;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0071e3;color:#fff;padding:12px 18px;border-radius:24px;font:600 13px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 4px 16px rgba(0,113,227,.4);z-index:99999;cursor:pointer;';t.textContent='새 버전이 있어요 · 탭해서 새로고침';t.onclick=()=>location.reload();document.body.appendChild(t);}});});}).catch(()=>{});}catch(e){}});}
 </script>
 </body>
