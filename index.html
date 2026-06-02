@@ -474,8 +474,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.25';
-const BUILD_TIME='2026-06-03 19:00';
+const APP_VERSION='v1.26';
+const BUILD_TIME='2026-06-03 21:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -711,7 +711,7 @@ function closeSheet(){document.getElementById('mSheet').classList.remove('open')
 function renderSheetBody(id){const it=items.find(i=>i.id===id);if(!it)return;const opts=people.map(p=>`<option value="${e(p)}"${it.payer===p?' selected':''}>${e(p)}</option>`).join('');const memOpts=(it.members.length?it.members:people);const rounderOpts='<option value="">자동 (결제자 우선)</option>'+memOpts.map(p=>`<option value="${ea(p)}"${it.rounderOverride===p?' selected':''}>${e(p)}</option>`).join('');document.getElementById('mSheetBody').innerHTML=`<div class="field-g"><div class="field-lbl">지출 이름</div><input class="field-inp" id="sfname" placeholder="예: 저녁식사" value="${ea(it.name)}" oninput="updateField(${id},'name',this.value)"/></div><div class="field-g"><div class="field-lbl">금액</div><div class="amt-wrap"><button type="button" class="amt-sign-btn${(+it.amount<0)?' on':''}" onclick="toggleAmtSign(${id})">−</button><input class="field-inp" type="text" inputmode="numeric" placeholder="0" value="${fmtAmt(it.amount)}" onkeydown="handleAmtKeydown(event)" oninput="handleAmtInput(${id},this)"/><span class="amt-unit">원</span></div></div><div class="field-g"><div class="field-lbl">결제자</div><select class="field-sel" onchange="updateField(${id},'payer',this.value)">${opts}</select></div><div class="field-g"><div class="field-lbl">참여자</div><div class="chips">${people.map(p=>`<button class="chip${it.members.includes(p)?' on':''}" onclick="toggleMember(${id},${ja(p)},this)">${e(p)}</button>`).join('')}</div></div><div class="field-g"><div class="field-lbl">차액 부담자</div><select class="field-sel" onchange="updateField(${id},'rounderOverride',this.value||null)">${rounderOpts}</select></div><button class="confirm-btn" onclick="closeSheet()">확인</button><button class="del-btn" onclick="removeItem(${id})">${svgTrash} 지출 삭제</button><div style="height:20px"></div>`;}
 
 function dSetTab(t){dTab=t;['input','result','settle','history'].forEach(n=>{document.getElementById('dT'+cap(n)).className='tab'+(n===t?' on':'');});renderDesktopRight();}
-function mSetTab(t){mTab=t;['input','result','settle','history'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n===t?' on':'');});renderMobileBody();}
+function mSetTab(t){mTab=t;['input','result','settle','history'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n===t?' on':'');});if(t==='history')window.scrollTo(0,0);renderMobileBody();}
 function goToHistory(){dSetTab('history');mSetTab('history');}
 function cap(s){return s[0].toUpperCase()+s.slice(1);}
 
@@ -891,11 +891,9 @@ function deleteHistoryRecord(id){
 }
 
 function toggleHistoryCard(sid){
-  const body=document.getElementById('rcb_'+sid);
-  const chev=document.getElementById('rcc_'+sid);
-  if(!body)return;
-  const open=body.classList.toggle('open');
-  if(chev)chev.className='rc-chevron'+(open?' open':'');
+  let open;
+  document.querySelectorAll('#rcb_'+sid).forEach(body=>{open=body.classList.toggle('open');});
+  if(open!==undefined)document.querySelectorAll('#rcc_'+sid).forEach(chev=>{chev.className='rc-chevron'+(open?' open':'');});
 }
 
 function _buildRecordCardHtml(r){
@@ -975,43 +973,46 @@ function renderHistoryBody(el){
 function hDbxGetToken(){return localStorage.getItem(DBX_H_TOKEN);}
 
 function _updateHDbxBadge(){
-  const el=document.getElementById('hDbxBadge');if(!el)return;
   const connected=!!hDbxGetToken();
-  el.className=connected?'hist-badge connected':'hist-badge';
-  el.textContent=connected?'☁ Dropbox 연결됨':'☁ Dropbox 미연결';
+  document.querySelectorAll('#hDbxBadge').forEach(el=>{
+    el.className=connected?'hist-badge connected':'hist-badge';
+    el.textContent=connected?'☁ Dropbox 연결됨':'☁ Dropbox 미연결';
+  });
 }
 
 function _updateHSyncInfo(){
-  const el=document.getElementById('hSyncInfo');if(!el)return;
   const last=localStorage.getItem(DBX_H_LASTSYNC);
-  if(!last){el.textContent='';return;}
-  try{const d=new Date(last);el.textContent=`마지막 동기화 ${d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}`;}catch(e2){}
+  let text='';
+  if(last){try{const d=new Date(last);text=`마지막 동기화 ${d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}`;}catch(e2){}}
+  document.querySelectorAll('#hSyncInfo').forEach(el=>{el.textContent=text;});
 }
 
 let _hPanelOpen=false;
 function toggleHDbxPanel(){
   _hPanelOpen=!_hPanelOpen;
-  const panel=document.getElementById('hDbxPanel');if(!panel)return;
-  if(_hPanelOpen){panel.style.display='block';_renderHDbxPanel();}
-  else{panel.style.display='none';}
+  document.querySelectorAll('#hDbxPanel').forEach(panel=>{
+    panel.style.display=_hPanelOpen?'block':'none';
+  });
+  if(_hPanelOpen)_renderHDbxPanel();
 }
 
 function _renderHDbxPanel(){
-  const panel=document.getElementById('hDbxPanel');if(!panel)return;
   const token=hDbxGetToken();
   const appKey=localStorage.getItem(DBX_H_APPKEY)||'';
-  let acHtml='';
+  let html='';
   if(token){
+    let acHtml='';
     try{const ac=JSON.parse(localStorage.getItem(DBX_H_ACCOUNT)||'{}');if(ac.name){acHtml=`<div class="dbx-account"><div class="dbx-account-info"><div class="dbx-account-name">${e(ac.name)}</div><div class="dbx-account-email">${e(ac.email)}</div></div><button class="dbx-disconnect" onclick="hDbxDisconnect()">연결 해제</button></div>`;}}catch(e2){}
-    panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body">${acHtml}<div class="dbx-btn-row"><button class="dbx-btn secondary" onclick="hSyncDropbox()">지금 동기화</button></div><div style="font-size:11px;color:var(--label3);margin-top:10px;text-align:center">파일: 01_Personal/Dutch-Pay/dutch-pay_history.json</div></div></div>`;
+    html=`<div class="dbx-panel"><div class="dbx-panel-body">${acHtml}<div class="dbx-btn-row"><button class="dbx-btn secondary" onclick="hSyncDropbox()">지금 동기화</button></div><div style="font-size:11px;color:var(--label3);margin-top:10px;text-align:center">파일: 01_Personal/Dutch-Pay/dutch-pay_history.json</div></div></div>`;
   }else{
     const redirectUri=location.origin+location.pathname;
-    panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body"><div class="dbx-field"><div class="dbx-label">Dropbox App Key</div><input class="dbx-inp" id="hDbxAppKey" placeholder="앱 키 입력" value="${e(appKey)}"/><div class="dbx-guide">1. Dropbox 개발자 콘솔에서 앱 생성<br>2. Permission: files.content.write, files.content.read<br>3. Redirect URI: <code>${redirectUri}</code><br>4. App Key 복사 후 위에 입력</div></div><button class="dbx-btn" onclick="hDbxConnect()">Dropbox 연결하기</button></div></div>`;
+    html=`<div class="dbx-panel"><div class="dbx-panel-body"><div class="dbx-field"><div class="dbx-label">Dropbox App Key</div><input class="dbx-inp" id="hDbxAppKey" placeholder="앱 키 입력" value="${e(appKey)}"/><div class="dbx-guide">1. Dropbox 개발자 콘솔에서 앱 생성<br>2. Permission: files.content.write, files.content.read<br>3. Redirect URI: <code>${redirectUri}</code><br>4. App Key 복사 후 위에 입력</div></div><button class="dbx-btn" onclick="hDbxConnect()">Dropbox 연결하기</button></div></div>`;
   }
+  document.querySelectorAll('#hDbxPanel').forEach(panel=>{panel.innerHTML=html;});
 }
 
 async function hDbxConnect(){
-  const appKey=(document.getElementById('hDbxAppKey')?.value||'').trim();
+  let appKey='';document.querySelectorAll('#hDbxAppKey').forEach(inp=>{if(inp.value.trim())appKey=inp.value.trim();});
   if(!appKey){toast('App Key를 입력해주세요',{type:'error'});return;}
   localStorage.setItem(DBX_H_APPKEY,appKey);
   const verifier=_hRandomStr(64);
@@ -1062,7 +1063,7 @@ let _hSyncing=false;
 async function hSyncDropbox(uploadOnly=false){
   const token=hDbxGetToken();if(!token)return;
   if(_hSyncing)return;_hSyncing=true;
-  const badge=document.getElementById('hDbxBadge');if(badge){badge.className='hist-badge syncing';badge.textContent='동기화 중...';}
+  document.querySelectorAll('#hDbxBadge').forEach(badge=>{badge.className='hist-badge syncing';badge.textContent='동기화 중...';});
   try{
     const local=loadHistory();
     if(!uploadOnly){
