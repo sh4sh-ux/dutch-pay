@@ -194,9 +194,10 @@ svg{display:block;flex-shrink:0;}
 .bd-ex-tag{font-size:10px;color:var(--blue-txt);background:var(--blue-bg);border-radius:4px;padding:1px 5px;font-weight:500;flex-shrink:0;}
 
 .right-body.settle-mode{background:var(--bg);}
-.settle-hero{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);padding:28px 20px;margin-bottom:14px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.04);}
-.sh-eye{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:8px;}
-.sh-num{font-size:36px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px;}
+.settle-hero{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);padding:16px 20px;margin-bottom:14px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+.sh-eye{font-size:10px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;}
+.sh-num{font-size:28px;font-weight:700;letter-spacing:-.5px;margin-bottom:0;}
+.sh-unit{font-size:.72em;font-weight:600;margin-left:2px;vertical-align:.1em;}
 .sh-sub{font-size:13px;color:var(--label2);}
 .txn-card{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
 .txn-row{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--sep);gap:12px;}
@@ -388,7 +389,7 @@ svg{display:block;flex-shrink:0;}
         <button class="tab on" id="dTInput" onclick="dSetTab('input')">입력</button>
         <button class="tab" id="dTResult" onclick="dSetTab('result')">내역</button>
         <button class="tab" id="dTSettle" onclick="dSetTab('settle')">공유</button>
-        <button class="tab" id="dTHistory" onclick="dSetTab('history')">기록</button>
+        <button class="tab" id="dTHistory" onclick="dSetTab('history')" style="display:none">기록</button>
       </div>
       <div style="margin-bottom:14px;">
         <input type="date" id="meetingDateInp" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 10px;font-size:13px;background-color:var(--card);color:var(--label);outline:none;cursor:pointer;font-family:inherit;" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/>
@@ -461,7 +462,7 @@ svg{display:block;flex-shrink:0;}
       <button class="mob-tab on" id="mTInput" onclick="mSetTab('input')">입력</button>
       <button class="mob-tab" id="mTResult" onclick="mSetTab('result')">내역</button>
       <button class="mob-tab" id="mTSettle" onclick="mSetTab('settle')">공유</button>
-      <button class="mob-tab" id="mTHistory" onclick="mSetTab('history')">기록</button>
+      <button class="mob-tab" id="mTHistory" onclick="mSetTab('history')" style="display:none">기록</button>
     </div>
   </div>
   <div class="mob-body" id="mBody"></div>
@@ -474,8 +475,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.15';
-const BUILD_TIME='2026-05-30 00:35';
+const APP_VERSION='v1.17';
+const BUILD_TIME='2026-06-03 00:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -520,13 +521,17 @@ function showDataMenu(anchorEl,ev){
   const pop=document.createElement('div');pop.className='data-pop';
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
-  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version">더치페이 ${APP_VERSION}</div>`;
+  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version">더치페이 ${APP_VERSION}</div>`;
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
       if(dbxGetToken()){syncFromDropbox();toast('Dropbox 동기화 중...');}
       else{goToHistory();}
       pop.remove();
     }else if(action==='openHistory'){goToHistory();pop.remove();}
-    else if(action==='exportCsv')exportCurrentGroupCsv();else if(action==='export')exportData();else if(action==='import')importData();else if(action==='reset')resetAllData();pop.remove();});
+    else if(action==='saveHistory'){saveToHistory();pop.remove();}
+    else if(action==='exportCsv'){exportCurrentGroupCsv();pop.remove();}
+    else if(action==='export'){exportData();pop.remove();}
+    else if(action==='import'){importData();pop.remove();}
+    else if(action==='reset'){resetAllData();pop.remove();}});
   document.body.appendChild(pop);_positionPopover(pop,anchorEl,true);
   setTimeout(()=>{const h=(e3)=>{if(!pop.contains(e3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=(e3)=>{if(e3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);
 }
@@ -740,12 +745,12 @@ function renderMobileBody(){
     if(!total){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>지출을 먼저 입력해주세요</p></div>';return;}
     const txns=calcTxns(paid,owes);
     let html=`<div class="share-date-row"><input type="date" class="share-date-inp" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('start',this.value)"/>${settleDateEnd?`<span class="share-date-sep">~</span><input type="date" class="share-date-inp" value="${settleDateEnd}" min="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('end',this.value)"/><button class="share-date-rm" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
-    html+=`<div class="settle-hero"><div class="sh-eye">총 지출금액</div><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div></div>`;
+    html+=`<div class="settle-hero"><div class="sh-eye">총 지출금액</div><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}<span class="sh-unit">원</span></div></div>`;
     if(txns.length){html+=`<div class="pay-section-title">송금</div>`;html+='<div class="txn-card">'+txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')+'</div>';}
     const validItems=items.filter(it=>+it.amount!==0);
-    if(validItems.length){const payRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';return `<div class="pay-row"><div class="pay-name-wrap"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><span class="pay-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><span class="pay-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');html+=`<div class="pay-section-title">결제 내역</div><div class="txn-card">${payRows}</div>`;}
+    if(validItems.length){const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItemMob(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-sep">·</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;}
     if(txns.length&&hasRounding)html+='<div class="notice">차액은 결제자에게 우선 부담돼요</div>';
-    html+=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button><button class="share-hist-btn" onclick="saveToHistory()">${svgBookmark} 기록 보관함에 저장</button><div style="text-align:center;margin-top:10px"><a href="#" onclick="goToHistory();return false;" style="font-size:12px;color:var(--label3);text-decoration:none">기록 보관함 열기 →</a></div></div>`;
+    html+=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button></div>`;
     el.innerHTML=html;return;
   }
   // input tab
@@ -812,12 +817,12 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   if(!total){body.innerHTML='<div class="empty"><div class="empty-icon">'+svgEmpty+'</div><p>지출을 먼저 입력해주세요</p></div>';return;}
   const txns=calcTxns(paid,owes);
   const dateRow=`<div class="share-date-row"><input type="date" class="share-date-inp" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('start',this.value)"/>${settleDateEnd?`<span class="share-date-sep">~</span><input type="date" class="share-date-inp" value="${settleDateEnd}" min="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('end',this.value)"/><button class="share-date-rm" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
-  const hero=`<div class="settle-hero"><div class="sh-eye">총 지출금액</div><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div></div>`;
+  const hero=`<div class="settle-hero"><div class="sh-eye">총 지출금액</div><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}<span class="sh-unit">원</span></div></div>`;
   const txnSection=txns.length?`<div class="pay-section-title">송금</div><div class="txn-card">${txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')}</div>`:'<div class="empty" style="padding:20px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div>';
   const validItems=items.filter(it=>+it.amount!==0);
-  const paySection=validItems.length?`<div class="pay-section-title">결제 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';return `<div class="pay-row"><div class="pay-name-wrap"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><span class="pay-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><span class="pay-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('')}</div>`:'';
+  const paySection=validItems.length?`<div class="pay-section-title">지출 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-sep">·</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('')}</div>`:'';
   const noticeHtml=txns.length&&hasRounding?'<div class="notice">차액은 결제자에게 우선 부담돼요</div>':'';
-  const shareBtn=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button><button class="share-hist-btn" onclick="saveToHistory()">${svgBookmark} 기록 보관함에 저장</button><div style="text-align:center;margin-top:10px"><a href="#" onclick="goToHistory();return false;" style="font-size:12px;color:var(--label3);text-decoration:none">기록 보관함 열기 →</a></div></div>`;
+  const shareBtn=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button></div>`;
   body.innerHTML=dateRow+hero+txnSection+paySection+noticeHtml+shareBtn;
 }
 
@@ -941,7 +946,7 @@ function _buildHistoryInnerHtml(){
   <div id="hDbxPanel" style="display:none"></div>
   <div class="sync-info" id="hSyncInfo"></div>`;
   if(!records.length){
-    html+=`<div class="empty" style="padding:60px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>공유 탭에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
+    html+=`<div class="empty" style="padding:60px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>⋯ 메뉴에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
   }else{
     html+=`<div class="record-list">${records.map(_buildRecordCardHtml).join('')}</div>`;
   }
@@ -1126,7 +1131,7 @@ async function generateSettleCanvas(){
   });
   const iconMap=new Map();for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#0055B8'));}catch(e){iconMap.set(svg,null);}}}
   const W=1080,PAD=42,TOP_PAD=56,cardX=PAD,cardW=W-PAD*2;
-  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=350,TXN_ROW_H=108,ITEM_ROW_H=136,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78;
+  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=230,TXN_ROW_H=108,ITEM_ROW_H=136,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78;
   const txnCardH=txns.length?txns.length*TXN_ROW_H:EMPTY_CARD_H;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
   const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;
@@ -1153,26 +1158,20 @@ async function generateSettleCanvas(){
   const totalDividerY=y+TOTAL_CARD_H/2;
   const totalAmountY=y+TOTAL_CARD_H/4+10;
   {
-    const _num=(total<0?'−':'')+fmt(Math.abs(total));
-    const _unit='원';
-    ctx.textBaseline='middle';
-    ctx.font=`700 90px ${FF}`;const _nw=ctx.measureText(_num).width;
-    ctx.font=`400 52px ${FF}`;const _uw=ctx.measureText(_unit).width;
-    const _gap=8,_maxW=cardW-100,_lx=W/2-(_nw+_gap+_uw)/2;
-    if(_nw+_gap+_uw<=_maxW){
-      ctx.font=`700 90px ${FF}`;ctx.textAlign='left';
-      ctx.fillStyle=total<0?C.red:'#1C1C1E';
-      ctx.fillText(truncateCanvasText(ctx,_num,_maxW-_uw-_gap),_lx,totalAmountY);
-      ctx.font=`400 52px ${FF}`;ctx.fillStyle=total<0?C.red:'#6E6E73';
-      ctx.fillText(_unit,_lx+_nw+_gap,totalAmountY+14);
+    const totalText=(total<0?'−':'')+fmt(Math.abs(total))+'원';
+    ctx.textBaseline='middle';ctx.textAlign='center';
+    ctx.fillStyle=total<0?C.red:'#1C1C1E';
+    const _maxW=cardW-80;
+    ctx.font=`700 68px ${FF}`;
+    if(ctx.measureText(totalText).width<=_maxW){
+      ctx.fillText(totalText,W/2,totalAmountY);
     }else{
-      ctx.font=`700 76px ${FF}`;ctx.textAlign='center';
-      ctx.fillStyle=total<0?C.red:'#1C1C1E';
-      ctx.fillText(truncateCanvasText(ctx,_num+_unit,_maxW),W/2,totalAmountY);
+      ctx.font=`700 54px ${FF}`;
+      ctx.fillText(truncateCanvasText(ctx,totalText,_maxW),W/2,totalAmountY);
     }
   }
   drawDivider(totalDividerY);
-  ctx.fillStyle=C.muted;setFont(34,500);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원`,W/2,y+TOTAL_CARD_H*3/4);
+  ctx.fillStyle=C.muted;setFont(28,500);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원`,W/2,y+TOTAL_CARD_H*3/4);
   y+=TOTAL_CARD_H+SECTION_GAP;
 
   y=drawSectionLabel('송금',y);
@@ -1210,17 +1209,17 @@ async function generateSettleCanvas(){
       const amountText=fmt(+it.amount)+'원';
       ctx.fillStyle=(+it.amount<0)?C.red:C.text;setFont(34,700);ctx.textAlign='right';ctx.textBaseline='middle';
       const amountX=cardX+cardW-38,amountW=ctx.measureText(amountText).width;
-      ctx.fillText(amountText,amountX,ry-13);
+      ctx.fillText(amountText,amountX,ry-16);
 
       const nameX=cardX+118,maxMainW=amountX-amountW-34-nameX;
       const name=truncateCanvasText(ctx,it.name||'(이름 없음)',maxMainW);
       ctx.fillStyle=C.text;setFont(30,700);ctx.textAlign='left';ctx.textBaseline='middle';
-      ctx.fillText(name,nameX,ry-13);
+      ctx.fillText(name,nameX,ry-16);
 
       const mems=it.members.length?it.members:people;
       const payerInfo=`${it.payer||''} 결제 · ${mems.join(', ')}`;
       ctx.fillStyle=C.muted;setFont(24,400);
-      ctx.fillText(truncateCanvasText(ctx,payerInfo,maxMainW),nameX,ry+17);
+      ctx.fillText(truncateCanvasText(ctx,payerInfo,maxMainW),nameX,ry+20);
 
       if(i<validItems.length-1)drawDivider(y+(i+1)*ITEM_ROW_H);
     });
