@@ -474,8 +474,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.27';
-const BUILD_TIME='2026-06-03 22:00';
+const APP_VERSION='v1.28';
+const BUILD_TIME='2026-06-03 23:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1019,7 +1019,7 @@ async function hDbxConnect(){
   localStorage.setItem(DBX_H_APPKEY,appKey);
   const verifier=_hRandomStr(64);
   const challenge=await _hSha256b64url(verifier);
-  sessionStorage.setItem('h_dbx_verifier',verifier);
+  localStorage.setItem('h_dbx_verifier',verifier);
   const redirectUri=location.origin+location.pathname;
   const params=new URLSearchParams({client_id:appKey,redirect_uri:redirectUri,response_type:'code',code_challenge:challenge,code_challenge_method:'S256',token_access_type:'offline'});
   location.href=`https://www.dropbox.com/oauth2/authorize?${params}`;
@@ -1030,9 +1030,9 @@ async function hDbxHandleCallback(){
   const code=params.get('code');
   if(!code)return;
   history.replaceState({},'',location.pathname);
-  const verifier=sessionStorage.getItem('h_dbx_verifier');
-  if(!verifier)return;
-  sessionStorage.removeItem('h_dbx_verifier');
+  const verifier=localStorage.getItem('h_dbx_verifier');
+  if(!verifier){toast('연결에 실패했어요. 다시 시도해주세요.',{type:'error'});return;}
+  localStorage.removeItem('h_dbx_verifier');
   const appKey=localStorage.getItem(DBX_H_APPKEY);
   const redirectUri=location.origin+location.pathname;
   try{

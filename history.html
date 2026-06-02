@@ -2,18 +2,10 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
-<meta http-equiv="refresh" content="0;url=index.html"/>
 <title>더치페이 기록</title>
 <script>
-// Dropbox OAuth 콜백을 index.html로 전달
-const search = location.search;
-if (search.includes('code=')) {
-  // OAuth 콜백 파라미터를 sessionStorage에 임시 보관
-  sessionStorage.setItem('h_dbx_verifier', sessionStorage.getItem('h_dbx_verifier') || '');
-  location.replace('index.html' + search);
-} else {
-  location.replace('index.html');
-}
+// Dropbox OAuth 콜백 → index.html로 전달
+location.replace('index.html'+(location.search||''));
 </script>
 </head>
 <body></body>
