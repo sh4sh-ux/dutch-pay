@@ -196,7 +196,6 @@ svg{display:block;flex-shrink:0;}
 .right-body.settle-mode{background:var(--bg);}
 .settle-hero{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);padding:22px 20px;margin-bottom:14px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.04);}
 .sh-num{font-size:34px;font-weight:700;letter-spacing:-.5px;margin-bottom:0;}
-.sh-unit{font-size:.72em;font-weight:600;margin-left:2px;vertical-align:.1em;}
 .sh-divider{height:1px;background:var(--sep);margin:14px 0;}
 .sh-sub{font-size:12px;color:var(--label2);}
 .txn-card{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
@@ -475,7 +474,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.18';
+const APP_VERSION='v1.19';
 const BUILD_TIME='2026-06-03 00:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -746,7 +745,7 @@ function renderMobileBody(){
     const txns=calcTxns(paid,owes);
     let html=`<div class="share-date-row"><input type="date" class="share-date-inp" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('start',this.value)"/>${settleDateEnd?`<span class="share-date-sep">~</span><input type="date" class="share-date-inp" value="${settleDateEnd}" min="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('end',this.value)"/><button class="share-date-rm" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
     const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
-    html+=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}<span class="sh-unit">원</span></div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
+    html+=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
     if(txns.length){html+=`<div class="pay-section-title">송금</div>`;html+='<div class="txn-card">'+txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')+'</div>';}
     const validItems=items.filter(it=>+it.amount!==0);
     if(validItems.length){const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItemMob(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-sep">·</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;}
@@ -819,7 +818,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const txns=calcTxns(paid,owes);
   const dateRow=`<div class="share-date-row"><input type="date" class="share-date-inp" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('start',this.value)"/>${settleDateEnd?`<span class="share-date-sep">~</span><input type="date" class="share-date-inp" value="${settleDateEnd}" min="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('end',this.value)"/><button class="share-date-rm" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
   const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
-  const hero=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}<span class="sh-unit">원</span></div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
+  const hero=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
   const txnSection=txns.length?`<div class="pay-section-title">송금</div><div class="txn-card">${txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')}</div>`:'<div class="empty" style="padding:20px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div>';
   const validItems=items.filter(it=>+it.amount!==0);
   const paySection=validItems.length?`<div class="pay-section-title">지출 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-sep">·</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('')}</div>`:'';
@@ -1157,7 +1156,7 @@ async function generateSettleCanvas(){
 
   y=drawSectionLabel('총 지출금액',y);
   drawCard(cardX,y,cardW,TOTAL_CARD_H);
-  const totalDividerY=y+TOTAL_CARD_H/2;
+  const totalDividerY=y+130;
   const totalAmountY=y+TOTAL_CARD_H/4+10;
   {
     const totalText=(total<0?'−':'')+fmt(Math.abs(total))+'원';
@@ -1173,7 +1172,7 @@ async function generateSettleCanvas(){
     }
   }
   drawDivider(totalDividerY);
-  ctx.fillStyle=C.muted;setFont(28,500);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원`,W/2,y+TOTAL_CARD_H*3/4);
+  ctx.fillStyle=C.muted;setFont(28,500);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원`,W/2,y+178);
   y+=TOTAL_CARD_H+SECTION_GAP;
 
   y=drawSectionLabel('송금',y);
