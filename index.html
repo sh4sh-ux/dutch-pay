@@ -474,8 +474,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.23';
-const BUILD_TIME='2026-06-03 17:00';
+const APP_VERSION='v1.24';
+const BUILD_TIME='2026-06-03 18:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -907,9 +907,9 @@ function _buildRecordCardHtml(r){
   const txns=r.txns||[];
   const rcItems=(r.items||[]).filter(it=>+it.amount!==0);
   const itemsHtml=rcItems.length
-    ?`<div class="rc-section-title">품목</div>`+rcItems.map(it=>{
+    ?`<div class="rc-section-title">지출 내역</div>`+rcItems.map(it=>{
         const mems=(it.members&&it.members.length)?it.members.join(', '):(r.people||[]).join(', ');
-        return `<div class="rc-item-row"><div class="rc-item-info"><div class="rc-item-name">${e(it.name||'(이름 없음)')}</div><div class="rc-item-meta">${e(it.payer||'')} 결제 · ${e(mems)}</div></div><span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>`;
+        return `<div class="rc-item-row"><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name">${e(it.name||'(이름 없음)')}</div><div class="rc-item-meta">${e(it.payer||'')} 결제 · ${e(mems)}</div></div><span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>`;
       }).join(''):'';
   const txnHtml=txns.length
     ?`<div class="rc-section-title">송금</div><div class="rc-txns">`+txns.map(t=>`<div class="rc-txn-row"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`).join('')+`</div>`
