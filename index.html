@@ -194,11 +194,11 @@ svg{display:block;flex-shrink:0;}
 .bd-ex-tag{font-size:10px;color:var(--blue-txt);background:var(--blue-bg);border-radius:4px;padding:1px 5px;font-weight:500;flex-shrink:0;}
 
 .right-body.settle-mode{background:var(--bg);}
-.settle-hero{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);padding:16px 20px;margin-bottom:14px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.04);}
-.sh-eye{font-size:10px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;}
-.sh-num{font-size:28px;font-weight:700;letter-spacing:-.5px;margin-bottom:0;}
+.settle-hero{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);padding:22px 20px;margin-bottom:14px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+.sh-num{font-size:34px;font-weight:700;letter-spacing:-.5px;margin-bottom:0;}
 .sh-unit{font-size:.72em;font-weight:600;margin-left:2px;vertical-align:.1em;}
-.sh-sub{font-size:13px;color:var(--label2);}
+.sh-divider{height:1px;background:var(--sep);margin:14px 0;}
+.sh-sub{font-size:12px;color:var(--label2);}
 .txn-card{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
 .txn-row{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--sep);gap:12px;}
 .txn-row:last-child{border-bottom:none;}
@@ -475,7 +475,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.17';
+const APP_VERSION='v1.18';
 const BUILD_TIME='2026-06-03 00:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -745,7 +745,8 @@ function renderMobileBody(){
     if(!total){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>지출을 먼저 입력해주세요</p></div>';return;}
     const txns=calcTxns(paid,owes);
     let html=`<div class="share-date-row"><input type="date" class="share-date-inp" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('start',this.value)"/>${settleDateEnd?`<span class="share-date-sep">~</span><input type="date" class="share-date-inp" value="${settleDateEnd}" min="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('end',this.value)"/><button class="share-date-rm" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
-    html+=`<div class="settle-hero"><div class="sh-eye">총 지출금액</div><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}<span class="sh-unit">원</span></div></div>`;
+    const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
+    html+=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}<span class="sh-unit">원</span></div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
     if(txns.length){html+=`<div class="pay-section-title">송금</div>`;html+='<div class="txn-card">'+txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')+'</div>';}
     const validItems=items.filter(it=>+it.amount!==0);
     if(validItems.length){const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItemMob(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-sep">·</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;}
@@ -811,13 +812,14 @@ function renderResultView(eyeId,titleId,subId,bodyId){
 }
 
 function renderSettleView(eyeId,titleId,subId,bodyId){
-  document.getElementById(eyeId).textContent='정산 송금';document.getElementById(titleId).textContent='이렇게 송금해주세요';document.getElementById(subId).textContent='아래 내역을 카카오톡 또는 문자로 공유해보세요.';
+  document.getElementById(eyeId).textContent='공유';document.getElementById(titleId).textContent='정산 내역';document.getElementById(subId).textContent='지출 요약과 송금 내역을 이미지로 공유하세요.';
   const body=document.getElementById(bodyId);if(body)body.classList.add('settle-mode');
   const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);
   if(!total){body.innerHTML='<div class="empty"><div class="empty-icon">'+svgEmpty+'</div><p>지출을 먼저 입력해주세요</p></div>';return;}
   const txns=calcTxns(paid,owes);
   const dateRow=`<div class="share-date-row"><input type="date" class="share-date-inp" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('start',this.value)"/>${settleDateEnd?`<span class="share-date-sep">~</span><input type="date" class="share-date-inp" value="${settleDateEnd}" min="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('end',this.value)"/><button class="share-date-rm" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
-  const hero=`<div class="settle-hero"><div class="sh-eye">총 지출금액</div><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}<span class="sh-unit">원</span></div></div>`;
+  const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
+  const hero=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}<span class="sh-unit">원</span></div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
   const txnSection=txns.length?`<div class="pay-section-title">송금</div><div class="txn-card">${txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')}</div>`:'<div class="empty" style="padding:20px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div>';
   const validItems=items.filter(it=>+it.amount!==0);
   const paySection=validItems.length?`<div class="pay-section-title">지출 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-sep">·</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('')}</div>`:'';
@@ -1131,7 +1133,7 @@ async function generateSettleCanvas(){
   });
   const iconMap=new Map();for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#0055B8'));}catch(e){iconMap.set(svg,null);}}}
   const W=1080,PAD=42,TOP_PAD=56,cardX=PAD,cardW=W-PAD*2;
-  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=230,TXN_ROW_H=108,ITEM_ROW_H=136,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78;
+  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=230,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78;
   const txnCardH=txns.length?txns.length*TXN_ROW_H:EMPTY_CARD_H;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
   const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;
@@ -1209,17 +1211,17 @@ async function generateSettleCanvas(){
       const amountText=fmt(+it.amount)+'원';
       ctx.fillStyle=(+it.amount<0)?C.red:C.text;setFont(34,700);ctx.textAlign='right';ctx.textBaseline='middle';
       const amountX=cardX+cardW-38,amountW=ctx.measureText(amountText).width;
-      ctx.fillText(amountText,amountX,ry-16);
+      ctx.fillText(amountText,amountX,ry+2);
 
       const nameX=cardX+118,maxMainW=amountX-amountW-34-nameX;
       const name=truncateCanvasText(ctx,it.name||'(이름 없음)',maxMainW);
       ctx.fillStyle=C.text;setFont(30,700);ctx.textAlign='left';ctx.textBaseline='middle';
-      ctx.fillText(name,nameX,ry-16);
+      ctx.fillText(name,nameX,ry-22);
 
       const mems=it.members.length?it.members:people;
       const payerInfo=`${it.payer||''} 결제 · ${mems.join(', ')}`;
       ctx.fillStyle=C.muted;setFont(24,400);
-      ctx.fillText(truncateCanvasText(ctx,payerInfo,maxMainW),nameX,ry+20);
+      ctx.fillText(truncateCanvasText(ctx,payerInfo,maxMainW),nameX,ry+26);
 
       if(i<validItems.length-1)drawDivider(y+(i+1)*ITEM_ROW_H);
     });
