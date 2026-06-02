@@ -474,8 +474,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.19';
-const BUILD_TIME='2026-06-03 00:00';
+const APP_VERSION='v1.20';
+const BUILD_TIME='2026-06-03 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -558,7 +558,7 @@ const STORAGE_KEY='dutchpay_v1';
 const HISTORY_KEY='dutchpay_history';
 
 // ── Dropbox 자동 동기화 ──
-const DBX_MAIN_FILE='/dutch-pay_data.json';
+const DBX_MAIN_FILE='/01_Personal/더치페이/dutch-pay_data.json';
 const DBX_LASTSYNC_MAIN='dutchpay_dbx_lastsync_main';
 // history.html과 동일한 localStorage 키 공유 (같은 도메인 = 같은 계정)
 function dbxGetToken(){return localStorage.getItem('dutchpay_dbx_token');}
@@ -875,7 +875,7 @@ const DBX_H_TOKEN='dutchpay_dbx_token';
 const DBX_H_REFRESH='dutchpay_dbx_refresh';
 const DBX_H_ACCOUNT='dutchpay_dbx_account';
 const DBX_H_LASTSYNC='dutchpay_dbx_lastsync';
-const DBX_H_FILE='/dutch-pay_history.json';
+const DBX_H_FILE='/01_Personal/더치페이/dutch-pay_history.json';
 const svgArrowH='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
 
 function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JSON.parse(r):[];}catch(e){return [];}}
@@ -1001,7 +1001,7 @@ function _renderHDbxPanel(){
   let acHtml='';
   if(token){
     try{const ac=JSON.parse(localStorage.getItem(DBX_H_ACCOUNT)||'{}');if(ac.name){acHtml=`<div class="dbx-account"><div class="dbx-account-info"><div class="dbx-account-name">${e(ac.name)}</div><div class="dbx-account-email">${e(ac.email)}</div></div><button class="dbx-disconnect" onclick="hDbxDisconnect()">연결 해제</button></div>`;}}catch(e2){}
-    panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body">${acHtml}<div class="dbx-btn-row"><button class="dbx-btn secondary" onclick="hSyncDropbox()">지금 동기화</button></div><div style="font-size:11px;color:var(--label3);margin-top:10px;text-align:center">파일: dutch-pay_history.json</div></div></div>`;
+    panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body">${acHtml}<div class="dbx-btn-row"><button class="dbx-btn secondary" onclick="hSyncDropbox()">지금 동기화</button></div><div style="font-size:11px;color:var(--label3);margin-top:10px;text-align:center">파일: 01_Personal/더치페이/dutch-pay_history.json</div></div></div>`;
   }else{
     const redirectUri=location.origin+location.pathname;
     panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body"><div class="dbx-field"><div class="dbx-label">Dropbox App Key</div><input class="dbx-inp" id="hDbxAppKey" placeholder="앱 키 입력" value="${e(appKey)}"/><div class="dbx-guide">1. Dropbox 개발자 콘솔에서 앱 생성<br>2. Permission: files.content.write, files.content.read<br>3. Redirect URI: <code>${redirectUri}</code><br>4. App Key 복사 후 위에 입력</div></div><button class="dbx-btn" onclick="hDbxConnect()">Dropbox 연결하기</button></div></div>`;
