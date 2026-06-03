@@ -201,7 +201,7 @@ svg{display:block;flex-shrink:0;}
 .txn-card{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
 .txn-row{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--sep);gap:12px;}
 .txn-row:last-child{border-bottom:none;}
-.txn-people{display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
+.txn-people{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .txn-from{font-size:14px;font-weight:600;color:var(--label);}
 .txn-arr{color:var(--label);display:flex;align-items:center;}
 .txn-to{font-size:14px;font-weight:600;color:var(--label);}
@@ -274,7 +274,7 @@ svg{display:block;flex-shrink:0;}
 .detail-row:hover{background:var(--fill2);}
 .detail-row:last-child{border-bottom:none;}
 .detail-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
-.detail-main{display:flex;align-items:center;gap:8px;min-width:0;}
+.detail-main{display:flex;align-items:center;gap:8px;min-width:0;padding-left:8px;}
 .detail-name{font-size:14px;font-weight:500;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .detail-sub{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--label3);min-width:0;}
 .detail-payer{white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;background:var(--fill);color:var(--label2);border-radius:100px;padding:2px 8px;font-size:10px;line-height:1;}
@@ -328,7 +328,7 @@ svg{display:block;flex-shrink:0;}
 .rc-item-row{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--sep);gap:10px;}
 .rc-item-row:last-child{border-bottom:none;}
 .rc-item-info{flex:1;min-width:0;}
-.rc-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rc-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:8px;}
 .rc-item-meta{font-size:11px;color:var(--label3);margin-top:1px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
 .rc-payer-pill{white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;background:var(--fill);color:var(--label2);border-radius:100px;padding:2px 8px;font-size:10px;line-height:1;}
 .rc-item-amt{font-size:13px;font-weight:600;flex-shrink:0;}
@@ -336,7 +336,7 @@ svg{display:block;flex-shrink:0;}
 .rc-txns{padding:0 0 4px;}
 .rc-txn-row{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--sep);font-size:13px;}
 .rc-txn-row:last-child{border-bottom:none;}
-.rc-txn-people{display:flex;align-items:center;gap:6px;color:var(--label);}
+.rc-txn-people{display:flex;align-items:center;gap:14px;color:var(--label);}
 .rc-txn-amt{font-weight:600;flex-shrink:0;}
 .rc-no-txn{font-size:13px;color:var(--green);padding:10px 16px;text-align:center;}
 .rc-foot{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--fill2);border-top:1px solid var(--sep);}
@@ -474,8 +474,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.33';
-const BUILD_TIME='2026-06-04 00:30';
+const APP_VERSION='v1.34';
+const BUILD_TIME='2026-06-04 01:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -642,7 +642,7 @@ function clearSettleEndDate(){settleDateEnd=null;saveState();renderDesktopRight(
 
 const svgX='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 const svgTrash='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
-const svgArrow='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+const svgArrow='<svg width="16" height="16" viewBox="0 0 24 24"><line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 6 L22 12 L13 18 Z" fill="currentColor"/></svg>';
 const svgEmpty='<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="11" y2="16"/></svg>';
 const svgShare='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
 const svgBookmark='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
@@ -886,7 +886,7 @@ const DBX_H_REFRESH='dutchpay_dbx_refresh';
 const DBX_H_ACCOUNT='dutchpay_dbx_account';
 const DBX_H_LASTSYNC='dutchpay_dbx_lastsync';
 const DBX_H_FILE='/01_Personal/Dutch-Pay/dutch-pay_history.json';
-const svgArrowH='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+const svgArrowH='<svg width="13" height="13" viewBox="0 0 24 24"><line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M13 6 L22 12 L13 18 Z" fill="currentColor"/></svg>';
 
 function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JSON.parse(r):[];}catch(e){return [];}}
 function saveHistory(arr){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));}catch(e){toast('저장 공간이 부족해 기록을 저장하지 못했어요',{type:'error'});}}
@@ -1199,8 +1199,15 @@ async function generateSettleCanvas(){
       const amountX=cardX+cardW-38,amountW=ctx.measureText(amountText).width;
       ctx.fillText(amountText,amountX,ry);
       const leftX=cardX+38,maxLeftW=amountX-amountW-34-leftX;
-      ctx.fillStyle=C.text;setFont(32,700);ctx.textAlign='left';
-      ctx.fillText(truncateCanvasText(ctx,`${t.from} → ${t.to}`,maxLeftW),leftX,ry);
+      const AGAP=20,AH=9,AL=36,headW=AH*1.8;
+      setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
+      const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry);
+      const fw=ctx.measureText(fromTxt).width;
+      const AX=leftX+fw+AGAP,AEX=AX+AL;
+      ctx.strokeStyle=C.text;ctx.lineWidth=2.5;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
+      ctx.fillStyle=C.text;ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
+      ctx.fillText(truncateCanvasText(ctx,t.to||'',Math.max(maxLeftW-fw-AGAP-AL-AGAP,40)),AEX+AGAP,ry);
       if(i<txns.length-1)drawDivider(y+(i+1)*TXN_ROW_H);
     });
   }
@@ -1225,14 +1232,14 @@ async function generateSettleCanvas(){
       ctx.fillText(amountText,amountX,ry+2);
 
       const nameX=cardX+118,maxMainW=amountX-amountW-34-nameX;
-      const name=truncateCanvasText(ctx,it.name||'(이름 없음)',maxMainW);
+      const pillPadX=14,pillPadY=6;
+      const name=truncateCanvasText(ctx,it.name||'(이름 없음)',maxMainW-pillPadX);
       ctx.fillStyle=C.text;setFont(30,700);ctx.textAlign='left';ctx.textBaseline='middle';
-      ctx.fillText(name,nameX,ry-22);
+      ctx.fillText(name,nameX+pillPadX,ry-22);
 
       const mems=it.members.length?it.members:people;
       const payerText=`${it.payer||'결제자 미정'} 결제`;
       setFont(20,400);ctx.textBaseline='alphabetic';ctx.textAlign='left';
-      const pillPadX=14,pillPadY=6;
       const pm=ctx.measureText(payerText);
       const pillTW=pm.width;
       const pillW=pillTW+pillPadX*2,pillH=20+pillPadY*2;
