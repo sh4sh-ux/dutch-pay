@@ -277,8 +277,7 @@ svg{display:block;flex-shrink:0;}
 .detail-main{display:flex;align-items:center;gap:8px;min-width:0;}
 .detail-name{font-size:14px;font-weight:500;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .detail-sub{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--label3);min-width:0;}
-.detail-payer{white-space:nowrap;flex-shrink:0;}
-.detail-sep{flex-shrink:0;}
+.detail-payer{white-space:nowrap;flex-shrink:0;background:var(--blue-bg);color:var(--blue-txt);border-radius:100px;padding:2px 8px;}
 .detail-members{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .detail-amt{font-size:15px;font-weight:700;flex-shrink:0;}
 .pay-ic{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -330,7 +329,8 @@ svg{display:block;flex-shrink:0;}
 .rc-item-row:last-child{border-bottom:none;}
 .rc-item-info{flex:1;min-width:0;}
 .rc-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rc-item-meta{font-size:11px;color:var(--label3);margin-top:1px;}
+.rc-item-meta{font-size:11px;color:var(--label3);margin-top:1px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.rc-payer-pill{white-space:nowrap;flex-shrink:0;background:var(--blue-bg);color:var(--blue-txt);border-radius:100px;padding:2px 8px;}
 .rc-item-amt{font-size:13px;font-weight:600;flex-shrink:0;}
 .rc-item-amt.neg{color:var(--red);}
 .rc-txns{padding:0 0 4px;}
@@ -474,8 +474,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.28';
-const BUILD_TIME='2026-06-03 23:00';
+const APP_VERSION='v1.30';
+const BUILD_TIME='2026-06-03 23:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -622,7 +622,7 @@ function _updateSyncBadge(){
   try{const d=new Date(last);el.textContent=`☁ ${d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 동기화됨`;}catch(e){}
 }
 
-function saveState(){try{syncCurrentToGroup();localStorage.setItem(STORAGE_KEY,JSON.stringify({version:2,groups,currentGroupId}));_scheduleSyncToDropbox();}catch(e){}}
+function saveState(){try{syncCurrentToGroup();localStorage.setItem(STORAGE_KEY,JSON.stringify({version:2,groups,currentGroupId}));_scheduleSyncToDropbox();}catch(e){toast('저장 공간이 부족해 데이터를 저장하지 못했어요',{type:'error'});}}
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if(d.version===2&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
 function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?'))return;const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
 
@@ -739,7 +739,7 @@ function renderMobileBody(){
     html+=`<div class="stat-grid" style="margin-bottom:12px"><div class="stat-box"><div class="stat-lbl">총 금액</div><div class="stat-val${total<0?' amt-neg':''}">${fmt(total)}원</div></div><div class="stat-box"><div class="stat-lbl">지출 수</div><div class="stat-val">${vc}개</div></div><div class="stat-box"><div class="stat-lbl">참여자</div><div class="stat-val">${people.length}명</div></div></div>`;
     const txns=calcTxns(paid,owes);
     if(txns.length){html+=`<div class="pay-section-title">송금 내역</div>`;html+='<div class="txn-card">'+txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')+'</div>';}else{html+=`<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>`;}
-    const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItemMob(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-sep">·</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');
+    const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItemMob(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');
     html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;el.innerHTML=html;return;
   }
   if(mTab==='settle'){
@@ -751,7 +751,7 @@ function renderMobileBody(){
     html+=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
     if(txns.length){html+=`<div class="pay-section-title">송금</div>`;html+='<div class="txn-card">'+txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')+'</div>';}
     const validItems=items.filter(it=>+it.amount!==0);
-    if(validItems.length){const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItemMob(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-sep">·</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;}
+    if(validItems.length){const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItemMob(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;}
     if(txns.length&&hasRounding)html+='<div class="notice">차액은 결제자에게 우선 부담돼요</div>';
     html+=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button></div>`;
     el.innerHTML=html;return;
@@ -809,7 +809,7 @@ function renderResultView(eyeId,titleId,subId,bodyId){
   const stats=`<div class="stat-grid"><div class="stat-box"><div class="stat-lbl">총 금액</div><div class="stat-val${total<0?' amt-neg':''}">${fmt(total)}원</div></div><div class="stat-box"><div class="stat-lbl">지출 수</div><div class="stat-val">${vc}개</div></div><div class="stat-box"><div class="stat-lbl">참여자</div><div class="stat-val">${people.length}명</div></div></div>`;
   const txns=calcTxns(paid,owes);
   let txnSection=txns.length?`<div class="pay-section-title">송금 내역</div><div class="txn-card">${txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')}</div>`:'<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>';
-  const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-sep">·</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');
+  const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');
   document.getElementById(bodyId).innerHTML=stats+txnSection+`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;
 }
 
@@ -824,7 +824,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const hero=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
   const txnSection=txns.length?`<div class="pay-section-title">송금</div><div class="txn-card">${txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')}</div>`:'<div class="empty" style="padding:20px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div>';
   const validItems=items.filter(it=>+it.amount!==0);
-  const paySection=validItems.length?`<div class="pay-section-title">지출 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-sep">·</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('')}</div>`:'';
+  const paySection=validItems.length?`<div class="pay-section-title">지출 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=Math.abs((+it.amount)%n);const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('')}</div>`:'';
   const noticeHtml=txns.length&&hasRounding?'<div class="notice">차액은 결제자에게 우선 부담돼요</div>':'';
   const shareBtn=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button></div>`;
   body.innerHTML=dateRow+hero+txnSection+paySection+noticeHtml+shareBtn;
@@ -882,7 +882,7 @@ const DBX_H_FILE='/01_Personal/Dutch-Pay/dutch-pay_history.json';
 const svgArrowH='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
 
 function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JSON.parse(r):[];}catch(e){return [];}}
-function saveHistory(arr){localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));}
+function saveHistory(arr){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));}catch(e){toast('저장 공간이 부족해 기록을 저장하지 못했어요',{type:'error'});}}
 
 function deleteHistoryRecord(id){
   if(!confirm('이 기록을 삭제할까요?'))return;
@@ -912,7 +912,7 @@ function _buildRecordCardHtml(r){
   const itemsHtml=rcItems.length
     ?`<div class="rc-section-title">지출 내역</div>`+rcItems.map(it=>{
         const mems=(it.members&&it.members.length)?it.members.join(', '):(r.people||[]).join(', ');
-        return `<div class="rc-item-row"><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name">${e(it.name||'(이름 없음)')}</div><div class="rc-item-meta">${e(it.payer||'')} 결제 · ${e(mems)}</div></div><span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>`;
+        return `<div class="rc-item-row"><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name">${e(it.name||'(이름 없음)')}</div><div class="rc-item-meta"><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span><span>${e(mems)}</span></div></div><span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>`;
       }).join(''):'';
   const txnHtml=txns.length
     ?`<div class="rc-section-title">송금</div><div class="rc-txns">`+txns.map(t=>`<div class="rc-txn-row"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`).join('')+`</div>`
