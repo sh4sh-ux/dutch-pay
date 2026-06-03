@@ -277,7 +277,7 @@ svg{display:block;flex-shrink:0;}
 .detail-main{display:flex;align-items:center;gap:8px;min-width:0;}
 .detail-name{font-size:14px;font-weight:500;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .detail-sub{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--label3);min-width:0;}
-.detail-payer{white-space:nowrap;flex-shrink:0;background:var(--blue-bg);color:var(--blue-txt);border-radius:100px;padding:2px 8px;}
+.detail-payer{white-space:nowrap;flex-shrink:0;background:var(--fill);color:var(--label2);border-radius:100px;padding:2px 8px;}
 .detail-members{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .detail-amt{font-size:15px;font-weight:700;flex-shrink:0;}
 .pay-ic{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -330,7 +330,7 @@ svg{display:block;flex-shrink:0;}
 .rc-item-info{flex:1;min-width:0;}
 .rc-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .rc-item-meta{font-size:11px;color:var(--label3);margin-top:1px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
-.rc-payer-pill{white-space:nowrap;flex-shrink:0;background:var(--blue-bg);color:var(--blue-txt);border-radius:100px;padding:2px 8px;}
+.rc-payer-pill{white-space:nowrap;flex-shrink:0;background:var(--fill);color:var(--label2);border-radius:100px;padding:2px 8px;}
 .rc-item-amt{font-size:13px;font-weight:600;flex-shrink:0;}
 .rc-item-amt.neg{color:var(--red);}
 .rc-txns{padding:0 0 4px;}
@@ -474,11 +474,12 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.30';
-const BUILD_TIME='2026-06-03 23:45';
+const APP_VERSION='v1.31';
+const BUILD_TIME='2026-06-04 00:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
+let _ownerTapCount=0,_ownerUnlocked=false;
 let dTab='input',mTab='input';
 let itemSort='default',itemSearch='';
 let settleDateStart=new Date().toISOString().slice(0,10),settleDateEnd=null;
@@ -520,7 +521,11 @@ function showDataMenu(anchorEl,ev){
   const pop=document.createElement('div');pop.className='data-pop';
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
-  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version">더치페이 ${APP_VERSION}</div>`;
+  if(_ownerUnlocked){
+    pop.innerHTML=`<div class="data-pop-hd">소유자 메뉴 🔓</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} 🔓</div>`;
+  }else{
+    pop.innerHTML=`<div class="data-pop-version" data-action="ownerTap" style="cursor:pointer;padding:14px 10px">더치페이 ${APP_VERSION}</div>`;
+  }
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
       if(dbxGetToken()){syncFromDropbox();toast('Dropbox 동기화 중...');}
       else{goToHistory();}
@@ -530,7 +535,9 @@ function showDataMenu(anchorEl,ev){
     else if(action==='exportCsv'){exportCurrentGroupCsv();pop.remove();}
     else if(action==='export'){exportData();pop.remove();}
     else if(action==='import'){importData();pop.remove();}
-    else if(action==='reset'){resetAllData();pop.remove();}});
+    else if(action==='reset'){resetAllData();pop.remove();}
+    else if(action==='ownerTap'){_ownerTapCount++;if(_ownerTapCount>=5){_ownerUnlocked=true;_ownerTapCount=0;pop.remove();showDataMenu();toast('🔓 소유자 모드',{type:'success'});}}
+    else if(action==='lockOwner'){_ownerUnlocked=false;_ownerTapCount=0;pop.remove();toast('🔒 잠금됨',{type:'success'});}});
   document.body.appendChild(pop);_positionPopover(pop,anchorEl,true);
   setTimeout(()=>{const h=(e3)=>{if(!pop.contains(e3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=(e3)=>{if(e3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);
 }
@@ -1223,9 +1230,17 @@ async function generateSettleCanvas(){
       ctx.fillText(name,nameX,ry-22);
 
       const mems=it.members.length?it.members:people;
-      const payerInfo=`${it.payer||''} 결제 · ${mems.join(', ')}`;
-      ctx.fillStyle=C.muted;setFont(24,400);
-      ctx.fillText(truncateCanvasText(ctx,payerInfo,maxMainW),nameX,ry+26);
+      const payerText=`${it.payer||'결제자 미정'} 결제`;
+      setFont(24,400);ctx.textBaseline='middle';ctx.textAlign='left';
+      const pillPadX=14,pillPadY=5;
+      const pillTW=ctx.measureText(payerText).width;
+      const pillW=pillTW+pillPadX*2,pillH=24+pillPadY*2;
+      ctx.fillStyle='#F3F3F5';
+      roundRectPath(ctx,nameX,ry+26-pillH/2,pillW,pillH,pillH/2);ctx.fill();
+      ctx.fillStyle='#666666';
+      ctx.fillText(payerText,nameX+pillPadX,ry+26);
+      const memsX=nameX+pillW+12,maxMemsW=amountX-amountW-34-memsX;
+      if(maxMemsW>30){ctx.fillStyle=C.muted;ctx.fillText(truncateCanvasText(ctx,mems.join(', '),maxMemsW),memsX,ry+26);}
 
       if(i<validItems.length-1)drawDivider(y+(i+1)*ITEM_ROW_H);
     });
