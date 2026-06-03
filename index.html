@@ -474,8 +474,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.34';
-const BUILD_TIME='2026-06-04 01:00';
+const APP_VERSION='v1.35';
+const BUILD_TIME='2026-06-04 01:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1233,9 +1233,24 @@ async function generateSettleCanvas(){
 
       const nameX=cardX+118,maxMainW=amountX-amountW-34-nameX;
       const pillPadX=14,pillPadY=6;
-      const name=truncateCanvasText(ctx,it.name||'(이름 없음)',maxMainW-pillPadX);
+      const n=(it.members.length||people.length)||1;
+      const rem=Math.abs(Math.round((+it.amount||0)%n));
+      const hasChip=hasRounding&&rem>0;
+      let chipReserve=0;
+      if(hasChip){setFont(22,500);chipReserve=ctx.measureText(`차액 ${rem}원`).width+20+20;}
+      const name=truncateCanvasText(ctx,it.name||'(이름 없음)',maxMainW-pillPadX-chipReserve);
       ctx.fillStyle=C.text;setFont(30,700);ctx.textAlign='left';ctx.textBaseline='middle';
       ctx.fillText(name,nameX+pillPadX,ry-22);
+      if(hasChip){
+        const chipText=`차액 ${rem}원`;
+        const nameW=ctx.measureText(name).width;
+        setFont(22,500);ctx.textBaseline='middle';
+        const chipTW=ctx.measureText(chipText).width;
+        const cpX=10,cpY=4,chipW=chipTW+cpX*2,chipH=22+cpY*2;
+        const chipX=nameX+pillPadX+nameW+12;
+        ctx.fillStyle=C.blueBg;roundRectPath(ctx,chipX,ry-22-chipH/2,chipW,chipH,6);ctx.fill();
+        ctx.fillStyle='#0055B8';ctx.textAlign='left';ctx.fillText(chipText,chipX+cpX,ry-22);
+      }
 
       const mems=it.members.length?it.members:people;
       const payerText=`${it.payer||'결제자 미정'} 결제`;
