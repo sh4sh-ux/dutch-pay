@@ -477,8 +477,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.42';
-const BUILD_TIME='2026-06-04 04:20';
+const APP_VERSION='v1.43';
+const BUILD_TIME='2026-06-03 23:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -738,7 +738,7 @@ function renderAll(){renderPills();renderItemLists();updateTotals();renderDeskto
 
 function renderPills(){const el=document.getElementById('dPills');if(!people.length){el.innerHTML='<span class="pills-empty">이름을 입력하세요</span>';return;}el.innerHTML=people.map(p=>`<span class="pill">${e(p)}<button class="pill-x" onclick="removePerson(${ja(p)})">${svgX}</button></span>`).join('');}
 
-function renderItemLists(){const el=document.getElementById('dItemRows');const tools=document.getElementById('dItemTools');if(tools)tools.style.display=items.length>=5?'flex':'none';const list=getDisplayItems();if(!list.length){if(items.length){el.innerHTML='<div class="ilist-results-empty">검색 결과가 없어요</div>';}else{el.innerHTML='';}return;}el.innerHTML=list.map(it=>`<div class="item-row${it.id===selectedId?' sel':''}" onclick="selectItem(${it.id})"><div class="item-dot"></div><div class="item-info"><div class="item-name">${e(it.name)||'(이름 없음)'}</div><div class="item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('');}
+function renderItemLists(){const el=document.getElementById('dItemRows');const tools=document.getElementById('dItemTools');if(tools)tools.style.display=items.length>=5?'flex':'none';const sortEl=document.getElementById('dItemSort');if(sortEl)sortEl.value=itemSort;const searchEl=document.getElementById('dItemSearch');if(searchEl)searchEl.value=itemSearch;const list=getDisplayItems();if(!list.length){if(items.length){el.innerHTML='<div class="ilist-results-empty">검색 결과가 없어요</div>';}else{el.innerHTML='';}return;}el.innerHTML=list.map(it=>`<div class="item-row${it.id===selectedId?' sel':''}" onclick="selectItem(${it.id})"><div class="item-dot"></div><div class="item-info"><div class="item-name">${e(it.name)||'(이름 없음)'}</div><div class="item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('');}
 
 function updateTotals(){const t=items.reduce((s,it)=>s+(+it.amount||0),0);const neg=t<0;const dEl=document.getElementById('dTotal');dEl.textContent=fmt(t)+'원';dEl.classList.toggle('amt-neg',neg);const mEl=document.getElementById('mTotal');if(mEl){mEl.textContent=fmt(t)+'원';mEl.classList.toggle('amt-neg',neg);}}
 
@@ -1192,13 +1192,9 @@ function truncateCanvasText(ctx,text,maxWidth){
 
 async function generateSettleCanvas(){
   const total=items.reduce((s,it)=>s+(+it.amount||0),0);
-  const{paid,owes}=computeShares();
+  const{paid,owes,hasRounding}=computeShares();
   const txns=calcTxns(paid,owes);
   const validItems=items.filter(it=>+it.amount!==0);
-  const hasRounding=validItems.some(it=>{
-    const n=(it.members.length||people.length)||1;
-    return Math.abs(Math.round((+it.amount||0)%n))>0;
-  });
   const iconMap=new Map();for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#0055B8'));}catch(e){iconMap.set(svg,null);}}}
   const W=1080,PAD=42,TOP_PAD=56,cardX=PAD,cardW=W-PAD*2;
   const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=245,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78;
@@ -1214,7 +1210,7 @@ async function generateSettleCanvas(){
   const drawDivider=(y)=>{ctx.strokeStyle=C.line;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cardX+34,y);ctx.lineTo(cardX+cardW-34,y);ctx.stroke();};
   const drawEmpty=(text,y,h)=>{ctx.fillStyle=C.muted;setFont(28,600);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,W/2,y+h/2);};
   const peopleCount=people.length;
-  const perPerson=peopleCount?Math.floor(total/peopleCount):0;
+  const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
 
   ctx.fillStyle=C.bg;ctx.fillRect(0,0,W,H);
   let y=TOP_PAD;
