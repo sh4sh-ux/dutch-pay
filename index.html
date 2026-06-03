@@ -474,8 +474,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.32';
-const BUILD_TIME='2026-06-04 00:20';
+const APP_VERSION='v1.33';
+const BUILD_TIME='2026-06-04 00:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1231,16 +1231,19 @@ async function generateSettleCanvas(){
 
       const mems=it.members.length?it.members:people;
       const payerText=`${it.payer||'결제자 미정'} 결제`;
-      setFont(24,400);ctx.textBaseline='middle';ctx.textAlign='left';
-      const pillPadX=14,pillPadY=5;
-      const pillTW=ctx.measureText(payerText).width;
-      const pillW=pillTW+pillPadX*2,pillH=24+pillPadY*2;
+      setFont(20,400);ctx.textBaseline='alphabetic';ctx.textAlign='left';
+      const pillPadX=14,pillPadY=6;
+      const pm=ctx.measureText(payerText);
+      const pillTW=pm.width;
+      const pillW=pillTW+pillPadX*2,pillH=20+pillPadY*2;
+      const pillCY=ry+26;
       ctx.fillStyle='#F3F3F5';
-      roundRectPath(ctx,nameX,ry+26-pillH/2,pillW,pillH,pillH/2);ctx.fill();
+      roundRectPath(ctx,nameX,pillCY-pillH/2,pillW,pillH,pillH/2);ctx.fill();
       ctx.fillStyle='#666666';
-      ctx.fillText(payerText,nameX+pillPadX,ry+26);
+      const pillBaselineY=pillCY+(pm.actualBoundingBoxAscent-pm.actualBoundingBoxDescent)/2;
+      ctx.fillText(payerText,nameX+pillPadX,pillBaselineY);
       const memsX=nameX+pillW+12,maxMemsW=amountX-amountW-34-memsX;
-      if(maxMemsW>30){ctx.fillStyle=C.muted;ctx.fillText(truncateCanvasText(ctx,mems.join(', '),maxMemsW),memsX,ry+26);}
+      if(maxMemsW>30){ctx.textBaseline='middle';ctx.fillStyle=C.muted;ctx.fillText(truncateCanvasText(ctx,mems.join(', '),maxMemsW),memsX,ry+26);}
 
       if(i<validItems.length-1)drawDivider(y+(i+1)*ITEM_ROW_H);
     });
