@@ -45,8 +45,8 @@ svg{display:block;flex-shrink:0;}
   .mob-tabs{display:flex;gap:0;}
   .mob-tab{flex:1;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--label2);padding:10px 0 12px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
   .mob-tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
-  .mob-body{padding:16px 16px 80px;}
-  .mob-owner-tap{position:fixed;bottom:0;left:0;right:0;z-index:50;text-align:center;padding:10px 0 max(20px,calc(env(safe-area-inset-bottom,0px)+10px));background:var(--bg);font-size:10px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;user-select:none;-webkit-tap-highlight-color:transparent;}
+  .mob-body{padding:16px 16px calc(max(env(safe-area-inset-bottom,0px),0px) + 72px);}
+  .mob-owner-tap{position:fixed;bottom:0;left:0;right:0;z-index:150;display:flex;align-items:center;justify-content:center;height:calc(44px + max(env(safe-area-inset-bottom,0px),0px));padding-bottom:max(env(safe-area-inset-bottom,0px),0px);background:var(--bg);font-size:10px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;user-select:none;-webkit-tap-highlight-color:transparent;cursor:default;}
   .mob-section{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:12px;}
   .mob-section-hd{padding:14px 16px;border-bottom:1px solid var(--sep);display:flex;align-items:center;justify-content:space-between;}
   .mob-section-title{font-size:12px;font-weight:600;color:var(--label2);letter-spacing:.3px;text-transform:uppercase;}
@@ -477,8 +477,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.39';
-const BUILD_TIME='2026-06-04 03:30';
+const APP_VERSION='v1.40';
+const BUILD_TIME='2026-06-04 04:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
