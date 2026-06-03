@@ -88,7 +88,7 @@ svg{display:block;flex-shrink:0;}
 .left{border-right:1px solid var(--sep);display:flex;flex-direction:column;background:var(--left-bg);}
 .left-top{padding:28px var(--pad-x) 0;}
 .app-label{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;}
-.app-version{font-weight:400;letter-spacing:0;opacity:.7;text-transform:none;margin-left:4px;}
+.app-version{font-weight:300;letter-spacing:0;opacity:.7;text-transform:none;margin-left:4px;}
 .app-title{font-size:24px;font-weight:700;letter-spacing:-.5px;line-height:1.15;margin-bottom:18px;}
 .tab-row{display:flex;gap:2px;background:var(--fill);border-radius:10px;padding:3px;margin-bottom:20px;}
 .tab{flex:1;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--label2);padding:6px 0;border-radius:8px;cursor:pointer;transition:all .15s;}
@@ -467,7 +467,7 @@ svg{display:block;flex-shrink:0;}
     </div>
   </div>
   <div class="mob-body" id="mBody"></div>
-  <div class="mob-owner-tap" id="mobOwnerTap" onclick="_ownerAreaClick(this,event)">DUTCH PAY <span id="appVersionMob"></span></div>
+  <div class="mob-owner-tap" id="mobOwnerTap" onclick="_ownerAreaClick(this,event)">DUTCH PAY <span class="app-version" id="appVersionMob"></span></div>
   <div class="mob-sheet-overlay" id="mOverlay" onclick="closeSheet()"></div>
   <div class="mob-sheet" id="mSheet">
     <div class="mob-sheet-handle"></div>
@@ -477,8 +477,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.41';
-const BUILD_TIME='2026-06-04 04:10';
+const APP_VERSION='v1.42';
+const BUILD_TIME='2026-06-04 04:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
