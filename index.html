@@ -45,7 +45,8 @@ svg{display:block;flex-shrink:0;}
   .mob-tabs{display:flex;gap:0;}
   .mob-tab{flex:1;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--label2);padding:10px 0 12px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
   .mob-tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
-  .mob-body{padding:16px 16px 100px;}
+  .mob-body{padding:16px 16px 80px;}
+  .mob-owner-tap{text-align:center;padding:12px 0 max(24px,calc(env(safe-area-inset-bottom,0px)+16px));font-size:10px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;user-select:none;-webkit-tap-highlight-color:transparent;}
   .mob-section{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:12px;}
   .mob-section-hd{padding:14px 16px;border-bottom:1px solid var(--sep);display:flex;align-items:center;justify-content:space-between;}
   .mob-section-title{font-size:12px;font-weight:600;color:var(--label2);letter-spacing:.3px;text-transform:uppercase;}
@@ -385,7 +386,7 @@ svg{display:block;flex-shrink:0;}
   <div class="left" id="dLeft">
     <div class="left-top">
       <div class="app-label">Dutch Pay <span class="app-version" id="appVersionD"></span></div>
-      <div class="app-title">더치페이</div>
+      <div class="app-title" onclick="_ownerTap()" style="cursor:default;user-select:none;-webkit-tap-highlight-color:transparent">더치페이</div>
       <div style="margin-bottom:16px;display:flex;gap:6px;align-items:center;justify-content:flex-end">
         <button class="data-menu-btn" onclick="showDataMenu(this,event)"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
       </div>
@@ -470,6 +471,7 @@ svg{display:block;flex-shrink:0;}
     </div>
   </div>
   <div class="mob-body" id="mBody"></div>
+  <div class="mob-owner-tap" id="mobOwnerTap" onclick="_ownerTap()">DUTCH PAY <span id="appVersionMob"></span></div>
   <div class="mob-sheet-overlay" id="mOverlay" onclick="closeSheet()"></div>
   <div class="mob-sheet" id="mSheet">
     <div class="mob-sheet-handle"></div>
@@ -479,12 +481,12 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.37';
-const BUILD_TIME='2026-06-04 02:10';
+const APP_VERSION='v1.38';
+const BUILD_TIME='2026-06-04 03:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
-let _ownerTapCount=0,_ownerUnlocked=false;
+let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked');
 let _historySearch='';
 let dTab='input',mTab='input';
 let itemSort='default',itemSearch='';
@@ -521,17 +523,25 @@ function _positionPopover(pop,anchorEl,rightAlign){const r=anchorEl.getBoundingC
 
 function _openGroupMorePop(anchorBtn,id,parentPop){document.querySelectorAll('.group-more-pop').forEach(el=>el.remove());const g=groups.find(x=>x.id===id);if(!g)return;const canDelete=groups.length>1;const menu=document.createElement('div');menu.className='group-more-pop';menu.innerHTML=`<button class="group-more-opt" data-mact="duplicate">${svgCopy}<span>복사</span></button><button class="group-more-opt" data-mact="rename">${svgPencil}<span>이름 변경</span></button>${canDelete?`<button class="group-more-opt danger" data-mact="delete">${svgTrash}<span>삭제</span></button>`:''}`;document.body.appendChild(menu);const r=anchorBtn.getBoundingClientRect();const mr=menu.getBoundingClientRect();let top=r.bottom+4;if(top+mr.height>window.innerHeight-8)top=r.top-mr.height-4;let left=r.right-mr.width;if(left<8)left=8;menu.style.top=top+'px';menu.style.left=left+'px';menu.addEventListener('click',(e2)=>{e2.stopPropagation();const b=e2.target.closest('[data-mact]');if(!b)return;const mact=b.dataset.mact;menu.remove();if(parentPop&&parentPop.remove)parentPop.remove();if(mact==='duplicate'){duplicateGroup(id);}else if(mact==='rename'){const newName=prompt('새 이름:',g.name);if(newName&&newName.trim())renameGroup(id,newName);}else if(mact==='delete'){if(confirm(`'${g.name}' 그룹을 삭제할까요?`))deleteGroup(id);}});setTimeout(()=>{const close=(ev)=>{if(!menu.contains(ev.target)){menu.remove();document.removeEventListener('click',close);document.removeEventListener('keydown',esc);}};const esc=(ev)=>{if(ev.key==='Escape'){menu.remove();document.removeEventListener('click',close);document.removeEventListener('keydown',esc);}};document.addEventListener('click',close);document.addEventListener('keydown',esc);},0);}
 
+function _ownerTap(){
+  if(_ownerUnlocked)return;
+  _ownerTapCount++;
+  if(_ownerTapCount>=5){_ownerUnlocked=true;_ownerTapCount=0;localStorage.setItem('dutchpay_owner_unlocked','1');_updateDataMenuBtns();toast('🔓 소유자 모드',{type:'success'});}
+}
+function _ownerLock(){
+  _ownerUnlocked=false;_ownerTapCount=0;localStorage.removeItem('dutchpay_owner_unlocked');_updateDataMenuBtns();toast('🔒 잠금됨',{type:'success'});
+}
+function _updateDataMenuBtns(){
+  document.querySelectorAll('.data-menu-btn').forEach(btn=>{btn.style.display=_ownerUnlocked?'':'none';});
+}
 function showDataMenu(anchorEl,ev){
+  if(!_ownerUnlocked)return;
   if(ev){ev.stopPropagation();ev.preventDefault();}
   document.querySelectorAll('.icon-pop,.rounder-pop,.group-pop,.data-pop').forEach(el=>el.remove());
   const pop=document.createElement('div');pop.className='data-pop';
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
-  if(_ownerUnlocked){
-    pop.innerHTML=`<div class="data-pop-hd">소유자 메뉴 🔓</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} 🔓</div>`;
-  }else{
-    pop.innerHTML=`<div class="data-pop-version" data-action="ownerTap" style="cursor:pointer;padding:14px 10px">더치페이 ${APP_VERSION}</div>`;
-  }
+  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
       if(dbxGetToken()){syncFromDropbox();toast('Dropbox 동기화 중...');}
       else{goToHistory();}
@@ -542,8 +552,7 @@ function showDataMenu(anchorEl,ev){
     else if(action==='export'){exportData();pop.remove();}
     else if(action==='import'){importData();pop.remove();}
     else if(action==='reset'){resetAllData();pop.remove();}
-    else if(action==='ownerTap'){_ownerTapCount++;if(_ownerTapCount>=5){_ownerUnlocked=true;_ownerTapCount=0;pop.remove();showDataMenu();toast('🔓 소유자 모드',{type:'success'});}}
-    else if(action==='lockOwner'){_ownerUnlocked=false;_ownerTapCount=0;pop.remove();toast('🔒 잠금됨',{type:'success'});}});
+    else if(action==='lockOwner'){_ownerLock();pop.remove();}});
   document.body.appendChild(pop);_positionPopover(pop,anchorEl,true);
   setTimeout(()=>{const h=(e3)=>{if(!pop.contains(e3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=(e3)=>{if(e3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);
 }
@@ -1342,7 +1351,7 @@ async function shareSettleImage(){
 
 loadState();
 renderAll();
-(()=>{['appVersionD','appVersionM'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});})();
+(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
 hDbxHandleCallback().then(()=>{if(hDbxGetToken())hSyncDropbox();});
