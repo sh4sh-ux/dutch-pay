@@ -477,8 +477,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.49';
-const BUILD_TIME='2026-06-04 02:00';
+const APP_VERSION='v1.50';
+const BUILD_TIME='2026-06-04 02:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1292,11 +1292,12 @@ async function generateSettleCanvas(){
       let chipReserve=0;
       if(hasChip){setFont(22,500);chipReserve=ctx.measureText(`차액 ${rem}원`).width+20+20;}
       const name=truncateCanvasText(ctx,it.name||'(이름 없음)',maxMainW-pillPadX-chipReserve);
-      ctx.fillStyle=C.text;setFont(30,700);ctx.textAlign='left';ctx.textBaseline='middle';
-      ctx.fillText(name,nameX+pillPadX,ry-22);
+      ctx.fillStyle=C.text;setFont(30,700);ctx.textAlign='left';ctx.textBaseline='alphabetic';
+      const nM=ctx.measureText(name);
+      ctx.fillText(name,nameX+pillPadX,(ry-22)+(nM.actualBoundingBoxAscent-nM.actualBoundingBoxDescent)/2);
       if(hasChip){
         const chipText=`차액 ${rem}원`;
-        const nameW=ctx.measureText(name).width;
+        const nameW=nM.width;
         setFont(22,500);ctx.textBaseline='alphabetic';
         const cm=ctx.measureText(chipText);
         const chipTW=cm.width;
