@@ -277,7 +277,7 @@ svg{display:block;flex-shrink:0;}
 .detail-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
 .detail-main{display:flex;align-items:center;gap:8px;min-width:0;padding-left:8px;}
 .detail-name{font-size:14px;font-weight:500;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.detail-sub{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--label3);min-width:0;}
+.detail-sub{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--label3);min-width:0;padding-left:8px;}
 .detail-payer{white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;background:var(--fill);color:var(--label2);border-radius:100px;padding:2px 8px;font-size:10px;line-height:1;}
 .detail-members{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:11px;}
 .detail-amt{font-size:15px;font-weight:700;flex-shrink:0;}
@@ -330,7 +330,7 @@ svg{display:block;flex-shrink:0;}
 .rc-item-row:last-child{border-bottom:none;}
 .rc-item-info{flex:1;min-width:0;}
 .rc-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:8px;}
-.rc-item-meta{font-size:11px;color:var(--label3);margin-top:1px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.rc-item-meta{font-size:11px;color:var(--label3);margin-top:1px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding-left:8px;}
 .rc-payer-pill{white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;background:var(--fill);color:var(--label2);border-radius:100px;padding:2px 8px;font-size:10px;line-height:1;}
 .rc-item-amt{font-size:13px;font-weight:600;flex-shrink:0;}
 .rc-item-amt.neg{color:var(--red);}
@@ -477,8 +477,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.46';
-const BUILD_TIME='2026-06-04 00:10';
+const APP_VERSION='v1.47';
+const BUILD_TIME='2026-06-04 01:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1313,11 +1313,11 @@ async function generateSettleCanvas(){
       const pillW=pillTW+pillPadX*2,pillH=20+pillPadY*2;
       const pillCY=ry+26;
       ctx.fillStyle='#F3F3F5';
-      roundRectPath(ctx,nameX,pillCY-pillH/2,pillW,pillH,pillH/2);ctx.fill();
+      roundRectPath(ctx,nameX+pillPadX,pillCY-pillH/2,pillW,pillH,pillH/2);ctx.fill();
       ctx.fillStyle='#666666';
       const pillBaselineY=pillCY+(pm.actualBoundingBoxAscent-pm.actualBoundingBoxDescent)/2;
-      ctx.fillText(payerText,nameX+pillPadX,pillBaselineY);
-      const memsX=nameX+pillW+12,maxMemsW=amountX-amountW-34-memsX;
+      ctx.fillText(payerText,nameX+pillPadX*2,pillBaselineY);
+      const memsX=nameX+pillPadX+pillW+12,maxMemsW=amountX-amountW-34-memsX;
       if(maxMemsW>30){setFont(22,400);ctx.textBaseline='middle';ctx.fillStyle=C.muted;ctx.fillText(truncateCanvasText(ctx,mems.join(', '),maxMemsW),memsX,ry+26);}
 
       if(i<validItems.length-1)drawDivider(y+(i+1)*ITEM_ROW_H);
