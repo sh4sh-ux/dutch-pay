@@ -477,8 +477,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.48';
-const BUILD_TIME='2026-06-04 01:30';
+const APP_VERSION='v1.49';
+const BUILD_TIME='2026-06-04 02:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1297,12 +1297,15 @@ async function generateSettleCanvas(){
       if(hasChip){
         const chipText=`차액 ${rem}원`;
         const nameW=ctx.measureText(name).width;
-        setFont(22,500);ctx.textBaseline='middle';
-        const chipTW=ctx.measureText(chipText).width;
+        setFont(22,500);ctx.textBaseline='alphabetic';
+        const cm=ctx.measureText(chipText);
+        const chipTW=cm.width;
         const cpX=10,cpY=4,chipW=chipTW+cpX*2,chipH=22+cpY*2;
         const chipX=nameX+pillPadX+nameW+12;
-        ctx.fillStyle=C.blueBg;roundRectPath(ctx,chipX,ry-22-chipH/2,chipW,chipH,6);ctx.fill();
-        ctx.fillStyle='#0055B8';ctx.textAlign='left';ctx.fillText(chipText,chipX+cpX,ry-22);
+        const chipCY=ry-22;
+        ctx.fillStyle=C.blueBg;roundRectPath(ctx,chipX,chipCY-chipH/2,chipW,chipH,6);ctx.fill();
+        ctx.fillStyle='#0055B8';ctx.textAlign='left';
+        ctx.fillText(chipText,chipX+cpX,chipCY+(cm.actualBoundingBoxAscent-cm.actualBoundingBoxDescent)/2);
       }
 
       const mems=it.members.length?it.members:people;
