@@ -202,6 +202,56 @@ svg{display:block;flex-shrink:0;}
 .txn-card{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
 .txn-row{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--sep);gap:12px;}
 .txn-row:last-child{border-bottom:none;}
+.txn-row.expandable{cursor:pointer;transition:background .1s;}
+.txn-row.expandable:hover{background:var(--fill);}
+.txn-row.pm-done{background:linear-gradient(90deg,rgba(52,199,89,.07) 0%,var(--card) 70%);}
+.txn-row.pm-diff{background:linear-gradient(90deg,rgba(255,59,48,.06) 0%,var(--card) 70%);}
+.txn-status-ic{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--sep2);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.txn-status-ic.done{background:var(--green);border-color:var(--green);}
+.txn-status-ic.diff{background:var(--red);border-color:var(--red);}
+.txn-right{text-align:right;flex-shrink:0;}
+.txn-chev{color:var(--label3);font-size:11px;flex-shrink:0;margin-left:2px;transition:transform .2s;}
+.txn-chev.open{transform:rotate(180deg);}
+.txn-pmeta{font-size:11px;color:var(--label3);margin-top:1px;}
+.txn-sdiff{font-size:11px;font-weight:500;margin-top:1px;}
+.txn-sdiff.pos{color:var(--green);}
+.txn-sdiff.neg{color:var(--red);}
+.txn-amt.done-clr{color:var(--green);}
+.txn-amt.neg-clr{color:var(--red);}
+.txn-item{border-bottom:1px solid var(--sep);}
+.txn-item:last-child{border-bottom:none;}
+.pm-card .txn-row{border-bottom:none;}
+.pay-panel{background:var(--fill);border-top:1px solid var(--sep);padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
+.pay-panel-row{display:flex;align-items:center;gap:8px;}
+.pay-panel-lbl{font-size:12px;font-weight:500;color:var(--label3);width:52px;flex-shrink:0;}
+.pay-toggle-track{width:40px;height:24px;border-radius:12px;background:var(--sep2);flex-shrink:0;position:relative;cursor:pointer;transition:background .2s;}
+.pay-toggle-track.on{background:var(--green);}
+.pay-toggle-thumb{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .2s;}
+.pay-toggle-track.on .pay-toggle-thumb{left:18px;}
+.pay-toggle-lbl{font-size:13px;color:var(--label2);}
+.pay-toggle-lbl.on{color:var(--green);font-weight:600;}
+.pay-inp{flex:1;border:1px solid var(--sep2);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;color:var(--label);background:var(--card);outline:none;min-width:0;}
+.pay-inp:focus{border-color:var(--blue);}
+.pay-inp.err{border-color:var(--red);}
+.pay-unit{font-size:13px;color:var(--label3);flex-shrink:0;}
+.pay-diff-badge{font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px;flex-shrink:0;white-space:nowrap;}
+.pay-diff-badge.pos{background:#EDFAF2;color:var(--green);}
+.pay-diff-badge.neg{background:#FFF0EE;color:var(--red);}
+.pay-diff-badge.zero{background:var(--fill);color:var(--label3);}
+.pay-sel{flex:1;border:1px solid var(--sep2);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;color:var(--label);background:var(--card);outline:none;cursor:pointer;min-width:0;}
+.pay-sel:focus{border-color:var(--blue);}
+.pay-now-btn{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0;}
+.pay-summary{margin-top:8px;background:var(--card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+.pay-summary-title{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.3px;text-transform:uppercase;padding:12px 18px 4px;}
+.pay-summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px 18px;border-bottom:1px solid var(--sep);}
+.pay-summary-row:last-child{border-bottom:none;}
+.pay-summary-lbl{font-size:13px;color:var(--label2);}
+.pay-summary-val{font-size:14px;font-weight:700;}
+.pay-summary-val.pos{color:var(--green);}
+.pay-summary-val.neg{color:var(--red);}
+.pay-unpaid-row{flex-direction:column;align-items:flex-start;gap:5px;padding-bottom:12px;}
+.pay-unpaid-chips{display:flex;flex-wrap:wrap;gap:4px;}
+.pay-unpaid-chip{background:var(--red-bg);color:var(--red);font-size:11px;font-weight:500;padding:2px 7px;border-radius:100px;}
 .txn-people{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .txn-from{font-size:14px;font-weight:600;color:var(--label);}
 .txn-arr{color:var(--label);display:flex;align-items:center;}
@@ -477,11 +527,12 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.52';
-const BUILD_TIME='2026-06-04 04:00';
+const APP_VERSION='v1.53';
+const BUILD_TIME='2026-06-07 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
+let payments={};
 let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked');
 let _historySearch='';
 let dTab='input',mTab='input';
@@ -489,13 +540,13 @@ let itemSort='default',itemSearch='';
 let settleDateStart=new Date().toISOString().slice(0,10),settleDateEnd=null;
 let groups=[],currentGroupId=null;
 
-function _emptyGroupData(){return{people:[],items:[],idc:0,settleDateStart:new Date().toISOString().slice(0,10),settleDateEnd:null,itemSort:'default',itemSearch:''};}
+function _emptyGroupData(){return{people:[],items:[],idc:0,settleDateStart:new Date().toISOString().slice(0,10),settleDateEnd:null,itemSort:'default',itemSearch:'',payments:{}};}
 function _autoGroupName(p){return(!p||!p.length)?'모임명 또는 참여자':p.join(', ');}
 function _updateAutoNameIfNeeded(){const g=getCurrentGroup();if(!g||!g.nameAuto)return;g.name=_autoGroupName(people);}
 function _newGroupId(){return 'g'+Date.now()+Math.floor(Math.random()*1000);}
 function getCurrentGroup(){return groups.find(g=>g.id===currentGroupId);}
-function syncCurrentToGroup(){const g=getCurrentGroup();if(!g)return;g.data={people:people.slice(),items:JSON.parse(JSON.stringify(items)),idc,settleDateStart,settleDateEnd,itemSort,itemSearch};}
-function loadGroupData(g){people=(g.data.people||[]).slice();items=JSON.parse(JSON.stringify(g.data.items||[]));idc=g.data.idc||0;settleDateStart=g.data.settleDateStart||new Date().toISOString().slice(0,10);settleDateEnd=g.data.settleDateEnd!==undefined?g.data.settleDateEnd:null;itemSort=g.data.itemSort||'default';itemSearch=g.data.itemSearch||'';selectedId=null;}
+function syncCurrentToGroup(){const g=getCurrentGroup();if(!g)return;g.data={people:people.slice(),items:JSON.parse(JSON.stringify(items)),idc,settleDateStart,settleDateEnd,itemSort,itemSearch,payments:JSON.parse(JSON.stringify(payments))};}
+function loadGroupData(g){people=(g.data.people||[]).slice();items=JSON.parse(JSON.stringify(g.data.items||[]));idc=g.data.idc||0;settleDateStart=g.data.settleDateStart||new Date().toISOString().slice(0,10);settleDateEnd=g.data.settleDateEnd!==undefined?g.data.settleDateEnd:null;itemSort=g.data.itemSort||'default';itemSearch=g.data.itemSearch||'';payments=JSON.parse(JSON.stringify(g.data.payments||{}));selectedId=null;}
 function switchGroup(id){if(id===currentGroupId)return;syncCurrentToGroup();currentGroupId=id;const g=getCurrentGroup();if(g)loadGroupData(g);renderAll();}
 function createGroup(name){const id=_newGroupId();syncCurrentToGroup();const trimmed=(name||'').trim();const isAuto=!trimmed;groups.push({id,name:trimmed||_autoGroupName([]),nameAuto:isAuto,data:_emptyGroupData()});currentGroupId=id;loadGroupData(groups[groups.length-1]);renderAll();toast(trimmed?`'${trimmed}' 그룹 생성됨`:'새 그룹이 생성됐어요',{type:'success'});}
 function renameGroup(id,newName){const g=groups.find(g=>g.id===id);if(!g)return;const trimmed=(newName||'').trim();if(!trimmed)return;g.name=trimmed;g.nameAuto=false;saveState();renderAll();}
@@ -734,6 +785,137 @@ function goToHistory(){
 }
 function cap(s){return s[0].toUpperCase()+s.slice(1);}
 
+// ── 입금 관리 (소유자 전용) ──
+const svgPayCheck='<svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 3.5L3.8 6.5L10 1" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+window._txnAmtMap={};
+function _txnKey(from,to){return `${from}|${to}`;}
+function _getPayment(key){return payments[key]||{done:false,amount:null,timestamp:'',account:'',memo:''};}
+
+function togglePaymentPanel(key){
+  const item=document.querySelector(`.txn-item[data-pm-key="${CSS.escape(key)}"]`);
+  if(!item)return;
+  const existingPanel=item.querySelector('.pay-panel');
+  if(existingPanel){existingPanel.remove();item.querySelector('.txn-chev').classList.remove('open');return;}
+  document.querySelectorAll('.pay-panel').forEach(p=>p.remove());
+  document.querySelectorAll('.txn-chev.open').forEach(c=>c.classList.remove('open'));
+  item.querySelector('.txn-chev').classList.add('open');
+  const pm=_getPayment(key);
+  const baseAmt=window._txnAmtMap[key]||0;
+  const diffVal=(pm.amount!==null&&pm.amount!=='')?(+pm.amount-baseAmt):null;
+  const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
+  const panel=document.createElement('div');
+  panel.className='pay-panel';
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="pmToggleDone('${ea(key)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':'미입금'}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!==null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="pmUpdateAmt('${ea(key)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row"><span class="pay-panel-lbl">입금일시</span><input class="pay-inp" type="datetime-local" value="${ea(pm.timestamp||'')}" onchange="pmUpdate('${ea(key)}','timestamp',this.value)" style="flex:1;min-width:0;"/><button class="pay-now-btn" onclick="pmSetNow('${ea(key)}')">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span><select class="pay-sel" onchange="pmUpdate('${ea(key)}','account',this.value)"><option value="">선택</option><option value="케이뱅크"${pm.account==='케이뱅크'?' selected':''}>케이뱅크</option><option value="카카오페이"${pm.account==='카카오페이'?' selected':''}>카카오페이</option><option value="토스뱅크"${pm.account==='토스뱅크'?' selected':''}>토스뱅크</option></select></div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="pmUpdate('${ea(key)}','memo',this.value)"/></div>`;
+  item.appendChild(panel);
+}
+
+function pmToggleDone(key){
+  const pm=_getPayment(key);pm.done=!pm.done;payments[key]=pm;saveState();
+  const item=document.querySelector(`.txn-item[data-pm-key="${CSS.escape(key)}"]`);
+  if(!item)return;
+  const track=item.querySelector('.pay-toggle-track');const lbl=item.querySelector('.pay-toggle-lbl');
+  if(track)track.classList.toggle('on',pm.done);
+  if(lbl){lbl.classList.toggle('on',pm.done);lbl.textContent=pm.done?'입금완료':'미입금';}
+  _patchPmRow(key);_patchSummary();
+}
+
+function pmUpdateAmt(key,el){
+  const pm=_getPayment(key);
+  const posFromEnd=el.value.length-el.selectionEnd;
+  const raw=el.value.replace(/[^0-9]/g,'');
+  if(raw===''){pm.amount=null;el.value='';}
+  else{const n=parseInt(raw,10);pm.amount=n;el.value=n.toLocaleString('ko-KR');const newPos=Math.max(0,el.value.length-posFromEnd);el.setSelectionRange(newPos,newPos);}
+  payments[key]=pm;saveState();
+  const item=document.querySelector(`.txn-item[data-pm-key="${CSS.escape(key)}"]`);
+  if(!item)return;
+  const panel=item.querySelector('.pay-panel');if(!panel)return;
+  const diffVal=(pm.amount!==null&&pm.amount!=='')?(+pm.amount-(window._txnAmtMap[key]||0)):null;
+  let badge=panel.querySelector('.pay-diff-badge');
+  if(diffVal!==null){
+    const cls=diffVal>0?'pos':diffVal<0?'neg':'zero';
+    const txt=(diffVal>0?'+':'')+fmt(diffVal)+'원';
+    if(!badge){badge=document.createElement('span');badge.className='pay-diff-badge '+cls;const row=panel.querySelectorAll('.pay-panel-row')[1];if(row)row.appendChild(badge);}
+    badge.className='pay-diff-badge '+cls;badge.textContent=txt;
+  }else if(badge)badge.remove();
+  _patchPmRow(key);_patchSummary();
+}
+
+function pmUpdate(key,field,val){
+  const pm=_getPayment(key);pm[field]=val;payments[key]=pm;saveState();
+  if(field!=='memo')_patchPmRow(key);
+  _patchSummary();
+}
+
+function pmSetNow(key){
+  const now=new Date();
+  const local=new Date(now-now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  const item=document.querySelector(`.txn-item[data-pm-key="${CSS.escape(key)}"]`);
+  if(item){const inp=item.querySelector('input[type="datetime-local"]');if(inp)inp.value=local;}
+  pmUpdate(key,'timestamp',local);
+}
+
+function _patchPmRow(key){
+  const pm=_getPayment(key);
+  const item=document.querySelector(`.txn-item[data-pm-key="${CSS.escape(key)}"]`);if(!item)return;
+  const row=item.querySelector('.txn-row');if(!row)return;
+  const hasAmt=pm.amount!==null&&pm.amount!=='';
+  const diff=hasAmt?(+pm.amount-(window._txnAmtMap[key]||0)):null;
+  const hasDiff=diff!==null&&diff!==0;
+  row.classList.toggle('pm-done',pm.done&&!hasDiff);row.classList.toggle('pm-diff',hasDiff);
+  const ic=row.querySelector('.txn-status-ic');
+  if(ic){ic.className='txn-status-ic'+(pm.done?(!hasDiff?' done':' diff'):'');ic.innerHTML=pm.done?svgPayCheck:'';}
+  const right=row.querySelector('.txn-right');
+  if(right){
+    const amtEl=right.querySelector('.txn-amt');
+    const metaEl=right.querySelector('.txn-pmeta');
+    const sdiffEl=right.querySelector('.txn-sdiff');
+    if(amtEl)amtEl.className='txn-amt'+(pm.done&&!hasDiff?' done-clr':hasDiff?' neg-clr':'');
+    if(metaEl){const parts=[];if(pm.done)parts.push('입금완료');if(pm.account)parts.push(pm.account);if(pm.timestamp)parts.push(pm.timestamp.replace('T',' ').slice(0,16));metaEl.textContent=parts.join(' · ');}
+    if(sdiffEl){if(hasDiff){sdiffEl.className='txn-sdiff'+(diff>0?' pos':' neg');sdiffEl.textContent=(diff>0?'+':'')+fmt(diff)+'원';}else{sdiffEl.textContent='';}}
+  }
+}
+
+function _patchSummary(){
+  document.querySelectorAll('.pay-summary-body').forEach(el=>{
+    try{const txns=JSON.parse(el.dataset.txns||'[]');el.innerHTML=_paySummaryBodyHtml(txns);}catch(e){}
+  });
+}
+
+function _txnRowsHtml(txns){
+  if(!_ownerUnlocked){
+    return txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('');
+  }
+  return txns.map(t=>{
+    const key=_txnKey(t.from,t.to);
+    window._txnAmtMap[key]=t.amt;
+    const pm=_getPayment(key);
+    const hasAmt=pm.amount!==null&&pm.amount!=='';
+    const diff=hasAmt?(+pm.amount-t.amt):null;
+    const hasDiff=diff!==null&&diff!==0;
+    const doneNoD=pm.done&&!hasDiff;
+    const rowCls='txn-row expandable'+(doneNoD?' pm-done':hasDiff?' pm-diff':'');
+    const icCls='txn-status-ic'+(doneNoD?' done':hasDiff?' diff':'');
+    const amtCls='txn-amt'+(doneNoD?' done-clr':hasDiff?' neg-clr':'');
+    const metaParts=[];if(pm.done)metaParts.push('입금완료');if(pm.account)metaParts.push(pm.account);
+    const sdiffHtml=hasDiff?`<div class="txn-sdiff ${diff>0?'pos':'neg'}">${diff>0?'+':''}${fmt(diff)}원</div>`:'<div class="txn-sdiff"></div>';
+    return `<div class="txn-item" data-pm-key="${ea(key)}"><div class="${rowCls}" onclick="togglePaymentPanel('${ea(key)}')"><div class="${icCls}">${pm.done?svgPayCheck:''}</div><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><div class="txn-right"><div class="${amtCls}">${fmt(t.amt)}원</div><div class="txn-pmeta">${e(metaParts.join(' · '))}</div>${sdiffHtml}</div><span class="txn-chev">▾</span></div></div>`;
+  }).join('');
+}
+
+function _paySummaryHtml(txns){
+  if(!_ownerUnlocked||!txns.length)return '';
+  return `<div class="pay-summary"><div class="pay-summary-title">입금 현황</div><div class="pay-summary-body" data-txns="${ea(JSON.stringify(txns))}">${_paySummaryBodyHtml(txns)}</div></div>`;
+}
+
+function _paySummaryBodyHtml(txns){
+  const totalBilled=txns.reduce((s,t)=>s+t.amt,0);
+  const totalReceived=txns.reduce((s,t)=>{const pm=_getPayment(_txnKey(t.from,t.to));return s+(pm.done?(pm.amount!==null&&pm.amount!==''?+pm.amount:t.amt):0);},0);
+  const net=totalReceived-totalBilled;
+  const unpaid=txns.filter(t=>!_getPayment(_txnKey(t.from,t.to)).done).map(t=>t.from);
+  const unpaidHtml=unpaid.length?unpaid.map(p=>`<span class="pay-unpaid-chip">${e(p)}</span>`).join(''):'<span style="font-size:12px;color:var(--green)">모두 입금완료 ✓</span>';
+  return `<div class="pay-summary-row"><span class="pay-summary-lbl">총 청구액</span><span class="pay-summary-val">${fmt(totalBilled)}원</span></div><div class="pay-summary-row"><span class="pay-summary-lbl">총 실수령액</span><span class="pay-summary-val${totalReceived>0?' pos':''}">${fmt(totalReceived)}원</span></div><div class="pay-summary-row"><span class="pay-summary-lbl">순 차액</span><span class="pay-summary-val ${net>0?'pos':net<0?'neg':''}">${net>0?'+':''}${fmt(net)}원</span></div><div class="pay-summary-row pay-unpaid-row"><span class="pay-summary-lbl">미입금자</span><div class="pay-unpaid-chips">${unpaidHtml}</div></div>`;
+}
+
 function renderAll(){renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();const di=document.getElementById('meetingDateInp');if(di)di.value=settleDateStart;saveState();}
 
 function renderPills(){const el=document.getElementById('dPills');if(!people.length){el.innerHTML='<span class="pills-empty">이름을 입력하세요</span>';return;}el.innerHTML=people.map(p=>`<span class="pill">${e(p)}<button class="pill-x" onclick="removePerson(${ja(p)})">${svgX}</button></span>`).join('');}
@@ -754,7 +936,7 @@ function renderMobileBody(){
     if(!vc){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>금액이 입력된 지출이 없어요</p></div>';return;}
     html+=`<div class="stat-grid" style="margin-bottom:12px"><div class="stat-box"><div class="stat-lbl">총 금액</div><div class="stat-val${total<0?' amt-neg':''}">${fmt(total)}원</div></div><div class="stat-box"><div class="stat-lbl">지출 수</div><div class="stat-val">${vc}개</div></div><div class="stat-box"><div class="stat-lbl">참여자</div><div class="stat-val">${people.length}명</div></div></div>`;
     const txns=calcTxns(paid,owes);
-    if(txns.length){html+=`<div class="pay-section-title">송금 내역</div>`;html+='<div class="txn-card">'+txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')+'</div>';}else{html+=`<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>`;}
+    if(txns.length){html+=`<div class="pay-section-title">송금 내역</div>`;html+=`<div class="txn-card${_ownerUnlocked?' pm-card':''}">${_txnRowsHtml(txns)}</div>`;html+=_paySummaryHtml(txns);}else{html+=`<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>`;}
     const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItemMob(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');
     html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;el.innerHTML=html;return;
   }
@@ -765,7 +947,7 @@ function renderMobileBody(){
     let html=`<div class="share-date-row"><input type="date" class="share-date-inp" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('start',this.value)"/>${settleDateEnd?`<span class="share-date-sep">~</span><input type="date" class="share-date-inp" value="${settleDateEnd}" min="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('end',this.value)"/><button class="share-date-rm" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
     const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
     html+=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
-    if(txns.length){html+=`<div class="pay-section-title">송금</div>`;html+='<div class="txn-card">'+txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')+'</div>';}
+    if(txns.length){html+=`<div class="pay-section-title">송금</div>`;html+=`<div class="txn-card${_ownerUnlocked?' pm-card':''}">${_txnRowsHtml(txns)}</div>`;html+=_paySummaryHtml(txns);}
     const validItems=items.filter(it=>+it.amount!==0);
     if(validItems.length){const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItemMob(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;}
     if(txns.length&&hasRounding)html+='<div class="notice">차액은 결제자에게 우선 부담돼요</div>';
@@ -824,7 +1006,7 @@ function renderResultView(eyeId,titleId,subId,bodyId){
   if(!vc){document.getElementById(bodyId).innerHTML='<div class="empty"><div class="empty-icon">'+svgEmpty+'</div><p>금액이 입력된 지출이 없어요</p></div>';return;}
   const stats=`<div class="stat-grid"><div class="stat-box"><div class="stat-lbl">총 금액</div><div class="stat-val${total<0?' amt-neg':''}">${fmt(total)}원</div></div><div class="stat-box"><div class="stat-lbl">지출 수</div><div class="stat-val">${vc}개</div></div><div class="stat-box"><div class="stat-lbl">참여자</div><div class="stat-val">${people.length}명</div></div></div>`;
   const txns=calcTxns(paid,owes);
-  let txnSection=txns.length?`<div class="pay-section-title">송금 내역</div><div class="txn-card">${txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')}</div>`:'<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>';
+  let txnSection=txns.length?`<div class="pay-section-title">송금 내역</div><div class="txn-card${_ownerUnlocked?' pm-card':''}">${_txnRowsHtml(txns)}</div>${_paySummaryHtml(txns)}`:'<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>';
   const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');
   document.getElementById(bodyId).innerHTML=stats+txnSection+`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;
 }
@@ -838,7 +1020,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const dateRow=`<div class="share-date-row"><input type="date" class="share-date-inp" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('start',this.value)"/>${settleDateEnd?`<span class="share-date-sep">~</span><input type="date" class="share-date-inp" value="${settleDateEnd}" min="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('end',this.value)"/><button class="share-date-rm" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
   const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
   const hero=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
-  const txnSection=txns.length?`<div class="pay-section-title">송금</div><div class="txn-card">${txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')}</div>`:'<div class="empty" style="padding:20px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div>';
+  const txnSection=txns.length?`<div class="pay-section-title">송금</div><div class="txn-card${_ownerUnlocked?' pm-card':''}">${_txnRowsHtml(txns)}</div>${_paySummaryHtml(txns)}`:'<div class="empty" style="padding:20px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div>';
   const validItems=items.filter(it=>+it.amount!==0);
   const paySection=validItems.length?`<div class="pay-section-title">지출 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span>${chip}</div><div class="detail-sub"><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('')}</div>`:'';
   const noticeHtml=txns.length&&hasRounding?'<div class="notice">차액은 결제자에게 우선 부담돼요</div>':'';
