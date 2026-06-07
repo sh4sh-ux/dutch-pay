@@ -259,7 +259,12 @@ svg{display:block;flex-shrink:0;}
 .pm-search{width:100%;border:1px solid var(--sep2);border-radius:10px;padding:9px 12px;font-size:14px;font-family:inherit;color:var(--label);background:var(--card);outline:none;box-sizing:border-box;}
 .pm-search:focus{border-color:var(--blue);}
 .pm-person-card{background:var(--card);border:1px solid var(--sep);border-radius:14px;padding:16px;margin-top:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
-.pm-person-name{font-size:15px;font-weight:700;margin-bottom:12px;}
+.pm-person-name-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.pm-person-name{font-size:15px;font-weight:700;}
+.pm-net-badge{font-size:12px;font-weight:600;padding:3px 9px;border-radius:100px;white-space:nowrap;}
+.pm-net-badge.pos{background:var(--green-bg);color:var(--green-txt);}
+.pm-net-badge.neg{background:var(--red-bg);color:var(--red);}
+.pm-net-badge.zero{background:var(--fill2);color:var(--green-txt);}
 .pm-person-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
 .pm-pstat{text-align:center;background:var(--fill);border-radius:10px;padding:10px 4px;}
 .pm-pstat-lbl{font-size:10px;color:var(--label3);margin-bottom:4px;}
@@ -568,8 +573,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.57';
-const BUILD_TIME='2026-06-07 13:30';
+const APP_VERSION='v1.58';
+const BUILD_TIME='2026-06-07 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -997,7 +1002,9 @@ function _pmHistResultsHtml(){
   const totalBilled=cards.reduce((s,c)=>s+c.billing,0);
   const totalReceived=cards.filter(c=>c.done).reduce((s,c)=>s+c.received,0);
   const totalUnpaid=totalBilled-totalReceived;
-  const summaryHtml=`<div class="pm-person-card"><div class="pm-person-name">${e(name)}</div><div class="pm-person-stats"><div class="pm-pstat"><div class="pm-pstat-lbl">총 청구</div><div class="pm-pstat-val">${fmt(totalBilled)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">총 수령</div><div class="pm-pstat-val${totalReceived>0?' pos':''}">${fmt(totalReceived)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">미수</div><div class="pm-pstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?'-'+fmt(totalUnpaid)+'원':'없음'}</div></div></div></div>`;
+  const net=totalReceived-totalBilled;
+  const netBadge=totalBilled===0?'':net>0?`<span class="pm-net-badge pos">+${fmt(net)}원 초과</span>`:net<0?`<span class="pm-net-badge neg">-${fmt(-net)}원 미수</span>`:`<span class="pm-net-badge zero">✓ 완납</span>`;
+  const summaryHtml=`<div class="pm-person-card"><div class="pm-person-name-row"><span class="pm-person-name">${e(name)}</span>${netBadge}</div><div class="pm-person-stats"><div class="pm-pstat"><div class="pm-pstat-lbl">총 청구</div><div class="pm-pstat-val">${fmt(totalBilled)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">총 수령</div><div class="pm-pstat-val${totalReceived>0?' pos':''}">${fmt(totalReceived)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">미수</div><div class="pm-pstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?'-'+fmt(totalUnpaid)+'원':'없음'}</div></div></div></div>`;
   if(_pmHistFilter==='unpaid')cards=cards.filter(c=>!c.done);
   if(_pmHistSort==='newest')cards.sort((a,b)=>b.rec.savedAt.localeCompare(a.rec.savedAt));
   else if(_pmHistSort==='oldest')cards.sort((a,b)=>a.rec.savedAt.localeCompare(b.rec.savedAt));
