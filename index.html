@@ -252,6 +252,45 @@ svg{display:block;flex-shrink:0;}
 .pay-unpaid-row{flex-direction:column;align-items:flex-start;gap:5px;padding-bottom:12px;}
 .pay-unpaid-chips{display:flex;flex-wrap:wrap;gap:4px;}
 .pay-unpaid-chip{background:var(--red-bg);color:var(--red);font-size:11px;font-weight:500;padding:2px 7px;border-radius:100px;}
+.pm-seg-row{display:flex;gap:0;background:var(--fill2);border-radius:9px;padding:2px;margin:14px 0 0;}
+.pm-seg{flex:1;text-align:center;padding:6px 0;font-size:13px;font-weight:500;color:var(--label3);border:none;background:none;border-radius:7px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.pm-seg.on{background:var(--card);color:var(--label);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.pm-search-wrap{margin-top:14px;}
+.pm-search{width:100%;border:1px solid var(--sep2);border-radius:10px;padding:9px 12px;font-size:14px;font-family:inherit;color:var(--label);background:var(--card);outline:none;box-sizing:border-box;}
+.pm-search:focus{border-color:var(--blue);}
+.pm-person-card{background:var(--card);border:1px solid var(--sep);border-radius:14px;padding:16px;margin-top:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+.pm-person-name{font-size:15px;font-weight:700;margin-bottom:12px;}
+.pm-person-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.pm-pstat{text-align:center;background:var(--fill);border-radius:10px;padding:10px 4px;}
+.pm-pstat-lbl{font-size:10px;color:var(--label3);margin-bottom:4px;}
+.pm-pstat-val{font-size:13px;font-weight:700;}
+.pm-pstat-val.pos{color:var(--green);}
+.pm-pstat-val.neg{color:var(--red);}
+.pm-controls{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px;}
+.pm-sort-sel{border:1px solid var(--sep2);border-radius:8px;padding:6px 10px;font-size:12px;font-family:inherit;color:var(--label);background:var(--card);outline:none;cursor:pointer;}
+.pm-filter-chips{display:flex;gap:6px;}
+.pm-filter-chip{border:1px solid var(--sep2);border-radius:100px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--label3);background:var(--card);cursor:pointer;font-family:inherit;transition:all .12s;}
+.pm-filter-chip.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+.pm-record-card{background:var(--card);border:1px solid var(--sep);border-radius:14px;overflow:hidden;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+.pm-record-hd{padding:14px 16px 10px;}
+.pm-record-date{font-size:11px;color:var(--label3);margin-bottom:3px;}
+.pm-record-group{font-size:14px;font-weight:600;}
+.pm-record-members{font-size:11px;color:var(--label3);margin-top:2px;}
+.pm-record-body{border-top:1px solid var(--sep);padding:10px 16px;}
+.pm-record-row{display:flex;align-items:center;justify-content:space-between;padding:3px 0;}
+.pm-record-lbl{font-size:12px;color:var(--label3);}
+.pm-record-val{font-size:13px;font-weight:600;}
+.pm-record-val.pos{color:var(--green);}
+.pm-record-val.neg{color:var(--red);}
+.pm-record-val.done-clr{color:var(--green);}
+.pm-record-foot{display:flex;align-items:center;justify-content:space-between;background:var(--fill);padding:8px 16px;border-top:1px solid var(--sep);}
+.pm-record-account{font-size:11px;color:var(--label3);}
+.pm-record-ts{font-size:11px;color:var(--label3);}
+.pm-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 8px;border-radius:100px;}
+.pm-badge.done{background:var(--green-bg);color:var(--green-txt);}
+.pm-badge.pos{background:var(--green-bg);color:var(--green-txt);}
+.pm-badge.neg{background:var(--red-bg);color:var(--red);}
+.pm-badge.pending{background:var(--fill2);color:var(--label3);}
 .txn-people{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .txn-from{font-size:14px;font-weight:600;color:var(--label);}
 .txn-arr{color:var(--label);display:flex;align-items:center;}
@@ -529,12 +568,13 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.55';
-const BUILD_TIME='2026-06-07 12:00';
+const APP_VERSION='v1.56';
+const BUILD_TIME='2026-06-07 13:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
 let payments={};
+let _pmHistTab='current',_pmHistSearch='',_pmHistSort='newest',_pmHistFilter='all';
 let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked');
 let _historySearch='';
 let dTab='input',mTab='input';
@@ -923,20 +963,70 @@ function _paySummaryBodyHtml(txns){
   return `<div class="pay-summary-row"><span class="pay-summary-lbl">총 청구액</span><span class="pay-summary-val">${fmt(totalBilled)}원</span></div><div class="pay-summary-row"><span class="pay-summary-lbl">총 실수령액</span><span class="pay-summary-val${totalReceived>0?' pos':''}">${fmt(totalReceived)}원</span></div><div class="pay-summary-row"><span class="pay-summary-lbl">순 차액</span><span class="pay-summary-val ${net>0?'pos':net<0?'neg':''}">${net>0?'+':''}${fmt(net)}원</span></div><div class="pay-summary-row pay-unpaid-row"><span class="pay-summary-lbl">미입금자</span><div class="pay-unpaid-chips">${unpaidHtml}</div></div>`;
 }
 
+function _pmSetTab(t){_pmHistTab=t;_reRenderPayment();}
+function _pmSetSort(v){_pmHistSort=v;_reRenderPayment();}
+function _pmSetFilter(v){_pmHistFilter=v;_reRenderPayment();}
+function _pmSetSearch(v){_pmHistSearch=v;_reRenderPayment();requestAnimationFrame(()=>{const inp=document.querySelector('.pm-search');if(inp){inp.focus();inp.setSelectionRange(v.length,v.length);}});}
+function _reRenderPayment(){if(window.innerWidth<700){const el=document.getElementById('mBody');if(el&&mTab==='payment')renderPaymentBody(el);}else{if(dTab==='payment')renderPaymentView('dREye','dRTitle','dRSub','dRBody');}}
+
+function _pmSegHtml(){
+  return `<div class="pm-seg-row"><button class="pm-seg${_pmHistTab==='current'?' on':''}" onclick="_pmSetTab('current')">이번 정산</button><button class="pm-seg${_pmHistTab==='history'?' on':''}" onclick="_pmSetTab('history')">전체 기록</button></div>`;
+}
+
+function _pmCurrentHtml(txns){
+  if(!txns.length)return '<div class="empty" style="padding:40px 0"><div class="empty-icon">'+svgEmpty+'</div><p>정산할 송금 내역이 없어요</p></div>';
+  return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">송금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>';
+}
+
+function _pmHistoryHtml(){
+  const searchHtml=`<div class="pm-search-wrap"><input class="pm-search" type="text" placeholder="이름으로 검색" value="${ea(_pmHistSearch)}" oninput="_pmSetSearch(this.value)"/></div>`;
+  const name=_pmHistSearch.trim();
+  if(!name)return searchHtml+'<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">이름을 검색하면<br>정산 기록을 확인할 수 있어요</p></div>';
+  let allRec=[];try{const raw=localStorage.getItem(HISTORY_KEY);allRec=raw?JSON.parse(raw):[];}catch(e){}
+  let cards=[];
+  allRec.forEach(rec=>{
+    (rec.txns||[]).filter(t=>t.from===name).forEach(t=>{
+      const key=`${t.from}|${t.to}`;
+      const pm=(rec.payments||{})[key]||{};
+      const billing=t.amt;
+      const received=pm.done?(pm.amount!=null?+pm.amount:billing):0;
+      const diff=pm.done?received-billing:null;
+      cards.push({rec,billing,received,diff,pm,done:!!pm.done});
+    });
+  });
+  if(_pmHistFilter==='unpaid')cards=cards.filter(c=>!c.done);
+  if(_pmHistSort==='newest')cards.sort((a,b)=>b.rec.savedAt.localeCompare(a.rec.savedAt));
+  else if(_pmHistSort==='oldest')cards.sort((a,b)=>a.rec.savedAt.localeCompare(b.rec.savedAt));
+  else if(_pmHistSort==='amtDesc')cards.sort((a,b)=>b.billing-a.billing);
+  else if(_pmHistSort==='amtAsc')cards.sort((a,b)=>a.billing-b.billing);
+  const totalBilled=allRec.reduce((s,rec)=>{return s+(rec.txns||[]).filter(t=>t.from===name).reduce((ss,t)=>ss+t.amt,0);},0);
+  const totalReceived=allRec.reduce((s,rec)=>{return s+(rec.txns||[]).filter(t=>t.from===name).reduce((ss,t)=>{const pm=(rec.payments||{})[`${t.from}|${t.to}`]||{};return ss+(pm.done?(pm.amount!=null?+pm.amount:t.amt):0);},0);},0);
+  const totalUnpaid=totalBilled-totalReceived;
+  const summaryHtml=`<div class="pm-person-card"><div class="pm-person-name">${e(name)}</div><div class="pm-person-stats"><div class="pm-pstat"><div class="pm-pstat-lbl">총 청구</div><div class="pm-pstat-val">${fmt(totalBilled)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">총 수령</div><div class="pm-pstat-val${totalReceived>0?' pos':''}">${fmt(totalReceived)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">미수</div><div class="pm-pstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?'-'+fmt(totalUnpaid)+'원':'없음'}</div></div></div></div>`;
+  const controlsHtml=`<div class="pm-controls"><select class="pm-sort-sel" onchange="_pmSetSort(this.value)"><option value="newest"${_pmHistSort==='newest'?' selected':''}>최신순</option><option value="oldest"${_pmHistSort==='oldest'?' selected':''}>오래된순</option><option value="amtDesc"${_pmHistSort==='amtDesc'?' selected':''}>금액 높은순</option><option value="amtAsc"${_pmHistSort==='amtAsc'?' selected':''}>금액 낮은순</option></select><div class="pm-filter-chips"><button class="pm-filter-chip${_pmHistFilter==='all'?' on':''}" onclick="_pmSetFilter('all')">전체</button><button class="pm-filter-chip${_pmHistFilter==='unpaid'?' on':''}" onclick="_pmSetFilter('unpaid')">미수만</button></div></div>`;
+  if(!cards.length)return searchHtml+summaryHtml+controlsHtml+'<div class="empty" style="padding:30px 0"><p style="color:var(--label3)">해당하는 기록이 없어요</p></div>';
+  const cardsHtml=cards.map(c=>{
+    const dateStr=c.rec.dateStart?c.rec.dateStart.slice(2).replace(/-/g,'. ')+'.':c.rec.savedAt.slice(0,10);
+    const members=(c.rec.people||[]).join(' · ');
+    const statusHtml=c.done?(c.diff>0?`<span class="pm-badge pos">+${fmt(c.diff)}원 초과</span>`:c.diff<0?`<span class="pm-badge neg">-${fmt(-c.diff)}원 부족</span>`:`<span class="pm-badge done">✓ 입금완료</span>`):`<span class="pm-badge pending">미입금</span>`;
+    const recValCls=c.done?(c.diff<0?' neg':' done-clr'):'';
+    return `<div class="pm-record-card"><div class="pm-record-hd"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e(c.rec.groupName||'')}</div><div class="pm-record-members">${e(members)}</div></div><div class="pm-record-body"><div class="pm-record-row"><span class="pm-record-lbl">청구금액</span><span class="pm-record-val">${fmt(c.billing)}원</span></div>${c.done?`<div class="pm-record-row"><span class="pm-record-lbl">실수령액</span><span class="pm-record-val${recValCls}">${fmt(c.received)}원</span></div>`:''}<div class="pm-record-row"><span class="pm-record-lbl">상태</span>${statusHtml}</div></div>${c.pm.account||c.pm.timestamp?`<div class="pm-record-foot"><span class="pm-record-account">${e(c.pm.account||'')}</span><span class="pm-record-ts">${c.pm.timestamp?c.pm.timestamp.replace('T',' ').slice(0,16):''}</span></div>`:''}</div>`;
+  }).join('');
+  return searchHtml+summaryHtml+controlsHtml+`<div class="pay-section-title" style="margin-top:14px">정산 기록 · ${cards.length}건</div>`+cardsHtml;
+}
+
 function renderPaymentView(eyeId,titleId,subId,bodyId){
   document.getElementById(eyeId).textContent='정산';
   document.getElementById(titleId).textContent='입금 관리';
-  document.getElementById(subId).textContent='송금 항목별 입금 여부를 확인하고 기록하세요.';
+  document.getElementById(subId).textContent='이번 정산 입금 현황과 전체 기록을 확인하세요.';
   const body=document.getElementById(bodyId);
   const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
-  if(!txns.length){body.innerHTML='<div class="empty"><div class="empty-icon">'+svgEmpty+'</div><p>정산할 송금 내역이 없어요</p></div>';return;}
-  body.innerHTML=_paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">송금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>';
+  body.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(txns):_pmHistoryHtml());
 }
 
 function renderPaymentBody(el){
   const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
-  if(!txns.length){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>정산할 송금 내역이 없어요</p></div>';return;}
-  el.innerHTML=_paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">송금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>';
+  el.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(txns):_pmHistoryHtml());
 }
 
 function renderAll(){
