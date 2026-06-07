@@ -568,8 +568,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.56';
-const BUILD_TIME='2026-06-07 13:00';
+const APP_VERSION='v1.57';
+const BUILD_TIME='2026-06-07 13:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -964,10 +964,11 @@ function _paySummaryBodyHtml(txns){
 }
 
 function _pmSetTab(t){_pmHistTab=t;_reRenderPayment();}
-function _pmSetSort(v){_pmHistSort=v;_reRenderPayment();}
-function _pmSetFilter(v){_pmHistFilter=v;_reRenderPayment();}
-function _pmSetSearch(v){_pmHistSearch=v;_reRenderPayment();requestAnimationFrame(()=>{const inp=document.querySelector('.pm-search');if(inp){inp.focus();inp.setSelectionRange(v.length,v.length);}});}
+function _pmSetSort(v){_pmHistSort=v;_patchHistResults();}
+function _pmSetFilter(v){_pmHistFilter=v;_patchHistResults();}
+function _pmSearchInput(v){_pmHistSearch=v;_patchHistResults();}
 function _reRenderPayment(){if(window.innerWidth<700){const el=document.getElementById('mBody');if(el&&mTab==='payment')renderPaymentBody(el);}else{if(dTab==='payment')renderPaymentView('dREye','dRTitle','dRSub','dRBody');}}
+function _patchHistResults(){const el=document.querySelector('.pm-hist-results');if(el)el.innerHTML=_pmHistResultsHtml();}
 
 function _pmSegHtml(){
   return `<div class="pm-seg-row"><button class="pm-seg${_pmHistTab==='current'?' on':''}" onclick="_pmSetTab('current')">이번 정산</button><button class="pm-seg${_pmHistTab==='history'?' on':''}" onclick="_pmSetTab('history')">전체 기록</button></div>`;
@@ -978,11 +979,10 @@ function _pmCurrentHtml(txns){
   return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">송금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>';
 }
 
-function _pmHistoryHtml(){
-  const searchHtml=`<div class="pm-search-wrap"><input class="pm-search" type="text" placeholder="이름으로 검색" value="${ea(_pmHistSearch)}" oninput="_pmSetSearch(this.value)"/></div>`;
+function _pmHistResultsHtml(){
   const name=_pmHistSearch.trim();
-  if(!name)return searchHtml+'<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">이름을 검색하면<br>정산 기록을 확인할 수 있어요</p></div>';
-  let allRec=[];try{const raw=localStorage.getItem(HISTORY_KEY);allRec=raw?JSON.parse(raw):[];}catch(e){}
+  if(!name)return '<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">이름을 검색하면<br>정산 기록을 확인할 수 있어요</p></div>';
+  let allRec=[];try{const raw=localStorage.getItem(HISTORY_KEY);allRec=raw?JSON.parse(raw):[];}catch(ex){}
   let cards=[];
   allRec.forEach(rec=>{
     (rec.txns||[]).filter(t=>t.from===name).forEach(t=>{
@@ -994,17 +994,17 @@ function _pmHistoryHtml(){
       cards.push({rec,billing,received,diff,pm,done:!!pm.done});
     });
   });
+  const totalBilled=cards.reduce((s,c)=>s+c.billing,0);
+  const totalReceived=cards.filter(c=>c.done).reduce((s,c)=>s+c.received,0);
+  const totalUnpaid=totalBilled-totalReceived;
+  const summaryHtml=`<div class="pm-person-card"><div class="pm-person-name">${e(name)}</div><div class="pm-person-stats"><div class="pm-pstat"><div class="pm-pstat-lbl">총 청구</div><div class="pm-pstat-val">${fmt(totalBilled)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">총 수령</div><div class="pm-pstat-val${totalReceived>0?' pos':''}">${fmt(totalReceived)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">미수</div><div class="pm-pstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?'-'+fmt(totalUnpaid)+'원':'없음'}</div></div></div></div>`;
   if(_pmHistFilter==='unpaid')cards=cards.filter(c=>!c.done);
   if(_pmHistSort==='newest')cards.sort((a,b)=>b.rec.savedAt.localeCompare(a.rec.savedAt));
   else if(_pmHistSort==='oldest')cards.sort((a,b)=>a.rec.savedAt.localeCompare(b.rec.savedAt));
   else if(_pmHistSort==='amtDesc')cards.sort((a,b)=>b.billing-a.billing);
   else if(_pmHistSort==='amtAsc')cards.sort((a,b)=>a.billing-b.billing);
-  const totalBilled=allRec.reduce((s,rec)=>{return s+(rec.txns||[]).filter(t=>t.from===name).reduce((ss,t)=>ss+t.amt,0);},0);
-  const totalReceived=allRec.reduce((s,rec)=>{return s+(rec.txns||[]).filter(t=>t.from===name).reduce((ss,t)=>{const pm=(rec.payments||{})[`${t.from}|${t.to}`]||{};return ss+(pm.done?(pm.amount!=null?+pm.amount:t.amt):0);},0);},0);
-  const totalUnpaid=totalBilled-totalReceived;
-  const summaryHtml=`<div class="pm-person-card"><div class="pm-person-name">${e(name)}</div><div class="pm-person-stats"><div class="pm-pstat"><div class="pm-pstat-lbl">총 청구</div><div class="pm-pstat-val">${fmt(totalBilled)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">총 수령</div><div class="pm-pstat-val${totalReceived>0?' pos':''}">${fmt(totalReceived)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">미수</div><div class="pm-pstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?'-'+fmt(totalUnpaid)+'원':'없음'}</div></div></div></div>`;
   const controlsHtml=`<div class="pm-controls"><select class="pm-sort-sel" onchange="_pmSetSort(this.value)"><option value="newest"${_pmHistSort==='newest'?' selected':''}>최신순</option><option value="oldest"${_pmHistSort==='oldest'?' selected':''}>오래된순</option><option value="amtDesc"${_pmHistSort==='amtDesc'?' selected':''}>금액 높은순</option><option value="amtAsc"${_pmHistSort==='amtAsc'?' selected':''}>금액 낮은순</option></select><div class="pm-filter-chips"><button class="pm-filter-chip${_pmHistFilter==='all'?' on':''}" onclick="_pmSetFilter('all')">전체</button><button class="pm-filter-chip${_pmHistFilter==='unpaid'?' on':''}" onclick="_pmSetFilter('unpaid')">미수만</button></div></div>`;
-  if(!cards.length)return searchHtml+summaryHtml+controlsHtml+'<div class="empty" style="padding:30px 0"><p style="color:var(--label3)">해당하는 기록이 없어요</p></div>';
+  if(!cards.length)return summaryHtml+controlsHtml+'<div class="empty" style="padding:30px 0"><p style="color:var(--label3)">해당하는 기록이 없어요</p></div>';
   const cardsHtml=cards.map(c=>{
     const dateStr=c.rec.dateStart?c.rec.dateStart.slice(2).replace(/-/g,'. ')+'.':c.rec.savedAt.slice(0,10);
     const members=(c.rec.people||[]).join(' · ');
@@ -1012,7 +1012,11 @@ function _pmHistoryHtml(){
     const recValCls=c.done?(c.diff<0?' neg':' done-clr'):'';
     return `<div class="pm-record-card"><div class="pm-record-hd"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e(c.rec.groupName||'')}</div><div class="pm-record-members">${e(members)}</div></div><div class="pm-record-body"><div class="pm-record-row"><span class="pm-record-lbl">청구금액</span><span class="pm-record-val">${fmt(c.billing)}원</span></div>${c.done?`<div class="pm-record-row"><span class="pm-record-lbl">실수령액</span><span class="pm-record-val${recValCls}">${fmt(c.received)}원</span></div>`:''}<div class="pm-record-row"><span class="pm-record-lbl">상태</span>${statusHtml}</div></div>${c.pm.account||c.pm.timestamp?`<div class="pm-record-foot"><span class="pm-record-account">${e(c.pm.account||'')}</span><span class="pm-record-ts">${c.pm.timestamp?c.pm.timestamp.replace('T',' ').slice(0,16):''}</span></div>`:''}</div>`;
   }).join('');
-  return searchHtml+summaryHtml+controlsHtml+`<div class="pay-section-title" style="margin-top:14px">정산 기록 · ${cards.length}건</div>`+cardsHtml;
+  return summaryHtml+controlsHtml+`<div class="pay-section-title" style="margin-top:14px">정산 기록 · ${cards.length}건</div>`+cardsHtml;
+}
+
+function _pmHistoryHtml(){
+  return `<div class="pm-search-wrap"><input class="pm-search" type="text" placeholder="이름으로 검색" value="${ea(_pmHistSearch)}" oninput="_pmSearchInput(this.value)"/></div><div class="pm-hist-results">${_pmHistResultsHtml()}</div>`;
 }
 
 function renderPaymentView(eyeId,titleId,subId,bodyId){
