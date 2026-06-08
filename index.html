@@ -232,6 +232,8 @@ svg{display:block;flex-shrink:0;}
 .pay-toggle-lbl.on{color:var(--green);font-weight:600;}
 .pay-inp{flex:1;border:1px solid var(--sep2);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;color:var(--label);background:var(--card);outline:none;min-width:0;text-align:left;}
 .pay-inp:focus{border-color:var(--blue);}
+.pay-inp[type="datetime-local"]::-webkit-date-and-time-value{text-align:left;}
+.pay-inp[type="datetime-local"]::-webkit-datetime-edit{text-align:left;padding:0;}
 .pay-inp.err{border-color:var(--red);}
 .pay-unit{font-size:13px;color:var(--label3);flex-shrink:0;}
 .pay-diff-badge{font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px;flex-shrink:0;white-space:nowrap;}
@@ -574,8 +576,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.64';
-const BUILD_TIME='2026-06-07 17:30';
+const APP_VERSION='v1.65';
+const BUILD_TIME='2026-06-07 18:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
