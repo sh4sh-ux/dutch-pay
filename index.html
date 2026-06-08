@@ -574,8 +574,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.61';
-const BUILD_TIME='2026-06-07 16:00';
+const APP_VERSION='v1.62';
+const BUILD_TIME='2026-06-07 16:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1011,7 +1011,7 @@ function _pmHistResultsHtml(){
   else if(_pmHistSort==='oldest')cards.sort((a,b)=>a.rec.savedAt.localeCompare(b.rec.savedAt));
   else if(_pmHistSort==='amtDesc')cards.sort((a,b)=>b.billing-a.billing);
   else if(_pmHistSort==='amtAsc')cards.sort((a,b)=>a.billing-b.billing);
-  const controlsHtml=`<div class="pm-controls"><select class="pm-sort-sel" onchange="_pmSetSort(this.value)"><option value="newest"${_pmHistSort==='newest'?' selected':''}>최신순</option><option value="oldest"${_pmHistSort==='oldest'?' selected':''}>오래된순</option><option value="amtDesc"${_pmHistSort==='amtDesc'?' selected':''}>금액 높은순</option><option value="amtAsc"${_pmHistSort==='amtAsc'?' selected':''}>금액 낮은순</option></select><div class="pm-filter-chips"><button class="pm-filter-chip${_pmHistFilter==='all'?' on':''}" onclick="_pmSetFilter('all')">전체</button><button class="pm-filter-chip${_pmHistFilter==='unpaid'?' on':''}" onclick="_pmSetFilter('unpaid')">미수만</button></div></div>`;
+  const controlsHtml=`<div class="pm-controls"><select class="pm-sort-sel" onchange="_pmSetSort(this.value)"><option value="newest"${_pmHistSort==='newest'?' selected':''}>최신순</option><option value="oldest"${_pmHistSort==='oldest'?' selected':''}>오래된순</option><option value="amtDesc"${_pmHistSort==='amtDesc'?' selected':''}>금액 높은순</option><option value="amtAsc"${_pmHistSort==='amtAsc'?' selected':''}>금액 낮은순</option></select><div class="pm-filter-chips"><button class="pm-filter-chip${_pmHistFilter==='all'?' on':''}" onclick="_pmSetFilter('all')">전체</button><button class="pm-filter-chip${_pmHistFilter==='unpaid'?' on':''}" onclick="_pmSetFilter('unpaid')">미수</button></div></div>`;
   if(!cards.length)return summaryHtml+controlsHtml+'<div class="empty" style="padding:30px 0"><p style="color:var(--label3)">해당하는 기록이 없어요</p></div>';
   const cardsHtml=cards.map(c=>{
     const dateStr=c.rec.dateStart?c.rec.dateStart.slice(2).replace(/-/g,'. ')+'.':c.rec.savedAt.slice(0,10);
