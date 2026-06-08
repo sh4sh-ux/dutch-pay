@@ -230,7 +230,7 @@ svg{display:block;flex-shrink:0;}
 .pay-toggle-track.on .pay-toggle-thumb{left:18px;}
 .pay-toggle-lbl{font-size:13px;color:var(--label2);}
 .pay-toggle-lbl.on{color:var(--green);font-weight:600;}
-.pay-inp{flex:1;border:1px solid var(--sep2);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;color:var(--label);background:var(--card);outline:none;min-width:0;}
+.pay-inp{flex:1;border:1px solid var(--sep2);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;color:var(--label);background:var(--card);outline:none;min-width:0;text-align:left;}
 .pay-inp:focus{border-color:var(--blue);}
 .pay-inp.err{border-color:var(--red);}
 .pay-unit{font-size:13px;color:var(--label3);flex-shrink:0;}
@@ -574,8 +574,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.63';
-const BUILD_TIME='2026-06-07 17:00';
+const APP_VERSION='v1.64';
+const BUILD_TIME='2026-06-07 17:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -856,7 +856,7 @@ function togglePaymentPanel(key){
   const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
   const panel=document.createElement('div');
   panel.className='pay-panel';
-  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="pmToggleDone('${ea(key)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':'미입금'}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!==null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="pmUpdateAmt('${ea(key)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row"><span class="pay-panel-lbl">입금일시</span><input class="pay-inp" type="datetime-local" value="${ea(pm.timestamp||'')}" onchange="pmUpdate('${ea(key)}','timestamp',this.value)" style="flex:1;min-width:0;text-align:left;"/><button class="pay-now-btn" onclick="pmSetNow('${ea(key)}')">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span><select class="pay-sel" onchange="pmUpdate('${ea(key)}','account',this.value)"><option value="">선택</option><option value="케이뱅크"${pm.account==='케이뱅크'?' selected':''}>케이뱅크</option><option value="카카오페이"${pm.account==='카카오페이'?' selected':''}>카카오페이</option><option value="토스뱅크"${pm.account==='토스뱅크'?' selected':''}>토스뱅크</option></select></div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="pmUpdate('${ea(key)}','memo',this.value)"/></div>`;
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="pmToggleDone('${ea(key)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':'미입금'}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!==null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="pmUpdateAmt('${ea(key)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row"><span class="pay-panel-lbl">입금일시</span><input class="pay-inp" type="datetime-local" value="${ea(pm.timestamp||'')}" onchange="pmUpdate('${ea(key)}','timestamp',this.value)" style="flex:1;min-width:0;text-align:left;-webkit-text-align:left;direction:ltr;"/><button class="pay-now-btn" onclick="pmSetNow('${ea(key)}')">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span><select class="pay-sel" onchange="pmUpdate('${ea(key)}','account',this.value)"><option value="">선택</option><option value="케이뱅크"${pm.account==='케이뱅크'?' selected':''}>케이뱅크</option><option value="카카오페이"${pm.account==='카카오페이'?' selected':''}>카카오페이</option><option value="토스뱅크"${pm.account==='토스뱅크'?' selected':''}>토스뱅크</option></select></div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="pmUpdate('${ea(key)}','memo',this.value)"/></div>`;
   item.appendChild(panel);
 }
 
