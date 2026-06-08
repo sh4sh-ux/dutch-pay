@@ -531,6 +531,7 @@ svg{display:block;flex-shrink:0;}
         <span class="foot-val" id="dTotal">0원</span>
       </div>
       <div id="dbxSyncBadge" style="font-size:11px;color:var(--label3);text-align:right;margin-top:5px;min-height:14px"></div>
+      <div style="font-size:10px;color:var(--label3);text-align:right;margin-top:4px;letter-spacing:.3px"><span id="appVersionD"></span></div>
     </div>
   </div>
   <div class="right">
@@ -573,8 +574,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.59';
-const BUILD_TIME='2026-06-07 15:00';
+const APP_VERSION='v1.60';
+const BUILD_TIME='2026-06-07 15:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
