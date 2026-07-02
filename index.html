@@ -576,8 +576,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.69';
-const BUILD_TIME='2026-07-02 09:10';
+const APP_VERSION='v1.70';
+const BUILD_TIME='2026-07-02 09:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1261,7 +1261,7 @@ function _buildRecordCardHtml(r){
     <div class="rc-hd" onclick="toggleHistoryCard('${sid}')">
       <div class="rc-meta">
         <div class="rc-date">${e(dateStr)}</div>
-        <div class="rc-name">${e(r.groupName)||'더치페이 정산'}</div>
+        <div class="rc-name">${e((r.people||[]).join(', ')||r.groupName||'더치페이 정산')}</div>
         <div class="rc-people">${e(ppl)}</div>
       </div>
       <div class="rc-right">
