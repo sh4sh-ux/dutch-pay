@@ -576,8 +576,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.67';
-const BUILD_TIME='2026-06-29 10:00';
+const APP_VERSION='v1.68';
+const BUILD_TIME='2026-07-02 09:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -639,7 +639,7 @@ function showDataMenu(anchorEl,ev){
   const pop=document.createElement('div');pop.className='data-pop';
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
-  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
+  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
       if(dbxGetToken()){syncFromDropbox();toast('Dropbox 동기화 중...');}
       else{goToHistory();}
@@ -649,6 +649,7 @@ function showDataMenu(anchorEl,ev){
     else if(action==='exportCsv'){exportCurrentGroupCsv();pop.remove();}
     else if(action==='export'){exportData();pop.remove();}
     else if(action==='import'){importData();pop.remove();}
+    else if(action==='resetCurrent'){resetCurrentSettlement();pop.remove();}
     else if(action==='reset'){resetAllData();pop.remove();}
     else if(action==='lockOwner'){_ownerLock();pop.remove();}});
   document.body.appendChild(pop);_positionPopover(pop,anchorEl,true);
@@ -745,6 +746,7 @@ function _updateSyncBadge(){
 function saveState(){try{syncCurrentToGroup();localStorage.setItem(STORAGE_KEY,JSON.stringify({version:2,groups,currentGroupId}));_scheduleSyncToDropbox();}catch(e){toast('저장 공간이 부족해 데이터를 저장하지 못했어요',{type:'error'});}}
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if(d.version===2&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
 function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?'))return;const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
+function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 모두 초기화할까요?'))return;people=[];items=[];payments={};idc=0;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
 
 function updateMeetingDate(val){settleDateStart=val||new Date().toISOString().slice(0,10);saveState();}
 function fmtDate(iso){if(!iso)return '';const[y,m,d]=iso.split('-');return `${y}.${m}.${d}`;}
@@ -1029,17 +1031,21 @@ function _pmHistoryHtml(){
   return `<div class="pm-search-wrap"><input class="pm-search" type="text" placeholder="이름으로 검색" value="${ea(_pmHistSearch)}" oninput="_pmSearchInput(this.value)"/></div><div class="pm-hist-results">${_pmHistResultsHtml()}</div>`;
 }
 
+function _cleanStalePayments(txns){const validKeys=new Set(txns.map(t=>`${t.from}|${t.to}`));let changed=false;Object.keys(payments).forEach(k=>{if(!validKeys.has(k)){delete payments[k];changed=true;}});if(changed)syncCurrentToGroup();}
+
 function renderPaymentView(eyeId,titleId,subId,bodyId){
   document.getElementById(eyeId).textContent='정산';
   document.getElementById(titleId).textContent='입금 관리';
   document.getElementById(subId).textContent='이번 정산 입금 현황과 전체 기록을 확인하세요.';
   const body=document.getElementById(bodyId);
   const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
+  _cleanStalePayments(txns);
   body.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(txns):_pmHistoryHtml());
 }
 
 function renderPaymentBody(el){
   const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
+  _cleanStalePayments(txns);
   el.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(txns):_pmHistoryHtml());
 }
 
