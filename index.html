@@ -576,8 +576,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.70';
-const BUILD_TIME='2026-07-02 09:20';
+const APP_VERSION='v1.71';
+const BUILD_TIME='2026-07-02 09:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1221,6 +1221,7 @@ const svgArrowH='<svg width="13" height="13" viewBox="0 0 24 24"><line x1="2" y1
 
 function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JSON.parse(r):[];}catch(e){return [];}}
 function saveHistory(arr){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));}catch(e){toast('저장 공간이 부족해 기록을 저장하지 못했어요',{type:'error'});}}
+function _migrateHistoryGroupNames(){try{const arr=loadHistory();let changed=false;arr.forEach(r=>{const correct=(r.people||[]).join(', ');if(correct&&r.groupName!==correct){r.groupName=correct;changed=true;}});if(changed)saveHistory(arr);}catch(e){}}
 
 function deleteHistoryRecord(id){
   if(!confirm('이 기록을 삭제할까요?'))return;
@@ -1669,6 +1670,7 @@ async function shareSettleImage(){
 }
 
 loadState();
+_migrateHistoryGroupNames();
 renderAll();
 (()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();})();
 _updateSyncBadge();
