@@ -319,6 +319,11 @@ svg{display:block;flex-shrink:0;}
 .reset-settle-btn:hover{color:var(--red);}
 .mob-reset-btn{background:none;border:none;font-size:12px;color:var(--label3);cursor:pointer;font-family:inherit;padding:10px 16px 14px;text-align:center;width:100%;display:block;}
 .mob-reset-btn:hover{color:var(--red);}
+.rc-txn-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;flex-wrap:wrap;}
+.pm-allrec-card{cursor:pointer;user-select:none;}
+.pm-allrec-card.open{border-radius:12px 12px 0 0;margin-bottom:0;}
+.pm-allrec-chev{font-size:9px;color:var(--label3);margin-left:2px;}
+.pm-allrec-detail{background:var(--card);border:1px solid var(--sep);border-top:none;border-radius:0 0 12px 12px;margin-bottom:8px;overflow:hidden;}
 .txn-people{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .txn-from{font-size:14px;font-weight:600;color:var(--label);}
 .txn-arr{color:var(--label);display:flex;align-items:center;}
@@ -598,8 +603,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.78';
-const BUILD_TIME='2026-07-05 10:30';
+const APP_VERSION='v1.79';
+const BUILD_TIME='2026-07-05 11:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1002,7 +1007,21 @@ function _pmSetSort(v){_pmHistSort=v;_patchHistResults();}
 function _pmSetFilter(v){_pmHistFilter=v;_patchHistResults();}
 function _pmSearchInput(v){_pmHistSearch=v;_patchHistResults();}
 function _reRenderPayment(){if(window.innerWidth<700){const el=document.getElementById('mBody');if(el&&mTab==='payment')renderPaymentBody(el);}else{if(dTab==='payment')renderPaymentView('dREye','dRTitle','dRSub','dRBody');}}
-function _patchHistResults(){const el=document.querySelector('.pm-hist-results');if(el)el.innerHTML=_pmHistResultsHtml();}
+function _patchHistResults(){const el=document.querySelector('.pm-hist-results');if(!el)return;const openCard=el.querySelector('.pm-allrec-card.open');const openRecId=openCard?openCard.dataset.recId:null;el.innerHTML=_pmHistResultsHtml();if(openRecId)toggleAllRecCard(openRecId);}
+function toggleAllRecCard(recId){
+  const card=document.querySelector(`.pm-allrec-card[data-rec-id="${CSS.escape(recId)}"]`);if(!card)return;
+  const next=card.nextElementSibling;
+  if(next&&next.classList.contains('pm-allrec-detail')){next.remove();card.classList.remove('open');const ch=card.querySelector('.pm-allrec-chev');if(ch)ch.textContent='▼';return;}
+  document.querySelectorAll('.pm-allrec-detail').forEach(d=>d.remove());
+  document.querySelectorAll('.pm-allrec-card.open').forEach(c=>{c.classList.remove('open');const ch=c.querySelector('.pm-allrec-chev');if(ch)ch.textContent='▼';});
+  card.classList.add('open');const chev=card.querySelector('.pm-allrec-chev');if(chev)chev.textContent='▲';
+  const rec=loadHistory().find(r=>r.id===recId);if(!rec)return;
+  const txns=rec.txns||[];const pmObj=rec.payments||{};
+  const detail=document.createElement('div');detail.className='pm-allrec-detail';
+  if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>';}
+  else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const badge=pm.done?`<span class="pm-badge done">✓ 입금완료</span>`:`<span class="pm-badge pending">미입금</span>`;const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('');}
+  card.insertAdjacentElement('afterend',detail);
+}
 
 function _pmSegHtml(){
   return `<div class="pm-seg-row"><button class="pm-seg${_pmHistTab==='current'?' on':''}" onclick="_pmSetTab('current')">이번 정산</button><button class="pm-seg${_pmHistTab==='history'?' on':''}" onclick="_pmSetTab('history')">전체 기록</button></div>`;
@@ -1028,7 +1047,8 @@ function _pmHistResultsHtml(){
         :doneCount===totalCount?`<span class="pm-badge done">✓ 완료</span>`
         :doneCount===0?`<span class="pm-badge pending">${totalCount}명 미입금</span>`
         :`<span class="pm-badge pending">${totalCount-doneCount}명 미입금</span>`;
-      return `<div class="pm-allrec-card"><div class="pm-allrec-left"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((rec.people||[]).join(', ')||rec.groupName||'')}</div></div><div class="pm-allrec-right"><div class="pm-record-total">${fmt(rec.total||0)}원</div>${statusHtml}</div></div>`;
+      const rid=ea(rec.id);
+      return `<div class="pm-allrec-card" data-rec-id="${rid}" onclick="toggleAllRecCard('${rid}')"><div class="pm-allrec-left"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((rec.people||[]).join(', ')||rec.groupName||'')}</div></div><div class="pm-allrec-right"><div class="pm-record-total">${fmt(rec.total||0)}원</div>${statusHtml}<span class="pm-allrec-chev">▼</span></div></div>`;
     }).join('');
     return `<div class="pay-section-title" style="margin-top:8px">전체 기록 · ${allRecs.length}건</div>`+recsHtml;
   }
@@ -1414,7 +1434,7 @@ function _buildRecordCardHtml(r){
       }).join(''):'';
   const pmObj=r.payments||{};
   const txnHtml=txns.length
-    ?`<div class="rc-section-title">송금</div><div class="rc-txns">`+txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const badge=pm.done?`<span class="pm-badge done">✓ 입금완료</span>`:`<span class="pm-badge pending">미입금</span>`;const rid=ea(r.id);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div><div class="rc-txn-status"><span class="rc-txn-amt">${fmt(t.amt)}원</span>${badge}</div></div>`;}).join('')+`</div>`
+    ?`<div class="rc-section-title">송금</div><div class="rc-txns">`+txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const badge=pm.done?`<span class="pm-badge done">✓ 입금완료</span>`:`<span class="pm-badge pending">미입금</span>`;const rid=ea(r.id);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+`</div>`
     :`<div class="rc-no-txn">모두 정산 완료 ✓</div>`;
   const savedAtStr=(()=>{try{const d=new Date(r.savedAt);return d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e2){return '';}})();
   return `<div class="record-card" data-rec-id="${e(r.id)}">
