@@ -598,8 +598,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.77';
-const BUILD_TIME='2026-07-05 10:00';
+const APP_VERSION='v1.78';
+const BUILD_TIME='2026-07-05 10:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1079,7 +1079,7 @@ function toggleHistRecordPanel(recId,txnKey){
   const card=document.querySelector(`.pm-record-card[data-rec-id="${CSS.escape(recId)}"]`);
   if(!card)return;
   const existing=card.querySelector('.pm-hist-edit-panel');
-  if(existing){existing.remove();const ch=card.querySelector('.pm-record-chev');if(ch)ch.classList.remove('open');return;}
+  if(existing){existing.remove();const ch=card.querySelector('.pm-record-chev');if(ch)ch.classList.remove('open');_patchHistResults();return;}
   document.querySelectorAll('.pm-hist-edit-panel').forEach(p=>p.remove());
   document.querySelectorAll('.pm-record-chev.open').forEach(c=>c.classList.remove('open'));
   const ch=card.querySelector('.pm-record-chev');if(ch)ch.classList.add('open');
