@@ -603,8 +603,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.80';
-const BUILD_TIME='2026-07-05 12:00';
+const APP_VERSION='v1.81';
+const BUILD_TIME='2026-07-05 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -623,10 +623,10 @@ function _autoGroupName(p){return(!p||!p.length)?'모임명 또는 참여자':p.
 function _updateAutoNameIfNeeded(){const g=getCurrentGroup();if(!g||!g.nameAuto)return;g.name=_autoGroupName(people);}
 function _newGroupId(){return 'g'+Date.now()+Math.floor(Math.random()*1000);}
 function getCurrentGroup(){return groups.find(g=>g.id===currentGroupId);}
-function syncCurrentToGroup(){const g=getCurrentGroup();if(!g)return;g.data={people:people.slice(),items:JSON.parse(JSON.stringify(items)),idc,settleDateStart,settleDateEnd,itemSort,itemSearch,payments:JSON.parse(JSON.stringify(payments))};}
+function syncCurrentToGroup(){const g=getCurrentGroup();if(!g)return;if(!g.createdAt)g.createdAt=new Date().toISOString();g.updatedAt=new Date().toISOString();g.data={people:people.slice(),items:JSON.parse(JSON.stringify(items)),idc,settleDateStart,settleDateEnd,itemSort,itemSearch,payments:JSON.parse(JSON.stringify(payments))};}
 function loadGroupData(g){people=(g.data.people||[]).slice();items=JSON.parse(JSON.stringify(g.data.items||[]));idc=g.data.idc||0;settleDateStart=g.data.settleDateStart||new Date().toISOString().slice(0,10);settleDateEnd=g.data.settleDateEnd!==undefined?g.data.settleDateEnd:null;itemSort=g.data.itemSort||'default';itemSearch=g.data.itemSearch||'';payments=JSON.parse(JSON.stringify(g.data.payments||{}));selectedId=null;}
 function switchGroup(id){if(id===currentGroupId)return;syncCurrentToGroup();currentGroupId=id;const g=getCurrentGroup();if(g)loadGroupData(g);renderAll();}
-function createGroup(name){const id=_newGroupId();syncCurrentToGroup();const trimmed=(name||'').trim();const isAuto=!trimmed;groups.push({id,name:trimmed||_autoGroupName([]),nameAuto:isAuto,data:_emptyGroupData()});currentGroupId=id;loadGroupData(groups[groups.length-1]);renderAll();toast(trimmed?`'${trimmed}' 그룹 생성됨`:'새 그룹이 생성됐어요',{type:'success'});}
+function createGroup(name){const id=_newGroupId();syncCurrentToGroup();const trimmed=(name||'').trim();const isAuto=!trimmed;const now=new Date().toISOString();groups.push({id,name:trimmed||_autoGroupName([]),nameAuto:isAuto,createdAt:now,updatedAt:now,data:_emptyGroupData()});currentGroupId=id;loadGroupData(groups[groups.length-1]);renderAll();toast(trimmed?`'${trimmed}' 그룹 생성됨`:'새 그룹이 생성됐어요',{type:'success'});}
 function renameGroup(id,newName){const g=groups.find(g=>g.id===id);if(!g)return;const trimmed=(newName||'').trim();if(!trimmed)return;g.name=trimmed;g.nameAuto=false;saveState();renderAll();}
 function duplicateGroup(id){const g=groups.find(g=>g.id===id);if(!g)return;syncCurrentToGroup();const newId=_newGroupId();const ng={id:newId,name:g.name+' (복사)',nameAuto:false,data:{people:(g.data.people||[]).slice(),items:[],idc:0,settleDateStart:new Date().toISOString().slice(0,10),settleDateEnd:null,itemSort:'default',itemSearch:''}};groups.push(ng);currentGroupId=newId;loadGroupData(ng);renderAll();toast(`'${ng.name}' 생성됨`,{type:'success'});}
 function deleteGroup(id){if(groups.length<=1){toast('마지막 그룹은 삭제할 수 없어요',{type:'error'});return;}const idx=groups.findIndex(g=>g.id===id);if(idx<0)return;const snap={group:JSON.parse(JSON.stringify(groups[idx])),idx,wasCurrent:id===currentGroupId};groups.splice(idx,1);if(snap.wasCurrent){currentGroupId=groups[0].id;loadGroupData(groups[0]);}renderAll();toast(`'${snap.group.name}' 그룹 삭제됨`,{action:()=>{groups.splice(snap.idx,0,snap.group);if(snap.wasCurrent){syncCurrentToGroup();currentGroupId=snap.group.id;loadGroupData(snap.group);}renderAll();},actionLabel:'되돌리기'});}
@@ -667,7 +667,9 @@ function showDataMenu(anchorEl,ev){
   const pop=document.createElement('div');pop.className='data-pop';
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
-  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
+  const abSlots=_loadAutoBackups();
+  const abLabel=abSlots.length?`↩ 자동 백업 복원 (${abSlots.length}개)`:'↩ 자동 백업 복원';
+  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><button class="data-pop-btn" data-action="import">JSON 불러오기</button><button class="data-pop-btn" data-action="autoBackupRestore">${abLabel}</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
       if(dbxGetToken()){syncFromDropbox();toast('Dropbox 동기화 중...');}
       else{goToHistory();}
@@ -677,6 +679,7 @@ function showDataMenu(anchorEl,ev){
     else if(action==='exportCsv'){exportCurrentGroupCsv();pop.remove();}
     else if(action==='export'){exportData();pop.remove();}
     else if(action==='import'){importData();pop.remove();}
+    else if(action==='autoBackupRestore'){pop.remove();_showAutoBackupList();}
     else if(action==='setMyName'){const n=prompt('더치페이에서 나의 이름을 입력하세요\n(입금 관리에서 나에게 오는 입금만 수정 가능해져요)',_myName);if(n===null)return;_myName=n.trim();localStorage.setItem('dutchpay_my_name',_myName);pop.remove();toast(_myName?`내 이름이 "${_myName}"으로 설정됐어요`:'내 이름 설정이 해제됐어요',{type:'success'});}
     else if(action==='resetCurrent'){resetCurrentSettlement();pop.remove();}
     else if(action==='reset'){resetAllData();pop.remove();}
@@ -691,7 +694,7 @@ function exportData(){syncCurrentToGroup();const payload={version:2,exportedAt:n
 
 function exportCurrentGroupCsv(){const g=getCurrentGroup();if(!g){toast('내보낼 데이터가 없어요',{type:'error'});return;}syncCurrentToGroup();if(!items.length){toast('지출이 없는 그룹이에요',{type:'error'});return;}const BOM='﻿';const esc=(s)=>{s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};const lines=[];lines.push(`그룹,${esc(g.name)}`);if(settleDateStart){if(settleDateEnd&&settleDateEnd!==settleDateStart){lines.push(`기간,${settleDateStart} ~ ${settleDateEnd}`);}else{lines.push(`일자,${settleDateStart}`);}}const total=items.reduce((s,it)=>s+(+it.amount||0),0);lines.push(`총 금액,${total}`);lines.push(`참여자,${esc(people.join(', '))}`);lines.push('');lines.push('# 지출 내역');lines.push('번호,지출 이름,금액,결제자,참여자');items.forEach((it,i)=>{const mems=(it.members.length?it.members:people).join(', ');lines.push([i+1,esc(it.name||'(이름 없음)'),+it.amount||0,esc(it.payer||''),esc(mems)].join(','));});lines.push('');const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);if(txns.length){lines.push('# 송금 내역');lines.push('보내는 사람,받는 사람,금액');txns.forEach(t=>{lines.push([esc(t.from),esc(t.to),t.amt].join(','));});lines.push('');}lines.push('# 개인별 정산');lines.push('이름,결제 총액,분담 총액,순액');people.forEach(p=>{const paidP=paid[p]||0,owesP=owes[p]||0,net=paidP-owesP;lines.push([esc(p),paidP,owesP,net].join(','));});const csv=BOM+lines.join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');const safeName=g.name.replace(/[\\\/:*?"<>|]/g,'_');a.download=`더치페이_${safeName}_${new Date().toISOString().slice(0,10)}.csv`;a.href=url;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);toast('엑셀(CSV) 파일이 다운로드됐어요',{type:'success'});}
 
-function importData(){const inp=document.createElement('input');inp.type='file';inp.accept='application/json,.json';inp.onchange=()=>{const file=inp.files&&inp.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);if(!d||!Array.isArray(d.groups)||!d.groups.length){toast('올바른 백업 파일이 아니에요',{type:'error'});return;}if(!confirm(`백업의 ${d.groups.length}개 그룹을 현재 데이터에 추가할까요?`))return;const existingIds=new Set(groups.map(g=>g.id));let added=0;d.groups.forEach(g=>{let newId=g.id;while(existingIds.has(newId))newId=_newGroupId();existingIds.add(newId);groups.push({id:newId,name:g.name||'복원된 그룹',data:Object.assign(_emptyGroupData(),g.data||{})});added++;});saveState();renderAll();toast(`${added}개 그룹 가져오기 완료`,{type:'success'});}catch(e){toast('백업 파일을 읽을 수 없어요',{type:'error'});}};reader.readAsText(file);};inp.click();}
+function importData(){const inp=document.createElement('input');inp.type='file';inp.accept='application/json,.json';inp.onchange=()=>{const file=inp.files&&inp.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);if(!d||!Array.isArray(d.groups)||!d.groups.length){toast('올바른 백업 파일이 아니에요',{type:'error'});return;}if(!confirm(`백업의 ${d.groups.length}개 그룹을 현재 데이터에 추가할까요?`))return;_autoBackup('JSON 가져오기 전');const existingIds=new Set(groups.map(g=>g.id));let added=0;d.groups.forEach(g=>{let newId=g.id;while(existingIds.has(newId))newId=_newGroupId();existingIds.add(newId);groups.push({id:newId,name:g.name||'복원된 그룹',data:Object.assign(_emptyGroupData(),g.data||{})});added++;});saveState();renderAll();toast(`${added}개 그룹 가져오기 완료`,{type:'success'});}catch(e){toast('백업 파일을 읽을 수 없어요',{type:'error'});}};reader.readAsText(file);};inp.click();}
 
 function getDisplayItems(){let arr=items.slice();if(itemSearch.trim()){const q=itemSearch.trim().toLowerCase();arr=arr.filter(it=>(it.name||'').toLowerCase().includes(q));}if(itemSort==='amtDesc')arr.sort((a,b)=>(+b.amount||0)-(+a.amount||0));else if(itemSort==='amtAsc')arr.sort((a,b)=>(+a.amount||0)-(+b.amount||0));else if(itemSort==='nameAsc')arr.sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko'));return arr;}
 function setItemSort(v){itemSort=v;renderAll();}
@@ -706,6 +709,43 @@ function openInExternalBrowser(){const t=detectInAppBrowser();const url=location
 
 const STORAGE_KEY='dutchpay_v1';
 const HISTORY_KEY='dutchpay_history';
+const AUTO_BACKUP_KEY='dutchpay_autobackups';
+const AUTO_BACKUP_MAX=5;
+
+function _autoBackup(reason){
+  try{
+    syncCurrentToGroup();
+    const slots=_loadAutoBackups();
+    slots.unshift({reason:reason||'',savedAt:new Date().toISOString(),version:3,groups:JSON.parse(JSON.stringify(groups)),currentGroupId});
+    if(slots.length>AUTO_BACKUP_MAX)slots.length=AUTO_BACKUP_MAX;
+    localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(slots));
+  }catch(e){}
+}
+function _loadAutoBackups(){
+  try{const d=JSON.parse(localStorage.getItem(AUTO_BACKUP_KEY)||'[]');return Array.isArray(d)?d:[];}catch(e){return [];}
+}
+function _restoreAutoBackup(idx){
+  const slots=_loadAutoBackups();
+  const slot=slots[idx];
+  if(!slot||!Array.isArray(slot.groups)||!slot.groups.length){toast('백업 데이터가 없어요',{type:'error'});return;}
+  if(!confirm(`"${slot.reason||'자동 백업'}" (${slot.savedAt?slot.savedAt.slice(0,16).replace('T',' '):'?'}) 시점으로 복원할까요?`))return;
+  groups=slot.groups;currentGroupId=slot.currentGroupId||groups[0].id;
+  const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);
+  saveState();renderAll();
+  toast('자동 백업에서 복원됐어요',{type:'success'});
+}
+function _showAutoBackupList(){
+  const slots=_loadAutoBackups();
+  if(!slots.length){toast('저장된 자동 백업이 없어요',{type:'error'});return;}
+  const pop=document.createElement('div');pop.className='data-pop';
+  const items=slots.map((s,i)=>{const dt=s.savedAt?s.savedAt.slice(0,16).replace('T',' '):'?';const groups_n=(s.groups||[]).length;return `<button class="data-pop-btn" data-idx="${i}">${e(s.reason||'자동 백업')}<br><span style="font-size:12px;color:var(--label3)">${dt} · ${groups_n}개 그룹</span></button>`;}).join('');
+  pop.innerHTML=`<div class="data-pop-hd">자동 백업 복원</div>${items}`;
+  pop.addEventListener('click',(ev)=>{ev.stopPropagation();const btn=ev.target.closest('[data-idx]');if(!btn)return;const idx=parseInt(btn.dataset.idx,10);pop.remove();_restoreAutoBackup(idx);});
+  document.body.appendChild(pop);
+  const anchor=document.querySelector('.owner-area-btn')||document.body;
+  _positionPopover(pop,anchor,true);
+  setTimeout(()=>{const h=(ev)=>{if(!pop.contains(ev.target)){pop.remove();document.removeEventListener('click',h);}};document.addEventListener('click',h);},0);
+}
 
 // ── Dropbox 자동 동기화 ──
 const DBX_MAIN_FILE='/01_Personal/Dutch-Pay/dutch-pay_data.json';
@@ -752,10 +792,11 @@ async function syncFromDropbox(){
     const localLast=localStorage.getItem(DBX_LASTSYNC_MAIN)||'';
     const remoteAt=remote.syncedAt||'';
     if(remoteAt && remoteAt > localLast){
+      _autoBackup('Dropbox 동기화 전');
       groups=remote.groups;
       currentGroupId=remote.currentGroupId||groups[0].id;
       const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);
-      localStorage.setItem(STORAGE_KEY,JSON.stringify({version:2,groups,currentGroupId}));
+      localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:new Date().toISOString(),groups,currentGroupId}));
       localStorage.setItem(DBX_LASTSYNC_MAIN,remoteAt);
       _updateSyncBadge();renderAll();
       toast('Dropbox에서 최신 데이터를 불러왔어요',{type:'success'});
@@ -772,9 +813,9 @@ function _updateSyncBadge(){
   try{const d=new Date(last);el.textContent=`☁ ${d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 동기화됨`;}catch(e){}
 }
 
-function saveState(){try{syncCurrentToGroup();localStorage.setItem(STORAGE_KEY,JSON.stringify({version:2,groups,currentGroupId}));_scheduleSyncToDropbox();}catch(e){toast('저장 공간이 부족해 데이터를 저장하지 못했어요',{type:'error'});}}
-function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if(d.version===2&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
-function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?'))return;const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
+function saveState(){try{syncCurrentToGroup();localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:new Date().toISOString(),groups,currentGroupId}));_scheduleSyncToDropbox();}catch(e){toast('저장 공간이 부족해 데이터를 저장하지 못했어요',{type:'error'});}}
+function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if((d.version===2||d.version===3)&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
+function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?'))return;_autoBackup('전체 초기화 전');if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
 function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 모두 초기화할까요?'))return;people=[];items=[];payments={};idc=0;settleDateStart=new Date().toISOString().slice(0,10);settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
 
 function updateMeetingDate(val){settleDateStart=val||new Date().toISOString().slice(0,10);saveState();}
@@ -1214,6 +1255,7 @@ function renderMobileBody(){
   el.innerHTML=html;mSetupInput();updateTotals();
 }
 
+// ── 순수 계산 함수 ──────────────────────────────────────────────────────────
 function computeShares(){
   const paid={},owes={},details={},owesFloat={};
   people.forEach(p=>{paid[p]=0;owes[p]=0;details[p]=[];owesFloat[p]=0;});
@@ -1240,6 +1282,7 @@ function computeShares(){
   return{paid,owes,details,hasRounding:diff!==0};
 }
 
+// calcTxns: 최소 송금 수로 정산 (그리디, 채권·채무 반복 상계)
 function calcTxns(paid,owes){
   const bal={};people.forEach(p=>{bal[p]=(paid[p]||0)-(owes[p]||0);});
   const creds=[],debts=[];
