@@ -311,6 +311,14 @@ svg{display:block;flex-shrink:0;}
 .pm-save-btn:active{opacity:.85;}
 .pm-close-btn{width:100%;padding:11px;background:var(--fill2);color:var(--label2);border:1px solid var(--sep);border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:4px;}
 .pm-close-btn:active{opacity:.85;}
+.rc-txn-row.clickable{cursor:pointer;user-select:none;}
+.rc-txn-row.clickable:hover{background:var(--fill);}
+.rc-txn-status{display:flex;align-items:center;gap:8px;}
+.rc-txn-edit-panel{padding:12px 16px;border-top:1px solid var(--sep);background:var(--fill);display:flex;flex-direction:column;gap:8px;}
+.reset-settle-btn{background:none;border:none;font-size:12px;color:var(--label3);cursor:pointer;font-family:inherit;padding:0;margin-top:8px;text-align:right;width:100%;display:block;}
+.reset-settle-btn:hover{color:var(--red);}
+.mob-reset-btn{background:none;border:none;font-size:12px;color:var(--label3);cursor:pointer;font-family:inherit;padding:10px 16px 14px;text-align:center;width:100%;display:block;}
+.mob-reset-btn:hover{color:var(--red);}
 .txn-people{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .txn-from{font-size:14px;font-weight:600;color:var(--label);}
 .txn-arr{color:var(--label);display:flex;align-items:center;}
@@ -545,6 +553,7 @@ svg{display:block;flex-shrink:0;}
         <span class="foot-lbl">합계</span>
         <span class="foot-val" id="dTotal">0원</span>
       </div>
+      <button class="reset-settle-btn" onclick="resetCurrentSettlement()">↺ 이번 정산 초기화</button>
       <div id="dbxSyncBadge" style="font-size:11px;color:var(--label3);text-align:right;margin-top:5px;min-height:14px"></div>
       <div style="font-size:10px;color:var(--label3);text-align:right;margin-top:4px;letter-spacing:.3px"><span id="appVersionD"></span></div>
     </div>
@@ -589,8 +598,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.76';
-const BUILD_TIME='2026-07-05 09:00';
+const APP_VERSION='v1.77';
+const BUILD_TIME='2026-07-05 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -793,7 +802,7 @@ const ICON_RULES=[
   [svgCake,/생일|생신|케이크|케익|cake|birthday|돌잔치|기념일|축하/i],
   [svgMic,/노래방|노래연습|코노|가라오케/],
   [svgCafe,/카페|커피|아메리카노|라떼|에스프레소|에이드|스무디|음료|프라푸치노|마키아토|cafe|coffee|스타벅스|스벅|starbucks|커피빈|메가커피|이디야|투썸|할리스|빽다방|컴포즈|폴바셋|탐앤탐스|엔제리너스|카페베네|더벤티|매머드|드롭탑|셀렉토|더리터|커피베이|블루보틀|테라로사/i],
-  [svgBeer,/맥주|소주|와인|호프|포차|술집|이자카야|바\b|bar/i],
+  [svgBeer,/맥주|소주|와인|호프|포장마차|포차|술집|이자카야|바\b|bar/i],
   [svgFood,/식사|밥|식당|저녁|점심|아침|회\b|고기|갈비|치킨|돈까스|국밥|오징어|회집|횟집|어시장|수산시장|음식|곱창|국수|라면|분식|한식|중식|일식|양식|뷔페|레스토랑|삼겹살|돼지|소고기|한우|불고기|족발|보쌈|찌개|전골|냉면|파스타|스파게티|초밥|스시|샐러드|버거|피자|짜장|짬뽕|마라탕|쌀국수|돈가스|덮밥|순대|떡볶이|어묵|튀김|수산|해산|조개|새우|랍스터|장어|복어|문어|낙지|꽃게|대게|킹크랩|추어탕|매운탕|해장국|설렁탕|곰탕|육개장|감자탕|닭볶음|닭갈비|본죽|한솥|김밥천국|김가네|이삭토스트|써브웨이|subway|교촌|굽네|bhc|BBQ|페리카나|맥도날드|버거킹|롯데리아|맘스터치|KFC|쉑쉑|도미노|피자헛|미스터피자|파파존스/i],
   [svgCar,/택시|버스|지하철|기차|KTX|교통|주차|주유|주유소|렌트|렌터카|톨게이트|하이패스|휘발유|경유/i],
   [svgShop,/마트|편의점|시장|쇼핑|백화점|store/i],
@@ -1181,7 +1190,7 @@ function renderMobileBody(){
   // input tab
   let html=`<div class="mob-section" style="margin-bottom:12px;padding:12px 16px;"><input type="date" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 11px;font-size:13px;background-color:var(--bg);color:var(--label);outline:none;font-family:inherit;" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/></div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">참여자</span><button class="mob-clear-btn" onclick="clearAll()">전체 삭제</button></div><div class="mob-pin-wrap"><div class="mob-pin-row"><input id="mPInp" placeholder="홍길동, 홍길순, 아무개"/><button class="mob-add-btn" onclick="mFlush()">추가</button></div><div class="mob-hint">쉼표(,)로 구분하면 여러 명을 한 번에 추가할 수 있어요</div></div>`;
   if(people.length){html+=`<div class="mob-pills">${people.map(p=>`<span class="pill">${e(p)}<button class="pill-x" onclick="removePerson(${ja(p)})">${svgX}</button></span>`).join('')}</div>`;}else{html+=`<div class="mob-empty-pills">이름을 입력하세요</div>`;}
-  html+=`</div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">지출</span><button class="mob-clear-btn" onclick="clearAllItems()">전체 삭제</button></div><div id="mItemRows">${items.map(it=>`<div class="mob-item-row${it.id===selectedId?' sel':''}" onclick="selectItemMob(${it.id})"><div class="mob-item-dot"></div><div class="mob-item-info"><div class="mob-item-name">${e(it.name)||'(이름 없음)'}</div><div class="mob-item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="mob-item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('')}</div><div class="mob-add-item-row" onclick="addItem()"><div class="mob-add-ic">+</div><span class="mob-add-txt">지출 추가</span></div></div>`;
+  html+=`</div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">지출</span><button class="mob-clear-btn" onclick="clearAllItems()">전체 삭제</button></div><div id="mItemRows">${items.map(it=>`<div class="mob-item-row${it.id===selectedId?' sel':''}" onclick="selectItemMob(${it.id})"><div class="mob-item-dot"></div><div class="mob-item-info"><div class="mob-item-name">${e(it.name)||'(이름 없음)'}</div><div class="mob-item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="mob-item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('')}</div><div class="mob-add-item-row" onclick="addItem()"><div class="mob-add-ic">+</div><span class="mob-add-txt">지출 추가</span></div><button class="mob-reset-btn" onclick="resetCurrentSettlement()">↺ 이번 정산 초기화</button></div>`;
   el.innerHTML=html;mSetupInput();updateTotals();
 }
 
@@ -1329,6 +1338,66 @@ function toggleHistoryCard(sid){
   if(chev)chev.className='rc-chevron'+(open?' open':'');
 }
 
+function toggleRcTxnPanel(recId,txnKey){
+  const row=document.querySelector(`.rc-txn-row[data-rec-id="${CSS.escape(recId)}"][data-txn-key="${CSS.escape(txnKey)}"]`);
+  if(!row)return;
+  const next=row.nextElementSibling;
+  if(next&&next.classList.contains('rc-txn-edit-panel')){next.remove();return;}
+  document.querySelectorAll('.rc-txn-edit-panel').forEach(p=>p.remove());
+  const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
+  const pm=(rec.payments||{})[txnKey]||{};
+  const txn=(rec.txns||[]).find(t=>`${t.from}|${t.to}`===txnKey);
+  const baseAmt=txn?txn.amt:0;
+  const diffVal=(pm.amount!=null&&pm.amount!=='')?(+pm.amount-baseAmt):null;
+  const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
+  const panel=document.createElement('div');panel.className='rc-txn-edit-panel';
+  panel.setAttribute('data-rec-id',recId);panel.setAttribute('data-txn-key',txnKey);
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="rcTxnToggleDone('${ea(recId)}','${ea(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':'미입금'}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="rcTxnUpdateAmt('${ea(recId)}','${ea(txnKey)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row" onclick="try{this.querySelector('input').showPicker()}catch(e){}" style="cursor:pointer;"><span class="pay-panel-lbl">입금일시</span><input class="pay-inp" type="datetime-local" value="${ea(pm.timestamp||'')}" onchange="rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','timestamp',this.value)" onclick="event.stopPropagation()" style="flex:1;min-width:0;text-align:left;direction:ltr;cursor:pointer;"/><button class="pay-now-btn" onclick="rcTxnSetNow('${ea(recId)}','${ea(txnKey)}');event.stopPropagation()">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span><select class="pay-sel" onchange="rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','account',this.value)"><option value="">선택</option><option value="케이뱅크"${pm.account==='케이뱅크'?' selected':''}>케이뱅크</option><option value="카카오페이"${pm.account==='카카오페이'?' selected':''}>카카오페이</option><option value="토스뱅크"${pm.account==='토스뱅크'?' selected':''}>토스뱅크</option><option value="우리은행"${pm.account==='우리은행'?' selected':''}>우리은행</option></select></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌번호</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="000-0000-0000" value="${ea(pm.accountNumber||'')}" oninput="rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','accountNumber',this.value)"/></div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="_closeRcTxnPanel('${ea(recId)}','${ea(txnKey)}')">저장</button>`;
+  row.insertAdjacentElement('afterend',panel);
+}
+function rcTxnToggleDone(recId,txnKey){
+  const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
+  if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
+  rec.payments[txnKey].done=!rec.payments[txnKey].done;
+  saveHistory(allRec);_patchHistResults();
+  const panel=document.querySelector(`.rc-txn-edit-panel[data-rec-id="${CSS.escape(recId)}"][data-txn-key="${CSS.escape(txnKey)}"]`);
+  if(panel){const done=rec.payments[txnKey].done;const track=panel.querySelector('.pay-toggle-track');const lbl=panel.querySelector('.pay-toggle-lbl');if(track)track.className='pay-toggle-track'+(done?' on':'');if(lbl){lbl.className='pay-toggle-lbl'+(done?' on':'');lbl.textContent=done?'입금완료':'미입금';}}
+}
+function rcTxnUpdate(recId,txnKey,field,val){
+  const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
+  if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
+  rec.payments[txnKey][field]=val;saveHistory(allRec);_patchHistResults();
+}
+function rcTxnUpdateAmt(recId,txnKey,el){
+  const raw=el.value.replace(/,/g,'');const num=raw===''?null:+raw;if(raw!==''&&isNaN(num))return;
+  const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
+  if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
+  rec.payments[txnKey].amount=num;saveHistory(allRec);_patchHistResults();
+  const panel=el.closest('.rc-txn-edit-panel');
+  if(panel){const txn=(rec.txns||[]).find(t=>`${t.from}|${t.to}`===txnKey);const baseAmt=txn?txn.amt:0;const diffVal=num!==null?(num-baseAmt):null;const existing=panel.querySelector('.pay-diff-badge');const row=el.closest('.pay-panel-row');if(diffVal!==null){const dh=`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`;if(existing)existing.outerHTML=dh;else if(row)row.insertAdjacentHTML('beforeend',dh);}else if(existing){existing.remove();}}
+}
+function rcTxnSetNow(recId,txnKey){
+  const ts=new Date().toISOString().slice(0,16);
+  const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
+  if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
+  rec.payments[txnKey].timestamp=ts;saveHistory(allRec);_patchHistResults();
+  const panel=document.querySelector(`.rc-txn-edit-panel[data-rec-id="${CSS.escape(recId)}"][data-txn-key="${CSS.escape(txnKey)}"]`);
+  if(panel){const inp=panel.querySelector('input[type="datetime-local"]');if(inp)inp.value=ts;}
+}
+function _closeRcTxnPanel(recId,txnKey){
+  document.querySelectorAll('.rc-txn-edit-panel').forEach(p=>p.remove());
+  _refreshRcCard(recId);_patchHistResults();
+}
+function _refreshRcCard(recId){
+  const card=document.querySelector(`.record-card[data-rec-id="${CSS.escape(recId)}"]`);
+  if(!card)return;
+  const rec=loadHistory().find(r=>r.id===recId);if(!rec)return;
+  const wasOpen=!!(card.querySelector('.rc-body.open'));
+  const temp=document.createElement('div');temp.innerHTML=_buildRecordCardHtml(rec);
+  const newCard=temp.firstElementChild;card.replaceWith(newCard);
+  if(wasOpen){const b=newCard.querySelector('.rc-body');const c=newCard.querySelector('.rc-chevron');if(b)b.classList.add('open');if(c)c.classList.add('open');}
+}
+
 function _buildRecordCardHtml(r){
   const sid=r.id.replace(/[^a-zA-Z0-9]/g,'');
   const fhd=d=>{if(!d)return'';const[y,m,day]=d.split('-');return`${y}년 ${+m}월 ${+day}일`;};
@@ -1343,11 +1412,12 @@ function _buildRecordCardHtml(r){
         const mems=(it.members&&it.members.length)?it.members.join(', '):(r.people||[]).join(', ');
         return `<div class="rc-item-row"><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name">${e(it.name||'(이름 없음)')}</div><div class="rc-item-meta"><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span><span>${e(mems)}</span></div></div><span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>`;
       }).join(''):'';
+  const pmObj=r.payments||{};
   const txnHtml=txns.length
-    ?`<div class="rc-section-title">송금</div><div class="rc-txns">`+txns.map(t=>`<div class="rc-txn-row"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`).join('')+`</div>`
+    ?`<div class="rc-section-title">송금</div><div class="rc-txns">`+txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const badge=pm.done?`<span class="pm-badge done">✓ 입금완료</span>`:`<span class="pm-badge pending">미입금</span>`;const rid=ea(r.id);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div><div class="rc-txn-status"><span class="rc-txn-amt">${fmt(t.amt)}원</span>${badge}</div></div>`;}).join('')+`</div>`
     :`<div class="rc-no-txn">모두 정산 완료 ✓</div>`;
   const savedAtStr=(()=>{try{const d=new Date(r.savedAt);return d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e2){return '';}})();
-  return `<div class="record-card">
+  return `<div class="record-card" data-rec-id="${e(r.id)}">
     <div class="rc-hd" onclick="toggleHistoryCard('${sid}')">
       <div class="rc-meta">
         <div class="rc-date">${e(dateStr)}</div>
