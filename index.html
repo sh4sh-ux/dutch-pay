@@ -304,6 +304,13 @@ svg{display:block;flex-shrink:0;}
 .pm-badge.pos{background:var(--green-bg);color:var(--green-txt);}
 .pm-badge.neg{background:var(--red-bg);color:var(--red);}
 .pm-badge.pending{background:var(--fill2);color:var(--label3);}
+.pm-allrec-card{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--sep);border-radius:12px;margin-bottom:8px;}
+.pm-allrec-left{flex:1;min-width:0;}
+.pm-allrec-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+.pm-save-btn{display:block;width:100%;margin-top:16px;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;}
+.pm-save-btn:active{opacity:.85;}
+.pm-close-btn{width:100%;padding:11px;background:var(--fill2);color:var(--label2);border:1px solid var(--sep);border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:4px;}
+.pm-close-btn:active{opacity:.85;}
 .txn-people{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .txn-from{font-size:14px;font-weight:600;color:var(--label);}
 .txn-arr{color:var(--label);display:flex;align-items:center;}
@@ -582,8 +589,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.75';
-const BUILD_TIME='2026-07-04 07:30';
+const APP_VERSION='v1.76';
+const BUILD_TIME='2026-07-05 09:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -994,12 +1001,28 @@ function _pmSegHtml(){
 
 function _pmCurrentHtml(txns){
   if(!txns.length)return '<div class="empty" style="padding:40px 0"><div class="empty-icon">'+svgEmpty+'</div><p>정산할 송금 내역이 없어요</p></div>';
-  return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">송금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>';
+  return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">송금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div><button class="pm-save-btn" onclick="saveToHistory()">📌 기록보관함에 저장</button>';
 }
 
 function _pmHistResultsHtml(){
   const name=_pmHistSearch.trim();
-  if(!name)return '<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">이름을 검색하면<br>정산 기록을 확인할 수 있어요</p></div>';
+  if(!name){
+    const allRecs=loadHistory();
+    if(!allRecs.length)return '<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">저장된 정산 기록이 없어요</p></div>';
+    const recsHtml=allRecs.map(rec=>{
+      const dateStr=rec.dateStart?rec.dateStart.slice(2).replace(/-/g,'. ')+'.':rec.savedAt?rec.savedAt.slice(0,10):'';
+      const txnsList=rec.txns||[];
+      const pmObj=rec.payments||{};
+      const doneCount=txnsList.filter(t=>!!(pmObj[`${t.from}|${t.to}`]||{}).done).length;
+      const totalCount=txnsList.length;
+      const statusHtml=totalCount===0?''
+        :doneCount===totalCount?`<span class="pm-badge done">✓ 완료</span>`
+        :doneCount===0?`<span class="pm-badge pending">${totalCount}명 미입금</span>`
+        :`<span class="pm-badge pending">${totalCount-doneCount}명 미입금</span>`;
+      return `<div class="pm-allrec-card"><div class="pm-allrec-left"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((rec.people||[]).join(', ')||rec.groupName||'')}</div></div><div class="pm-allrec-right"><div class="pm-record-total">${fmt(rec.total||0)}원</div>${statusHtml}</div></div>`;
+    }).join('');
+    return `<div class="pay-section-title" style="margin-top:8px">전체 기록 · ${allRecs.length}건</div>`+recsHtml;
+  }
   let allRec=[];try{const raw=localStorage.getItem(HISTORY_KEY);allRec=raw?JSON.parse(raw):[];}catch(ex){}
   let cards=[];
   allRec.forEach(rec=>{
@@ -1057,7 +1080,7 @@ function toggleHistRecordPanel(recId,txnKey){
   const diffVal=(pm.amount!=null&&pm.amount!=='')?(+pm.amount-baseAmt):null;
   const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
   const panel=document.createElement('div');panel.className='pm-hist-edit-panel';
-  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="histPmToggleDone('${ea(recId)}','${ea(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':'미입금'}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="histPmUpdateAmt('${ea(recId)}','${ea(txnKey)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row" onclick="try{this.querySelector('input').showPicker()}catch(e){}" style="cursor:pointer;"><span class="pay-panel-lbl">입금일시</span><input class="pay-inp" type="datetime-local" value="${ea(pm.timestamp||'')}" onchange="histPmUpdate('${ea(recId)}','${ea(txnKey)}','timestamp',this.value)" onclick="event.stopPropagation()" style="flex:1;min-width:0;text-align:left;direction:ltr;cursor:pointer;"/><button class="pay-now-btn" onclick="histPmSetNow('${ea(recId)}','${ea(txnKey)}');event.stopPropagation()">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span><select class="pay-sel" onchange="histPmUpdate('${ea(recId)}','${ea(txnKey)}','account',this.value)"><option value="">선택</option><option value="케이뱅크"${pm.account==='케이뱅크'?' selected':''}>케이뱅크</option><option value="카카오페이"${pm.account==='카카오페이'?' selected':''}>카카오페이</option><option value="토스뱅크"${pm.account==='토스뱅크'?' selected':''}>토스뱅크</option><option value="우리은행"${pm.account==='우리은행'?' selected':''}>우리은행</option></select></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌번호</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="000-0000-0000" value="${ea(pm.accountNumber||'')}" oninput="histPmUpdate('${ea(recId)}','${ea(txnKey)}','accountNumber',this.value)"/></div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="histPmUpdate('${ea(recId)}','${ea(txnKey)}','memo',this.value)"/></div>`;
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="histPmToggleDone('${ea(recId)}','${ea(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':'미입금'}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="histPmUpdateAmt('${ea(recId)}','${ea(txnKey)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row" onclick="try{this.querySelector('input').showPicker()}catch(e){}" style="cursor:pointer;"><span class="pay-panel-lbl">입금일시</span><input class="pay-inp" type="datetime-local" value="${ea(pm.timestamp||'')}" onchange="histPmUpdate('${ea(recId)}','${ea(txnKey)}','timestamp',this.value)" onclick="event.stopPropagation()" style="flex:1;min-width:0;text-align:left;direction:ltr;cursor:pointer;"/><button class="pay-now-btn" onclick="histPmSetNow('${ea(recId)}','${ea(txnKey)}');event.stopPropagation()">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span><select class="pay-sel" onchange="histPmUpdate('${ea(recId)}','${ea(txnKey)}','account',this.value)"><option value="">선택</option><option value="케이뱅크"${pm.account==='케이뱅크'?' selected':''}>케이뱅크</option><option value="카카오페이"${pm.account==='카카오페이'?' selected':''}>카카오페이</option><option value="토스뱅크"${pm.account==='토스뱅크'?' selected':''}>토스뱅크</option><option value="우리은행"${pm.account==='우리은행'?' selected':''}>우리은행</option></select></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌번호</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="000-0000-0000" value="${ea(pm.accountNumber||'')}" oninput="histPmUpdate('${ea(recId)}','${ea(txnKey)}','accountNumber',this.value)"/></div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="histPmUpdate('${ea(recId)}','${ea(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="toggleHistRecordPanel('${ea(recId)}','${ea(txnKey)}')">저장</button>`;
   card.appendChild(panel);
 }
 function histPmToggleDone(recId,txnKey){
@@ -1263,6 +1286,10 @@ function saveToHistory(){
   try{
     const raw=localStorage.getItem(HISTORY_KEY);
     const arr=raw?JSON.parse(raw):[];
+    const sig=r=>[r.dateStart,(r.people||[]).slice().sort().join('|'),r.total,(r.items||[]).map(i=>i.name+'|'+(+i.amount||0)).sort().join(',')].join('§');
+    const newSig=sig(record);
+    const dup=arr.find(r=>sig(r)===newSig);
+    if(dup&&!confirm('이미 저장된 기록이 있어요. 새로 추가할까요?'))return;
     arr.unshift(record);
     localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
     toast('기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
