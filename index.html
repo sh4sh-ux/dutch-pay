@@ -603,8 +603,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.83';
-const BUILD_TIME='2026-07-06 12:00';
+const APP_VERSION='v1.84';
+const BUILD_TIME='2026-07-06 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1864,12 +1864,12 @@ async function generateSettleCanvas(){
         afterNameX=chipX+chipW;
       }
       // 결제자 배지: 이름(+chip) 바로 오른쪽, 이름과 같은 줄
-      setFont(20,400);ctx.textBaseline='alphabetic';ctx.textAlign='left';
+      setFont(20,400);ctx.textBaseline='middle';ctx.textAlign='left';
       const pillX=afterNameX+12;const pillCY=ry-22;
       ctx.fillStyle='#F3F3F5';
       roundRectPath(ctx,pillX,pillCY-pillH/2,pillW,pillH,pillH/2);ctx.fill();
       ctx.fillStyle='#666666';
-      ctx.fillText(payerText,pillX+pillPadX,pillCY+(pm.actualBoundingBoxAscent-pm.actualBoundingBoxDescent)/2);
+      ctx.fillText(payerText,pillX+pillPadX,pillCY);
       // 참석자: 하단 줄, 이름과 왼쪽 정렬
       const memsStartX=nameX+pillPadX,maxMemsW=amountX-amountW-34-memsStartX;
       if(maxMemsW>30){setFont(22,400);ctx.textBaseline='middle';ctx.fillStyle=C.muted;ctx.fillText(truncateCanvasText(ctx,mems.join(', '),maxMemsW),memsStartX,ry+26);}
