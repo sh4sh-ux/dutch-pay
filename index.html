@@ -525,6 +525,12 @@ svg{display:block;flex-shrink:0;}
 .hist-dr-sinp::placeholder{color:var(--label3);}
 .hist-dr-sinp:focus{box-shadow:0 0 0 2px var(--blue);border-radius:10px;}
 .hist-dr-body{overflow-y:auto;flex:1;padding:10px 16px 40px;-webkit-overflow-scrolling:touch;}
+.sinp-rel{position:relative;display:flex;align-items:center;width:100%;}
+.sinp-rel > input{padding-right:26px;}
+.sinp-clr{position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--label3);font-size:14px;line-height:1;cursor:pointer;padding:2px 4px;display:none;-webkit-appearance:none;appearance:none;touch-action:manipulation;}
+.sinp-clr.vis{display:flex;align-items:center;justify-content:center;}
+.ilist-s-wrap{flex:1;max-width:140px;min-width:0;}
+.ilist-s-wrap .ilist-search{width:100%;max-width:none;flex:1;}
 </style>
 </head>
 <body>
@@ -566,7 +572,10 @@ svg{display:block;flex-shrink:0;}
         <button class="clear-all-btn" onclick="clearAllItems()">전체 삭제</button>
       </div>
       <div class="ilist-label-row" id="dItemTools" style="display:none">
-        <input type="search" class="ilist-search" id="dItemSearch" placeholder="검색" oninput="setItemSearch(this.value)"/>
+        <div class="sinp-rel ilist-s-wrap">
+          <input type="search" class="ilist-search" id="dItemSearch" placeholder="검색" oninput="setItemSearch(this.value);_chkClear(this)"/>
+          <button class="sinp-clr" onclick="_clrItemSearch()">✕</button>
+        </div>
         <select class="ilist-sort" onchange="setItemSort(this.value)" id="dItemSort">
           <option value="default">기본순</option>
           <option value="amtDesc">금액↓</option>
@@ -648,14 +657,17 @@ svg{display:block;flex-shrink:0;}
     <button class="hist-dr-pill" data-sort="amtAsc" onclick="setHistorySort('amtAsc')">금액 작은 순</button>
   </div>
   <div class="hist-dr-sinp-wrap">
-    <input class="hist-dr-sinp" id="histDrSinp" type="search" placeholder="이름, 참여자, 날짜 검색…" oninput="updateHistorySearch(this.value)">
+    <div class="sinp-rel">
+      <input class="hist-dr-sinp" id="histDrSinp" type="search" placeholder="이름, 참여자, 날짜 검색…" oninput="updateHistorySearch(this.value);_chkClear(this)">
+      <button class="sinp-clr" onclick="_clrHistDr()">✕</button>
+    </div>
   </div>
   <div class="hist-dr-body" id="histDrBody"></div>
 </div>
 
 <script>
-const APP_VERSION='v1.96';
-const BUILD_TIME='2026-07-07 18:30';
+const APP_VERSION='v1.97';
+const BUILD_TIME='2026-07-07 19:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -978,7 +990,7 @@ function goToHistory(){openHistDrawer();}
 function openHistDrawer(){
   _histDrawerOpen=true;
   _historySearch='';
-  const si=document.getElementById('histDrSinp');if(si)si.value='';
+  const si=document.getElementById('histDrSinp');if(si){si.value='';_chkClear(si);}
   _refreshHistDrawer();
   document.getElementById('histDrOv').classList.add('open');
   document.getElementById('histDr').classList.add('open');
@@ -1244,8 +1256,8 @@ function _pmHistResultsHtml(){
   const netBadge=totalBilled===0?'':net>0?`<span class="pm-net-badge pos">+${fmt(net)}원 초과</span>`:net<0?`<span class="pm-net-badge neg">-${fmt(-net)}원 미수</span>`:`<span class="pm-net-badge zero">✓ 완납</span>`;
   const summaryHtml=`<div class="pm-person-card"><div class="pm-person-name-row"><span class="pm-person-name">${e(name)}</span>${netBadge}</div><div class="pm-person-stats"><div class="pm-pstat"><div class="pm-pstat-lbl">총 청구</div><div class="pm-pstat-val">${fmt(totalBilled)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">총 수령</div><div class="pm-pstat-val${totalReceived>0?' pos':''}">${fmt(totalReceived)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">미수</div><div class="pm-pstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?'-'+fmt(totalUnpaid)+'원':'없음'}</div></div></div></div>`;
   if(_pmHistFilter==='unpaid')cards=cards.filter(c=>!c.done);
-  if(_pmHistSort==='newest')cards.sort((a,b)=>b.rec.savedAt.localeCompare(a.rec.savedAt));
-  else if(_pmHistSort==='oldest')cards.sort((a,b)=>a.rec.savedAt.localeCompare(b.rec.savedAt));
+  if(_pmHistSort==='newest')cards.sort((a,b)=>(b.rec.dateStart||b.rec.savedAt).localeCompare(a.rec.dateStart||a.rec.savedAt));
+  else if(_pmHistSort==='oldest')cards.sort((a,b)=>(a.rec.dateStart||a.rec.savedAt).localeCompare(b.rec.dateStart||b.rec.savedAt));
   else if(_pmHistSort==='amtDesc')cards.sort((a,b)=>b.billing-a.billing);
   else if(_pmHistSort==='amtAsc')cards.sort((a,b)=>a.billing-b.billing);
   const controlsHtml=`<div class="pm-controls"><select class="pm-sort-sel" onchange="_pmSetSort(this.value)"><option value="newest"${_pmHistSort==='newest'?' selected':''}>최신순</option><option value="oldest"${_pmHistSort==='oldest'?' selected':''}>오래된순</option><option value="amtDesc"${_pmHistSort==='amtDesc'?' selected':''}>금액 높은순</option><option value="amtAsc"${_pmHistSort==='amtAsc'?' selected':''}>금액 낮은순</option></select><div class="pm-filter-chips"><button class="pm-filter-chip${_pmHistFilter==='all'?' on':''}" onclick="_pmSetFilter('all')">전체</button><button class="pm-filter-chip${_pmHistFilter==='unpaid'?' on':''}" onclick="_pmSetFilter('unpaid')">미수</button></div></div>`;
@@ -1264,7 +1276,7 @@ function _pmHistResultsHtml(){
 }
 
 function _pmHistoryHtml(){
-  return `<div class="pm-search-wrap"><input class="pm-search" type="text" placeholder="이름으로 검색" value="${ea(_pmHistSearch)}" oninput="_pmSearchInput(this.value)"/></div><div class="pm-hist-results">${_pmHistResultsHtml()}</div>`;
+  return `<div class="pm-search-wrap"><div class="sinp-rel"><input class="pm-search" type="text" placeholder="이름으로 검색" value="${ea(_pmHistSearch)}" oninput="_pmSearchInput(this.value);_chkClear(this)"/><button class="sinp-clr${_pmHistSearch?' vis':''}" onclick="_clrPmSearch()">✕</button></div></div><div class="pm-hist-results">${_pmHistResultsHtml()}</div>`;
 }
 
 function toggleHistRecordPanel(recId,txnKey){
@@ -1344,7 +1356,7 @@ function renderAll(){
 
 function renderPills(){const el=document.getElementById('dPills');if(!people.length){el.innerHTML='<span class="pills-empty">이름을 입력하세요</span>';return;}el.innerHTML=people.map(p=>`<span class="pill">${e(p)}<button class="pill-x" onclick="removePerson(${ja(p)})">${svgX}</button></span>`).join('');}
 
-function renderItemLists(){const el=document.getElementById('dItemRows');const tools=document.getElementById('dItemTools');if(tools)tools.style.display=items.length>=5?'flex':'none';const sortEl=document.getElementById('dItemSort');if(sortEl)sortEl.value=itemSort;const searchEl=document.getElementById('dItemSearch');if(searchEl)searchEl.value=itemSearch;const list=getDisplayItems();if(!list.length){if(items.length){el.innerHTML='<div class="ilist-results-empty">검색 결과가 없어요</div>';}else{el.innerHTML='';}return;}el.innerHTML=list.map(it=>`<div class="item-row${it.id===selectedId?' sel':''}" onclick="selectItem(${it.id})"><div class="item-dot"></div><div class="item-info"><div class="item-name">${e(it.name)||'(이름 없음)'}</div><div class="item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('');}
+function renderItemLists(){const el=document.getElementById('dItemRows');const tools=document.getElementById('dItemTools');if(tools)tools.style.display=items.length>=5?'flex':'none';const sortEl=document.getElementById('dItemSort');if(sortEl)sortEl.value=itemSort;const searchEl=document.getElementById('dItemSearch');if(searchEl){searchEl.value=itemSearch;_chkClear(searchEl);}const list=getDisplayItems();if(!list.length){if(items.length){el.innerHTML='<div class="ilist-results-empty">검색 결과가 없어요</div>';}else{el.innerHTML='';}return;}el.innerHTML=list.map(it=>`<div class="item-row${it.id===selectedId?' sel':''}" onclick="selectItem(${it.id})"><div class="item-dot"></div><div class="item-info"><div class="item-name">${e(it.name)||'(이름 없음)'}</div><div class="item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('');}
 
 function updateTotals(){const t=items.reduce((s,it)=>s+(+it.amount||0),0);const neg=t<0;const dEl=document.getElementById('dTotal');dEl.textContent=fmt(t)+'원';dEl.classList.toggle('amt-neg',neg);const mEl=document.getElementById('mTotal');if(mEl){mEl.textContent=fmt(t)+'원';mEl.classList.toggle('amt-neg',neg);}}
 
@@ -1650,7 +1662,7 @@ function _buildHistoryInnerHtml(){
     html+=`<div class="empty" style="padding:60px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>⋯ 메뉴에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
   }else{
     const filtered=_filterHistoryRecords(records,_historySearch);
-    html+=`<div class="hist-search-wrap"><input type="search" class="hist-search" placeholder="이름, 참여자, 날짜 검색..." value="${e(_historySearch)}" oninput="updateHistorySearch(this.value)"></div>`;
+    html+=`<div class="hist-search-wrap"><div class="sinp-rel"><input type="search" class="hist-search" placeholder="이름, 참여자, 날짜 검색..." value="${e(_historySearch)}" oninput="updateHistorySearch(this.value);_chkClear(this)"><button class="sinp-clr${_historySearch?' vis':''}" onclick="_clrHistSearch()">✕</button></div></div>`;
     html+=`<div class="record-list" id="historyRecordList">`;
     html+=filtered.length
       ?filtered.map(_buildRecordCardHtml).join('')
@@ -1665,7 +1677,6 @@ function _filterHistoryRecords(records,query){
   const q=query.toLowerCase().trim();
   const fhd=d=>{if(!d)return'';const[y,m,day]=d.split('-');return`${y}년 ${+m}월 ${+day}일`;};
   return records.filter(r=>{
-    if((r.groupName||'').toLowerCase().includes(q))return true;
     if((r.people||[]).some(p=>p.toLowerCase().includes(q)))return true;
     if((r.items||[]).some(it=>(it.name||'').toLowerCase().includes(q)))return true;
     const dateDisplay=r.dateEnd&&r.dateEnd!==r.dateStart?`${fhd(r.dateStart)} ~ ${fhd(r.dateEnd)}`:fhd(r.dateStart);
@@ -1673,6 +1684,11 @@ function _filterHistoryRecords(records,query){
     return false;
   });
 }
+function _chkClear(inp){const btn=inp.nextElementSibling;if(btn&&btn.classList.contains('sinp-clr'))btn.classList.toggle('vis',inp.value.length>0);}
+function _clrHistDr(){const i=document.getElementById('histDrSinp');if(i){i.value='';_chkClear(i);updateHistorySearch('');}}
+function _clrItemSearch(){const i=document.getElementById('dItemSearch');if(i){i.value='';_chkClear(i);setItemSearch('');}}
+function _clrPmSearch(){_pmSearchInput('');const r=document.querySelector('.pm-search');if(r){r.value='';_chkClear(r);}}
+function _clrHistSearch(){const i=document.querySelector('.hist-search');if(i){i.value='';_chkClear(i);updateHistorySearch('');}}
 function updateHistorySearch(val){
   _historySearch=val;
   if(_histDrawerOpen){_refreshHistDrList();return;}
