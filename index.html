@@ -603,8 +603,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.84';
-const BUILD_TIME='2026-07-06 14:00';
+const APP_VERSION='v1.85';
+const BUILD_TIME='2026-07-06 15:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -853,7 +853,7 @@ const ICON_RULES=[
   [svgCar,/택시|버스|지하철|기차|KTX|교통|주차|주유|주유소|렌트|렌터카|톨게이트|하이패스|휘발유|경유/i],
   [svgShop,/마트|편의점|시장|쇼핑|백화점|store/i],
   [svgMovie,/영화|시네마|CGV|메가박스|롯데시네마/i],
-  [svgBed,/호텔|모텔|펜션|숙소|에어비앤비|민박|리조트|hotel/i],
+  [svgBed,/호텔|모텔|펜션|풀빌라|숙소|에어비앤비|민박|리조트|hotel/i],
 ];
 const ICON_BY_KEY={food:svgFood,cafe:svgCafe,beer:svgBeer,mic:svgMic,car:svgCar,shop:svgShop,movie:svgMovie,bed:svgBed,cake:svgCake,receipt:svgReceipt};
 function getIconSvg(itemOrName){let name,override;if(typeof itemOrName==='string'){name=itemOrName;}else if(itemOrName){name=itemOrName.name;override=itemOrName.iconOverride;}if(override&&ICON_BY_KEY[override])return ICON_BY_KEY[override];if(!name||!name.trim())return svgReceipt;for(const[svg,pat]of ICON_RULES){if(pat.test(name))return svg;}return svgFood;}
