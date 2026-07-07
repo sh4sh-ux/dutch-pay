@@ -502,6 +502,27 @@ svg{display:block;flex-shrink:0;}
 .dbx-disconnect{font-size:12px;color:var(--red);border:none;background:transparent;font-weight:500;flex-shrink:0;cursor:pointer;font-family:inherit;}
 .dbx-btn-row{display:flex;gap:8px;}
 .dbx-btn-row .dbx-btn{flex:1;padding:9px;}
+/* ── 기록 보관함 드로어 ── */
+.hist-dr-ov{position:fixed;inset:0;background:rgba(0,0,0,.38);opacity:0;transition:opacity .3s ease;pointer-events:none;z-index:300;-webkit-backdrop-filter:blur(1px);backdrop-filter:blur(1px);}
+.hist-dr-ov.open{opacity:1;pointer-events:auto;cursor:pointer;}
+.hist-dr{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -4px 32px rgba(0,0,0,.12),0 -1px 4px rgba(0,0,0,.05);z-index:301;display:flex;flex-direction:column;height:84dvh;transform:translateY(100%);transition:transform .36s cubic-bezier(.32,.72,0,1);will-change:transform;}
+.hist-dr.open{transform:translateY(0);}
+.hist-dr-handle{display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0;}
+.hist-dr-handle-bar{width:36px;height:4px;background:var(--sep2);border-radius:2px;}
+.hist-dr-hd{display:flex;align-items:center;padding:10px 16px 0;flex-shrink:0;gap:8px;}
+.hist-dr-title{font-size:17px;font-weight:700;color:var(--label);flex:1;}
+.hist-dr-cnt{font-size:13px;font-weight:500;color:var(--label3);}
+.hist-dr-close{width:28px;height:28px;border-radius:50%;background:var(--fill);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--label2);font-size:12px;font-weight:700;font-family:inherit;transition:background .12s;flex-shrink:0;}
+.hist-dr-close:hover{background:var(--sep2);}
+.hist-dr-sort{display:flex;gap:6px;padding:10px 16px 0;overflow-x:auto;flex-shrink:0;scrollbar-width:none;}
+.hist-dr-sort::-webkit-scrollbar{display:none;}
+.hist-dr-pill{flex-shrink:0;padding:5px 13px;border-radius:20px;border:1.5px solid var(--sep2);background:transparent;font-size:12px;font-weight:500;color:var(--label2);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap;}
+.hist-dr-pill.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue-txt);font-weight:600;}
+.hist-dr-sinp-wrap{padding:8px 16px 0;flex-shrink:0;}
+.hist-dr-sinp{width:100%;background:var(--fill);border:none;border-radius:10px;padding:9px 12px 9px 34px;font-size:14px;color:var(--label);font-family:inherit;outline:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center;}
+.hist-dr-sinp::placeholder{color:var(--label3);}
+.hist-dr-sinp:focus{box-shadow:0 0 0 2px var(--blue);border-radius:10px;}
+.hist-dr-body{overflow-y:auto;flex:1;padding:10px 16px 40px;-webkit-overflow-scrolling:touch;}
 </style>
 </head>
 <body>
@@ -606,9 +627,30 @@ svg{display:block;flex-shrink:0;}
   </div>
 </div>
 
+<!-- 기록 보관함 드로어 -->
+<div class="hist-dr-ov" id="histDrOv" onclick="closeHistDrawer()"></div>
+<div class="hist-dr" id="histDr">
+  <div class="hist-dr-handle"><div class="hist-dr-handle-bar"></div></div>
+  <div class="hist-dr-hd">
+    <div class="hist-dr-title">기록 보관함</div>
+    <span class="hist-dr-cnt" id="histDrCnt"></span>
+    <button class="hist-dr-close" onclick="closeHistDrawer()">✕</button>
+  </div>
+  <div class="hist-dr-sort">
+    <button class="hist-dr-pill on" data-sort="newest" onclick="setHistorySort('newest')">최신순</button>
+    <button class="hist-dr-pill" data-sort="oldest" onclick="setHistorySort('oldest')">오래된 순</button>
+    <button class="hist-dr-pill" data-sort="amtDesc" onclick="setHistorySort('amtDesc')">금액 큰 순</button>
+    <button class="hist-dr-pill" data-sort="amtAsc" onclick="setHistorySort('amtAsc')">금액 작은 순</button>
+  </div>
+  <div class="hist-dr-sinp-wrap">
+    <input class="hist-dr-sinp" id="histDrSinp" type="search" placeholder="이름, 참여자, 날짜 검색…" oninput="updateHistorySearch(this.value)">
+  </div>
+  <div class="hist-dr-body" id="histDrBody"></div>
+</div>
+
 <script>
-const APP_VERSION='v1.89';
-const BUILD_TIME='2026-07-07 12:00';
+const APP_VERSION='v1.90';
+const BUILD_TIME='2026-07-07 16:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -617,6 +659,8 @@ let _pmHistTab='current',_pmHistSearch='',_pmHistSort='newest',_pmHistFilter='al
 let _myName=localStorage.getItem('dutchpay_my_name')||'';
 let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked');
 let _historySearch='';
+let _historySort='newest';
+let _histDrawerOpen=false;
 let dTab='input',mTab='input';
 let itemSort='default',itemSearch='';
 let settleDateStart=new Date().toISOString().slice(0,10),settleDateEnd=null;
@@ -925,9 +969,54 @@ function renderSheetBody(id){const it=items.find(i=>i.id===id);if(!it)return;con
 
 function dSetTab(t){dTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n===t?' on':'');});renderDesktopRight();}
 function mSetTab(t){mTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('mT'+cap(n));if(el)el.className='mob-tab'+(n===t?' on':'');});renderMobileBody();}
-function goToHistory(){
-  if(window.innerWidth<700){window.scrollTo(0,0);mSetTab('history');}
-  else{dSetTab('history');}
+function goToHistory(){openHistDrawer();}
+function openHistDrawer(){
+  _histDrawerOpen=true;
+  _historySearch='';
+  const si=document.getElementById('histDrSinp');if(si)si.value='';
+  _refreshHistDrawer();
+  document.getElementById('histDrOv').classList.add('open');
+  document.getElementById('histDr').classList.add('open');
+}
+function closeHistDrawer(){
+  _histDrawerOpen=false;
+  document.getElementById('histDrOv').classList.remove('open');
+  document.getElementById('histDr').classList.remove('open');
+}
+function setHistorySort(val){
+  _historySort=val;
+  document.querySelectorAll('.hist-dr-pill').forEach(p=>p.classList.toggle('on',p.dataset.sort===val));
+  _refreshHistDrList();
+}
+function _sortHistRecs(recs,sort){
+  const a=[...recs];
+  if(sort==='oldest')return a.sort((x,y)=>(x.savedAt||'').localeCompare(y.savedAt||''));
+  if(sort==='amtDesc')return a.sort((x,y)=>_recTot(y)-_recTot(x));
+  if(sort==='amtAsc')return a.sort((x,y)=>_recTot(x)-_recTot(y));
+  return a.sort((x,y)=>(y.savedAt||'').localeCompare(x.savedAt||''));
+}
+function _recTot(r){return(r.items||[]).reduce((s,it)=>s+(+it.amount||0),0);}
+function _refreshHistDrawer(){
+  _hPanelOpen=false;
+  const recs=loadHistory();
+  const cnt=document.getElementById('histDrCnt');if(cnt)cnt.textContent=recs.length?`${recs.length}건`:'';
+  const body=document.getElementById('histDrBody');if(!body)return;
+  const connected=!!hDbxGetToken();
+  const badgeTxt=connected?'☁ Dropbox 연결됨':'☁ Dropbox 미연결';
+  body.innerHTML=`<div class="hist-top" style="margin-bottom:8px"><div class="${connected?'hist-badge connected':'hist-badge'}" id="hDbxBadge">${badgeTxt}</div><button class="hist-dbx-btn" onclick="toggleHDbxPanel()">Dropbox 설정</button></div><div id="hDbxPanel" style="display:none"></div><div class="sync-info" id="hSyncInfo"></div><div id="histDrList">${_histDrListHtml(recs)}</div>`;
+  _updateHSyncInfo();
+}
+function _histDrListHtml(recs){
+  if(!recs.length)return`<div class="empty" style="padding:40px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>⋯ 메뉴에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
+  let filtered=_filterHistoryRecords(recs,_historySearch);
+  filtered=_sortHistRecs(filtered,_historySort);
+  return`<div class="record-list">${filtered.length?filtered.map(_buildRecordCardHtml).join(''):`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">'${e(_historySearch)}' 검색 결과가 없어요</p></div>`}</div>`;
+}
+function _refreshHistDrList(){
+  const el=document.getElementById('histDrList');if(!el)return;
+  const recs=loadHistory();
+  const cnt=document.getElementById('histDrCnt');if(cnt)cnt.textContent=recs.length?`${recs.length}건`:'';
+  el.innerHTML=_histDrListHtml(recs);
 }
 function cap(s){return s[0].toUpperCase()+s.slice(1);}
 
@@ -1410,6 +1499,7 @@ function deleteHistoryRecord(id){
   saveHistory(loadHistory().filter(r=>r.id!==id));
   toast('기록이 삭제됐어요');
   if(hDbxGetToken())hSyncDropbox(true);
+  if(_histDrawerOpen){_refreshHistDrList();return;}
   if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
   if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
 }
@@ -1564,6 +1654,7 @@ function _filterHistoryRecords(records,query){
 }
 function updateHistorySearch(val){
   _historySearch=val;
+  if(_histDrawerOpen){_refreshHistDrList();return;}
   const el=document.getElementById('historyRecordList');
   if(!el)return;
   const records=loadHistory();
@@ -1687,6 +1778,7 @@ function hDbxDisconnect(){
   if(!confirm('Dropbox 연결을 해제할까요?'))return;
   [DBX_H_TOKEN,DBX_H_REFRESH,DBX_H_ACCOUNT,DBX_H_LASTSYNC].forEach(k=>localStorage.removeItem(k));
   toast('Dropbox 연결 해제됨');
+  if(_histDrawerOpen){_refreshHistDrawer();return;}
   if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
   if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
 }
@@ -1716,8 +1808,8 @@ async function hSyncDropbox(uploadOnly=false){
     const uploadRes=await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${uploadToken}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE,mode:'overwrite',autorename:false,mute:true})},body:JSON.stringify(toUpload,null,2)});
     if(uploadRes.status===401){uploadToken=await _hDbxRefreshToken();if(uploadToken)await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${uploadToken}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE,mode:'overwrite',autorename:false,mute:true})},body:JSON.stringify(toUpload,null,2)});}
     localStorage.setItem(DBX_H_LASTSYNC,new Date().toISOString());
-    if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
-    if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
+    if(_histDrawerOpen){_refreshHistDrawer();}
+    else{if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}}
   }catch(err){toast('동기화 실패: '+err.message,{type:'error'});_updateHDbxBadge();}
   finally{_hSyncing=false;}
 }
