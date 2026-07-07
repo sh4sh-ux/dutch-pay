@@ -46,7 +46,10 @@ svg{display:block;flex-shrink:0;}
   .mob-tab{flex:1;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--label2);padding:10px 0 12px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
   .mob-tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
   .mob-body{padding:16px 16px calc(max(env(safe-area-inset-bottom,0px),0px) + 72px);}
-  .mob-owner-tap{position:fixed;bottom:0;left:0;right:0;z-index:150;display:flex;align-items:center;justify-content:center;height:calc(44px + max(env(safe-area-inset-bottom,0px),0px));padding-bottom:max(env(safe-area-inset-bottom,0px),0px);background:var(--bg);font-size:10px;font-weight:600;color:#777;letter-spacing:.5px;text-transform:uppercase;user-select:none;-webkit-tap-highlight-color:transparent;cursor:default;}
+  .mob-owner-tap{display:none;}
+  .mob-ver-badge{font-size:11px;font-weight:600;color:var(--label3);background:var(--fill);border:1px solid var(--sep);border-radius:6px;padding:3px 7px;cursor:pointer;font-family:inherit;user-select:none;-webkit-tap-highlight-color:transparent;transition:background .12s;display:inline-flex;align-items:center;flex-shrink:0;}
+  .mob-ver-badge:active{background:var(--fill2);}
+  .mob-owner-btn{display:none;align-items:center;justify-content:center;width:30px;height:30px;background:var(--fill);border:1.5px solid var(--sep2);border-radius:8px;color:var(--label2);font-size:17px;cursor:pointer;font-family:inherit;padding:0;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
   .mob-section{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:12px;}
   .mob-section-hd{padding:14px 16px;border-bottom:1px solid var(--sep);display:flex;align-items:center;justify-content:space-between;}
   .mob-section-title{font-size:12px;font-weight:600;color:var(--label2);letter-spacing:.3px;text-transform:uppercase;}
@@ -605,8 +608,14 @@ svg{display:block;flex-shrink:0;}
 <div class="mobile-shell">
   <div class="mob-header">
     <div class="mob-title-row">
-      <span class="mob-title" onclick="mSetTab('input')" style="cursor:pointer">더치페이</span>
-      <span id="mTotal" style="font-size:18px;font-weight:700">0원</span>
+      <div style="display:flex;align-items:center;gap:7px;min-width:0;">
+        <span class="mob-title" onclick="mSetTab('input')" style="cursor:pointer">더치페이</span>
+        <button class="mob-ver-badge" id="appVersionM"></button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <button class="mob-owner-btn" id="mOwnerBtn" onclick="showDataMenu(this,event)">⋯</button>
+        <span id="mTotal" style="font-size:18px;font-weight:700">0원</span>
+      </div>
     </div>
     <div style="margin-bottom:14px"></div>
     <div class="mob-tabs">
@@ -649,8 +658,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.90';
-const BUILD_TIME='2026-07-07 16:00';
+const APP_VERSION='v1.91';
+const BUILD_TIME='2026-07-07 17:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -990,10 +999,25 @@ function setHistorySort(val){
 }
 function _sortHistRecs(recs,sort){
   const a=[...recs];
-  if(sort==='oldest')return a.sort((x,y)=>(x.savedAt||'').localeCompare(y.savedAt||''));
+  if(sort==='oldest')return a.sort((x,y)=>(x.dateStart||'').localeCompare(y.dateStart||''));
   if(sort==='amtDesc')return a.sort((x,y)=>_recTot(y)-_recTot(x));
   if(sort==='amtAsc')return a.sort((x,y)=>_recTot(x)-_recTot(y));
-  return a.sort((x,y)=>(y.savedAt||'').localeCompare(x.savedAt||''));
+  return a.sort((x,y)=>(y.dateStart||'').localeCompare(x.dateStart||''));
+}
+function _initVerBadge(){
+  const badge=document.getElementById('appVersionM');if(!badge)return;
+  let _lp=null;
+  const _unlock=()=>{
+    _lp=null;navigator.vibrate&&navigator.vibrate(30);
+    if(!_ownerUnlocked){_ownerUnlocked=true;localStorage.setItem('dutchpay_owner_unlocked','1');renderAll();}
+    showDataMenu(badge,{stopPropagation:()=>{},preventDefault:()=>{}});
+  };
+  badge.addEventListener('touchstart',()=>{_lp=setTimeout(_unlock,600);},{passive:true});
+  badge.addEventListener('touchend',e=>{if(_lp){clearTimeout(_lp);_lp=null;e.preventDefault();location.reload();}});
+  badge.addEventListener('touchcancel',()=>{if(_lp){clearTimeout(_lp);_lp=null;}});
+  badge.addEventListener('mousedown',()=>{_lp=setTimeout(_unlock,600);});
+  badge.addEventListener('mouseup',()=>{if(_lp){clearTimeout(_lp);_lp=null;location.reload();}});
+  badge.addEventListener('mouseleave',()=>{if(_lp){clearTimeout(_lp);_lp=null;}});
 }
 function _recTot(r){return(r.items||[]).reduce((s,it)=>s+(+it.amount||0),0);}
 function _refreshHistDrawer(){
@@ -1317,6 +1341,7 @@ function renderPaymentBody(el){
 function renderAll(){
   const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
   const dTPay=document.getElementById('dTPayment');if(dTPay)dTPay.style.display=_ownerUnlocked?'':'none';
+  const mOBtn=document.getElementById('mOwnerBtn');if(mOBtn)mOBtn.style.display=_ownerUnlocked?'inline-flex':'none';
   renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
   const di=document.getElementById('meetingDateInp');if(di)di.value=settleDateStart;saveState();
 }
@@ -2009,7 +2034,7 @@ async function shareSettleImage(){
 loadState();
 _migrateHistoryGroupNames();
 renderAll();
-(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();})();
+(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
 hDbxHandleCallback().then(()=>{if(hDbxGetToken())hSyncDropbox();});
