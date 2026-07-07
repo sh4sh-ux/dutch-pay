@@ -666,8 +666,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.97';
-const BUILD_TIME='2026-07-07 19:00';
+const APP_VERSION='v1.98';
+const BUILD_TIME='2026-07-07 19:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1501,9 +1501,7 @@ function saveToHistory(){
   try{
     const raw=localStorage.getItem(HISTORY_KEY);
     const arr=raw?JSON.parse(raw):[];
-    const sig=r=>[r.dateStart,(r.people||[]).slice().sort().join('|'),r.total,(r.items||[]).map(i=>i.name+'|'+(+i.amount||0)).sort().join(',')].join('§');
-    const newSig=sig(record);
-    const dup=arr.find(r=>sig(r)===newSig);
+    const dup=arr.find(r=>_histFingerprint(r)===_histFingerprint(record));
     if(dup&&!confirm('이미 저장된 기록이 있어요. 새로 추가할까요?'))return;
     arr.unshift(record);
     localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
@@ -1524,7 +1522,10 @@ const DBX_H_FILE='/01_Personal/Dutch-Pay/dutch-pay_history.json';
 const svgArrowH='<svg width="13" height="13" viewBox="0 0 24 24"><line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M13 6 L22 12 L13 18 Z" fill="currentColor"/></svg>';
 
 function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JSON.parse(r):[];}catch(e){return [];}}
-function saveHistory(arr){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));}catch(e){toast('저장 공간이 부족해 기록을 저장하지 못했어요',{type:'error'});}}
+function _histFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|'),(r.items||[]).map(i=>`${i.name||''}|${+i.amount||0}|${i.payer||''}`).sort().join(',')].join('§');}
+function _dedupHistory(arr){const map=new Map();arr.forEach(r=>{const fp=_histFingerprint(r);const ex=map.get(fp);if(!ex){map.set(fp,r);}else{const isNewer=(r.savedAt||'')>(ex.savedAt||'');const winner=isNewer?r:ex,loser=isNewer?ex:r;map.set(fp,{...winner,payments:{...(loser.payments||{}),...(winner.payments||{})}});}});return Array.from(map.values());}
+function saveHistory(arr){try{const deduped=_dedupHistory(arr);const removed=arr.length-deduped.length;localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));if(removed>0)setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),50);}catch(e){toast('저장 공간이 부족해 기록을 저장하지 못했어요',{type:'error'});}}
+function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const deduped=_dedupHistory(arr);const removed=arr.length-deduped.length;if(removed>0){localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),400);}}catch(e){}}
 function _migrateHistoryGroupNames(){try{const arr=loadHistory();let changed=false;arr.forEach(r=>{const correct=(r.people||[]).join(', ');if(correct&&r.groupName!==correct){r.groupName=correct;changed=true;}});if(changed)saveHistory(arr);}catch(e){}}
 
 function deleteHistoryRecord(id){
@@ -2045,6 +2046,7 @@ async function shareSettleImage(){
 
 loadState();
 _migrateHistoryGroupNames();
+_deduplicateHistoryOnStartup();
 renderAll();
 (()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();})();
 _updateSyncBadge();
