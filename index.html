@@ -456,9 +456,10 @@ svg{display:block;flex-shrink:0;}
 .rc-item-row{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--sep);gap:10px;}
 .rc-item-row:last-child{border-bottom:none;}
 .rc-item-info{flex:1;min-width:0;}
-.rc-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:8px;}
-.rc-item-meta{font-size:11px;color:var(--label3);margin-top:1px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding-left:8px;}
-.rc-payer-pill{white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;background:var(--fill);color:var(--label2);border-radius:100px;padding:2px 8px;font-size:10px;line-height:1;}
+.rc-item-name-row{display:flex;align-items:center;gap:5px;padding-left:8px;min-width:0;flex-wrap:wrap;}
+.rc-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rc-item-meta{font-size:11px;color:var(--label3);margin-top:2px;padding-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rc-payer-pill{white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:var(--fill);color:var(--label2);border-radius:100px;padding:2px 8px;font-size:10px;line-height:1;}
 .rc-item-amt{font-size:13px;font-weight:600;flex-shrink:0;}
 .rc-item-amt.neg{color:var(--red);}
 .rc-txns{padding:0 0 4px;}
@@ -653,8 +654,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.93';
-const BUILD_TIME='2026-07-07 17:45';
+const APP_VERSION='v1.94';
+const BUILD_TIME='2026-07-07 18:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1603,7 +1604,7 @@ function _buildRecordCardHtml(r){
   const itemsHtml=rcItems.length
     ?`<div class="rc-section-title">지출 내역</div>`+rcItems.map(it=>{
         const mems=(it.members&&it.members.length)?it.members.join(', '):(r.people||[]).join(', ');
-        return `<div class="rc-item-row"><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name">${e(it.name||'(이름 없음)')}</div><div class="rc-item-meta"><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span><span>${e(mems)}</span></div></div><span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>`;
+        return `<div class="rc-item-row"><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span></div><div class="rc-item-meta">${e(mems)}</div></div><span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>`;
       }).join(''):'';
   const pmObj=r.payments||{};
   const txnHtml=txns.length
