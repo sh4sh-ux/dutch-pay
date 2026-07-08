@@ -666,8 +666,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.98';
-const BUILD_TIME='2026-07-07 19:30';
+const APP_VERSION='v1.99';
+const BUILD_TIME='2026-07-07 20:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1219,7 +1219,7 @@ function _pmCurrentHtml(txns){
 function _pmHistResultsHtml(){
   const name=_pmHistSearch.trim();
   if(!name){
-    const allRecs=loadHistory();
+    const allRecs=loadHistory().sort((a,b)=>(b.dateStart||b.savedAt||'').localeCompare(a.dateStart||a.savedAt||''));
     if(!allRecs.length)return '<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">저장된 정산 기록이 없어요</p></div>';
     const recsHtml=allRecs.map(rec=>{
       const dateStr=rec.dateStart?rec.dateStart.slice(2).replace(/-/g,'. ')+'.':rec.savedAt?rec.savedAt.slice(0,10):'';
