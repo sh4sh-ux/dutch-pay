@@ -666,8 +666,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v1.99';
-const BUILD_TIME='2026-07-07 20:00';
+const APP_VERSION='v2.00';
+const BUILD_TIME='2026-07-07 20:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -774,6 +774,7 @@ function openInExternalBrowser(){const t=detectInAppBrowser();const url=location
 
 const STORAGE_KEY='dutchpay_v1';
 const HISTORY_KEY='dutchpay_history';
+const HISTORY_DEL_KEY='dutchpay_hist_deleted';
 const AUTO_BACKUP_KEY='dutchpay_autobackups';
 const AUTO_BACKUP_MAX=5;
 
@@ -1522,6 +1523,9 @@ const DBX_H_FILE='/01_Personal/Dutch-Pay/dutch-pay_history.json';
 const svgArrowH='<svg width="13" height="13" viewBox="0 0 24 24"><line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M13 6 L22 12 L13 18 Z" fill="currentColor"/></svg>';
 
 function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JSON.parse(r):[];}catch(e){return [];}}
+function _loadDelIds(){try{return new Set(JSON.parse(localStorage.getItem(HISTORY_DEL_KEY)||'[]'));}catch(e){return new Set();}}
+function _saveDelId(id){try{const s=_loadDelIds();s.add(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
+function _mergeDelIds(remoteIds){try{const s=_loadDelIds();(remoteIds||[]).forEach(id=>s.add(id));localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));return s;}catch(e){return _loadDelIds();}}
 function _histFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|'),(r.items||[]).map(i=>`${i.name||''}|${+i.amount||0}|${i.payer||''}`).sort().join(',')].join('§');}
 function _dedupHistory(arr){const map=new Map();arr.forEach(r=>{const fp=_histFingerprint(r);const ex=map.get(fp);if(!ex){map.set(fp,r);}else{const isNewer=(r.savedAt||'')>(ex.savedAt||'');const winner=isNewer?r:ex,loser=isNewer?ex:r;map.set(fp,{...winner,payments:{...(loser.payments||{}),...(winner.payments||{})}});}});return Array.from(map.values());}
 function saveHistory(arr){try{const deduped=_dedupHistory(arr);const removed=arr.length-deduped.length;localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));if(removed>0)setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),50);}catch(e){toast('저장 공간이 부족해 기록을 저장하지 못했어요',{type:'error'});}}
@@ -1530,6 +1534,7 @@ function _migrateHistoryGroupNames(){try{const arr=loadHistory();let changed=fal
 
 function deleteHistoryRecord(id){
   if(!confirm('이 기록을 삭제할까요?'))return;
+  _saveDelId(id);
   saveHistory(loadHistory().filter(r=>r.id!==id));
   toast('기록이 삭제됐어요');
   if(hDbxGetToken())hSyncDropbox(true);
@@ -1833,15 +1838,16 @@ async function hSyncDropbox(uploadOnly=false){
       let res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${dlToken}`,'Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE})}});
       if(res.status===401){dlToken=await _hDbxRefreshToken();if(dlToken)res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${dlToken}`,'Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE})}});}
       if(res&&res.ok){
-        const remote=JSON.parse(await res.text());
-        if(Array.isArray(remote)){
-          const map=new Map();[...remote,...local].forEach(r=>{const ex=map.get(r.id);if(!ex||(r.savedAt||'')>(ex.savedAt||''))map.set(r.id,r);});
-          const merged=Array.from(map.values()).sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));
-          saveHistory(merged);
-        }
+        const raw=JSON.parse(await res.text());
+        const remoteRecs=Array.isArray(raw)?raw:(raw.records||[]);
+        const delIds=_mergeDelIds(Array.isArray(raw)?[]:(raw.deletedIds||[]));
+        const map=new Map();
+        [...remoteRecs,...local].forEach(r=>{if(delIds.has(r.id))return;const ex=map.get(r.id);if(!ex||(r.savedAt||'')>(ex.savedAt||''))map.set(r.id,r);});
+        const merged=Array.from(map.values()).sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));
+        saveHistory(merged);
       }
     }
-    const toUpload=loadHistory();
+    const toUpload={records:loadHistory(),deletedIds:[..._loadDelIds()]};
     let uploadToken=hDbxGetToken();
     const uploadRes=await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${uploadToken}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE,mode:'overwrite',autorename:false,mute:true})},body:JSON.stringify(toUpload,null,2)});
     if(uploadRes.status===401){uploadToken=await _hDbxRefreshToken();if(uploadToken)await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${uploadToken}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE,mode:'overwrite',autorename:false,mute:true})},body:JSON.stringify(toUpload,null,2)});}
