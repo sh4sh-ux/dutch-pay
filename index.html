@@ -547,10 +547,10 @@ svg{display:block;flex-shrink:0;}
       <div style="margin-bottom:16px"></div>
       <div class="tab-row">
         <button class="tab on" id="dTInput" onclick="dSetTab('input')">입력</button>
-        <button class="tab" id="dTResult" onclick="dSetTab('result')">내역</button>
+        <button class="tab" id="dTResult" onclick="dSetTab('result')">정산</button>
         <button class="tab" id="dTSettle" onclick="dSetTab('settle')">공유</button>
         <button class="tab" id="dTHistory" onclick="dSetTab('history')" style="display:none">기록</button>
-        <button class="tab" id="dTPayment" onclick="dSetTab('payment')" style="display:none">정산</button>
+        <button class="tab" id="dTPayment" onclick="dSetTab('payment')" style="display:none">수금</button>
       </div>
       <div style="margin-bottom:14px;">
         <input type="date" id="meetingDateInp" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 10px;font-size:13px;background-color:var(--card);color:var(--label);outline:none;cursor:pointer;font-family:inherit;" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/>
@@ -627,10 +627,10 @@ svg{display:block;flex-shrink:0;}
     <div style="margin-bottom:14px"></div>
     <div class="mob-tabs">
       <button class="mob-tab on" id="mTInput" onclick="mSetTab('input')">입력</button>
-      <button class="mob-tab" id="mTResult" onclick="mSetTab('result')">내역</button>
+      <button class="mob-tab" id="mTResult" onclick="mSetTab('result')">정산</button>
       <button class="mob-tab" id="mTSettle" onclick="mSetTab('settle')">공유</button>
       <button class="mob-tab" id="mTHistory" onclick="mSetTab('history')" style="display:none">기록</button>
-      <button class="mob-tab" id="mTPayment" onclick="mSetTab('payment')" style="display:none">정산</button>
+      <button class="mob-tab" id="mTPayment" onclick="mSetTab('payment')" style="display:none">수금</button>
     </div>
   </div>
   <div class="mob-body" id="mBody"></div>
@@ -668,8 +668,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.02';
-const BUILD_TIME='2026-07-15 12:00';
+const APP_VERSION='v2.03';
+const BUILD_TIME='2026-07-15 13:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1336,7 +1336,7 @@ function histPmSetNow(recId,txnKey){
 function _cleanStalePayments(txns){const validKeys=new Set(txns.map(t=>`${t.from}|${t.to}`));let changed=false;Object.keys(payments).forEach(k=>{if(!validKeys.has(k)){delete payments[k];changed=true;}});if(changed)syncCurrentToGroup();}
 
 function renderPaymentView(eyeId,titleId,subId,bodyId){
-  document.getElementById(eyeId).textContent='정산';
+  document.getElementById(eyeId).textContent='수금';
   document.getElementById(titleId).textContent='입금 관리';
   document.getElementById(subId).textContent='이번 정산 입금 현황과 전체 기록을 확인하세요.';
   const body=document.getElementById(bodyId);
@@ -1444,7 +1444,7 @@ function calcTxns(paid,owes){
 function personCardHtml(p,paid,owes,details){const bd=details[p]||[],owed=owes[p]||0,ppaid=paid[p]||0,net=ppaid-owed;const netTxt=net>0?`+${fmt(net)}원 받을 예정`:net<0?`${fmt(-net)}원 낼 예정`:'정산 완료';const netCls=net>0?'pos':net<0?'neg':'zero';const rows=bd.map(b=>`<div class="bd-row"><span class="bd-name"><span class="bd-name-txt">${e(b.name)}</span>${b.extra?'<span class="bd-ex-tag">+1원</span>':''}</span><span class="bd-ptag">${e(b.payer)} 결제</span><span class="bd-share">${fmt(b.share)}원</span></div>`).join('');return `<div class="pcard"><div class="phd"><div class="avatar">${e(p.slice(0,1))}</div><div class="pname-col"><div class="pname">${e(p)}</div><div class="pnet ${netCls}">${netTxt}</div></div><div class="ptotal">${fmt(owed)}원</div></div>${rows}<div class="bd-row" style="background:var(--fill2)"><span class="bd-name" style="color:var(--label3)"><span class="bd-name-txt">실제 결제</span></span><span class="bd-share">${fmt(ppaid)}원</span></div></div>`;}
 
 function renderResultView(eyeId,titleId,subId,bodyId){
-  document.getElementById(eyeId).textContent='정산 결과';document.getElementById(titleId).textContent='누가 얼마를 낼까요';document.getElementById(subId).textContent='요약과 송금·지출 내역을 한눈에 확인하세요.';
+  document.getElementById(eyeId).textContent='정산';document.getElementById(titleId).textContent='누가 얼마를 낼까요';document.getElementById(subId).textContent='요약과 송금·지출 내역을 한눈에 확인하세요.';
   const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);const vc=items.filter(it=>+it.amount!==0).length;
   if(!vc){document.getElementById(bodyId).innerHTML='<div class="empty"><div class="empty-icon">'+svgEmpty+'</div><p>금액이 입력된 지출이 없어요</p></div>';return;}
   const stats=`<div class="stat-grid"><div class="stat-box"><div class="stat-lbl">총 금액</div><div class="stat-val${total<0?' amt-neg':''}">${fmt(total)}원</div></div><div class="stat-box"><div class="stat-lbl">지출 수</div><div class="stat-val">${vc}건</div></div><div class="stat-box"><div class="stat-lbl">참여자</div><div class="stat-val">${people.length}명</div></div></div>`;
