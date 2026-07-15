@@ -474,6 +474,8 @@ svg{display:block;flex-shrink:0;}
 .rc-del-btn:hover{opacity:.7;}
 .rc-load-btn{font-size:12px;color:var(--blue);border:none;background:transparent;font-weight:500;padding:0;cursor:pointer;}
 .rc-load-btn:hover{opacity:.7;}
+.rc-pdf-btn{font-size:12px;color:var(--label2);border:none;background:transparent;font-weight:500;padding:0;cursor:pointer;}
+.rc-pdf-btn:hover{opacity:.7;}
 .hist-search-wrap{padding:10px 0 4px;}
 .hist-search{width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--sep2);border-radius:10px;background:var(--card);color:var(--label);outline:none;font-family:inherit;box-sizing:border-box;}
 .hist-search:focus{border-color:var(--blue);}
@@ -666,8 +668,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.01';
-const BUILD_TIME='2026-07-07 21:00';
+const APP_VERSION='v2.02';
+const BUILD_TIME='2026-07-15 12:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1647,6 +1649,8 @@ function _buildRecordCardHtml(r){
     <div class="rc-foot">
       <span class="rc-saved-at">${savedAtStr} 저장 · ${(r.people||[]).length}명</span>
       <div style="display:flex;gap:14px;align-items:center;">
+        <button class="rc-load-btn" onclick="shareHistoryImage('${e(r.id)}')">이미지</button>
+        <button class="rc-pdf-btn" onclick="printHistoryRecord('${e(r.id)}')">PDF</button>
         <button class="rc-load-btn" onclick="loadHistoryAsGroup('${e(r.id)}')">불러오기</button>
         <button class="rc-del-btn" onclick="deleteHistoryRecord('${e(r.id)}')">삭제</button>
       </div>
@@ -2049,6 +2053,153 @@ async function shareSettleImage(){
   const date=new Date().toISOString().slice(0,10);const filename=`정산_${date}.png`;const file=new File([blob],filename,{type:'image/png'});
   if(navigator.share&&!inApp){try{await navigator.share({files:[file]});return;}catch(e){if(e&&e.name==='AbortError')return;}}
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.download=filename;a.href=url;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+async function generateHistoryCanvas(rec){
+  const W=1080,PAD=42,TOP_PAD=56;
+  const FF="-apple-system,'SF Pro Text','Apple SD Gothic Neo','Helvetica Neue',Arial,sans-serif";
+  const C={bg:'#F4F4F6',card:'#FFFFFF',text:'#111111',muted:'#8E8E93',label:'#666666',line:'#E9E9EC',blue:'#0071E3',blueBg:'#EBF3FF',red:'#E53E3E',green:'#1A7A3C',greenBg:'#E8FBE9',grayBg:'#F0F0F2'};
+  const cardX=PAD,cardW=W-PAD*2;
+  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=40,TOTAL_CARD_H=230,ITEM_ROW_H=152,TXN_ROW_H=120,EMPTY_CARD_H=132,FOOTER_H=100,BOTTOM_PAD=20;
+  const validItems=(rec.items||[]).filter(it=>+it.amount!==0);
+  const txns=rec.txns||[];
+  const pmObj=rec.payments||{};
+  const people=rec.people||[];
+  const total=rec.total||0;
+  const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
+  const txnCardH=txns.length?txns.length*TXN_ROW_H:EMPTY_CARD_H;
+  const iconMap=new Map();
+  for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#0055B8'));}catch(e){iconMap.set(svg,null);}}}
+  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+itemCardH+SECTION_GAP+SECTION_LABEL_H+txnCardH+FOOTER_H+BOTTOM_PAD;
+  const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');
+  const setFont=(s,w)=>{ctx.font=`${w||'normal'} ${s}px ${FF}`;};
+  const drawCard=(x,y,w,h)=>{ctx.save();ctx.shadowColor='rgba(17,17,17,.035)';ctx.shadowBlur=8;ctx.shadowOffsetY=2;ctx.fillStyle=C.card;roundRectPath(ctx,x,y,w,h,28);ctx.fill();ctx.restore();ctx.strokeStyle=C.line;ctx.lineWidth=1.5;roundRectPath(ctx,x,y,w,h,28);ctx.stroke();};
+  const drawSectionLabel=(text,y)=>{ctx.fillStyle=C.label;setFont(28,700);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(text,cardX+6,y);return y+SECTION_LABEL_H;};
+  const drawDivider=y=>{ctx.strokeStyle=C.line;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cardX+34,y);ctx.lineTo(cardX+cardW-34,y);ctx.stroke();};
+  const drawEmpty=(text,y,h)=>{ctx.fillStyle=C.muted;setFont(28,600);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,W/2,y+h/2);};
+  const drawBadge=(text,x,y,bg,fg)=>{setFont(22,600);ctx.textBaseline='middle';ctx.textAlign='left';const tw=ctx.measureText(text).width;const ph=18,pv=8,bh=22+pv*2;const bw=tw+ph*2;ctx.fillStyle=bg;roundRectPath(ctx,x,y-bh/2,bw,bh,bh/2);ctx.fill();ctx.fillStyle=fg;ctx.fillText(text,x+ph,y);return bw+8;};
+  ctx.fillStyle=C.bg;ctx.fillRect(0,0,W,H);
+  let y=TOP_PAD;
+  // 헤더
+  ctx.fillStyle=C.text;setFont(48,800);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('정산 내역',cardX,y);
+  const fhd=d=>{if(!d)return'';const[yr,m,day]=d.split('-');return`${yr}.${(+m).toString().padStart(2,'0')}.${(+day).toString().padStart(2,'0')}`;};
+  const dateStr=rec.dateEnd&&rec.dateEnd!==rec.dateStart?`${fhd(rec.dateStart)} ~ ${fhd(rec.dateEnd)}`:fhd(rec.dateStart);
+  if(dateStr){ctx.fillStyle=C.muted;setFont(30,700);ctx.textAlign='right';ctx.fillText(truncateCanvasText(ctx,dateStr,520),cardX+cardW,y+12);}
+  y+=HEADER_H;
+  // 총 지출금액
+  y=drawSectionLabel('총 지출금액',y);
+  drawCard(cardX,y,cardW,TOTAL_CARD_H);
+  const totalText=(total<0?'−':'')+fmt(Math.abs(total))+'원';
+  ctx.fillStyle=total<0?C.red:'#1C1C1E';ctx.textBaseline='middle';ctx.textAlign='center';
+  const _maxW=cardW-80;ctx.font=`700 68px ${FF}`;
+  if(ctx.measureText(totalText).width<=_maxW){ctx.fillText(totalText,W/2,y+81);}
+  else{ctx.font=`700 54px ${FF}`;ctx.fillText(truncateCanvasText(ctx,totalText,_maxW),W/2,y+81);}
+  drawDivider(y+140);
+  const perPerson=people.length?Math.floor(Math.abs(total)/people.length):0;
+  ctx.fillStyle=C.muted;setFont(28,500);ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(`총 ${people.length}명 · 인당 평균 ${fmt(perPerson)}원`,W/2,y+188);
+  y+=TOTAL_CARD_H+SECTION_GAP;
+  // 지출 내역
+  y=drawSectionLabel('지출 내역',y);
+  drawCard(cardX,y,cardW,itemCardH);
+  if(!validItems.length){drawEmpty('지출 내역이 없어요',y,itemCardH);}
+  else{
+    validItems.forEach((it,i)=>{
+      const ry=y+i*ITEM_ROW_H+ITEM_ROW_H/2;
+      const iconX=cardX+68;
+      ctx.fillStyle=C.blueBg;ctx.beginPath();ctx.arc(iconX,ry,30,0,Math.PI*2);ctx.fill();
+      const iconImg=iconMap.get(getIconSvg(it));
+      if(iconImg){ctx.drawImage(iconImg,iconX-15,ry-15,30,30);}else{ctx.fillStyle=C.blue;ctx.beginPath();ctx.arc(iconX,ry,6,0,Math.PI*2);ctx.fill();}
+      const amtTxt=fmt(+it.amount)+'원';
+      ctx.fillStyle=(+it.amount<0)?C.red:C.text;setFont(34,700);ctx.textAlign='right';ctx.textBaseline='middle';
+      const amtX=cardX+cardW-38,amtW=ctx.measureText(amtTxt).width;
+      ctx.fillText(amtTxt,amtX,ry+2);
+      const nameX=cardX+118,maxW=amtX-amtW-34-nameX;
+      const mems=it.members&&it.members.length?it.members:people;
+      const payerTxt=`${it.payer||'결제자 미정'} 결제`;
+      setFont(20,400);const pmw=ctx.measureText(payerTxt).width;
+      const ppx=14,ppy=6,pillW=pmw+ppx*2,pillH=20+ppy*2;
+      setFont(30,700);
+      const nm=truncateCanvasText(ctx,it.name||'(이름 없음)',maxW-ppx-pillW-16);
+      ctx.fillStyle=C.text;ctx.textAlign='left';ctx.textBaseline='alphabetic';
+      const nM=ctx.measureText(nm);
+      ctx.fillText(nm,nameX+ppx,(ry-22)+(nM.actualBoundingBoxAscent-nM.actualBoundingBoxDescent)/2);
+      const afx=nameX+ppx+nM.width+12;
+      setFont(20,400);ctx.textBaseline='middle';ctx.textAlign='left';
+      ctx.fillStyle='#F3F3F5';roundRectPath(ctx,afx,ry-22-pillH/2,pillW,pillH,pillH/2);ctx.fill();
+      ctx.fillStyle='#666666';ctx.fillText(payerTxt,afx+ppx,ry-22);
+      const memsStartX=nameX+ppx,maxMemsW=amtX-amtW-34-memsStartX;
+      if(maxMemsW>30){setFont(22,400);ctx.textBaseline='middle';ctx.fillStyle=C.muted;ctx.fillText(truncateCanvasText(ctx,mems.join(', '),maxMemsW),memsStartX,ry+26);}
+      if(i<validItems.length-1)drawDivider(y+(i+1)*ITEM_ROW_H);
+    });
+  }
+  y+=itemCardH+SECTION_GAP;
+  // 송금 내역
+  y=drawSectionLabel('송금 내역',y);
+  drawCard(cardX,y,cardW,txnCardH);
+  if(!txns.length){drawEmpty('모두 정산 완료 ✓',y,txnCardH);}
+  else{
+    txns.forEach((t,i)=>{
+      const ry=y+i*TXN_ROW_H+TXN_ROW_H/2;
+      const tkey=`${t.from}|${t.to}`;const pm=pmObj[tkey]||{};
+      const billing=t.amt;const received=pm.done?(pm.amount!=null?+pm.amount:billing):0;
+      const diff=pm.done?received-billing:null;
+      // 금액 (우측)
+      const amtTxt=fmt(billing)+'원';
+      ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
+      const amtX=cardX+cardW-38;ctx.fillText(amtTxt,amtX,ry-16);
+      // from → to (좌측 상단)
+      const leftX=cardX+38;
+      setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
+      const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry-16);
+      const fw=ctx.measureText(fromTxt).width;
+      const AGAP=20,AH=9,AL=36,headW=AH*1.8;
+      const AX=leftX+fw+AGAP,AEX=AX+AL;
+      ctx.strokeStyle=C.text;ctx.lineWidth=2.5;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(AX,ry-16);ctx.lineTo(AEX-headW,ry-16);ctx.stroke();
+      ctx.fillStyle=C.text;ctx.beginPath();ctx.moveTo(AEX-headW,ry-16-AH);ctx.lineTo(AEX,ry-16);ctx.lineTo(AEX-headW,ry-16+AH);ctx.closePath();ctx.fill();
+      const toTxt=truncateCanvasText(ctx,t.to||'',300);
+      ctx.fillStyle=C.text;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(toTxt,AEX+AGAP,ry-16);
+      // 상태 배지 (좌측 하단)
+      if(pm.done){
+        if(diff>0)drawBadge(`+${fmt(diff)}원 초과`,leftX,ry+24,C.blueBg,'#0055B8');
+        else if(diff<0)drawBadge(`-${fmt(-diff)}원 부족`,leftX,ry+24,'#FFEEEE',C.red);
+        else drawBadge('✓ 입금완료',leftX,ry+24,C.greenBg,C.green);
+      }else{drawBadge('미입금',leftX,ry+24,C.grayBg,C.muted);}
+      if(i<txns.length-1)drawDivider(y+(i+1)*TXN_ROW_H);
+    });
+  }
+  y+=txnCardH+32;
+  // 푸터
+  ctx.fillStyle=C.muted;setFont(24,400);ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(`더치페이 ${APP_VERSION}`,W/2,y+FOOTER_H/2);
+  return canvas;
+}
+
+async function shareHistoryImage(id){
+  const rec=loadHistory().find(r=>r.id===id);if(!rec){toast('기록을 찾을 수 없어요',{type:'error'});return;}
+  toast('이미지 생성 중…',{type:'info'});
+  try{
+    const canvas=await generateHistoryCanvas(rec);
+    const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob){toast('이미지 생성에 실패했어요',{type:'error'});return;}
+    const date=(rec.dateStart||'').replace(/-/g,'')||new Date().toISOString().slice(0,10).replace(/-/g,'');
+    const filename=`정산내역_${date}.png`;const file=new File([blob],filename,{type:'image/png'});
+    if(navigator.share){try{await navigator.share({files:[file]});return;}catch(e2){if(e2&&e2.name==='AbortError')return;}}
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.download=filename;a.href=url;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(err){toast('이미지 저장에 실패했어요',{type:'error'});}
+}
+
+function printHistoryRecord(id){
+  const rec=loadHistory().find(r=>r.id===id);if(!rec){toast('기록을 찾을 수 없어요',{type:'error'});return;}
+  const fhd=d=>{if(!d)return'';const[yr,m,day]=d.split('-');return`${yr}년 ${+m}월 ${+day}일`;};
+  const dateStr=rec.dateEnd&&rec.dateEnd!==rec.dateStart?`${fhd(rec.dateStart)} ~ ${fhd(rec.dateEnd)}`:fhd(rec.dateStart);
+  const ppl=rec.people||[];const total=rec.total||0;const perPerson=ppl.length?Math.floor(Math.abs(total)/ppl.length):0;
+  const validItems=(rec.items||[]).filter(it=>+it.amount!==0);const txns=rec.txns||[];const pmObj=rec.payments||{};
+  const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const itemsHtml=validItems.map(it=>{const mems=it.members&&it.members.length?it.members.join(', '):ppl.join(', ');return`<tr><td><strong>${esc(it.name||'(이름 없음)')}</strong></td><td class="s">${esc(it.payer||'')} 결제</td><td class="s">${esc(mems)}</td><td class="r">${fmt(+it.amount)}원</td></tr>`;}).join('');
+  const txnsHtml=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=pmObj[tkey]||{};const billing=t.amt;const received=pm.done?(pm.amount!=null?+pm.amount:billing):0;const diff=pm.done?received-billing:null;let st='미입금',sc='pending';if(pm.done){if(diff>0){st=`+${fmt(diff)}원 초과`;sc='excess';}else if(diff<0){st=`-${fmt(-diff)}원 부족`;sc='lack';}else{st='✓ 입금완료';sc='done';}}const ts=pm.timestamp?pm.timestamp.replace('T',' ').slice(0,16):'';return`<tr><td>${esc(t.from)} → ${esc(t.to)}</td><td class="r">${fmt(billing)}원</td><td><span class="badge ${sc}">${st}</span></td><td class="s">${ts}</td></tr>`;}).join('');
+  const html=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>정산내역 ${dateStr}</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:-apple-system,'Apple SD Gothic Neo',Arial,sans-serif;font-size:14px;color:#111;background:#fff;padding:32px;}h1{font-size:28px;font-weight:800;margin-bottom:4px;}.date{color:#888;font-size:14px;margin-bottom:20px;}.hero{background:#f5f5f7;border-radius:14px;padding:22px;text-align:center;margin-bottom:24px;}.hero-total{font-size:40px;font-weight:800;}.hero-sub{color:#888;margin-top:6px;font-size:13px;}.sec{margin-bottom:24px;}.sec-title{font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #eee;}table{width:100%;border-collapse:collapse;}td{padding:10px 6px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}td.r{text-align:right;font-weight:700;white-space:nowrap;}td.s{color:#888;font-size:12px;}.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}.badge.done{background:#e8fbe9;color:#1a7a3c;}.badge.excess{background:#ebf3ff;color:#0055b8;}.badge.lack{background:#ffeeee;color:#e53e3e;}.badge.pending{background:#f0f0f2;color:#888;}.foot{margin-top:24px;text-align:center;color:#bbb;font-size:11px;border-top:1px solid #eee;padding-top:14px;}@media print{body{padding:16px;}}</style></head><body><h1>정산 내역</h1><div class="date">${dateStr} · ${esc(ppl.join(', '))}</div><div class="hero"><div class="hero-total">${fmt(total)}원</div><div class="hero-sub">총 ${ppl.length}명 · 인당 평균 ${fmt(perPerson)}원</div></div><div class="sec"><div class="sec-title">지출 내역</div><table>${itemsHtml||'<tr><td colspan="4" style="color:#888;text-align:center;padding:20px">지출 내역이 없어요</td></tr>'}</table></div><div class="sec"><div class="sec-title">송금 내역</div><table>${txnsHtml||'<tr><td colspan="4" style="color:#888;text-align:center;padding:20px">송금 내역이 없어요</td></tr>'}</table></div><div class="foot">더치페이 ${APP_VERSION}</div><script>window.onload=function(){window.print();}<\/script></body></html>`;
+  const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();}else{toast('팝업이 차단됐어요. 브라우저 팝업 허용 후 다시 시도해주세요',{type:'error'});}
 }
 
 loadState();
