@@ -70,8 +70,8 @@ svg{display:block;flex-shrink:0;}
   .mob-item-meta{font-size:11px;color:var(--label3);margin-top:2px;}
   .mob-item-amt{font-size:14px;font-weight:700;}
   .mob-add-item-row{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;}
-  .mob-add-ic{width:24px;height:24px;border-radius:50%;background:var(--green-bg);color:var(--green-txt);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;}
-  .mob-add-txt{font-size:14px;font-weight:500;color:var(--green);}
+  .mob-add-ic{width:24px;height:24px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;}
+  .mob-add-txt{font-size:14px;font-weight:500;color:var(--blue);}
   .mob-total-bar{background:var(--card);border-radius:var(--r);padding:14px 16px;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;}
   .mob-total-lbl{font-size:13px;color:var(--label2);}
   .mob-total-val{font-size:20px;font-weight:700;}
@@ -138,8 +138,8 @@ svg{display:block;flex-shrink:0;}
 .item-amt{font-size:13px;font-weight:700;flex-shrink:0;}
 .add-row{display:flex;align-items:center;gap:10px;padding:11px var(--pad-x);cursor:pointer;transition:background .1s;}
 .add-row:hover{background:var(--fill);}
-.add-ic{width:22px;height:22px;border-radius:50%;background:var(--green-bg);color:var(--green-txt);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:400;line-height:1;flex-shrink:0;}
-.add-txt{font-size:13px;font-weight:500;color:var(--green);}
+.add-ic{width:22px;height:22px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:400;line-height:1;flex-shrink:0;}
+.add-txt{font-size:13px;font-weight:500;color:var(--blue);}
 .left-foot{border-top:1px solid var(--sep);padding:14px var(--pad-x);}
 .foot-row{display:flex;align-items:baseline;justify-content:space-between;}
 .foot-lbl{font-size:12px;color:var(--label2);}
@@ -533,6 +533,14 @@ svg{display:block;flex-shrink:0;}
 .sinp-clr.vis{display:flex;align-items:center;justify-content:center;}
 .ilist-s-wrap{flex:1;max-width:140px;min-width:0;}
 .ilist-s-wrap .ilist-search{width:100%;max-width:none;flex:1;}
+/* ── 날짜 표시 (로케일 독립적 YYYY.MM.DD) ── */
+.dp-wrap{position:relative;width:100%;display:block;}
+.dp-txt{border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 28px 8px 10px;font-size:13px;background-color:var(--card);color:var(--label);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2' ry='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/></svg>");background-repeat:no-repeat;background-position:right 8px center;background-size:14px 14px;cursor:pointer;white-space:nowrap;width:100%;box-sizing:border-box;line-height:1.4;}
+.dp-txt.share-date-inp{flex:1;}
+.dp-inp{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;-webkit-appearance:none;appearance:none;background:transparent;}
+/* ── 모바일 FAB ── */
+.mob-fab{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;border:none;border-radius:28px;padding:14px 28px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;box-shadow:0 4px 20px rgba(0,113,227,.35);z-index:50;white-space:nowrap;display:none;transition:opacity .15s;}
+.mob-fab:active{opacity:.85;}
 </style>
 </head>
 <body>
@@ -547,18 +555,17 @@ svg{display:block;flex-shrink:0;}
       <div style="margin-bottom:16px"></div>
       <div class="tab-row">
         <button class="tab on" id="dTInput" onclick="dSetTab('input')">입력</button>
-        <button class="tab" id="dTResult" onclick="dSetTab('result')">내역</button>
+        <button class="tab" id="dTResult" onclick="dSetTab('result')">정산</button>
         <button class="tab" id="dTSettle" onclick="dSetTab('settle')">공유</button>
         <button class="tab" id="dTHistory" onclick="dSetTab('history')" style="display:none">기록</button>
-        <button class="tab" id="dTPayment" onclick="dSetTab('payment')" style="display:none">정산</button>
+        <button class="tab" id="dTPayment" onclick="dSetTab('payment')" style="display:none">수금</button>
       </div>
       <div style="margin-bottom:14px;">
-        <input type="date" id="meetingDateInp" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 10px;font-size:13px;background-color:var(--card);color:var(--label);outline:none;cursor:pointer;font-family:inherit;" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/>
+        <div class="dp-wrap"><div class="dp-txt" id="meetingDateDisp"></div><input type="date" id="meetingDateInp" class="dp-inp" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value);_dpSync(this)"/></div>
       </div>
       <div class="people-wrap">
         <div class="sec-label-row">
           <span class="sec-label">참여자</span>
-          <button class="clear-all-btn" onclick="clearAll()">전체 삭제</button>
         </div>
         <div class="pin-row">
           <input id="dPInp" placeholder="홍길동, 홍길순, 아무개"/>
@@ -571,7 +578,6 @@ svg{display:block;flex-shrink:0;}
     <div class="items-scroll">
       <div class="ilist-label-row">
         <span class="ilist-label">지출</span>
-        <button class="clear-all-btn" onclick="clearAllItems()">전체 삭제</button>
       </div>
       <div class="ilist-label-row" id="dItemTools" style="display:none">
         <div class="sinp-rel ilist-s-wrap">
@@ -580,8 +586,6 @@ svg{display:block;flex-shrink:0;}
         </div>
         <select class="ilist-sort" onchange="setItemSort(this.value)" id="dItemSort">
           <option value="default">기본순</option>
-          <option value="amtDesc">금액↓</option>
-          <option value="amtAsc">금액↑</option>
           <option value="nameAsc">이름순</option>
         </select>
       </div>
@@ -627,14 +631,15 @@ svg{display:block;flex-shrink:0;}
     <div style="margin-bottom:14px"></div>
     <div class="mob-tabs">
       <button class="mob-tab on" id="mTInput" onclick="mSetTab('input')">입력</button>
-      <button class="mob-tab" id="mTResult" onclick="mSetTab('result')">내역</button>
+      <button class="mob-tab" id="mTResult" onclick="mSetTab('result')">정산</button>
       <button class="mob-tab" id="mTSettle" onclick="mSetTab('settle')">공유</button>
       <button class="mob-tab" id="mTHistory" onclick="mSetTab('history')" style="display:none">기록</button>
-      <button class="mob-tab" id="mTPayment" onclick="mSetTab('payment')" style="display:none">정산</button>
+      <button class="mob-tab" id="mTPayment" onclick="mSetTab('payment')" style="display:none">수금</button>
     </div>
   </div>
   <div class="mob-body" id="mBody"></div>
   <div class="mob-owner-tap" id="mobOwnerTap" onclick="_ownerAreaClick(this,event)">DUTCH PAY <span class="app-version" id="appVersionMob"></span></div>
+  <button class="mob-fab" id="mobFab" onclick="_mobFabClick()"></button>
   <div class="mob-sheet-overlay" id="mOverlay" onclick="closeSheet()"></div>
   <div class="mob-sheet" id="mSheet">
     <div class="mob-sheet-handle"></div>
@@ -668,12 +673,13 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.02';
-const BUILD_TIME='2026-07-15 12:00';
+const APP_VERSION='v2.10';
+const BUILD_TIME='2026-07-15 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
 let payments={};
+let _justAddedId=null;
 let _pmHistTab='current',_pmHistSearch='',_pmHistSort='newest',_pmHistFilter='all';
 let _myName=localStorage.getItem('dutchpay_my_name')||'';
 let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked');
@@ -892,11 +898,14 @@ function _updateSyncBadge(){
 
 function saveState(){try{syncCurrentToGroup();localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:new Date().toISOString(),groups,currentGroupId}));_scheduleSyncToDropbox();}catch(e){toast('저장 공간이 부족해 데이터를 저장하지 못했어요',{type:'error'});}}
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if((d.version===2||d.version===3)&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
-function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?'))return;_autoBackup('전체 초기화 전');if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
-function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 모두 초기화할까요?'))return;_autoBackup('이번 정산 초기화 전');people=[];items=[];payments={};idc=0;settleDateStart=new Date().toISOString().slice(0,10);settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
+function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;_autoBackup('전체 초기화 전');if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
+function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;_autoBackup('이번 정산 초기화 전');people=[];items=[];payments={};idc=0;settleDateStart=new Date().toISOString().slice(0,10);settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
 
-function updateMeetingDate(val){settleDateStart=val||new Date().toISOString().slice(0,10);saveState();}
+function updateMeetingDate(val){settleDateStart=val||new Date().toISOString().slice(0,10);_dpUpdate('meetingDateDisp',settleDateStart);saveState();}
 function fmtDate(iso){if(!iso)return '';const[y,m,d]=iso.split('-');return `${y}.${m}.${d}`;}
+function _dpSync(inp){const txt=inp.previousElementSibling;if(txt&&txt.classList.contains('dp-txt'))txt.textContent=fmtDate(inp.value);}
+function _dpUpdate(dispId,iso){const el=document.getElementById(dispId);if(el)el.textContent=fmtDate(iso);}
+function _dpHtml(iso,onChangeCode,wrapCls,minVal){const fa=ea(iso||'');const min=minVal?` min="${ea(minVal)}"`:'' ;return `<div class="dp-wrap${wrapCls?' '+wrapCls:''}"><div class="dp-txt">${e(fmtDate(iso||''))}</div><input type="date" class="dp-inp" value="${fa}"${min} onclick="try{this.showPicker()}catch(e2){}" onchange="${onChangeCode};_dpSync(this)"/></div>`;}
 function getSettleDateStr(){const s=fmtDate(settleDateStart);if(settleDateEnd&&settleDateEnd!==settleDateStart)return `${s} ~ ${fmtDate(settleDateEnd)}`;return s;}
 function updateSettleDate(which,val){if(which==='start')settleDateStart=val||new Date().toISOString().slice(0,10);else settleDateEnd=val||null;if(settleDateEnd&&settleDateEnd<settleDateStart){const t=settleDateEnd;settleDateEnd=settleDateStart;settleDateStart=t;}saveState();renderDesktopRight();renderMobileBody();}
 function addSettleEndDate(){settleDateEnd=settleDateStart;saveState();renderDesktopRight();renderMobileBody();}
@@ -970,25 +979,26 @@ function showIconPicker(itemId,anchorEl,ev){if(ev){ev.stopPropagation();ev.preve
 
 function showRounderPicker(itemId,anchorEl,ev){if(ev){ev.stopPropagation();ev.preventDefault();}document.querySelectorAll('.rounder-pop').forEach(el=>el.remove());const it=items.find(i=>i.id===itemId);if(!it)return;const memOpts=it.members.length?it.members:people;const cur=it.rounderOverride||'';const pop=document.createElement('div');pop.className='rounder-pop';pop.innerHTML=`<div class="rounder-pop-hd">차액 부담자</div>`+[{v:'',label:'자동 (결제자 우선)'}].concat(memOpts.map(p=>({v:p,label:e(p)+' 부담'}))).map(o=>`<button class="rounder-opt${cur===o.v?' on':''}" data-val="${ea(o.v)}">${o.label}</button>`).join('');pop.addEventListener('click',ev2=>{ev2.stopPropagation();const btn=ev2.target.closest('.rounder-opt');if(!btn)return;setRounderOverride(itemId,btn.dataset.val);pop.remove();});document.body.appendChild(pop);const r=anchorEl.getBoundingClientRect();pop.style.top=(r.bottom+window.scrollY+6)+'px';let left=r.left+window.scrollX;const pr=pop.getBoundingClientRect();if(left+pr.width>window.innerWidth-8)left=window.innerWidth-pr.width-8;pop.style.left=Math.max(8,left)+'px';setTimeout(()=>{const h=ev3=>{if(!pop.contains(ev3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=ev3=>{if(ev3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);}
 
-function addItem(){const isMobile=window.matchMedia('(max-width:700px)').matches;if(!people.length){const inp=isMobile?document.getElementById('mPInp'):document.getElementById('dPInp');if(inp)inp.focus();return;}idc++;items.push({id:idc,name:'',amount:'',payer:people[0]||'',members:[...people]});selectedId=idc;renderAll();if(isMobile){openSheet(idc);setTimeout(()=>{const inp=document.getElementById('sfname');if(inp)inp.focus();},320);}else{setTimeout(()=>{const inp=document.getElementById('fname');if(inp)inp.focus();},60);}}
+function addItem(){const isMobile=window.matchMedia('(max-width:700px)').matches;if(!people.length){const inp=isMobile?document.getElementById('mPInp'):document.getElementById('dPInp');if(inp)inp.focus();return;}idc++;items.push({id:idc,name:'',amount:'',payer:people[0]||'',members:[...people]});selectedId=idc;_justAddedId=idc;renderAll();if(isMobile){openSheet(idc);setTimeout(()=>{const inp=document.getElementById('sfname');if(inp)inp.focus();},320);}else{setTimeout(()=>{const inp=document.getElementById('fname');if(inp)inp.focus();},60);}}
 
 function removeItem(id){const idx=items.findIndex(it=>it.id===id);if(idx<0)return;const name=items[idx].name||'(이름 없음)';if(!confirm(`'${name}' 지출을 삭제할까요?`))return;const snap={item:items[idx],idx};items=items.filter(it=>it.id!==id);if(selectedId===id)selectedId=null;closeSheet();renderAll();toast(`'${name}' 삭제됨`,{action:()=>{items.splice(snap.idx,0,snap.item);renderAll();},actionLabel:'되돌리기'});}
 
-function selectItem(id){selectedId=id;if(dTab!=='input'){dTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('dT'+cap(n)).className='tab'+(n==='input'?' on':'');});}renderAll();}
-function selectItemMob(id){selectedId=id;if(mTab!=='input'){mTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n==='input'?' on':'');});renderMobileBody();}openSheet(id);}
+function _checkAutoDelete(){if(_justAddedId===null)return;const id=_justAddedId;_justAddedId=null;const it=items.find(i=>i.id===id);if(it&&!it.name&&(!it.amount||+it.amount===0)){items=items.filter(i=>i.id!==id);if(selectedId===id)selectedId=null;}}
+function selectItem(id){_checkAutoDelete();selectedId=id;if(dTab!=='input'){dTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('dT'+cap(n)).className='tab'+(n==='input'?' on':'');});}renderAll();}
+function selectItemMob(id){_checkAutoDelete();selectedId=id;if(mTab!=='input'){mTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n==='input'?' on':'');});renderMobileBody();}openSheet(id);}
 
-function updateField(id,field,val){const it=items.find(i=>i.id===id);if(!it)return;it[field]=val;renderItemLists();refreshMobItems();updateTotals();if(field==='name'){document.getElementById('dREye').textContent='지출 편집';document.getElementById('dRTitle').textContent=val||'새 지출';const mst=document.getElementById('mSheetTitle');if(mst)mst.textContent=val||'새 지출';}saveState();}
+function updateField(id,field,val){const it=items.find(i=>i.id===id);if(!it)return;it[field]=val;if(_justAddedId===id&&(field==='name'||field==='amount')&&val)_justAddedId=null;renderItemLists();refreshMobItems();updateTotals();if(field==='name'){document.getElementById('dREye').textContent='지출 편집';document.getElementById('dRTitle').textContent=val||'새 지출';const mst=document.getElementById('mSheetTitle');if(mst)mst.textContent=val||'새 지출';}saveState();}
 
 function toggleMember(id,name,btn){const it=items.find(i=>i.id===id);if(!it)return;if(it.members.includes(name)){if(it.members.length>1)it.members=it.members.filter(m=>m!==name);}else it.members.push(name);btn.className='chip'+(it.members.includes(name)?' on':'');renderItemLists();refreshMobItems();saveState();}
 
 function refreshMobItems(){const el=document.getElementById('mItemRows');if(!el)return;const list=getDisplayItems();if(!list.length){el.innerHTML=items.length?'<div class="ilist-results-empty">검색 결과가 없어요</div>':'';return;}el.innerHTML=list.map(it=>`<div class="mob-item-row${it.id===selectedId?' sel':''}" onclick="selectItemMob(${it.id})"><div class="mob-item-dot"></div><div class="mob-item-info"><div class="mob-item-name">${e(it.name)||'(이름 없음)'}</div><div class="mob-item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="mob-item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('');}
 
 function openSheet(id){const sheet=document.getElementById('mSheet');const overlay=document.getElementById('mOverlay');const it=items.find(i=>i.id===id);document.getElementById('mSheetTitle').textContent=(it&&it.name)?it.name:'새 지출';renderSheetBody(id);overlay.classList.add('open');requestAnimationFrame(()=>sheet.classList.add('open'));}
-function closeSheet(){document.getElementById('mSheet').classList.remove('open');document.getElementById('mOverlay').classList.remove('open');}
+function closeSheet(){_checkAutoDelete();document.getElementById('mSheet').classList.remove('open');document.getElementById('mOverlay').classList.remove('open');_updateMobFab();}
 function renderSheetBody(id){const it=items.find(i=>i.id===id);if(!it)return;const opts=people.map(p=>`<option value="${e(p)}"${it.payer===p?' selected':''}>${e(p)}</option>`).join('');const memOpts=(it.members.length?it.members:people);const rounderOpts='<option value="">자동 (결제자 우선)</option>'+memOpts.map(p=>`<option value="${ea(p)}"${it.rounderOverride===p?' selected':''}>${e(p)}</option>`).join('');document.getElementById('mSheetBody').innerHTML=`<div class="field-g"><div class="field-lbl">지출 이름</div><input class="field-inp" id="sfname" placeholder="예: 저녁식사" value="${ea(it.name)}" oninput="updateField(${id},'name',this.value)"/></div><div class="field-g"><div class="field-lbl">금액</div><div class="amt-wrap"><button type="button" class="amt-sign-btn${(+it.amount<0)?' on':''}" onclick="toggleAmtSign(${id})">−</button><input class="field-inp" type="text" inputmode="numeric" placeholder="0" value="${fmtAmt(it.amount)}" onkeydown="handleAmtKeydown(event)" oninput="handleAmtInput(${id},this)"/><span class="amt-unit">원</span></div></div><div class="field-g"><div class="field-lbl">결제자</div><select class="field-sel" onchange="updateField(${id},'payer',this.value)">${opts}</select></div><div class="field-g"><div class="field-lbl">참여자</div><div class="chips">${people.map(p=>`<button class="chip${it.members.includes(p)?' on':''}" onclick="toggleMember(${id},${ja(p)},this)">${e(p)}</button>`).join('')}</div></div><div class="field-g"><div class="field-lbl">차액 부담자</div><select class="field-sel" onchange="updateField(${id},'rounderOverride',this.value||null)">${rounderOpts}</select></div><button class="confirm-btn" onclick="closeSheet()">확인</button><button class="del-btn" onclick="removeItem(${id})">${svgTrash} 지출 삭제</button><div style="height:20px"></div>`;}
 
-function dSetTab(t){dTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n===t?' on':'');});renderDesktopRight();}
-function mSetTab(t){mTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('mT'+cap(n));if(el)el.className='mob-tab'+(n===t?' on':'');});renderMobileBody();}
+function dSetTab(t){_checkAutoDelete();dTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n===t?' on':'');});renderDesktopRight();}
+function mSetTab(t){_checkAutoDelete();mTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('mT'+cap(n));if(el)el.className='mob-tab'+(n===t?' on':'');});renderMobileBody();_updateMobFab();}
 function goToHistory(){openHistDrawer();}
 function openHistDrawer(){
   _histDrawerOpen=true;
@@ -1336,7 +1346,7 @@ function histPmSetNow(recId,txnKey){
 function _cleanStalePayments(txns){const validKeys=new Set(txns.map(t=>`${t.from}|${t.to}`));let changed=false;Object.keys(payments).forEach(k=>{if(!validKeys.has(k)){delete payments[k];changed=true;}});if(changed)syncCurrentToGroup();}
 
 function renderPaymentView(eyeId,titleId,subId,bodyId){
-  document.getElementById(eyeId).textContent='정산';
+  document.getElementById(eyeId).textContent='수금';
   document.getElementById(titleId).textContent='입금 관리';
   document.getElementById(subId).textContent='이번 정산 입금 현황과 전체 기록을 확인하세요.';
   const body=document.getElementById(bodyId);
@@ -1351,16 +1361,27 @@ function renderPaymentBody(el){
   el.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(txns):_pmHistoryHtml());
 }
 
+function _updateMobFab(){
+  const fab=document.getElementById('mobFab');if(!fab)return;
+  if(window.innerWidth>=700){fab.style.display='none';return;}
+  if(mTab!=='input'){fab.style.display='none';return;}
+  const hasItems=items.some(it=>+it.amount!==0);
+  fab.style.display='block';
+  fab.textContent=hasItems?'정산 결과 보기 →':'+ 지출 추가';
+  fab.onclick=hasItems?()=>mSetTab('result'):addItem;
+}
+function _mobFabClick(){const fab=document.getElementById('mobFab');if(fab&&fab.onclick)fab.onclick();}
 function renderAll(){
   const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
   const dTPay=document.getElementById('dTPayment');if(dTPay)dTPay.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
-  const di=document.getElementById('meetingDateInp');if(di)di.value=settleDateStart;saveState();
+  const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
+  _updateMobFab();saveState();
 }
 
 function renderPills(){const el=document.getElementById('dPills');if(!people.length){el.innerHTML='<span class="pills-empty">이름을 입력하세요</span>';return;}el.innerHTML=people.map(p=>`<span class="pill">${e(p)}<button class="pill-x" onclick="removePerson(${ja(p)})">${svgX}</button></span>`).join('');}
 
-function renderItemLists(){const el=document.getElementById('dItemRows');const tools=document.getElementById('dItemTools');if(tools)tools.style.display=items.length>=5?'flex':'none';const sortEl=document.getElementById('dItemSort');if(sortEl)sortEl.value=itemSort;const searchEl=document.getElementById('dItemSearch');if(searchEl){searchEl.value=itemSearch;_chkClear(searchEl);}const list=getDisplayItems();if(!list.length){if(items.length){el.innerHTML='<div class="ilist-results-empty">검색 결과가 없어요</div>';}else{el.innerHTML='';}return;}el.innerHTML=list.map(it=>`<div class="item-row${it.id===selectedId?' sel':''}" onclick="selectItem(${it.id})"><div class="item-dot"></div><div class="item-info"><div class="item-name">${e(it.name)||'(이름 없음)'}</div><div class="item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('');}
+function renderItemLists(){const el=document.getElementById('dItemRows');const tools=document.getElementById('dItemTools');if(tools)tools.style.display=items.length>=10?'flex':'none';const sortEl=document.getElementById('dItemSort');if(sortEl)sortEl.value=itemSort;const searchEl=document.getElementById('dItemSearch');if(searchEl){searchEl.value=itemSearch;_chkClear(searchEl);}const list=getDisplayItems();if(!list.length){if(items.length){el.innerHTML='<div class="ilist-results-empty">검색 결과가 없어요</div>';}else{el.innerHTML='';}return;}el.innerHTML=list.map(it=>`<div class="item-row${it.id===selectedId?' sel':''}" onclick="selectItem(${it.id})"><div class="item-dot"></div><div class="item-info"><div class="item-name">${e(it.name)||'(이름 없음)'}</div><div class="item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('');}
 
 function updateTotals(){const t=items.reduce((s,it)=>s+(+it.amount||0),0);const neg=t<0;const dEl=document.getElementById('dTotal');dEl.textContent=fmt(t)+'원';dEl.classList.toggle('amt-neg',neg);const mEl=document.getElementById('mTotal');if(mEl){mEl.textContent=fmt(t)+'원';mEl.classList.toggle('amt-neg',neg);}}
 
@@ -1385,7 +1406,7 @@ function renderMobileBody(){
     const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);
     if(!total){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>지출을 먼저 입력해주세요</p></div>';return;}
     const txns=calcTxns(paid,owes);
-    let html=`<div class="share-date-row"><input type="date" class="share-date-inp" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('start',this.value)"/>${settleDateEnd?`<span class="share-date-sep">~</span><input type="date" class="share-date-inp" value="${settleDateEnd}" min="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('end',this.value)"/><button class="share-date-rm" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
+    let html=`<div class="share-date-row">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-inp")}${settleDateEnd?`<span class="share-date-sep">~</span>${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-inp",settleDateStart)}<button class="share-date-rm" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
     const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
     html+=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
     if(txns.length){html+=`<div class="pay-section-title">송금</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`;}
@@ -1396,10 +1417,10 @@ function renderMobileBody(){
     el.innerHTML=html;return;
   }
   // input tab
-  let html=`<div class="mob-section" style="margin-bottom:12px;padding:12px 16px;"><input type="date" style="width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 11px;font-size:13px;background-color:var(--bg);color:var(--label);outline:none;font-family:inherit;" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateMeetingDate(this.value)"/></div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">참여자</span><button class="mob-clear-btn" onclick="clearAll()">전체 삭제</button></div><div class="mob-pin-wrap"><div class="mob-pin-row"><input id="mPInp" placeholder="홍길동, 홍길순, 아무개"/><button class="mob-add-btn" onclick="mFlush()">추가</button></div><div class="mob-hint">쉼표(,)로 구분하면 여러 명을 한 번에 추가할 수 있어요</div></div>`;
+  let html=`<div class="mob-section" style="margin-bottom:12px;padding:12px 16px;">${_dpHtml(settleDateStart,"updateMeetingDate(this.value)")}</div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">참여자</span></div><div class="mob-pin-wrap"><div class="mob-pin-row"><input id="mPInp" placeholder="홍길동, 홍길순, 아무개"/><button class="mob-add-btn" onclick="mFlush()">추가</button></div><div class="mob-hint">쉼표(,)로 구분하면 여러 명을 한 번에 추가할 수 있어요</div></div>`;
   if(people.length){html+=`<div class="mob-pills">${people.map(p=>`<span class="pill">${e(p)}<button class="pill-x" onclick="removePerson(${ja(p)})">${svgX}</button></span>`).join('')}</div>`;}else{html+=`<div class="mob-empty-pills">이름을 입력하세요</div>`;}
-  html+=`</div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">지출</span><button class="mob-clear-btn" onclick="clearAllItems()">전체 삭제</button></div><div id="mItemRows">${items.map(it=>`<div class="mob-item-row${it.id===selectedId?' sel':''}" onclick="selectItemMob(${it.id})"><div class="mob-item-dot"></div><div class="mob-item-info"><div class="mob-item-name">${e(it.name)||'(이름 없음)'}</div><div class="mob-item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="mob-item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('')}</div><div class="mob-add-item-row" onclick="addItem()"><div class="mob-add-ic">+</div><span class="mob-add-txt">지출 추가</span></div><button class="mob-reset-btn" onclick="resetCurrentSettlement()">↺ 이번 정산 초기화</button></div>`;
-  el.innerHTML=html;mSetupInput();updateTotals();
+  html+=`</div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">지출</span></div><div id="mItemRows">${items.map(it=>`<div class="mob-item-row${it.id===selectedId?' sel':''}" onclick="selectItemMob(${it.id})"><div class="mob-item-dot"></div><div class="mob-item-info"><div class="mob-item-name">${e(it.name)||'(이름 없음)'}</div><div class="mob-item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="mob-item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('')}</div><div class="mob-add-item-row" onclick="addItem()"><div class="mob-add-ic">+</div><span class="mob-add-txt">지출 추가</span></div><button class="mob-reset-btn" onclick="resetCurrentSettlement()">↺ 이번 정산 초기화</button></div>`;
+  el.innerHTML=html;mSetupInput();updateTotals();_updateMobFab();
 }
 
 // ── 순수 계산 함수 ──────────────────────────────────────────────────────────
@@ -1444,7 +1465,7 @@ function calcTxns(paid,owes){
 function personCardHtml(p,paid,owes,details){const bd=details[p]||[],owed=owes[p]||0,ppaid=paid[p]||0,net=ppaid-owed;const netTxt=net>0?`+${fmt(net)}원 받을 예정`:net<0?`${fmt(-net)}원 낼 예정`:'정산 완료';const netCls=net>0?'pos':net<0?'neg':'zero';const rows=bd.map(b=>`<div class="bd-row"><span class="bd-name"><span class="bd-name-txt">${e(b.name)}</span>${b.extra?'<span class="bd-ex-tag">+1원</span>':''}</span><span class="bd-ptag">${e(b.payer)} 결제</span><span class="bd-share">${fmt(b.share)}원</span></div>`).join('');return `<div class="pcard"><div class="phd"><div class="avatar">${e(p.slice(0,1))}</div><div class="pname-col"><div class="pname">${e(p)}</div><div class="pnet ${netCls}">${netTxt}</div></div><div class="ptotal">${fmt(owed)}원</div></div>${rows}<div class="bd-row" style="background:var(--fill2)"><span class="bd-name" style="color:var(--label3)"><span class="bd-name-txt">실제 결제</span></span><span class="bd-share">${fmt(ppaid)}원</span></div></div>`;}
 
 function renderResultView(eyeId,titleId,subId,bodyId){
-  document.getElementById(eyeId).textContent='정산 결과';document.getElementById(titleId).textContent='누가 얼마를 낼까요';document.getElementById(subId).textContent='요약과 송금·지출 내역을 한눈에 확인하세요.';
+  document.getElementById(eyeId).textContent='정산';document.getElementById(titleId).textContent='누가 얼마를 낼까요';document.getElementById(subId).textContent='요약과 송금·지출 내역을 한눈에 확인하세요.';
   const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);const vc=items.filter(it=>+it.amount!==0).length;
   if(!vc){document.getElementById(bodyId).innerHTML='<div class="empty"><div class="empty-icon">'+svgEmpty+'</div><p>금액이 입력된 지출이 없어요</p></div>';return;}
   const stats=`<div class="stat-grid"><div class="stat-box"><div class="stat-lbl">총 금액</div><div class="stat-val${total<0?' amt-neg':''}">${fmt(total)}원</div></div><div class="stat-box"><div class="stat-lbl">지출 수</div><div class="stat-val">${vc}건</div></div><div class="stat-box"><div class="stat-lbl">참여자</div><div class="stat-val">${people.length}명</div></div></div>`;
@@ -1460,7 +1481,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);
   if(!total){body.innerHTML='<div class="empty"><div class="empty-icon">'+svgEmpty+'</div><p>지출을 먼저 입력해주세요</p></div>';return;}
   const txns=calcTxns(paid,owes);
-  const dateRow=`<div class="share-date-row"><input type="date" class="share-date-inp" value="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('start',this.value)"/>${settleDateEnd?`<span class="share-date-sep">~</span><input type="date" class="share-date-inp" value="${settleDateEnd}" min="${settleDateStart}" onclick="try{this.showPicker()}catch(e){}" onchange="updateSettleDate('end',this.value)"/><button class="share-date-rm" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
+  const dateRow=`<div class="share-date-row">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-inp")}${settleDateEnd?`<span class="share-date-sep">~</span>${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-inp",settleDateStart)}<button class="share-date-rm" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
   const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
   const hero=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
   const txnSection=txns.length?`<div class="pay-section-title">송금</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`:'<div class="empty" style="padding:20px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div>';
@@ -2206,7 +2227,7 @@ loadState();
 _migrateHistoryGroupNames();
 _deduplicateHistoryOnStartup();
 renderAll();
-(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();})();
+(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
 hDbxHandleCallback().then(()=>{if(hDbxGetToken())hSyncDropbox();});
