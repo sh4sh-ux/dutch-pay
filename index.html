@@ -419,6 +419,7 @@ svg{display:block;flex-shrink:0;}
 .share-date-rm{width:24px;height:24px;border-radius:50%;border:none;background:var(--fill);color:var(--label3);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;}
 .share-date-rm:hover{background:var(--red-bg);color:var(--red);}
 .share-actions{margin-top:20px;}
+.saved-badge{margin-top:10px;text-align:center;font-size:13px;color:var(--green);font-weight:600;}
 .share-save-btn{width:100%;border:none;border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;background:var(--label);color:#fff;cursor:pointer;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .share-save-btn:hover{opacity:.88;}
 .share-save-btn:active{transform:scale(.99);}
@@ -673,8 +674,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.10';
-const BUILD_TIME='2026-07-15 14:00';
+const APP_VERSION='v2.11';
+const BUILD_TIME='2026-07-16 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -983,7 +984,7 @@ function addItem(){const isMobile=window.matchMedia('(max-width:700px)').matches
 
 function removeItem(id){const idx=items.findIndex(it=>it.id===id);if(idx<0)return;const name=items[idx].name||'(이름 없음)';if(!confirm(`'${name}' 지출을 삭제할까요?`))return;const snap={item:items[idx],idx};items=items.filter(it=>it.id!==id);if(selectedId===id)selectedId=null;closeSheet();renderAll();toast(`'${name}' 삭제됨`,{action:()=>{items.splice(snap.idx,0,snap.item);renderAll();},actionLabel:'되돌리기'});}
 
-function _checkAutoDelete(){if(_justAddedId===null)return;const id=_justAddedId;_justAddedId=null;const it=items.find(i=>i.id===id);if(it&&!it.name&&(!it.amount||+it.amount===0)){items=items.filter(i=>i.id!==id);if(selectedId===id)selectedId=null;}}
+function _checkAutoDelete(){if(_justAddedId===null)return;const id=_justAddedId;_justAddedId=null;const it=items.find(i=>i.id===id);if(it&&!it.name&&(!it.amount||+it.amount===0)){items=items.filter(i=>i.id!==id);if(selectedId===id)selectedId=null;renderItemLists();refreshMobItems();saveState();}}
 function selectItem(id){_checkAutoDelete();selectedId=id;if(dTab!=='input'){dTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('dT'+cap(n)).className='tab'+(n==='input'?' on':'');});}renderAll();}
 function selectItemMob(id){_checkAutoDelete();selectedId=id;if(mTab!=='input'){mTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n==='input'?' on':'');});renderMobileBody();}openSheet(id);}
 
@@ -1413,7 +1414,8 @@ function renderMobileBody(){
     const validItems=items.filter(it=>+it.amount!==0);
     if(validItems.length){const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItemMob(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${chip}</div><div class="detail-sub"><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;}
     if(txns.length&&hasRounding)html+='<div class="notice">차액은 결제자에게 우선 부담돼요</div>';
-    html+=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button></div>`;
+    const savedBadge=_isAlreadySaved()?'<div class="saved-badge">저장됨 ✓</div>':'';
+    html+=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button>${savedBadge}</div>`;
     el.innerHTML=html;return;
   }
   // input tab
@@ -1488,7 +1490,8 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const validItems=items.filter(it=>+it.amount!==0);
   const paySection=validItems.length?`<div class="pay-section-title">지출 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${chip}</div><div class="detail-sub"><span class="detail-members">${e(mems.join(', '))}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('')}</div>`:'';
   const noticeHtml=txns.length&&hasRounding?'<div class="notice">차액은 결제자에게 우선 부담돼요</div>':'';
-  const shareBtn=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button></div>`;
+  const savedBadge=_isAlreadySaved()?'<div class="saved-badge">저장됨 ✓</div>':'';
+  const shareBtn=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button>${savedBadge}</div>`;
   body.innerHTML=dateRow+hero+txnSection+paySection+noticeHtml+shareBtn;
 }
 
@@ -2067,13 +2070,23 @@ async function generateSettleCanvas(){
   return canvas;
 }
 
+function _isAlreadySaved(){
+  const total=items.reduce((s,it)=>s+(+it.amount||0),0);if(!total)return false;
+  const record={dateStart:settleDateStart,dateEnd:settleDateEnd,people:[...people],items:JSON.parse(JSON.stringify(items))};
+  const fp=_histFingerprint(record);return loadHistory().some(r=>_histFingerprint(r)===fp);
+}
+function _afterShare(){
+  if(_isAlreadySaved()){toast('이미지 공유 완료',{type:'success'});return;}
+  toast('공유 완료 — 기록 보관함에도 저장할까요?',{type:'success',action:()=>saveToHistory(),actionLabel:'저장'});
+}
 async function shareSettleImage(){
   const total=items.reduce((s,it)=>s+(+it.amount||0),0);if(!total){toast('공유할 정산 내역이 없어요',{type:'error'});return;}
   const inApp=detectInAppBrowser();if(inApp){const ok=confirm(`${inApp.name} 내부 브라우저는 이미지 공유가 제한돼요.\n외부 브라우저에서 열어주세요.\n\n지금 외부 브라우저로 열까요?`);if(ok){openInExternalBrowser();return;}}
   const canvas=await generateSettleCanvas();const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob){toast('이미지 생성에 실패했어요',{type:'error'});return;}
   const date=new Date().toISOString().slice(0,10);const filename=`정산_${date}.png`;const file=new File([blob],filename,{type:'image/png'});
-  if(navigator.share&&!inApp){try{await navigator.share({files:[file]});return;}catch(e){if(e&&e.name==='AbortError')return;}}
+  if(navigator.share&&!inApp){try{await navigator.share({files:[file]});_afterShare();return;}catch(e){if(e&&e.name==='AbortError')return;}}
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.download=filename;a.href=url;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);
+  _afterShare();
 }
 
 async function generateHistoryCanvas(rec){
