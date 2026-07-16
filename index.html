@@ -540,7 +540,7 @@ svg{display:block;flex-shrink:0;}
 .dp-wrap.share-date-inp{flex:1;}
 .dp-wrap.pay-date-wrap{width:auto;flex:1;}
 .dp-ph{color:var(--label3);}
-.dp-inp{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;font-size:16px;}
+.dp-inp{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;font-size:16px;pointer-events:none;}
 /* ── 모바일 FAB ── */
 .mob-fab{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;border:none;border-radius:28px;padding:14px 28px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;box-shadow:0 4px 20px rgba(0,113,227,.35);z-index:50;white-space:nowrap;display:none;transition:opacity .15s;}
 .mob-fab:active{opacity:.85;}
@@ -564,7 +564,7 @@ svg{display:block;flex-shrink:0;}
         <button class="tab" id="dTPayment" onclick="dSetTab('payment')" style="display:none">수금</button>
       </div>
       <div style="margin-bottom:14px;">
-        <label class="dp-wrap"><div class="dp-txt" id="meetingDateDisp"></div><input type="date" id="meetingDateInp" class="dp-inp" onchange="updateMeetingDate(this.value);_dpSync(this)"/></label>
+        <div class="dp-wrap" onclick="_dpPick(this)"><div class="dp-txt" id="meetingDateDisp"></div><input type="date" id="meetingDateInp" class="dp-inp" onchange="updateMeetingDate(this.value);_dpSync(this)"/></div>
       </div>
       <div class="people-wrap">
         <div class="sec-label-row">
@@ -675,8 +675,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.15';
-const BUILD_TIME='2026-07-16 14:00';
+const APP_VERSION='v2.16';
+const BUILD_TIME='2026-07-16 15:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -902,11 +902,12 @@ function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지�
 function updateMeetingDate(val){settleDateStart=val||new Date().toISOString().slice(0,10);_dpUpdate('meetingDateDisp',settleDateStart);saveState();}
 function fmtDate(iso){if(!iso)return '';const[y,m,d]=iso.split('-');return `${y}.${m}.${d}`;}
 function _dpSync(inp){const txt=inp.previousElementSibling;if(txt&&txt.classList.contains('dp-txt'))txt.textContent=fmtDate(inp.value);}
+function _dpPick(wrap){const inp=wrap.querySelector('.dp-inp');if(!inp)return;try{inp.showPicker();}catch(e){inp.focus();}}
 function _dpUpdate(dispId,iso){const el=document.getElementById(dispId);if(el)el.textContent=fmtDate(iso);}
-function _dpHtml(iso,onChangeCode,wrapCls,minVal){const fa=ea(iso||'');const min=minVal?` min="${ea(minVal)}"`:'' ;return `<label class="dp-wrap${wrapCls?' '+wrapCls:''}"><div class="dp-txt">${e(fmtDate(iso||''))}</div><input type="date" class="dp-inp" value="${fa}"${min} onchange="${onChangeCode};_dpSync(this)"/></label>`;}
+function _dpHtml(iso,onChangeCode,wrapCls,minVal){const fa=ea(iso||'');const min=minVal?` min="${ea(minVal)}"`:'' ;return `<div class="dp-wrap${wrapCls?' '+wrapCls:''}" onclick="_dpPick(this)"><div class="dp-txt">${e(fmtDate(iso||''))}</div><input type="date" class="dp-inp" value="${fa}"${min} onchange="${onChangeCode};_dpSync(this)"/></div>`;}
 function _dtpFmt(iso){if(!iso)return'';const[d,t]=(iso||'').split('T');if(!d)return'';const[y,m,day]=d.split('-');const time=t?t.slice(0,5):'';return`${y}.${m}.${day}${time?' '+time:''}`;}
 function _dtpSync(inp){const txt=inp.previousElementSibling;if(!txt||!txt.classList.contains('dp-txt'))return;const v=inp.value;txt.textContent=v?_dtpFmt(v):'날짜·시간 선택';txt.classList.toggle('dp-ph',!v);}
-function _dtpHtml(iso,onChangeCode,wrapCls){const fa=ea(iso||'');const disp=iso?_dtpFmt(iso):'날짜·시간 선택';const ph=!iso;return`<label class="dp-wrap${wrapCls?' '+wrapCls:''}"><div class="dp-txt${ph?' dp-ph':''}">${e(disp)}</div><input type="datetime-local" class="dp-inp" value="${fa}" onchange="${onChangeCode};_dtpSync(this)"/></label>`;}
+function _dtpHtml(iso,onChangeCode,wrapCls){const fa=ea(iso||'');const disp=iso?_dtpFmt(iso):'날짜·시간 선택';const ph=!iso;return`<div class="dp-wrap${wrapCls?' '+wrapCls:''}" onclick="_dpPick(this)"><div class="dp-txt${ph?' dp-ph':''}">${e(disp)}</div><input type="datetime-local" class="dp-inp" value="${fa}" onchange="${onChangeCode};_dtpSync(this)"/></div>`;}
 function getSettleDateStr(){const s=fmtDate(settleDateStart);if(settleDateEnd&&settleDateEnd!==settleDateStart)return `${s} ~ ${fmtDate(settleDateEnd)}`;return s;}
 function updateSettleDate(which,val){if(which==='start')settleDateStart=val||new Date().toISOString().slice(0,10);else settleDateEnd=val||null;if(settleDateEnd&&settleDateEnd<settleDateStart){const t=settleDateEnd;settleDateEnd=settleDateStart;settleDateStart=t;}saveState();renderDesktopRight();renderMobileBody();}
 function addSettleEndDate(){settleDateEnd=settleDateStart;saveState();renderDesktopRight();renderMobileBody();}
