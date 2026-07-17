@@ -675,8 +675,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.17';
-const BUILD_TIME='2026-07-17 09:00';
+const APP_VERSION='v2.18';
+const BUILD_TIME='2026-07-17 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1154,7 +1154,7 @@ function _patchPmRow(key){
     const metaEl=right.querySelector('.txn-pmeta');
     const sdiffEl=right.querySelector('.txn-sdiff');
     if(amtEl)amtEl.className='txn-amt'+(isGreen?' done-clr':isRed?' neg-clr':'');
-    if(metaEl){const parts=[];if(pm.done)parts.push('입금완료');if(pm.account)parts.push(pm.account);if(pm.timestamp)parts.push(pm.timestamp.replace('T',' ').slice(0,16));metaEl.textContent=parts.join(' · ');}
+    if(metaEl){const parts=[];if(pm.done)parts.push('입금완료');if(pm.account)parts.push(pm.account);if(pm.timestamp)parts.push(_dtpFmt(pm.timestamp));metaEl.textContent=parts.join(' · ');}
     if(sdiffEl){if(hasDiff){sdiffEl.className='txn-sdiff'+(diff>0?' pos':' neg');sdiffEl.textContent=(diff>0?'+':'')+fmt(diff)+'원';}else{sdiffEl.textContent='';}}
   }
 }
@@ -1286,7 +1286,7 @@ function _pmHistResultsHtml(){
     const rid=ea(c.rec.id||'');const rkey=ea(c.key);
     const hdClick=c.isOwnerTxn?` onclick="toggleHistRecordPanel('${rid}','${rkey}')"`:' style="cursor:default"';
     const chevHtml=c.isOwnerTxn?'<span class="pm-record-chev">▼</span>':'';
-    return `<div class="pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="pm-record-hd"${hdClick}><div class="pm-record-meta"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="pm-record-members">${e(members)}</div></div><div class="pm-record-right"><div class="pm-record-total">${fmt(c.billing)}원</div>${chevHtml}</div></div><div class="pm-record-body">${c.done?`<div class="pm-record-row"><span class="pm-record-lbl">실수령액</span><span class="pm-record-val${recValCls}">${fmt(c.received)}원</span></div>`:''}<div class="pm-record-row"><span class="pm-record-lbl">상태</span>${statusHtml}</div></div>${c.pm.account||c.pm.accountNumber||c.pm.timestamp?`<div class="pm-record-foot"><span class="pm-record-account">${e([c.pm.account,c.pm.accountNumber].filter(Boolean).join(' '))}</span><span class="pm-record-ts">${c.pm.timestamp?c.pm.timestamp.replace('T',' ').slice(0,16):''}</span></div>`:''}</div>`;
+    return `<div class="pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="pm-record-hd"${hdClick}><div class="pm-record-meta"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="pm-record-members">${e(members)}</div></div><div class="pm-record-right"><div class="pm-record-total">${fmt(c.billing)}원</div>${chevHtml}</div></div><div class="pm-record-body">${c.done?`<div class="pm-record-row"><span class="pm-record-lbl">실수령액</span><span class="pm-record-val${recValCls}">${fmt(c.received)}원</span></div>`:''}<div class="pm-record-row"><span class="pm-record-lbl">상태</span>${statusHtml}</div></div>${c.pm.account||c.pm.accountNumber||c.pm.timestamp?`<div class="pm-record-foot"><span class="pm-record-account">${e([c.pm.account,c.pm.accountNumber].filter(Boolean).join(' '))}</span><span class="pm-record-ts">${c.pm.timestamp?_dtpFmt(c.pm.timestamp):''}</span></div>`:''}</div>`;
   }).join('');
   return summaryHtml+controlsHtml+`<div class="pay-section-title" style="margin-top:14px">정산 기록 · ${cards.length}건</div>`+cardsHtml;
 }
@@ -1321,7 +1321,7 @@ function histPmToggleDone(recId,txnKey){
 function histPmUpdate(recId,txnKey,field,val){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
-  rec.payments[txnKey][field]=val;saveHistory(allRec);
+  rec.payments[txnKey][field]=val;saveHistory(allRec);_patchHistResults();
 }
 function histPmUpdateAmt(recId,txnKey,el){
   const raw=el.value.replace(/,/g,'');const num=raw===''?null:+raw;
@@ -1530,11 +1530,16 @@ function saveToHistory(){
   try{
     const raw=localStorage.getItem(HISTORY_KEY);
     const arr=raw?JSON.parse(raw):[];
-    const dup=arr.find(r=>_histFingerprint(r)===_histFingerprint(record));
-    if(dup&&!confirm('이미 저장된 기록이 있어요. 새로 추가할까요?'))return;
-    arr.unshift(record);
-    localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
-    toast('기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+    const dupIdx=arr.findIndex(r=>_histFingerprint(r)===_histFingerprint(record));
+    if(dupIdx>=0){
+      arr[dupIdx]={...arr[dupIdx],payments:record.payments,txns:record.txns,savedAt:record.savedAt};
+      localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
+      toast('입금 현황이 기록에 업데이트됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+    }else{
+      arr.unshift(record);
+      localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
+      toast('기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+    }
     if(hDbxGetToken())hSyncDropbox(true);
   }catch(err){
     toast('저장에 실패했어요',{type:'error'});
@@ -1618,7 +1623,7 @@ function rcTxnUpdateAmt(recId,txnKey,el){
   if(panel){const txn=(rec.txns||[]).find(t=>`${t.from}|${t.to}`===txnKey);const baseAmt=txn?txn.amt:0;const diffVal=num!==null?(num-baseAmt):null;const existing=panel.querySelector('.pay-diff-badge');const row=el.closest('.pay-panel-row');if(diffVal!==null){const dh=`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`;if(existing)existing.outerHTML=dh;else if(row)row.insertAdjacentHTML('beforeend',dh);}else if(existing){existing.remove();}}
 }
 function rcTxnSetNow(recId,txnKey){
-  const ts=new Date().toISOString().slice(0,16);
+  const now=new Date();const ts=new Date(now-now.getTimezoneOffset()*60000).toISOString().slice(0,16);
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
   rec.payments[txnKey].timestamp=ts;saveHistory(allRec);_patchHistResults();
