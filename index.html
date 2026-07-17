@@ -310,6 +310,8 @@ svg{display:block;flex-shrink:0;}
 .pm-allrec-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
 .pm-save-btn{display:block;width:100%;margin-top:16px;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;}
 .pm-save-btn:active{opacity:.85;}
+.pm-dbx-btn{display:block;width:100%;margin-top:8px;padding:13px;background:transparent;color:var(--blue);border:1.5px solid var(--blue);border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;}
+.pm-dbx-btn:active{opacity:.75;}
 .pm-close-btn{width:100%;padding:11px;background:var(--fill2);color:var(--label2);border:1px solid var(--sep);border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:4px;}
 .pm-close-btn:active{opacity:.85;}
 .rc-txn-row.clickable{cursor:pointer;user-select:none;}
@@ -675,8 +677,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.23';
-const BUILD_TIME='2026-07-17 15:00';
+const APP_VERSION='v2.24';
+const BUILD_TIME='2026-07-17 15:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1114,6 +1116,18 @@ async function _checkAllPaidAutoSave(){
     if(ok){_dbxAutoSavedFp=fp;toast('모든 입금 완료 🎉 Dropbox에 정산 이미지가 저장됐어요',{type:'success'});}
   }catch(e){}
 }
+async function saveSettleToDropbox(){
+  if(!hDbxGetToken()){toast('Dropbox가 연결되지 않았어요. ⋯ 메뉴에서 연결해주세요.',{type:'error'});return;}
+  try{
+    const canvas=await generateSettleCanvas();
+    const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob)return;
+    const total=items.reduce((s,it)=>s+(+it.amount||0),0);
+    const filename=_buildSettleFilename(settleDateStart,total,people);
+    const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${filename}.png`,blob);
+    if(ok){_dbxAutoSavedFp=_settleAutoSaveFp();toast('Dropbox에 저장됐어요 ✓',{type:'success'});}
+    else toast('저장에 실패했어요. 다시 시도해주세요.',{type:'error'});
+  }catch(e){toast('저장 중 오류가 발생했어요.',{type:'error'});}
+}
 async function _checkAllPaidAutoSaveForRec(rec){
   if(!hDbxGetToken()||!rec)return;
   const txns=rec.txns||[];if(!txns.length)return;
@@ -1272,7 +1286,8 @@ function _pmSegHtml(){
 
 function _pmCurrentHtml(txns){
   if(!txns.length)return '<div class="empty" style="padding:40px 0"><div class="empty-icon">'+svgEmpty+'</div><p>정산할 송금 내역이 없어요</p></div>';
-  return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">송금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div><button class="pm-save-btn" onclick="saveToHistory()">📌 기록보관함에 저장</button>';
+  const dbxBtn=hDbxGetToken()?'<button class="pm-dbx-btn" onclick="saveSettleToDropbox()">☁️ Dropbox에 이미지 저장</button>':'';
+  return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">송금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div><button class="pm-save-btn" onclick="saveToHistory()">📌 기록보관함에 저장</button>'+dbxBtn;
 }
 
 function _pmHistResultsHtml(){
