@@ -677,8 +677,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.30';
-const BUILD_TIME='2026-07-17 17:30';
+const APP_VERSION='v2.31';
+const BUILD_TIME='2026-07-17 17:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2161,7 +2161,7 @@ async function generateHistoryCanvas(rec){
   const FF="-apple-system,'SF Pro Text','Apple SD Gothic Neo','Helvetica Neue',Arial,sans-serif";
   const C={bg:'#F4F4F6',card:'#FFFFFF',text:'#111111',muted:'#8E8E93',label:'#666666',line:'#E9E9EC',blue:'#0071E3',blueBg:'#EBF3FF',red:'#E53E3E',green:'#1A7A3C',greenBg:'#E8FBE9',grayBg:'#F0F0F2'};
   const cardX=PAD,cardW=W-PAD*2;
-  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=40,TOTAL_CARD_H=230,ITEM_ROW_H=152,TXN_ROW_H=120,EMPTY_CARD_H=132,FOOTER_H=100,BOTTOM_PAD=20;
+  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=40,TOTAL_CARD_H=230,ITEM_ROW_H=152,TXN_ROW_H=96,EMPTY_CARD_H=132,FOOTER_H=100,BOTTOM_PAD=20;
   const validItems=(rec.items||[]).filter(it=>+it.amount!==0);
   const txns=rec.txns||[];
   const pmObj=rec.payments||{};
@@ -2245,28 +2245,35 @@ async function generateHistoryCanvas(rec){
       const tkey=`${t.from}|${t.to}`;const pm=pmObj[tkey]||{};
       const billing=t.amt;const received=pm.done?(pm.amount!=null?+pm.amount:billing):0;
       const diff=pm.done?received-billing:null;
+      // 배지 텍스트/색상
+      const badgeTxt=pm.done?(diff>0?`✓ +${fmt(diff)}원 초과`:diff<0?`-${fmt(-diff)}원 부족`:'✓ 입금완료'):'미입금';
+      const badgeBg=pm.done?(diff<0?'#FFEEEE':C.greenBg):C.grayBg;
+      const badgeFg=pm.done?(diff<0?C.red:C.green):C.muted;
+      setFont(22,600);const btw=ctx.measureText(badgeTxt).width;
+      const bph=16,bpv=7,bH=22+bpv*2,bW=btw+bph*2;
       // 금액 (우측)
       const amtTxt=fmt(billing)+'원';
       ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
-      const amtX=cardX+cardW-38;ctx.fillText(amtTxt,amtX,ry-16);
-      // from → to (좌측 상단)
+      const amtX=cardX+cardW-38;const amtW=ctx.measureText(amtTxt).width;ctx.fillText(amtTxt,amtX,ry);
+      // from → to (좌측, 1줄)
       const leftX=cardX+38;
       setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
-      const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry-16);
+      const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry);
       const fw=ctx.measureText(fromTxt).width;
       const AGAP=20,AH=9,AL=36,headW=AH*1.8;
       const AX=leftX+fw+AGAP,AEX=AX+AL;
       ctx.strokeStyle=C.text;ctx.lineWidth=2.5;ctx.lineCap='round';
-      ctx.beginPath();ctx.moveTo(AX,ry-16);ctx.lineTo(AEX-headW,ry-16);ctx.stroke();
-      ctx.fillStyle=C.text;ctx.beginPath();ctx.moveTo(AEX-headW,ry-16-AH);ctx.lineTo(AEX,ry-16);ctx.lineTo(AEX-headW,ry-16+AH);ctx.closePath();ctx.fill();
-      const toTxt=truncateCanvasText(ctx,t.to||'',300);
-      ctx.fillStyle=C.text;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(toTxt,AEX+AGAP,ry-16);
-      // 상태 배지 (좌측 하단)
-      if(pm.done){
-        if(diff>0)drawBadge(`+${fmt(diff)}원 초과`,leftX,ry+24,C.greenBg,C.green);
-        else if(diff<0)drawBadge(`-${fmt(-diff)}원 부족`,leftX,ry+24,'#FFEEEE',C.red);
-        else drawBadge('✓ 입금완료',leftX,ry+24,C.greenBg,C.green);
-      }else{drawBadge('미입금',leftX,ry+24,C.grayBg,C.muted);}
+      ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
+      ctx.fillStyle=C.text;ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
+      const toStartX=AEX+AGAP;
+      const maxToW=amtX-amtW-30-bW-14-toStartX;
+      const toTxt=truncateCanvasText(ctx,t.to||'',Math.max(maxToW,40));
+      ctx.fillStyle=C.text;ctx.textAlign='left';ctx.fillText(toTxt,toStartX,ry);
+      const toW=ctx.measureText(toTxt).width;
+      // 배지 (to 바로 옆 인라인)
+      const bX=toStartX+toW+14;
+      ctx.fillStyle=badgeBg;roundRectPath(ctx,bX,ry-bH/2,bW,bH,bH/2);ctx.fill();
+      setFont(22,600);ctx.fillStyle=badgeFg;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(badgeTxt,bX+bph,ry);
       if(i<txns.length-1)drawDivider(y+(i+1)*TXN_ROW_H);
     });
   }
