@@ -677,8 +677,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.31';
-const BUILD_TIME='2026-07-17 17:45';
+const APP_VERSION='v2.32';
+const BUILD_TIME='2026-07-17 18:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2246,7 +2246,7 @@ async function generateHistoryCanvas(rec){
       const billing=t.amt;const received=pm.done?(pm.amount!=null?+pm.amount:billing):0;
       const diff=pm.done?received-billing:null;
       // 배지 텍스트/색상
-      const badgeTxt=pm.done?(diff>0?`✓ +${fmt(diff)}원 초과`:diff<0?`-${fmt(-diff)}원 부족`:'✓ 입금완료'):'미입금';
+      const badgeTxt=pm.done?(diff>0?`✓ + ${fmt(diff)}원 초과`:diff<0?`-${fmt(-diff)}원 부족`:'✓ 입금완료'):'미입금';
       const badgeBg=pm.done?(diff<0?'#FFEEEE':C.greenBg):C.grayBg;
       const badgeFg=pm.done?(diff<0?C.red:C.green):C.muted;
       setFont(22,600);const btw=ctx.measureText(badgeTxt).width;
