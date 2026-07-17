@@ -677,8 +677,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.26';
-const BUILD_TIME='2026-07-17 16:00';
+const APP_VERSION='v2.27';
+const BUILD_TIME='2026-07-17 16:15';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1113,7 +1113,7 @@ async function _checkAllPaidAutoSave(){
     const canvas=await generateSettleCanvas();
     const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob)return;
     const total=items.reduce((s,it)=>s+(+it.amount||0),0);
-    const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${_buildSettleFilename(settleDateStart,total,people)}.png`,blob);
+    const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${_buildSettleFilename(settleDateStart,total,people)}`,blob);
     if(ok){_dbxAutoSavedFp=fp;toast('모든 입금 완료 🎉 Dropbox에 정산 이미지가 저장됐어요',{type:'success'});}
   }catch(e){}
 }
@@ -1124,7 +1124,7 @@ async function saveSettleToDropbox(){
     const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob)return;
     const total=items.reduce((s,it)=>s+(+it.amount||0),0);
     const filename=_buildSettleFilename(settleDateStart,total,people);
-    const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${filename}.png`,blob);
+    const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${filename}`,blob);
     if(ok){_dbxAutoSavedFp=_settleAutoSaveFp();toast('Dropbox에 저장됐어요 ✓',{type:'success'});}
     else toast('저장에 실패했어요. 다시 시도해주세요.',{type:'error'});
   }catch(e){console.error('[DBX save]',e);toast('저장 중 오류가 발생했어요.',{type:'error'});}
@@ -1144,7 +1144,7 @@ async function _checkAllPaidAutoSaveForRec(rec){
     items=si;people=sp;payments=spay;settleDateStart=sds;
     const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob)return;
     const total=(rec.items||[]).reduce((s,it)=>s+(+it.amount||0),0);
-    const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${_buildSettleFilename(rec.dateStart,total,rec.people||[])}.png`,blob);
+    const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${_buildSettleFilename(rec.dateStart,total,rec.people||[])}`,blob);
     if(ok)toast('모든 입금 완료 🎉 Dropbox에 정산 이미지가 저장됐어요',{type:'success'});
   }catch(e){items=si;people=sp;payments=spay;settleDateStart=sds;}
 }
