@@ -675,8 +675,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.21';
-const BUILD_TIME='2026-07-17 13:00';
+const APP_VERSION='v2.22';
+const BUILD_TIME='2026-07-17 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1195,7 +1195,7 @@ function _patchPmRow(key){
     const sdiffEl=right.querySelector('.txn-sdiff');
     if(amtEl)amtEl.className='txn-amt'+(isGreen?' done-clr':isRed?' neg-clr':'');
     if(metaEl){const parts=[];if(pm.done)parts.push('입금완료');if(pm.account)parts.push(pm.account);if(pm.timestamp)parts.push(_dtpFmt(pm.timestamp));metaEl.textContent=parts.join(' · ');}
-    if(sdiffEl){if(hasDiff){sdiffEl.className='txn-sdiff'+(diff>0?' pos':' neg');sdiffEl.textContent=(diff>0?'+':'')+fmt(diff)+'원';}else{sdiffEl.textContent='';}}
+    if(sdiffEl){if(diff!==null){sdiffEl.className='txn-sdiff'+(diff>0?' pos':' neg');sdiffEl.textContent=(diff>0?'+':'')+fmt(diff)+'원';}else{sdiffEl.textContent='';}}
   }
 }
 
