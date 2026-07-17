@@ -675,14 +675,15 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.22';
-const BUILD_TIME='2026-07-17 14:00';
+const APP_VERSION='v2.23';
+const BUILD_TIME='2026-07-17 15:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
 let payments={};
 let _justAddedId=null;
 let _pmHistTab='current',_pmHistSearch='',_pmHistSort='newest',_pmHistFilter='all';
+let _dbxAutoSavedFp='';
 let _myName=localStorage.getItem('dutchpay_my_name')||'';
 let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked');
 let _historySearch='';
@@ -1098,17 +1099,19 @@ function _buildSettleFilename(dateStart,total,ppl){
   const yymmd=d.slice(2,8)||'000000';
   return `${yymmd}_더치페이(${fmt(total)})_${(ppl||[]).join(', ')}`;
 }
+function _settleAutoSaveFp(){return `${settleDateStart}|${people.slice().sort().join(',')}|${items.reduce((s,i)=>s+(+i.amount||0),0)}`;}
 async function _checkAllPaidAutoSave(){
   if(!hDbxGetToken())return;
   const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
   if(!txns.length)return;
   if(!txns.every(t=>payments[`${t.from}|${t.to}`]?.done))return;
+  const fp=_settleAutoSaveFp();if(_dbxAutoSavedFp===fp)return;
   try{
     const canvas=await generateSettleCanvas();
     const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob)return;
     const total=items.reduce((s,it)=>s+(+it.amount||0),0);
     const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${_buildSettleFilename(settleDateStart,total,people)}.png`,blob);
-    if(ok)toast('모든 입금 완료 🎉 Dropbox에 정산 이미지가 저장됐어요',{type:'success'});
+    if(ok){_dbxAutoSavedFp=fp;toast('모든 입금 완료 🎉 Dropbox에 정산 이미지가 저장됐어요',{type:'success'});}
   }catch(e){}
 }
 async function _checkAllPaidAutoSaveForRec(rec){
@@ -1396,12 +1399,14 @@ function renderPaymentView(eyeId,titleId,subId,bodyId){
   const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
   _cleanStalePayments(txns);
   body.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(txns):_pmHistoryHtml());
+  if(_pmHistTab==='current')_checkAllPaidAutoSave();
 }
 
 function renderPaymentBody(el){
   const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
   _cleanStalePayments(txns);
   el.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(txns):_pmHistoryHtml());
+  if(_pmHistTab==='current')_checkAllPaidAutoSave();
 }
 
 function _updateMobFab(){
