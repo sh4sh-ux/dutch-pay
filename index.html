@@ -677,8 +677,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.32';
-const BUILD_TIME='2026-07-17 18:00';
+const APP_VERSION='v2.33';
+const BUILD_TIME='2026-07-17 18:15';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1133,6 +1133,19 @@ async function saveSettleToDropbox(){
     else toast('저장에 실패했어요. 다시 시도해주세요.',{type:'error'});
   }catch(e){console.error('[DBX save]',e);toast('저장 중 오류가 발생했어요.',{type:'error'});}
 }
+async function saveHistRecToDropbox(recId){
+  if(!hDbxGetToken()){toast('Dropbox가 연결되지 않았어요. ⋯ 메뉴에서 연결해주세요.',{type:'error'});return;}
+  const rec=loadHistory().find(r=>r.id===recId);if(!rec)return;
+  try{
+    const canvas=await generateHistoryCanvas(rec);
+    const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob)return;
+    const total=rec.total||(rec.items||[]).reduce((s,it)=>s+(+it.amount||0),0);
+    const filename=_buildSettleFilename(rec.dateStart,total,rec.people||[]);
+    const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${filename}.png`,blob);
+    if(ok)toast('Dropbox에 저장됐어요 ✓',{type:'success'});
+    else toast('저장에 실패했어요. 다시 시도해주세요.',{type:'error'});
+  }catch(e){console.error('[DBX save]',e);toast('저장 중 오류가 발생했어요.',{type:'error'});}
+}
 async function _checkAllPaidAutoSaveForRec(rec){
   if(!hDbxGetToken()||!rec)return;
   const txns=rec.txns||[];if(!txns.length)return;
@@ -1274,8 +1287,9 @@ function toggleAllRecCard(recId){
   const rec=loadHistory().find(r=>r.id===recId);if(!rec)return;
   const txns=rec.txns||[];const pmObj=rec.payments||{};
   const detail=document.createElement('div');detail.className='pm-allrec-detail';
-  if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>';}
-  else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const received=pm.done?(pm.amount!=null?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">✓ 입금완료</span>`):`<span class="pm-badge pending">미입금</span>`;const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('');}
+  const dbxBtn=hDbxGetToken()?`<div style="padding:10px 14px 12px"><button class="pm-dbx-btn" style="margin-top:0" onclick="saveHistRecToDropbox('${ea(recId)}')">☁️ Dropbox에 이미지 저장</button></div>`:'';
+  if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>'+dbxBtn;}
+  else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const received=pm.done?(pm.amount!=null?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">✓ 입금완료</span>`):`<span class="pm-badge pending">미입금</span>`;const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+dbxBtn;}
   card.insertAdjacentElement('afterend',detail);
 }
 
