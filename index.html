@@ -677,8 +677,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.33';
-const BUILD_TIME='2026-07-17 18:15';
+const APP_VERSION='v2.34';
+const BUILD_TIME='2026-07-17 18:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -986,7 +986,7 @@ function showIconPicker(itemId,anchorEl,ev){if(ev){ev.stopPropagation();ev.preve
 
 function showRounderPicker(itemId,anchorEl,ev){if(ev){ev.stopPropagation();ev.preventDefault();}document.querySelectorAll('.rounder-pop').forEach(el=>el.remove());const it=items.find(i=>i.id===itemId);if(!it)return;const memOpts=it.members.length?it.members:people;const cur=it.rounderOverride||'';const pop=document.createElement('div');pop.className='rounder-pop';pop.innerHTML=`<div class="rounder-pop-hd">차액 부담자</div>`+[{v:'',label:'자동 (결제자 우선)'}].concat(memOpts.map(p=>({v:p,label:e(p)+' 부담'}))).map(o=>`<button class="rounder-opt${cur===o.v?' on':''}" data-val="${ea(o.v)}">${o.label}</button>`).join('');pop.addEventListener('click',ev2=>{ev2.stopPropagation();const btn=ev2.target.closest('.rounder-opt');if(!btn)return;setRounderOverride(itemId,btn.dataset.val);pop.remove();});document.body.appendChild(pop);const r=anchorEl.getBoundingClientRect();pop.style.top=(r.bottom+window.scrollY+6)+'px';let left=r.left+window.scrollX;const pr=pop.getBoundingClientRect();if(left+pr.width>window.innerWidth-8)left=window.innerWidth-pr.width-8;pop.style.left=Math.max(8,left)+'px';setTimeout(()=>{const h=ev3=>{if(!pop.contains(ev3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=ev3=>{if(ev3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);}
 
-function addItem(){const isMobile=window.matchMedia('(max-width:700px)').matches;if(!people.length){const inp=isMobile?document.getElementById('mPInp'):document.getElementById('dPInp');if(inp)inp.focus();return;}idc++;items.push({id:idc,name:'',amount:'',payer:people[0]||'',members:[...people]});selectedId=idc;_justAddedId=idc;renderAll();if(isMobile){openSheet(idc);setTimeout(()=>{const inp=document.getElementById('sfname');if(inp)inp.focus();},320);}else{setTimeout(()=>{const inp=document.getElementById('fname');if(inp)inp.focus();},60);}}
+function addItem(){const isMobile=window.matchMedia('(max-width:700px)').matches;if(!people.length){const inp=isMobile?document.getElementById('mPInp'):document.getElementById('dPInp');if(inp)inp.focus();return;}idc++;items.push({id:idc,name:'',amount:'',payer:(_myName&&people.includes(_myName)?_myName:people[0])||'',members:[...people]});selectedId=idc;_justAddedId=idc;renderAll();if(isMobile){openSheet(idc);setTimeout(()=>{const inp=document.getElementById('sfname');if(inp)inp.focus();},320);}else{setTimeout(()=>{const inp=document.getElementById('fname');if(inp)inp.focus();},60);}}
 
 function removeItem(id){const idx=items.findIndex(it=>it.id===id);if(idx<0)return;const name=items[idx].name||'(이름 없음)';if(!confirm(`'${name}' 지출을 삭제할까요?`))return;const snap={item:items[idx],idx};items=items.filter(it=>it.id!==id);if(selectedId===id)selectedId=null;closeSheet();renderAll();toast(`'${name}' 삭제됨`,{action:()=>{items.splice(snap.idx,0,snap.item);renderAll();},actionLabel:'되돌리기'});}
 
