@@ -682,8 +682,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.56';
-const BUILD_TIME='2026-07-22 16:30';
+const APP_VERSION='v2.57';
+const BUILD_TIME='2026-07-22 16:50';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1218,7 +1218,7 @@ function _patchPmRow(key){
   const pm=_getPayment(key);
   const item=document.querySelector(`.txn-item[data-pm-key="${CSS.escape(key)}"]`);if(!item)return;
   const row=item.querySelector('.txn-row');if(!row)return;
-  const hasAmt=pm.amount!==null&&pm.amount!=='';
+  const hasAmt=pm.amount!==null&&pm.amount!==''&&!isNaN(+pm.amount);
   const diff=hasAmt?(+pm.amount-(window._txnAmtMap[key]||0)):null;
   const isGreen=pm.done&&(diff===null||diff>=0);
   const isRed=diff!==null&&diff<0;
@@ -1251,7 +1251,7 @@ function _txnRowsOwnerHtml(txns){
     const key=_txnKey(t.from,t.to);
     window._txnAmtMap[key]=t.amt;
     const pm=_getPayment(key);
-    const hasAmt=pm.amount!==null&&pm.amount!=='';
+    const hasAmt=pm.amount!==null&&pm.amount!==''&&!isNaN(+pm.amount);
     const diff=hasAmt?(+pm.amount-t.amt):null;
     const isGreen=pm.done&&(diff===null||diff>=0);
     const isRed=diff!==null&&diff<0;
@@ -1271,7 +1271,7 @@ function _paySummaryHtml(txns){
 
 function _paySummaryBodyHtml(txns){
   const totalBilled=txns.reduce((s,t)=>s+t.amt,0);
-  const totalReceived=txns.reduce((s,t)=>{const pm=_getPayment(_txnKey(t.from,t.to));return s+(pm.done?(pm.amount!==null&&pm.amount!==''?+pm.amount:t.amt):0);},0);
+  const totalReceived=txns.reduce((s,t)=>{const pm=_getPayment(_txnKey(t.from,t.to));const validAmt=pm.amount!==null&&pm.amount!==''&&!isNaN(+pm.amount);return s+(pm.done?(validAmt?+pm.amount:t.amt):0);},0);
   const net=totalReceived-totalBilled;
   const unpaid=txns.filter(t=>!_getPayment(_txnKey(t.from,t.to)).done).map(t=>t.from);
   const unpaidHtml=unpaid.length?unpaid.map(p=>`<span class="pay-unpaid-chip">${e(p)}</span>`).join(''):'<span style="font-size:12px;color:var(--green)">모두 입금완료 ✓</span>';
@@ -1837,7 +1837,9 @@ function loadHistoryAsGroup(id){
   let newIdc=0;
   const newItems=(r.items||[]).map(it=>({id:++newIdc,name:it.name||'',amount:it.amount||0,payer:it.payer||'',members:[...(it.members||[])],watchers:[...(it.watchers||[])],isTreat:it.isTreat||false,rounderOverride:it.rounderOverride||null,iconOverride:it.iconOverride||null}));
   const newId=_newGroupId();
-  const newGroup={id:newId,name:r.groupName||'불러온 정산',nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||new Date().toISOString().slice(0,10),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:'',payments:JSON.parse(JSON.stringify(r.payments||{}))}};
+  const _cleanPm=v=>{const amt=(v.amount!==null&&v.amount!==undefined&&v.amount!==''&&!isNaN(+v.amount))?+v.amount:null;return{done:!!v.done,amount:amt,timestamp:v.timestamp||'',account:v.account||'',accountNumber:v.accountNumber||'',memo:v.memo||''};};
+  const cleanPayments={};Object.entries(r.payments||{}).forEach(([k,v])=>{cleanPayments[k]=_cleanPm(v);});
+  const newGroup={id:newId,name:r.groupName||'불러온 정산',nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||new Date().toISOString().slice(0,10),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:'',payments:cleanPayments}};
   groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);saveState();
   if(window.innerWidth<700){mTab='input';renderMobileBody();window.scrollTo(0,0);}
   else{dTab='input';renderAll();}
