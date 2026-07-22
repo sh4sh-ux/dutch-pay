@@ -682,8 +682,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.54';
-const BUILD_TIME='2026-07-22 16:10';
+const APP_VERSION='v2.55';
+const BUILD_TIME='2026-07-22 16:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1579,7 +1579,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   body.innerHTML=dateRow+hero+txnSection+paySection+noticeHtml+shareBtn;
 }
 
-function toggleTreat(id){const it=items.find(i=>i.id===id);if(!it)return;it.isTreat=!it.isTreat;saveState();renderAll();}
+function toggleTreat(id){const it=items.find(i=>i.id===id);if(!it)return;it.isTreat=!it.isTreat;saveState();renderAll();const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(id);}
 function _itMembersHtml(it){const mems=it.members.length?it.members:people;const ws=(it.watchers||[]).filter(w=>!mems.includes(w));if(it.isTreat)return[...mems,...ws].map(m=>e(m)).join(', ');return[...mems.map(m=>e(m)),...ws.map(w=>`${e(w)}(깍두기)`)].join(', ');}
 function fmt(n){return Math.round(n).toLocaleString('ko-KR');}
 function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -1834,7 +1834,7 @@ function loadHistoryAsGroup(id){
   if(!confirm(`'${r.groupName||'정산 기록'}' 기록을 새 그룹으로 불러올까요?\n참여자와 지출 내역이 복사됩니다.`))return;
   syncCurrentToGroup();
   let newIdc=0;
-  const newItems=(r.items||[]).map(it=>({id:++newIdc,name:it.name||'',amount:it.amount||0,payer:it.payer||'',members:[...(it.members||[])],rounderOverride:it.rounderOverride||null,iconOverride:it.iconOverride||null}));
+  const newItems=(r.items||[]).map(it=>({id:++newIdc,name:it.name||'',amount:it.amount||0,payer:it.payer||'',members:[...(it.members||[])],watchers:[...(it.watchers||[])],isTreat:it.isTreat||false,rounderOverride:it.rounderOverride||null,iconOverride:it.iconOverride||null}));
   const newId=_newGroupId();
   const newGroup={id:newId,name:r.groupName||'불러온 정산',nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||new Date().toISOString().slice(0,10),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:''}};
   groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);saveState();
