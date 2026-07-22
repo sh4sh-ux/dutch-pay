@@ -682,8 +682,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.44';
-const BUILD_TIME='2026-07-22 13:45';
+const APP_VERSION='v2.45';
+const BUILD_TIME='2026-07-22 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1528,7 +1528,7 @@ function computeShares(){
       mems.forEach(p=>{owesFloat[p]=(owesFloat[p]||0)+exact;details[p].push({name:it.name||'(이름 없음)',payer:it.payer,share:exact,extra:false});});
     }
   });
-  const totalAmt=items.reduce((s,it)=>s+(+it.amount||0),0);
+  const totalAmt=items.filter(it=>!it.isTreat).reduce((s,it)=>s+(+it.amount||0),0);
   let totalFloor=0;const fracParts=[];
   people.forEach(p=>{const f=owesFloat[p]||0;const fl=Math.floor(f);owes[p]=fl;totalFloor+=fl;fracParts.push({p,frac:f-fl});});
   let diff=Math.round(totalAmt-totalFloor);
