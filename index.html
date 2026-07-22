@@ -682,8 +682,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.55';
-const BUILD_TIME='2026-07-22 16:20';
+const APP_VERSION='v2.56';
+const BUILD_TIME='2026-07-22 16:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1832,11 +1832,12 @@ function loadHistoryAsGroup(id){
   const r=records.find(rec=>rec.id===id);
   if(!r)return;
   if(!confirm(`'${r.groupName||'정산 기록'}' 기록을 새 그룹으로 불러올까요?\n참여자와 지출 내역이 복사됩니다.`))return;
+  closeHistDrawer();closeSheet();
   syncCurrentToGroup();
   let newIdc=0;
   const newItems=(r.items||[]).map(it=>({id:++newIdc,name:it.name||'',amount:it.amount||0,payer:it.payer||'',members:[...(it.members||[])],watchers:[...(it.watchers||[])],isTreat:it.isTreat||false,rounderOverride:it.rounderOverride||null,iconOverride:it.iconOverride||null}));
   const newId=_newGroupId();
-  const newGroup={id:newId,name:r.groupName||'불러온 정산',nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||new Date().toISOString().slice(0,10),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:''}};
+  const newGroup={id:newId,name:r.groupName||'불러온 정산',nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||new Date().toISOString().slice(0,10),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:'',payments:JSON.parse(JSON.stringify(r.payments||{}))}};
   groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);saveState();
   if(window.innerWidth<700){mTab='input';renderMobileBody();window.scrollTo(0,0);}
   else{dTab='input';renderAll();}
