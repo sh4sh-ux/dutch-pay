@@ -172,7 +172,7 @@ svg{display:block;flex-shrink:0;}
 .chip-watch-lbl{font-size:10px;font-weight:700;margin-left:2px;}
 .treat-toggle{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:10px 14px;font-size:14px;font-family:inherit;background:var(--card);color:var(--label2);cursor:pointer;text-align:left;transition:all .12s;}
 .treat-toggle.on{border-color:#D47000;background:#FFF8EE;color:#D47000;font-weight:600;}
-.treat-badge{font-size:11px;color:#D47000;font-weight:600;flex-shrink:0;}
+.treat-badge{font-size:11px;color:#0071E3;font-weight:600;flex-shrink:0;}
 .del-btn{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:10px;font-size:13px;color:var(--red);background:transparent;margin-top:8px;transition:background .12s;display:flex;align-items:center;justify-content:center;gap:6px;}
 .del-btn:hover{background:var(--red-bg);}
 .confirm-btn{width:100%;border:none;border-radius:var(--rs);padding:12px;font-size:14px;font-weight:600;background:var(--label);color:#fff;margin-top:16px;cursor:pointer;transition:opacity .12s;}
@@ -682,8 +682,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.53';
-const BUILD_TIME='2026-07-22 16:00';
+const APP_VERSION='v2.54';
+const BUILD_TIME='2026-07-22 16:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2155,7 +2155,7 @@ async function generateSettleCanvas(){
       // 한턱 배지: 결제자 배지 오른쪽 (배경 없음)
       if(it.isTreat){
         const tbX=pillX+pillW+12;
-        setFont(20,600);ctx.fillStyle='#D47000';ctx.textAlign='left';ctx.textBaseline='middle';
+        setFont(20,600);ctx.fillStyle='#0071E3';ctx.textAlign='left';ctx.textBaseline='middle';
         ctx.fillText(treatBadgeTxt,tbX,pillCY);
       }
       // 참석자: 하단 줄, 이름과 왼쪽 정렬
@@ -2268,7 +2268,7 @@ async function generateHistoryCanvas(rec){
       setFont(20,400);ctx.textBaseline='middle';ctx.textAlign='left';
       ctx.fillStyle='#F3F3F5';roundRectPath(ctx,afx,ry-22-pillH/2,pillW,pillH,pillH/2);ctx.fill();
       ctx.fillStyle='#666666';ctx.fillText(payerTxt,afx+ppx,ry-22);
-      if(it.isTreat){setFont(20,600);ctx.fillStyle='#D47000';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(treatTxt,afx+pillW+12,ry-22);}
+      if(it.isTreat){setFont(20,600);ctx.fillStyle='#0071E3';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(treatTxt,afx+pillW+12,ry-22);}
       const memsStartX=nameX+ppx,maxMemsW=amtX-amtW-34-memsStartX;
       if(maxMemsW>30){setFont(22,400);ctx.textBaseline='middle';ctx.fillStyle=C.muted;ctx.fillText(truncateCanvasText(ctx,memsDisplay.join(', '),maxMemsW),memsStartX,ry+26);}
       if(i<validItems.length-1)drawDivider(y+(i+1)*ITEM_ROW_H);
