@@ -682,8 +682,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.47';
-const BUILD_TIME='2026-07-22 14:20';
+const APP_VERSION='v2.48';
+const BUILD_TIME='2026-07-22 15:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2118,12 +2118,16 @@ async function generateSettleCanvas(){
       if(hasChip){setFont(22,500);chipReserve=ctx.measureText(`차액 ${rem}원`).width+20+20;}
       // 배지 크기 먼저 측정해서 이름 truncate 폭 계산
       const mems=it.members.length?it.members:people;
+      const ws=(it.watchers||[]).filter(w=>!mems.includes(w));
+      const memsDisplay=it.isTreat?[...mems,...ws]:[...mems,...ws.map(w=>w+'(깍두기)')];
       const payerText=`${it.payer||'결제자 미정'} 결제`;
+      const treatBadgeTxt='🎉 한턱';
       setFont(20,400);const pm=ctx.measureText(payerText);
       const pillTW=pm.width;const pillW=pillTW+pillPadX*2,pillH=20+pillPadY*2;
+      setFont(20,600);const tbW=it.isTreat?ctx.measureText(treatBadgeTxt).width+24:0;
       // 이름: 배지+chip 공간 확보 후 truncate
       setFont(30,700);
-      const name=truncateCanvasText(ctx,it.name||'(이름 없음)',maxMainW-pillPadX-chipReserve-pillW-16);
+      const name=truncateCanvasText(ctx,it.name||'(이름 없음)',maxMainW-pillPadX-chipReserve-pillW-16-(it.isTreat?tbW+10:0));
       ctx.fillStyle=C.text;ctx.textAlign='left';ctx.textBaseline='alphabetic';
       const nM=ctx.measureText(name);
       ctx.fillText(name,nameX+pillPadX,(ry-22)+(nM.actualBoundingBoxAscent-nM.actualBoundingBoxDescent)/2);
@@ -2148,9 +2152,16 @@ async function generateSettleCanvas(){
       roundRectPath(ctx,pillX,pillCY-pillH/2,pillW,pillH,pillH/2);ctx.fill();
       ctx.fillStyle='#666666';
       ctx.fillText(payerText,pillX+pillPadX,pillCY);
+      // 한턱 배지: 결제자 배지 오른쪽
+      if(it.isTreat){
+        const tbX=pillX+pillW+10,tbPx=12,tbH=20+6*2;
+        ctx.fillStyle='#FFF3E0';roundRectPath(ctx,tbX,pillCY-tbH/2,tbW,tbH,6);ctx.fill();
+        setFont(20,600);ctx.fillStyle='#D47000';ctx.textAlign='left';ctx.textBaseline='middle';
+        ctx.fillText(treatBadgeTxt,tbX+tbPx,pillCY);
+      }
       // 참석자: 하단 줄, 이름과 왼쪽 정렬
       const memsStartX=nameX+pillPadX,maxMemsW=amountX-amountW-34-memsStartX;
-      if(maxMemsW>30){setFont(22,400);ctx.textBaseline='middle';ctx.fillStyle=C.muted;ctx.fillText(truncateCanvasText(ctx,mems.join(', '),maxMemsW),memsStartX,ry+26);}
+      if(maxMemsW>30){setFont(22,400);ctx.textBaseline='middle';ctx.fillStyle=C.muted;ctx.fillText(truncateCanvasText(ctx,memsDisplay.join(', '),maxMemsW),memsStartX,ry+26);}
 
       if(i<validItems.length-1)drawDivider(y+(i+1)*ITEM_ROW_H);
     });
