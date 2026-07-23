@@ -551,6 +551,22 @@ svg{display:block;flex-shrink:0;}
 /* ── 모바일 FAB ── */
 .mob-fab{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;border:none;border-radius:28px;padding:14px 28px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;box-shadow:0 4px 20px rgba(0,113,227,.35);z-index:50;white-space:nowrap;display:none;transition:opacity .15s;}
 .mob-fab:active{opacity:.85;}
+/* ── 동기화 충돌 모달 ── */
+.sc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.sc-modal{background:var(--card);border-radius:20px;padding:24px;max-width:460px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.sc-hd{font-size:18px;font-weight:700;margin-bottom:6px;color:var(--label);}
+.sc-desc{font-size:13px;color:var(--label3);margin-bottom:20px;line-height:1.5;}
+.sc-card{border:1px solid var(--sep);border-radius:14px;padding:14px;margin-bottom:14px;}
+.sc-card-title{font-size:14px;font-weight:600;margin-bottom:10px;color:var(--label);}
+.sc-versions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sc-ver{background:var(--fill);border:2px solid transparent;border-radius:10px;padding:10px;text-align:left;cursor:pointer;font-family:inherit;transition:border-color .15s,background .15s;width:100%;}
+.sc-ver.on{border-color:var(--blue);background:var(--blue-bg);}
+.sc-ver-hd{font-size:12px;font-weight:600;margin-bottom:4px;color:var(--label2);}
+.sc-ver-sub{font-size:11px;color:var(--label3);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sc-ver-row{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--label);margin-bottom:2px;}
+.sc-ver-at{font-size:10px;color:var(--label3);}
+.sc-confirm{width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;}
+.sc-confirm:active{opacity:.88;}
 </style>
 </head>
 <body>
@@ -682,8 +698,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.65';
-const BUILD_TIME='2026-07-23 11:00';
+const APP_VERSION='v2.66';
+const BUILD_TIME='2026-07-23 12:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -878,24 +894,76 @@ async function syncFromDropbox(){
   try{
     const remote=await _dbxDownload(token,DBX_MAIN_FILE);
     if(!remote||!Array.isArray(remote.groups)||!remote.groups.length){await syncToDropbox();return;}
-    // last-write-wins: remote가 더 최신이면 통째로 교체 (삭제도 정상 반영)
-    const localLast=localStorage.getItem(DBX_LASTSYNC_MAIN)||'';
-    const remoteAt=remote.syncedAt||'';
-    if(remoteAt && remoteAt > localLast){
-      _autoBackup('Dropbox 동기화 전');
-      groups=remote.groups;
-      currentGroupId=remote.currentGroupId||groups[0].id;
-      const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);
-      localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:new Date().toISOString(),groups,currentGroupId}));
-      localStorage.setItem(DBX_LASTSYNC_MAIN,remoteAt);
-      _updateSyncBadge();renderAll();
-      toast('Dropbox에서 최신 데이터를 불러왔어요',{type:'success'});
+
+    // 그룹 단위 병합: 전체 파일 교체 대신 그룹별 updatedAt 비교
+    const mergedGroups=[...groups];
+    const conflicts=[];
+    (remote.groups||[]).forEach(rg=>{
+      const li=mergedGroups.findIndex(lg=>lg.id===rg.id);
+      if(li===-1){
+        mergedGroups.push(rg); // remote에만 있는 그룹 → 추가
+      }else{
+        const lg=mergedGroups[li];
+        const la=lg.updatedAt||lg.createdAt||'';
+        const ra=rg.updatedAt||rg.createdAt||'';
+        if(ra>la){
+          mergedGroups[li]=rg; // remote 더 최신 → 교체
+        }else if(ra===la&&JSON.stringify(lg.data)!==JSON.stringify(rg.data)){
+          conflicts.push({id:rg.id,local:lg,remote:rg,idx:li}); // 동시 수정 → 충돌
+        }
+        // la>ra: 로컬이 더 최신 → 그대로 유지
+      }
+    });
+
+    if(conflicts.length){
+      _autoBackup('Dropbox 충돌 감지');
+      _showSyncConflictUI(conflicts,mergedGroups,remote.currentGroupId);
       return;
     }
-    // 로컬이 더 최신이거나 동일 → 업로드
-    await syncToDropbox();
+
+    const changed=JSON.stringify(mergedGroups)!==JSON.stringify(groups);
+    if(changed)toast('Dropbox에서 최신 내용을 병합했어요',{type:'success'});
+    _applySyncMerge(mergedGroups,remote.currentGroupId);
   }catch(e){}
 }
+function _applySyncMerge(mergedGroups,remoteCurrentId){
+  groups=mergedGroups;
+  if(!getCurrentGroup()&&groups.length)currentGroupId=groups[0].id;
+  const g=getCurrentGroup()||groups[0];
+  if(g){currentGroupId=g.id;loadGroupData(g);}
+  localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:new Date().toISOString(),groups,currentGroupId}));
+  localStorage.setItem(DBX_LASTSYNC_MAIN,new Date().toISOString());
+  _updateSyncBadge();renderAll();
+  syncToDropbox(); // 병합 결과 Dropbox에 업로드
+}
+
+function _showSyncConflictUI(conflicts,mergedGroups,remoteCurrentId){
+  document.getElementById('syncConflictOv')?.remove();
+  const choices={};conflicts.forEach(c=>{choices[c.id]='local';});
+  function _scFmtDate(iso){if(!iso)return '';try{const d=new Date(iso);return d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+  function _scFmtGroup(g){const items=(g.data&&g.data.items)||[];const total=items.reduce((s,it)=>s+(+it.amount||0),0);const ppl=((g.data&&g.data.people)||[]).join(', ')||g.name||'그룹';return{ppl,cnt:items.length,total:fmt(total)+'원',at:_scFmtDate(g.updatedAt)};}
+  const cards=conflicts.map(c=>{const l=_scFmtGroup(c.local),r=_scFmtGroup(c.remote);return `<div class="sc-card" data-cid="${e(c.id)}"><div class="sc-card-title">${e(c.local.name||c.id)}</div><div class="sc-versions"><button class="sc-ver sc-local on" onclick="_scPick(${ja(c.id)},'local')"><div class="sc-ver-hd">📱 이 기기</div><div class="sc-ver-sub">${e(l.ppl)}</div><div class="sc-ver-row"><span>${l.cnt}건</span><span>${l.total}</span></div><div class="sc-ver-at">${e(l.at)}</div></button><button class="sc-ver sc-remote" onclick="_scPick(${ja(c.id)},'remote')"><div class="sc-ver-hd">☁ Dropbox</div><div class="sc-ver-sub">${e(r.ppl)}</div><div class="sc-ver-row"><span>${r.cnt}건</span><span>${r.total}</span></div><div class="sc-ver-at">${e(r.at)}</div></button></div></div>`;}).join('');
+  const ov=document.createElement('div');ov.id='syncConflictOv';ov.className='sc-overlay';
+  ov.innerHTML=`<div class="sc-modal"><div class="sc-hd">⚠️ 동기화 충돌</div><div class="sc-desc">두 기기에서 같은 그룹을 동시에 수정했어요.<br>유지할 버전을 선택해주세요.</div>${cards}<button class="sc-confirm" onclick="_scConfirm()">선택 완료</button></div>`;
+  document.body.appendChild(ov);
+  window._scConflictState={conflicts,mergedGroups,remoteCurrentId,choices};
+}
+function _scPick(id,choice){
+  if(!window._scConflictState)return;
+  window._scConflictState.choices[id]=choice;
+  const card=document.querySelector(`.sc-card[data-cid="${CSS.escape(id)}"]`);
+  if(card){card.querySelectorAll('.sc-ver').forEach(btn=>{btn.classList.toggle('on',btn.classList.contains('sc-'+choice));});}
+}
+function _scConfirm(){
+  if(!window._scConflictState)return;
+  const{conflicts,mergedGroups,remoteCurrentId,choices}=window._scConflictState;
+  conflicts.forEach(c=>{const li=mergedGroups.findIndex(g=>g.id===c.id);if(li!==-1&&choices[c.id]==='remote')mergedGroups[li]=c.remote;});
+  document.getElementById('syncConflictOv')?.remove();
+  window._scConflictState=null;
+  _applySyncMerge(mergedGroups,remoteCurrentId);
+  toast('병합 완료 — Dropbox에 업로드됐어요',{type:'success'});
+}
+
 function _updateSyncBadge(){
   const el=document.getElementById('dbxSyncBadge');if(!el)return;
   const last=localStorage.getItem(DBX_LASTSYNC_MAIN);
