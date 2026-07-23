@@ -710,7 +710,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.17';
+const APP_VERSION='v3.18';
 const BUILD_TIME='2026-07-23 01:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -2481,7 +2481,13 @@ async function generateHistoryCanvas(rec){
   // 입금 내역 (내 기준: 받은 돈)
   y=drawSectionLabel('입금 내역',y);
   drawCard(cardX,y,cardW,txnCardH);
-  if(!txns.length){drawEmpty('모두 정산 완료 ✓',y,txnCardH);}
+  if(!txns.length){
+    const _allTreat=validItems.length>0&&validItems.every(it=>it.isTreat);
+    const _tPayers=[...new Set(validItems.filter(it=>it.isTreat).map(it=>it.payer).filter(Boolean))];
+    const _tPayer=_allTreat&&_tPayers.length===1?_tPayers[0]:'';
+    if(_tPayer){ctx.fillStyle=C.muted;setFont(26,600);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('잘 먹고, 잘 놀고, 계산까지…',W/2,y+txnCardH/2-18);ctx.fillText(`역시 ${_tPayer}!!! 👍🏼👍🏼👍🏼`,W/2,y+txnCardH/2+18);}
+    else{drawEmpty('모두 정산 완료 ✓',y,txnCardH);}
+  }
   else{
     txns.forEach((t,i)=>{
       const ry=y+i*TXN_ROW_H+TXN_ROW_H/2;
