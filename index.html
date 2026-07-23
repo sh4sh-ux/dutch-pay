@@ -180,13 +180,13 @@ svg{display:block;flex-shrink:0;}
 
 .stat-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:20px;}
 .result-breakdown{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:20px;box-shadow:0 2px 10px rgba(20,25,40,.07);}
-.rbd-row{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);}
+.rbd-row{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--sep);}
 .rbd-row:last-child{border-bottom:none;}
 .rbd-lbl{font-size:14px;color:var(--label);font-weight:500;}
 .rbd-hint{font-size:11px;color:var(--label3);margin-left:5px;font-weight:400;}
-.rbd-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);}
+.rbd-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--label);}
 .rbd-val.rbd-neg{color:var(--green);}
-.rbd-sep{height:1px;background:var(--line);}
+.rbd-sep{height:1px;background:var(--sep);}
 .rbd-row.rbd-total{background:var(--blue-bg,#EBF3FF);}
 .rbd-row.rbd-total .rbd-lbl{color:var(--blue);font-weight:600;}
 .rbd-row.rbd-total .rbd-val{color:var(--blue);font-size:17px;}
@@ -588,7 +588,7 @@ svg{display:block;flex-shrink:0;}
 <div class="desktop-app">
   <div class="left" id="dLeft">
     <div class="left-top">
-      <div class="app-label" id="dOwnerLabel" onclick="_ownerAreaClick(this,event)" style="user-select:none;-webkit-tap-highlight-color:transparent;cursor:default">Dutch Pay <span id="appVersionD" style="font-size:10px;font-weight:300;opacity:.7;letter-spacing:0;text-transform:none"></span><span id="calcVerifyD" style="font-size:10px;font-weight:700;margin-left:3px"></span></div>
+      <div class="app-label" id="dOwnerLabel" onclick="_ownerAreaClick(this,event)" style="user-select:none;-webkit-tap-highlight-color:transparent;cursor:default">Dutch Pay <span id="appVersionD" style="font-size:10px;font-weight:300;opacity:.9;letter-spacing:0;text-transform:none;margin-left:16px"></span><span id="calcVerifyD" style="font-size:10px;font-weight:700;margin-left:3px"></span></div>
       <div class="app-title" onclick="dSetTab('input')" style="cursor:pointer">더치페이</div>
       <div style="margin-bottom:16px"></div>
       <div class="tab-row">
@@ -709,8 +709,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.93';
-const BUILD_TIME='2026-07-23 18:30';
+const APP_VERSION='v2.94';
+const BUILD_TIME='2026-07-23 19:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1618,7 +1618,7 @@ function _resultBreakdownHtml(paid,owes,txns){
   const ownerSends=txns.filter(t=>t.from===ownerName).reduce((s,t)=>s+t.amt,0);
   let rows='';
   if(ownerPaid>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">내가 결제한 금액</span><span class="rbd-val">${fmt(ownerPaid)}원</span></div>`;
-  if(treatTotal>0){const tr=items.find(it=>it.isTreat)?.payer||'';rows+=`<div class="rbd-row"><span class="rbd-lbl">한턱 혜택${tr?`<span class="rbd-hint">${e(tr)} 쏨</span>`:''}</span><span class="rbd-val">${fmt(treatTotal)}원</span></div>`;}
+  if(treatTotal>0){const tr=items.find(it=>it.isTreat)?.payer||'';const hintHtml=tr?'<span class="rbd-hint">'+e(tr)+' 쏨</span>':'';rows+='<div class="rbd-row"><span class="rbd-lbl">한턱 혜택'+hintHtml+'</span><span class="rbd-val">'+fmt(treatTotal)+'원</span></div>';}
   if(ownerReceives>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">돌려받을 금액</span><span class="rbd-val rbd-neg">−${fmt(ownerReceives)}원</span></div>`;
   if(ownerSends>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">보낼 금액</span><span class="rbd-val">${fmt(ownerSends)}원</span></div>`;
   rows+=`<div class="rbd-sep"></div><div class="rbd-row rbd-total"><span class="rbd-lbl">내 부담</span><span class="rbd-val">${fmt(ownerBurden)}원</span></div>`;
