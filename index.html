@@ -699,8 +699,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.75';
-const BUILD_TIME='2026-07-23 21:00';
+const APP_VERSION='v2.76';
+const BUILD_TIME='2026-07-23 22:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -883,7 +883,7 @@ async function _dbxDownload(token,path){
   if(res.status===409)return null;if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownload(t,path);return null;}if(!res.ok)return null;
   try{return JSON.parse(await res.text());}catch(e){return null;}
 }
-let _syncTimer=null,_syncing=false;
+let _syncTimer=null,_syncing=false,_syncFromRunning=false;
 function _scheduleSyncToDropbox(){
   if(!dbxGetToken())return;
   clearTimeout(_syncTimer);
@@ -905,6 +905,7 @@ async function syncToDropbox(){
 }
 async function syncFromDropbox(){
   const token=dbxGetToken();if(!token)return;
+  if(_syncFromRunning)return;_syncFromRunning=true;
   try{
     const remote=await _dbxDownload(token,DBX_MAIN_FILE);
     if(!remote||!Array.isArray(remote.groups)||!remote.groups.length){await syncToDropbox();return;}
@@ -949,10 +950,10 @@ async function syncFromDropbox(){
 
     const changed=JSON.stringify(filtered)!==JSON.stringify(groups)||JSON.stringify(mergedDeleted)!==JSON.stringify(deletedGroups);
     if(changed)toast('Dropbox에서 최신 내용을 병합했어요',{type:'success'});
-    _applySyncMerge(filtered,remote.currentGroupId,mergedDeleted);
-  }catch(e){}
+    await _applySyncMerge(filtered,remote.currentGroupId,mergedDeleted);
+  }catch(e){}finally{_syncFromRunning=false;}
 }
-function _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted){
+async function _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted){
   groups=mergedGroups;
   if(mergedDeleted)deletedGroups=mergedDeleted;
   // 스냅샷 선-적재: loadGroupData 후 syncCurrentToGroup이 updatedAt을 건드리지 않도록
@@ -964,8 +965,8 @@ function _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted){
   localStorage.setItem(DBX_LASTSYNC_MAIN,new Date().toISOString());
   const hashes={};groups.forEach(g=>{hashes[g.id]=_groupHash(g);});
   _saveSyncedHashes(hashes);
-  _updateSyncBadge();renderAll();
-  syncToDropbox();
+  _updateSyncBadge();renderAll(true);
+  await syncToDropbox();
 }
 
 function _showSyncConflictUI(conflicts,mergedGroups,remoteCurrentId,mergedDeleted){
@@ -985,13 +986,13 @@ function _scPick(id,choice){
   const card=document.querySelector(`.sc-card[data-cid="${CSS.escape(id)}"]`);
   if(card){card.querySelectorAll('.sc-ver').forEach(btn=>{btn.classList.toggle('on',btn.classList.contains('sc-'+choice));});}
 }
-function _scConfirm(){
+async function _scConfirm(){
   if(!window._scConflictState)return;
   const{conflicts,mergedGroups,remoteCurrentId,choices,mergedDeleted}=window._scConflictState;
   conflicts.forEach(c=>{const li=mergedGroups.findIndex(g=>g.id===c.id);if(li!==-1&&choices[c.id]==='remote')mergedGroups[li]=c.remote;});
   document.getElementById('syncConflictOv')?.remove();
   window._scConflictState=null;
-  _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted);
+  await _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted);
   toast('병합 완료 — Dropbox에 업로드됐어요',{type:'success'});
 }
 
@@ -1597,12 +1598,12 @@ function _updateMobFab(){
   fab.onclick=hasItems?()=>mSetTab('result'):addItem;
 }
 function _mobFabClick(){const fab=document.getElementById('mobFab');if(fab&&fab.onclick)fab.onclick();}
-function renderAll(){
+function renderAll(skipSave=false){
   const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
   const dTPay=document.getElementById('dTPayment');if(dTPay)dTPay.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
   const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
-  _updateMobFab();saveState();
+  _updateMobFab();if(!skipSave)saveState();
 }
 
 function _pillHtml(p){return `<span class="pill">${e(p)}<button class="pill-x" aria-label="${e(p)} 삭제" onclick="event.stopPropagation();removePerson(${ja(p)})">${svgX}</button></span>`;}
