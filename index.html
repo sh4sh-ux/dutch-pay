@@ -698,8 +698,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.66';
-const BUILD_TIME='2026-07-23 12:00';
+const APP_VERSION='v2.67';
+const BUILD_TIME='2026-07-23 12:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1374,9 +1374,11 @@ function _pmSegHtml(){
 }
 
 function _pmCurrentHtml(txns){
-  if(!txns.length)return '<div class="empty" style="padding:40px 0"><div class="empty-icon">'+svgEmpty+'</div><p>정산할 송금 내역이 없어요</p></div>';
+  const hasItems=items.some(it=>+it.amount!==0);
   const dbxBtn=hDbxGetToken()?'<button class="pm-dbx-btn" onclick="saveSettleToDropbox()">☁️ Dropbox에 이미지 저장</button>':'';
-  return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">송금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div><button class="pm-save-btn" onclick="saveToHistory()">📌 기록보관함에 저장</button>'+dbxBtn;
+  const saveBtn='<button class="pm-save-btn" onclick="saveToHistory()">📌 기록보관함에 저장</button>';
+  if(!txns.length)return '<div class="empty" style="padding:40px 0"><div class="empty-icon">'+svgEmpty+'</div><p>정산할 송금 내역이 없어요</p></div>'+(hasItems?saveBtn+dbxBtn:'');
+  return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">송금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>'+saveBtn+dbxBtn;
 }
 
 function _pmHistResultsHtml(){
