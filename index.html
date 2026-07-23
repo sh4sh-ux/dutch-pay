@@ -476,6 +476,7 @@ svg{display:block;flex-shrink:0;}
 .rc-txn-row:last-child{border-bottom:none;}
 .rc-txn-people{display:flex;align-items:center;gap:14px;color:var(--label);}
 .rc-txn-amt{font-weight:600;flex-shrink:0;}
+.result-amt-hero,.sh-num,.txn-amt,.detail-amt,.rc-item-amt,.rc-txn-amt,.sh-sub{font-family:system-ui,-apple-system,'BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif;}
 .rc-no-txn{font-size:13px;color:var(--green);padding:10px 16px;text-align:center;}
 .rc-foot{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--fill2);border-top:1px solid var(--sep);}
 .rc-saved-at{font-size:11px;color:var(--label3);}
@@ -699,8 +700,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.87';
-const BUILD_TIME='2026-07-23 15:45';
+const APP_VERSION='v2.88';
+const BUILD_TIME='2026-07-23 16:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
