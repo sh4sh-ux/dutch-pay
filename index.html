@@ -708,8 +708,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.04';
-const BUILD_TIME='2026-07-23 23:00';
+const APP_VERSION='v3.05';
+const BUILD_TIME='2026-07-23 23:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2476,8 +2476,8 @@ async function generateHistoryCanvas(rec){
     });
   }
   y+=itemCardH+SECTION_GAP;
-  // 송금 내역
-  y=drawSectionLabel('송금 내역',y);
+  // 입금 내역 (내 기준: 받은 돈)
+  y=drawSectionLabel('입금 내역',y);
   drawCard(cardX,y,cardW,txnCardH);
   if(!txns.length){drawEmpty('모두 정산 완료 ✓',y,txnCardH);}
   else{
