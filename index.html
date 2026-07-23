@@ -431,7 +431,7 @@ svg{display:block;flex-shrink:0;}
 .share-date-inp:hover{border-color:var(--label3);}
 .share-date-inp:focus{border-color:var(--blue);}
 .share-date-sep{color:var(--label3);font-size:13px;}
-.share-date-add{font-size:13px;padding:8px 12px;border:1px dashed var(--sep2);border-radius:var(--rs);background:transparent;color:var(--label2);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;line-height:1.4;}
+.share-date-add{-webkit-appearance:none;appearance:none;font-size:13px;padding:0 12px;height:36px;box-sizing:border-box;border:1px dashed var(--sep2);border-radius:var(--rs);background:transparent;color:var(--label2);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;}
 .share-date-add:hover{border-color:var(--blue);color:var(--blue);}
 .share-date-rm{width:24px;height:24px;border-radius:50%;border:none;background:var(--fill);color:var(--label3);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;}
 .share-date-rm:hover{background:var(--red-bg);color:var(--red);}
@@ -555,7 +555,7 @@ svg{display:block;flex-shrink:0;}
 /* ── 날짜 표시 (로케일 독립적 YYYY.MM.DD) ── */
 .dp-wrap{position:relative;width:100%;display:block;}
 .dp-txt{border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 28px 8px 10px;font-size:13px;background-color:var(--card);color:var(--label);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2' ry='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/></svg>");background-repeat:no-repeat;background-position:right 8px center;background-size:14px 14px;cursor:pointer;white-space:nowrap;width:100%;box-sizing:border-box;line-height:1.4;}
-.dp-wrap.share-date-inp{flex:1;border:none;background:none;padding:0;}
+.dp-wrap.share-date-inp{flex:1;border:none;background:none;padding:0;}.dp-wrap.share-date-inp .dp-txt{height:36px;box-sizing:border-box;}
 .dp-wrap.pay-date-wrap{width:auto;flex:1;}
 .dp-ph{color:var(--label3);}
 .dp-inp{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;font-size:16px;}
@@ -708,8 +708,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.09';
-const BUILD_TIME='2026-07-23 23:50';
+const APP_VERSION='v3.10';
+const BUILD_TIME='2026-07-24 00:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
