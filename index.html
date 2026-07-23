@@ -698,8 +698,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.68';
-const BUILD_TIME='2026-07-23 14:00';
+const APP_VERSION='v2.69';
+const BUILD_TIME='2026-07-23 15:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -772,12 +772,13 @@ function showDataMenu(anchorEl,ev){
   const pop=document.createElement('div');pop.className='data-pop';
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
-  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button><button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
+  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
       if(dbxGetToken()){syncFromDropbox();toast('Dropbox 동기화 중...');}
       else{goToHistory();}
       pop.remove();
-    }else if(action==='openHistory'){goToHistory();pop.remove();}
+    }else if(action==='dbxRename'){pop.remove();_dbxRenameExistingFiles();}
+    else if(action==='openHistory'){goToHistory();pop.remove();}
     else if(action==='saveHistory'){saveToHistory();pop.remove();}
     else if(action==='exportCsv'){exportCurrentGroupCsv();pop.remove();}
     else if(action==='export'){exportData();pop.remove();}
@@ -1204,7 +1205,7 @@ function togglePaymentPanel(key){
 function _buildSettleFilename(dateStart,total,ppl){
   const d=(dateStart||'').replace(/-/g,'');
   const yymmd=d.slice(2,8)||'000000';
-  return `${yymmd}_더치페이(${fmt(total)})_${(ppl||[]).join(', ')}`;
+  return `${yymmd}_정산내역(${fmt(total)})_${(ppl||[]).join(', ')}`;
 }
 function _settleAutoSaveFp(){return `${settleDateStart}|${people.slice().sort().join(',')}|${items.reduce((s,i)=>s+(+i.amount||0),0)}`;}
 function _currentSettleRec(){
@@ -1262,6 +1263,47 @@ async function _checkAllPaidAutoSaveForRec(rec){
     const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${_buildSettleFilename(rec.dateStart,total,rec.people||[])}.png`,blob);
     if(ok)toast('모든 입금 완료 🎉 Dropbox에 정산 이미지가 저장됐어요',{type:'success'});
   }catch(e){}
+}
+
+async function _dbxRenameExistingFiles(){
+  const token=hDbxGetToken();
+  if(!token){toast('Dropbox가 연결되지 않았어요',{type:'error'});return;}
+  toast('Dropbox 파일 목록 확인 중...');
+  try{
+    // 폴더 내 파일 목록 수집 (페이지네이션 포함)
+    let entries=[];
+    let res=await fetch('https://api.dropboxapi.com/2/files/list_folder',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({path:'/01_Personal/Dutch-Pay',recursive:false,include_non_downloadable_files:false})});
+    if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxRenameExistingFiles();}
+    if(!res.ok){toast('폴더 목록을 가져오지 못했어요',{type:'error'});return;}
+    let data=await res.json();
+    entries.push(...(data.entries||[]));
+    while(data.has_more){
+      res=await fetch('https://api.dropboxapi.com/2/files/list_folder/continue',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({cursor:data.cursor})});
+      if(!res.ok)break;
+      data=await res.json();
+      entries.push(...(data.entries||[]));
+    }
+    // 이름 변경 대상 추출
+    const toRename=[];
+    for(const entry of entries){
+      if(entry['.tag']!=='file')continue;
+      const name=entry.name;
+      const newName=name.replace(/더치페이|dutch\s*pay/gi,'정산내역');
+      if(newName!==name)toRename.push({fromPath:entry.path_lower,toPath:`/01_Personal/Dutch-Pay/${newName}`});
+    }
+    if(!toRename.length){toast('변경할 파일이 없어요 (이미 최신 이름)',{type:'success'});return;}
+    const preview=toRename[0].toPath.split('/').pop();
+    if(!confirm(`${toRename.length}개 파일의 이름을 변경할까요?\n예시: ${preview}`))return;
+    // 파일 이동 (이름 변경)
+    let done=0,fail=0;
+    for(const{fromPath,toPath} of toRename){
+      const tk=hDbxGetToken();
+      const r=await fetch('https://api.dropboxapi.com/2/files/move_v2',{method:'POST',headers:{'Authorization':`Bearer ${tk}`,'Content-Type':'application/json'},body:JSON.stringify({from_path:fromPath,to_path:toPath,autorename:false})});
+      if(r.ok)done++;else fail++;
+    }
+    if(fail===0)toast(`${done}개 파일 이름 변경 완료 ✓`,{type:'success'});
+    else toast(`${done}개 변경됨 · ${fail}개 실패`,{type:'error'});
+  }catch(e){toast('파일 이름 변경 중 오류가 발생했어요',{type:'error'});}
 }
 
 function pmToggleDone(key){
