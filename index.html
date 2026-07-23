@@ -701,8 +701,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.89';
-const BUILD_TIME='2026-07-23 16:30';
+const APP_VERSION='v2.90';
+const BUILD_TIME='2026-07-23 17:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1627,8 +1627,8 @@ function renderMobileBody(){
     let html='';const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);const vc=items.filter(it=>+it.amount!==0).length;
     if(!vc){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>금액이 입력된 지출이 없어요</p></div>';return;}
     const txns=calcTxns(paid,owes);
-    const transferTotal=txns.reduce((s,t)=>s+t.amt,0);
-    const burdenLine=txns.length?`<div class="result-burden">내 부담 ${fmt(total-transferTotal)}원</div>`:'';
+    const ownerBurden=(people[idc]!=null)?owes[people[idc]]:null;
+    const burdenLine=(txns.length&&ownerBurden!=null)?`<div class="result-burden">내 부담 ${fmt(ownerBurden)}원</div>`:'';
     html+=`<div class="result-amt-hero">${fmt(total)}원</div>${burdenLine}`;
     if(txns.length){html+=`<div class="pay-section-title">송금 내역</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`;}else{html+=`<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>`;}
     const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';return `<div class="detail-row" onclick="selectItemMob(${it.id})"><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉     👏👏👏</span>':''}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');
@@ -1708,7 +1708,8 @@ function renderResultView(eyeId,titleId,subId,bodyId){
   document.getElementById(titleId).textContent=title;
   document.getElementById(subId).textContent=subBase;
   const transferTotal=txns.reduce((s,t)=>s+t.amt,0);
-  const burdenLine=txns.length?`<div class="result-burden">내 부담 ${fmt(total-transferTotal)}원</div>`:'';
+  const ownerBurden=(people[idc]!=null)?owes[people[idc]]:null;
+  const burdenLine=(txns.length&&ownerBurden!=null)?`<div class="result-burden">내 부담 ${fmt(ownerBurden)}원</div>`:'';
   const heroHtml=`<div class="result-amt-hero">${fmt(total)}원</div>${burdenLine}`;
   const txnSection=txns.length?`<div class="pay-section-title">송금 내역</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`:'<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>';
   const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉     👏👏👏</span>':''}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');
