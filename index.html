@@ -698,8 +698,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.69';
-const BUILD_TIME='2026-07-23 15:00';
+const APP_VERSION='v2.70';
+const BUILD_TIME='2026-07-23 16:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -720,6 +720,7 @@ let deletedGroups={};
 const _syncSnapshots={};
 const SYNC_HASHES_KEY='dutchpay_sync_hashes';
 function _dataHash(data){let h=0;const s=JSON.stringify(data)||'';for(let i=0;i<s.length;i++)h=Math.imul(31,h)+s.charCodeAt(i)|0;return (h>>>0).toString(36);}
+function _groupHash(g){return _dataHash({name:g.name,nameAuto:g.nameAuto,data:g.data});}
 function _loadSyncedHashes(){try{return JSON.parse(localStorage.getItem(SYNC_HASHES_KEY)||'{}')||{};}catch(e){return {};}}
 function _saveSyncedHashes(h){try{localStorage.setItem(SYNC_HASHES_KEY,JSON.stringify(h));}catch(e){}}
 
@@ -885,7 +886,7 @@ let _syncTimer=null,_syncing=false;
 function _scheduleSyncToDropbox(){
   if(!dbxGetToken())return;
   clearTimeout(_syncTimer);
-  _syncTimer=setTimeout(()=>syncToDropbox(),3000);
+  _syncTimer=setTimeout(()=>syncFromDropbox(),3000);
 }
 async function syncToDropbox(){
   if(_syncing||!dbxGetToken())return;
@@ -895,7 +896,7 @@ async function syncToDropbox(){
     const ok=await _dbxUpload(dbxGetToken(),DBX_MAIN_FILE,JSON.stringify({version:2,groups,currentGroupId,deletedGroups,syncedAt:new Date().toISOString()}));
     if(ok){
       localStorage.setItem(DBX_LASTSYNC_MAIN,new Date().toISOString());
-      const hashes={};groups.forEach(g=>{hashes[g.id]=_dataHash(g.data);});
+      const hashes={};groups.forEach(g=>{hashes[g.id]=_groupHash(g);});
       _saveSyncedHashes(hashes);
       _updateSyncBadge();
     }
@@ -923,8 +924,8 @@ async function syncFromDropbox(){
       }else{
         const lg=mergedGroups[li];
         const baseHash=baseHashes[rg.id]||null;
-        const localHash=_dataHash(lg.data);
-        const remoteHash=_dataHash(rg.data);
+        const localHash=_groupHash(lg);
+        const remoteHash=_groupHash(rg);
         const localChanged=baseHash===null||localHash!==baseHash;
         const remoteChanged=baseHash===null||remoteHash!==baseHash;
         if(localChanged&&remoteChanged&&localHash!==remoteHash){
@@ -960,7 +961,7 @@ function _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted){
   if(g){currentGroupId=g.id;loadGroupData(g);}
   localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:new Date().toISOString(),groups,currentGroupId,deletedGroups}));
   localStorage.setItem(DBX_LASTSYNC_MAIN,new Date().toISOString());
-  const hashes={};groups.forEach(g=>{hashes[g.id]=_dataHash(g.data);});
+  const hashes={};groups.forEach(g=>{hashes[g.id]=_groupHash(g);});
   _saveSyncedHashes(hashes);
   _updateSyncBadge();renderAll();
   syncToDropbox();
@@ -1002,7 +1003,7 @@ function _updateSyncBadge(){
 
 function saveState(){try{syncCurrentToGroup();localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:new Date().toISOString(),groups,currentGroupId,deletedGroups}));_scheduleSyncToDropbox();}catch(e){toast('저장 공간이 부족해 데이터를 저장하지 못했어요',{type:'error'});}}
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if((d.version===2||d.version===3)&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;deletedGroups=d.deletedGroups||{};currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);groups.forEach(g=>{_syncSnapshots[g.id]=JSON.stringify(g.data);});}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
-function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;_autoBackup('전체 초기화 전');if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
+function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;_autoBackup('전체 초기화 전');if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const now=new Date().toISOString();groups.forEach(g=>{deletedGroups[g.id]=now;});const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:now,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
 function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;_autoBackup('이번 정산 초기화 전');people=[];items=[];payments={};idc=0;settleDateStart=new Date().toISOString().slice(0,10);settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
 
 function updateMeetingDate(val){settleDateStart=val||new Date().toISOString().slice(0,10);_dpUpdate('meetingDateDisp',settleDateStart);saveState();}
