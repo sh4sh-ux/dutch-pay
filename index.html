@@ -179,7 +179,7 @@ svg{display:block;flex-shrink:0;}
 .confirm-btn:hover{opacity:.85;}
 
 .stat-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:20px;}
-.result-breakdown{background:var(--card);border-radius:var(--r);border:1px solid var(--line);overflow:hidden;margin-bottom:20px;}
+.result-breakdown{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:20px;box-shadow:0 2px 10px rgba(20,25,40,.07);}
 .rbd-row{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);}
 .rbd-row:last-child{border-bottom:none;}
 .rbd-lbl{font-size:14px;color:var(--label);font-weight:500;}
@@ -486,7 +486,7 @@ svg{display:block;flex-shrink:0;}
 .rc-txn-row:last-child{border-bottom:none;}
 .rc-txn-people{display:flex;align-items:center;gap:14px;color:var(--label);}
 .rc-txn-amt{font-weight:600;flex-shrink:0;}
-.result-amt-hero,.sh-num,.txn-amt,.detail-amt,.rc-item-amt,.rc-txn-amt,.sh-sub{font-family:system-ui,-apple-system,'BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif;}
+.result-amt-hero,.sh-num,.txn-amt,.detail-amt,.rc-item-amt,.rc-txn-amt,.sh-sub,.item-amt,.rbd-val,#dTotal,#mTotal{font-family:system-ui,-apple-system,'BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif;}
 .rc-no-txn{font-size:13px;color:var(--green);padding:10px 16px;text-align:center;}
 .rc-foot{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--fill2);border-top:1px solid var(--sep);}
 .rc-saved-at{font-size:11px;color:var(--label3);}
@@ -588,7 +588,7 @@ svg{display:block;flex-shrink:0;}
 <div class="desktop-app">
   <div class="left" id="dLeft">
     <div class="left-top">
-      <div class="app-label" id="dOwnerLabel" onclick="_ownerAreaClick(this,event)" style="user-select:none;-webkit-tap-highlight-color:transparent;cursor:default">Dutch Pay</div>
+      <div class="app-label" id="dOwnerLabel" onclick="_ownerAreaClick(this,event)" style="user-select:none;-webkit-tap-highlight-color:transparent;cursor:default">Dutch Pay <span id="appVersionD" style="font-size:10px;font-weight:300;opacity:.7;letter-spacing:0;text-transform:none"></span><span id="calcVerifyD" style="font-size:10px;font-weight:700;margin-left:3px"></span></div>
       <div class="app-title" onclick="dSetTab('input')" style="cursor:pointer">더치페이</div>
       <div style="margin-bottom:16px"></div>
       <div class="tab-row">
@@ -639,7 +639,6 @@ svg{display:block;flex-shrink:0;}
       </div>
       <button class="reset-settle-btn" onclick="resetCurrentSettlement()">↺ 이번 정산 초기화</button>
       <div id="dbxSyncBadge" style="font-size:11px;color:var(--label3);text-align:right;margin-top:5px;min-height:14px"></div>
-      <div style="font-size:10px;color:var(--label3);text-align:right;margin-top:4px;letter-spacing:.3px"><span id="appVersionD"></span><span id="calcVerifyD" style="margin-left:5px;font-weight:700"></span></div>
     </div>
   </div>
   <div class="right">
@@ -710,8 +709,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.92';
-const BUILD_TIME='2026-07-23 18:00';
+const APP_VERSION='v2.93';
+const BUILD_TIME='2026-07-23 18:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1629,7 +1628,7 @@ function _verifySettlement(){
   if(!people.length||!items.some(it=>+it.amount))return{ok:true};
   const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
   const bal={};people.forEach(p=>{bal[p]=(paid[p]||0)-(owes[p]||0);});
-  txns.forEach(t=>{bal[t.from]=(bal[t.from]||0)-t.amt;bal[t.to]=(bal[t.to]||0)+t.amt;});
+  txns.forEach(t=>{bal[t.from]=(bal[t.from]||0)+t.amt;bal[t.to]=(bal[t.to]||0)-t.amt;});
   const maxErr=Math.max(0,...Object.values(bal).map(Math.abs));
   if(maxErr>1)console.error('[dutch-pay] 계산 오류 감지 (maxErr='+maxErr+'원)',bal);
   return{ok:maxErr<=1,maxErr,bal};
