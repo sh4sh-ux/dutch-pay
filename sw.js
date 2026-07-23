@@ -1,4 +1,4 @@
-const CACHE_NAME = "dutch-pay-v2.100";
+const CACHE_NAME = "dutch-pay-v3.00";
 const ASSETS = [
   "./",
   "./index.html",
