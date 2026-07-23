@@ -710,7 +710,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.19';
+const APP_VERSION='v3.20';
 const BUILD_TIME='2026-07-23 01:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -2485,7 +2485,7 @@ async function generateHistoryCanvas(rec){
     const _allTreat=validItems.length>0&&validItems.every(it=>it.isTreat);
     const _tPayers=[...new Set(validItems.filter(it=>it.isTreat).map(it=>it.payer).filter(Boolean))];
     const _tPayer=_allTreat&&_tPayers.length===1?_tPayers[0]:'';
-    if(_tPayer){const _lh=28;const _gap=(txnCardH-2*_lh)/3;const _y1=y+_gap+_lh/2;const _y2=y+_gap*2+_lh*1.5;ctx.fillStyle=C.muted;setFont(26,600);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('잘 먹고, 잘 놀고, 계산까지…',W/2,_y1);ctx.fillText(`역시 ${_tPayer}!!! 👍🏼👍🏼👍🏼`,W/2,_y2);}
+    if(_tPayer){const _lh=28;const _gap=(txnCardH-2*_lh)/3;const _y1=y+_gap+_lh/2;const _y2=y+_gap*2+_lh*1.5;ctx.fillStyle=C.muted;setFont(26,600);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('잘 먹었고, 잘 놀았고, 계산까지...',W/2,_y1);ctx.fillText(`역시 ${_tPayer}!!! 👍🏼👍🏼👍🏼`,W/2,_y2);}
     else{drawEmpty('모두 정산 완료 ✓',y,txnCardH);}
   }
   else{
