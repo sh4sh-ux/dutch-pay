@@ -578,6 +578,7 @@ svg{display:block;flex-shrink:0;}
 .sc-ver-at{font-size:10px;color:var(--label3);}
 .sc-confirm{width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;}
 .sc-confirm:active{opacity:.88;}
+.mob-item-row,.item-row,.rbd-row,.bd-row,.txn-row,.txn-item,.pay-summary-row,.detail-row,.rc-txn-row,.pay-row{border-image:linear-gradient(to right,transparent 16px,var(--sep) 16px,var(--sep) calc(100% - 16px),transparent calc(100% - 16px)) 1;}
 </style>
 </head>
 <body>
@@ -708,8 +709,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.13';
-const BUILD_TIME='2026-07-23 00:30';
+const APP_VERSION='v3.14';
+const BUILD_TIME='2026-07-23 01:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
