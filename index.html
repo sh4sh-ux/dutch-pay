@@ -179,8 +179,17 @@ svg{display:block;flex-shrink:0;}
 .confirm-btn:hover{opacity:.85;}
 
 .stat-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:20px;}
-.result-amt-hero{font-size:36px;font-weight:700;letter-spacing:-.8px;color:var(--blue);font-variant-numeric:tabular-nums;line-height:1.1;padding:6px 2px 8px;}
-.result-burden{font-size:15px;font-weight:600;color:var(--label2);font-variant-numeric:tabular-nums;padding:0 2px 18px;}
+.result-breakdown{background:var(--card);border-radius:var(--r);border:1px solid var(--line);overflow:hidden;margin-bottom:20px;}
+.rbd-row{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);}
+.rbd-row:last-child{border-bottom:none;}
+.rbd-lbl{font-size:14px;color:var(--label);font-weight:500;}
+.rbd-hint{font-size:11px;color:var(--label3);margin-left:5px;font-weight:400;}
+.rbd-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);}
+.rbd-val.rbd-neg{color:var(--green);}
+.rbd-sep{height:1px;background:var(--line);}
+.rbd-row.rbd-total{background:var(--blue-bg,#EBF3FF);}
+.rbd-row.rbd-total .rbd-lbl{color:var(--blue);font-weight:600;}
+.rbd-row.rbd-total .rbd-val{color:var(--blue);font-size:17px;}
 .stat-box{background:var(--fill);border-radius:var(--rm);padding:16px 12px;text-align:center;min-width:0;}
 .stat-lbl{font-size:11px;color:var(--label2);font-weight:500;margin-bottom:6px;white-space:nowrap;}
 .stat-val{font-size:20px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
@@ -701,8 +710,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.91';
-const BUILD_TIME='2026-07-23 17:30';
+const APP_VERSION='v2.92';
+const BUILD_TIME='2026-07-23 18:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1600,6 +1609,22 @@ function _updateMobFab(){
   fab.onclick=hasItems?()=>mSetTab('result'):addItem;
 }
 function _mobFabClick(){const fab=document.getElementById('mobFab');if(fab&&fab.onclick)fab.onclick();}
+function _resultBreakdownHtml(paid,owes,txns){
+  const ownerName=people[idc];
+  if(!ownerName)return'';
+  const ownerPaid=paid[ownerName]||0;
+  const ownerBurden=owes[ownerName]||0;
+  const treatTotal=items.filter(it=>it.isTreat).reduce((s,it)=>s+(+it.amount||0),0);
+  const ownerReceives=txns.filter(t=>t.to===ownerName).reduce((s,t)=>s+t.amt,0);
+  const ownerSends=txns.filter(t=>t.from===ownerName).reduce((s,t)=>s+t.amt,0);
+  let rows='';
+  if(ownerPaid>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">내가 결제한 금액</span><span class="rbd-val">${fmt(ownerPaid)}원</span></div>`;
+  if(treatTotal>0){const tr=items.find(it=>it.isTreat)?.payer||'';rows+=`<div class="rbd-row"><span class="rbd-lbl">한턱 혜택${tr?`<span class="rbd-hint">${e(tr)} 쏨</span>`:''}</span><span class="rbd-val">${fmt(treatTotal)}원</span></div>`;}
+  if(ownerReceives>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">돌려받을 금액</span><span class="rbd-val rbd-neg">−${fmt(ownerReceives)}원</span></div>`;
+  if(ownerSends>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">보낼 금액</span><span class="rbd-val">${fmt(ownerSends)}원</span></div>`;
+  rows+=`<div class="rbd-sep"></div><div class="rbd-row rbd-total"><span class="rbd-lbl">내 부담</span><span class="rbd-val">${fmt(ownerBurden)}원</span></div>`;
+  return`<div class="result-breakdown">${rows}</div>`;
+}
 function _verifySettlement(){
   if(!people.length||!items.some(it=>+it.amount))return{ok:true};
   const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
@@ -1647,9 +1672,7 @@ function renderMobileBody(){
     let html='';const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);const vc=items.filter(it=>+it.amount!==0).length;
     if(!vc){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>금액이 입력된 지출이 없어요</p></div>';return;}
     const txns=calcTxns(paid,owes);
-    const ownerBurden=(people[idc]!=null)?owes[people[idc]]:null;
-    const burdenLine=(txns.length&&ownerBurden!=null)?`<div class="result-burden">내 부담 ${fmt(ownerBurden)}원</div>`:'';
-    html+=`<div class="result-amt-hero">${fmt(total)}원</div>${burdenLine}`;
+    html+=_resultBreakdownHtml(paid,owes,txns);
     if(txns.length){html+=`<div class="pay-section-title">송금 내역</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`;}else{html+=`<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>`;}
     const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';return `<div class="detail-row" onclick="selectItemMob(${it.id})"><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉     👏👏👏</span>':''}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');
     html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;el.innerHTML=html;return;
@@ -1722,15 +1745,13 @@ function renderResultView(eyeId,titleId,subId,bodyId){
   document.getElementById(eyeId).textContent='정산 결과';
   if(!vc){document.getElementById(titleId).textContent='누가 얼마를 낼까요';document.getElementById(subId).textContent='지출을 입력하면 정산 결과가 여기에 표시돼요.';document.getElementById(bodyId).innerHTML='<div class="empty"><div class="empty-icon">'+svgEmpty+'</div><p>금액이 입력된 지출이 없어요</p></div>';return;}
   const txns=calcTxns(paid,owes);
-  const subBase=`${people.length}명 · ${vc}건`;
+  const subBase=`총 ${fmt(total)}원 · ${people.length}명 · ${vc}건`;
   let title;
   if(txns.length===0){title='정산 완료';}else if(txns.length===1){title=`${txns[0].from} → ${txns[0].to}`;}else{title=`보낼 송금 ${txns.length}건`;}
   document.getElementById(titleId).textContent=title;
   document.getElementById(subId).textContent=subBase;
   const transferTotal=txns.reduce((s,t)=>s+t.amt,0);
-  const ownerBurden=(people[idc]!=null)?owes[people[idc]]:null;
-  const burdenLine=(txns.length&&ownerBurden!=null)?`<div class="result-burden">내 부담 ${fmt(ownerBurden)}원</div>`:'';
-  const heroHtml=`<div class="result-amt-hero">${fmt(total)}원</div>${burdenLine}`;
+  const heroHtml=_resultBreakdownHtml(paid,owes,txns);
   const txnSection=txns.length?`<div class="pay-section-title">송금 내역</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`:'<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>';
   const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉     👏👏👏</span>':''}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('');
   document.getElementById(bodyId).innerHTML=heroHtml+txnSection+`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;
