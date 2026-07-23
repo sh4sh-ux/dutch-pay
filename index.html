@@ -630,7 +630,7 @@ svg{display:block;flex-shrink:0;}
       </div>
       <button class="reset-settle-btn" onclick="resetCurrentSettlement()">↺ 이번 정산 초기화</button>
       <div id="dbxSyncBadge" style="font-size:11px;color:var(--label3);text-align:right;margin-top:5px;min-height:14px"></div>
-      <div style="font-size:10px;color:var(--label3);text-align:right;margin-top:4px;letter-spacing:.3px"><span id="appVersionD"></span></div>
+      <div style="font-size:10px;color:var(--label3);text-align:right;margin-top:4px;letter-spacing:.3px"><span id="appVersionD"></span><span id="calcVerifyD" style="margin-left:5px;font-weight:700"></span></div>
     </div>
   </div>
   <div class="right">
@@ -652,7 +652,7 @@ svg{display:block;flex-shrink:0;}
     <div class="mob-title-row">
       <div style="display:flex;align-items:center;gap:7px;min-width:0;">
         <span class="mob-title" onclick="mSetTab('input')" style="cursor:pointer">더치페이</span>
-        <button class="mob-ver-badge" id="appVersionM"></button>
+        <button class="mob-ver-badge" id="appVersionM"></button><span id="calcVerifyM" style="font-size:10px;font-weight:700;margin-left:3px"></span>
       </div>
       <span id="mTotal" style="font-size:18px;font-weight:700;flex-shrink:0;">0원</span>
     </div>
@@ -701,8 +701,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.90';
-const BUILD_TIME='2026-07-23 17:00';
+const APP_VERSION='v2.91';
+const BUILD_TIME='2026-07-23 17:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1600,10 +1600,30 @@ function _updateMobFab(){
   fab.onclick=hasItems?()=>mSetTab('result'):addItem;
 }
 function _mobFabClick(){const fab=document.getElementById('mobFab');if(fab&&fab.onclick)fab.onclick();}
+function _verifySettlement(){
+  if(!people.length||!items.some(it=>+it.amount))return{ok:true};
+  const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
+  const bal={};people.forEach(p=>{bal[p]=(paid[p]||0)-(owes[p]||0);});
+  txns.forEach(t=>{bal[t.from]=(bal[t.from]||0)-t.amt;bal[t.to]=(bal[t.to]||0)+t.amt;});
+  const maxErr=Math.max(0,...Object.values(bal).map(Math.abs));
+  if(maxErr>1)console.error('[dutch-pay] 계산 오류 감지 (maxErr='+maxErr+'원)',bal);
+  return{ok:maxErr<=1,maxErr,bal};
+}
+function _updateVerifyBadge(){
+  const r=_verifySettlement();
+  const hasData=people.length&&items.some(it=>+it.amount);
+  ['calcVerifyD','calcVerifyM'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    if(!hasData){el.textContent='';return;}
+    el.textContent=r.ok?'✓':'⚠';
+    el.style.color=r.ok?'var(--green)':'var(--red)';
+    el.title=r.ok?'계산 검증 완료':'계산 오류 감지됨 (콘솔 확인)';
+  });
+}
 function renderAll(skipSave=false){
   const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
   const dTPay=document.getElementById('dTPayment');if(dTPay)dTPay.style.display=_ownerUnlocked?'':'none';
-  renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
+  renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();_updateVerifyBadge();
   const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
   _updateMobFab();if(!skipSave)saveState();
 }
@@ -2520,7 +2540,7 @@ loadState();
 _migrateHistoryGroupNames();
 _deduplicateHistoryOnStartup();
 renderAll();
-(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;})();
+(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_updateVerifyBadge();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
 hDbxHandleCallback().then(()=>{if(hDbxGetToken())hSyncDropbox();});
