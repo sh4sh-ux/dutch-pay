@@ -426,7 +426,7 @@ svg{display:block;flex-shrink:0;}
 .detail-members{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:11px;}
 .detail-amt{font-size:15px;font-weight:700;flex-shrink:0;}
 .pay-ic{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.share-date-row{display:flex;align-items:stretch;gap:6px;margin-bottom:14px;padding:0;flex-wrap:nowrap;}@media(max-width:740px){.share-date-row{padding:0;}}
+.share-date-row{display:grid;grid-template-columns:1fr auto;gap:6px;margin-bottom:14px;}
 .share-date-inp{font-size:13px;padding:6px 10px;border:1px solid var(--sep2);border-radius:8px;background-color:var(--card);color:var(--label);font-family:inherit;outline:none;cursor:pointer;flex:1;min-width:0;}
 .share-date-inp:hover{border-color:var(--label3);}
 .share-date-inp:focus{border-color:var(--blue);}
@@ -708,8 +708,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.12';
-const BUILD_TIME='2026-07-24 00:20';
+const APP_VERSION='v3.13';
+const BUILD_TIME='2026-07-23 00:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
