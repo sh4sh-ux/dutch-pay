@@ -709,8 +709,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v2.96';
-const BUILD_TIME='2026-07-23 20:00';
+const APP_VERSION='v2.97';
+const BUILD_TIME='2026-07-23 20:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1608,8 +1608,14 @@ function _updateMobFab(){
   fab.onclick=hasItems?()=>mSetTab('result'):addItem;
 }
 function _mobFabClick(){const fab=document.getElementById('mobFab');if(fab&&fab.onclick)fab.onclick();}
+function _getOwnerName(txns){
+  if(_myName&&people.includes(_myName))return _myName;
+  if(!txns.length)return people[0]||null;
+  const recv={};people.forEach(p=>{recv[p]=0;});txns.forEach(t=>{recv[t.to]=(recv[t.to]||0)+t.amt;});
+  return people.reduce((b,p)=>(recv[p]||0)>(recv[b]||0)?p:b,people[0])||null;
+}
 function _resultBreakdownHtml(paid,owes,txns){
-  const ownerName=(_myName&&people.includes(_myName))?_myName:null;
+  const ownerName=_getOwnerName(txns);
   if(!ownerName)return'';
   const ownerPaid=paid[ownerName]||0;
   const ownerBurden=owes[ownerName]||0;
@@ -2219,7 +2225,7 @@ async function generateSettleCanvas(){
   const{paid,owes,hasRounding}=computeShares();
   const txns=calcTxns(paid,owes);
   const validItems=items.filter(it=>+it.amount!==0);
-  const _imgOwner=(_myName&&people.includes(_myName))?_myName:null;
+  const _imgOwner=_getOwnerName(txns);
   const bdRows=[];
   if(_imgOwner){
     const _op=paid[_imgOwner]||0,_ob=owes[_imgOwner]||0;
