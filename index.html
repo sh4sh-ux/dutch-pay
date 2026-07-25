@@ -710,8 +710,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.23';
-const BUILD_TIME='2026-07-23 01:00';
+const APP_VERSION='v3.24';
+const BUILD_TIME='2026-07-25 00:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -971,7 +971,9 @@ async function _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted){
   groups.forEach(g=>{_syncSnapshots[g.id]=JSON.stringify(g.data);});
   if(!getCurrentGroup()&&groups.length)currentGroupId=groups[0].id;
   const g=getCurrentGroup()||groups[0];
+  const _prevSelId=selectedId;
   if(g){currentGroupId=g.id;loadGroupData(g);}
+  if(_prevSelId&&items.find(i=>i.id===_prevSelId))selectedId=_prevSelId;
   localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:new Date().toISOString(),groups,currentGroupId,deletedGroups}));
   localStorage.setItem(DBX_LASTSYNC_MAIN,new Date().toISOString());
   const hashes={};groups.forEach(g=>{hashes[g.id]=_groupHash(g);});
