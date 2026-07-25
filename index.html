@@ -710,8 +710,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.26';
-const BUILD_TIME='2026-07-25 02:00';
+const APP_VERSION='v3.27';
+const BUILD_TIME='2026-07-25 03:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -978,7 +978,7 @@ async function _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted){
   localStorage.setItem(DBX_LASTSYNC_MAIN,new Date().toISOString());
   const hashes={};groups.forEach(g=>{hashes[g.id]=_groupHash(g);});
   _saveSyncedHashes(hashes);
-  _updateSyncBadge();renderAll(true);
+  _updateSyncBadge();_renderAllSafe();
   await syncToDropbox();
 }
 
@@ -1654,6 +1654,23 @@ function _updateVerifyBadge(){
     el.style.color=r.ok?'var(--green)':'var(--red)';
     el.title=r.ok?'계산 검증 완료':'계산 오류 감지됨 (콘솔 확인)';
   });
+}
+function _renderAllSafe(){
+  const ae=document.activeElement;
+  const _inp=ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT');
+  const rBody=document.getElementById('dRBody');
+  const mBody=document.getElementById('mBody');
+  const mSheet=document.getElementById('mSheet');
+  const _skipD=_inp&&rBody&&rBody.contains(ae);
+  const _skipM=_inp&&((mBody&&mBody.contains(ae))||(mSheet&&mSheet.contains(ae)));
+  const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
+  const dTPay=document.getElementById('dTPayment');if(dTPay)dTPay.style.display=_ownerUnlocked?'':'none';
+  renderPills();renderItemLists();updateTotals();
+  if(!_skipD)renderDesktopRight();
+  if(!_skipM)renderMobileBody();
+  refreshGroupSwitcher();_updateVerifyBadge();
+  const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
+  _updateMobFab();
 }
 function renderAll(skipSave=false){
   const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
