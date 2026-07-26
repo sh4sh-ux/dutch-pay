@@ -710,8 +710,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.27';
-const BUILD_TIME='2026-07-25 03:00';
+const APP_VERSION='v3.28';
+const BUILD_TIME='2026-07-26 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -723,7 +723,7 @@ let _myName=localStorage.getItem('dutchpay_my_name')||'';
 let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked');
 let _historySearch='';
 let _historySort='newest';
-let _histDrawerOpen=false;
+let _histDrawerOpen=false,_loadedHistId=null;
 let dTab='input',mTab='input';
 let itemSort='default',itemSearch='';
 let settleDateStart=new Date().toISOString().slice(0,10),settleDateEnd=null;
@@ -743,7 +743,7 @@ function _newGroupId(){return 'g'+Date.now()+Math.floor(Math.random()*1000);}
 function getCurrentGroup(){return groups.find(g=>g.id===currentGroupId);}
 function syncCurrentToGroup(){const g=getCurrentGroup();if(!g)return;if(!g.createdAt)g.createdAt=new Date().toISOString();const nextData={people:people.slice(),items:JSON.parse(JSON.stringify(items)),idc,settleDateStart,settleDateEnd,itemSort,itemSearch,payments:JSON.parse(JSON.stringify(payments))};const nextStr=JSON.stringify(nextData);if(nextStr!==_syncSnapshots[g.id]){g.updatedAt=new Date().toISOString();_syncSnapshots[g.id]=nextStr;}g.data=nextData;}
 function loadGroupData(g){people=(g.data.people||[]).slice();items=JSON.parse(JSON.stringify(g.data.items||[]));idc=g.data.idc||0;settleDateStart=g.data.settleDateStart||new Date().toISOString().slice(0,10);settleDateEnd=g.data.settleDateEnd!==undefined?g.data.settleDateEnd:null;itemSort=g.data.itemSort||'default';itemSearch=g.data.itemSearch||'';payments=JSON.parse(JSON.stringify(g.data.payments||{}));selectedId=null;}
-function switchGroup(id){if(id===currentGroupId)return;syncCurrentToGroup();currentGroupId=id;const g=getCurrentGroup();if(g)loadGroupData(g);renderAll();}
+function switchGroup(id){if(id===currentGroupId)return;syncCurrentToGroup();currentGroupId=id;const g=getCurrentGroup();if(g)loadGroupData(g);_loadedHistId=null;renderAll();}
 function createGroup(name){const id=_newGroupId();syncCurrentToGroup();const trimmed=(name||'').trim();const isAuto=!trimmed;const now=new Date().toISOString();groups.push({id,name:trimmed||_autoGroupName([]),nameAuto:isAuto,createdAt:now,updatedAt:now,data:_emptyGroupData()});currentGroupId=id;loadGroupData(groups[groups.length-1]);renderAll();toast(trimmed?`'${trimmed}' 그룹 생성됨`:'새 그룹이 생성됐어요',{type:'success'});}
 function renameGroup(id,newName){const g=groups.find(g=>g.id===id);if(!g)return;const trimmed=(newName||'').trim();if(!trimmed)return;g.name=trimmed;g.nameAuto=false;g.updatedAt=new Date().toISOString();saveState();renderAll();}
 function duplicateGroup(id){const g=groups.find(g=>g.id===id);if(!g)return;syncCurrentToGroup();const newId=_newGroupId();const ng={id:newId,name:g.name+' (복사)',nameAuto:false,data:{people:(g.data.people||[]).slice(),items:[],idc:0,settleDateStart:new Date().toISOString().slice(0,10),settleDateEnd:null,itemSort:'default',itemSearch:''}};groups.push(ng);currentGroupId=newId;loadGroupData(ng);renderAll();toast(`'${ng.name}' 생성됨`,{type:'success'});}
@@ -1838,15 +1838,27 @@ function saveToHistory(){
   try{
     const raw=localStorage.getItem(HISTORY_KEY);
     const arr=raw?JSON.parse(raw):[];
-    const dupIdx=arr.findIndex(r=>_histFingerprint(r)===_histFingerprint(record));
-    if(dupIdx>=0){
-      arr[dupIdx]={...arr[dupIdx],payments:record.payments,txns:record.txns,savedAt:record.savedAt};
+    if(_loadedHistId){
+      const editIdx=arr.findIndex(r=>r.id===_loadedHistId);
+      if(editIdx>=0){
+        arr[editIdx]={...arr[editIdx],...record,id:_loadedHistId};
+      }else{
+        arr.unshift(record);
+      }
       localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
-      toast('입금 현황이 기록에 업데이트됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+      _loadedHistId=null;
+      toast('기록이 수정됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
     }else{
-      arr.unshift(record);
-      localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
-      toast('기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+      const dupIdx=arr.findIndex(r=>_histFingerprint(r)===_histFingerprint(record));
+      if(dupIdx>=0){
+        arr[dupIdx]={...arr[dupIdx],people:record.people,items:record.items,total:record.total,payments:record.payments,txns:record.txns,savedAt:record.savedAt};
+        localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
+        toast('기록이 업데이트됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+      }else{
+        arr.unshift(record);
+        localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
+        toast('기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+      }
     }
     if(hDbxGetToken())hSyncDropbox(true);
   }catch(err){
@@ -1991,6 +2003,7 @@ function _buildRecordCardHtml(r){
         <button class="rc-load-btn" onclick="shareHistoryImage('${e(r.id)}')">이미지</button>
         <button class="rc-pdf-btn" onclick="printHistoryRecord('${e(r.id)}')">PDF</button>
         <button class="rc-load-btn" onclick="loadHistoryAsGroup('${e(r.id)}')">불러오기</button>
+        <button class="rc-load-btn" onclick="loadHistoryForEdit('${e(r.id)}')">수정</button>
         <button class="rc-del-btn" onclick="deleteHistoryRecord('${e(r.id)}')">삭제</button>
       </div>
     </div>
@@ -2068,6 +2081,24 @@ function loadHistoryAsGroup(id){
   if(window.innerWidth<700){mTab='input';renderMobileBody();window.scrollTo(0,0);}
   else{dTab='input';renderAll();}
   toast(`'${newGroup.name}' 그룹으로 불러왔어요`,{type:'success'});
+}
+function loadHistoryForEdit(id){
+  const records=loadHistory();
+  const r=records.find(rec=>rec.id===id);
+  if(!r)return;
+  const displayName=(r.people||[]).join(', ')||r.groupName||'정산 기록';
+  closeHistDrawer();closeSheet();
+  syncCurrentToGroup();
+  let newIdc=0;
+  const newItems=(r.items||[]).map(it=>({id:++newIdc,name:it.name||'',amount:it.amount||0,payer:it.payer||'',members:[...(it.members||[])],watchers:[...(it.watchers||[])],isTreat:it.isTreat||false,rounderOverride:it.rounderOverride||null,iconOverride:it.iconOverride||null}));
+  const newId=_newGroupId();
+  const _cleanPm=v=>{const amt=(v.amount!==null&&v.amount!==undefined&&v.amount!==''&&!isNaN(+v.amount))?+v.amount:null;return{done:!!v.done,amount:amt,timestamp:v.timestamp||'',account:v.account||'',accountNumber:v.accountNumber||'',memo:v.memo||''};};
+  const cleanPayments={};Object.entries(r.payments||{}).forEach(([k,v])=>{cleanPayments[k]=_cleanPm(v);});
+  const newGroup={id:newId,name:displayName,nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||new Date().toISOString().slice(0,10),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:'',payments:cleanPayments}};
+  groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);_loadedHistId=id;saveState();
+  if(window.innerWidth<700){mTab='input';renderMobileBody();window.scrollTo(0,0);}
+  else{dTab='input';renderAll();}
+  toast(`수정 중: '${displayName}' — 변경 후 ⋯ → 기록 보관함에 저장`,{type:'info',duration:5000});
 }
 function renderHistoryView(eyeId,titleId,subId,bodyId){
   _hPanelOpen=false;
