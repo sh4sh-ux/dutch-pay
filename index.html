@@ -663,7 +663,7 @@ svg{display:block;flex-shrink:0;}
         <span class="mob-title" onclick="mSetTab('input')" style="cursor:pointer">더치페이</span>
         <button class="mob-ver-badge" id="appVersionM"></button><span id="calcVerifyM" style="font-size:10px;font-weight:700;margin-left:3px"></span>
       </div>
-      <div style="display:flex;align-items:baseline;gap:5px;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
         <span style="font-size:11px;font-weight:600;color:var(--label3);">총 지출</span>
         <span id="mTotal" style="font-size:18px;font-weight:700;">0원</span>
       </div>
@@ -713,8 +713,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.30';
-const BUILD_TIME='2026-07-27 11:00';
+const APP_VERSION='v3.31';
+const BUILD_TIME='2026-07-27 12:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
