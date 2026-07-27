@@ -663,7 +663,10 @@ svg{display:block;flex-shrink:0;}
         <span class="mob-title" onclick="mSetTab('input')" style="cursor:pointer">더치페이</span>
         <button class="mob-ver-badge" id="appVersionM"></button><span id="calcVerifyM" style="font-size:10px;font-weight:700;margin-left:3px"></span>
       </div>
-      <span id="mTotal" style="font-size:18px;font-weight:700;flex-shrink:0;">0원</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;gap:1px;">
+        <span style="font-size:10px;color:var(--label3);font-weight:400;letter-spacing:.3px;line-height:1;">총 지출</span>
+        <span id="mTotal" style="font-size:18px;font-weight:700;line-height:1.2;">0원</span>
+      </div>
     </div>
     <div style="margin-bottom:14px"></div>
     <div class="mob-tabs">
@@ -710,8 +713,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.28';
-const BUILD_TIME='2026-07-26 10:00';
+const APP_VERSION='v3.29';
+const BUILD_TIME='2026-07-27 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1630,7 +1633,7 @@ function _resultBreakdownHtml(paid,owes,txns){
   let rows='';
   if(ownerPaid>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">내가 결제한 금액</span><span class="rbd-val">${fmt(ownerPaid)}원</span></div>`;
   if(treatTotal>0){const tr=items.find(it=>it.isTreat)?.payer||'';const hintHtml=tr?'<span class="rbd-hint">'+e(tr)+' 쏨</span>':'';rows+='<div class="rbd-row"><span class="rbd-lbl">한턱 혜택'+hintHtml+'</span><span class="rbd-val">'+fmt(treatTotal)+'원</span></div>';}
-  if(ownerReceives>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">돌려받을 금액</span><span class="rbd-val rbd-neg">−${fmt(ownerReceives)}원</span></div>`;
+  if(ownerReceives>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">돌려받을 금액</span><span class="rbd-val rbd-neg">${fmt(ownerReceives)}원</span></div>`;
   if(ownerSends>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">보낼 금액</span><span class="rbd-val">${fmt(ownerSends)}원</span></div>`;
   rows+=`<div class="rbd-sep"></div><div class="rbd-row rbd-total"><span class="rbd-lbl">내 부담</span><span class="rbd-val">${fmt(ownerBurden)}원</span></div>`;
   return`<div class="result-breakdown">${rows}</div>`;
