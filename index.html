@@ -713,8 +713,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.31';
-const BUILD_TIME='2026-07-27 12:00';
+const APP_VERSION='v3.32';
+const BUILD_TIME='2026-07-27 13:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -968,6 +968,9 @@ async function syncFromDropbox(){
   }catch(e){}finally{_syncFromRunning=false;}
 }
 async function _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted){
+  // 병합 전 현재 상태 스냅샷
+  const _prevGroupHash=getCurrentGroup()?_groupHash(getCurrentGroup()):null;
+  const _prevGroupCount=groups.length;
   groups=mergedGroups;
   if(mergedDeleted)deletedGroups=mergedDeleted;
   // 스냅샷 선-적재: loadGroupData 후 syncCurrentToGroup이 updatedAt을 건드리지 않도록
@@ -981,7 +984,10 @@ async function _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted){
   localStorage.setItem(DBX_LASTSYNC_MAIN,new Date().toISOString());
   const hashes={};groups.forEach(g=>{hashes[g.id]=_groupHash(g);});
   _saveSyncedHashes(hashes);
-  _updateSyncBadge();_renderAllSafe();
+  _updateSyncBadge();
+  // 실제로 데이터가 바뀐 경우에만 화면 재렌더링
+  const _newGroupHash=getCurrentGroup()?_groupHash(getCurrentGroup()):null;
+  if(_prevGroupHash!==_newGroupHash||groups.length!==_prevGroupCount)_renderAllSafe();
   await syncToDropbox();
 }
 
