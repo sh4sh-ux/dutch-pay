@@ -122,10 +122,6 @@ svg{display:block;flex-shrink:0;}
 .ilist-label-row{display:flex;align-items:center;justify-content:space-between;padding:0 var(--pad-x);margin-bottom:8px;gap:6px;}
 .ilist-label{font-size:12px;font-weight:600;color:var(--label2);flex-shrink:0;}
 .ilist-tools{display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end;}
-.ilist-search{flex:1;max-width:140px;min-width:0;font-size:12px;padding:4px 8px;border:1px solid var(--sep2);border-radius:6px;background:var(--card);color:var(--label);outline:none;}
-.ilist-search:focus{border-color:var(--blue);}
-.ilist-sort{font-size:11px;padding:4px 6px;border:1px solid var(--sep2);border-radius:6px;background:var(--card);color:var(--label2);font-family:inherit;cursor:pointer;}
-.ilist-sort:focus{border-color:var(--blue);}
 .ilist-results-empty{padding:24px var(--pad-x);font-size:13px;color:var(--label3);text-align:center;}
 .item-row{display:flex;align-items:center;gap:10px;padding:10px var(--pad-x);border-bottom:1px solid var(--sep);cursor:pointer;transition:background .12s;animation:rowIn .25s ease;}
 @keyframes rowIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
@@ -493,8 +489,6 @@ svg{display:block;flex-shrink:0;}
 .rc-del-btn:hover{opacity:.7;}
 .rc-load-btn{font-size:12px;color:var(--blue);border:none;background:transparent;font-weight:500;padding:0;cursor:pointer;}
 .rc-load-btn:hover{opacity:.7;}
-.rc-pdf-btn{font-size:12px;color:var(--label2);border:none;background:transparent;font-weight:500;padding:0;cursor:pointer;}
-.rc-pdf-btn:hover{opacity:.7;}
 .hist-search-wrap{padding:10px 0 4px;}
 .hist-search{width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--sep2);border-radius:10px;background:var(--card);color:var(--label);outline:none;font-family:inherit;box-sizing:border-box;}
 .hist-search:focus{border-color:var(--blue);}
@@ -550,8 +544,6 @@ svg{display:block;flex-shrink:0;}
 .sinp-rel > input{padding-right:26px;}
 .sinp-clr{position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--label3);font-size:14px;line-height:1;cursor:pointer;padding:2px 4px;display:none;-webkit-appearance:none;appearance:none;touch-action:manipulation;}
 .sinp-clr.vis{display:flex;align-items:center;justify-content:center;}
-.ilist-s-wrap{flex:1;max-width:140px;min-width:0;}
-.ilist-s-wrap .ilist-search{width:100%;max-width:none;flex:1;}
 /* ── 날짜 표시 (로케일 독립적 YYYY.MM.DD) ── */
 .dp-wrap{position:relative;width:100%;display:block;}
 .dp-txt{border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 28px 8px 10px;font-size:13px;background-color:var(--card);color:var(--label);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2' ry='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/></svg>");background-repeat:no-repeat;background-position:right 8px center;background-size:14px 14px;cursor:pointer;white-space:nowrap;width:100%;box-sizing:border-box;line-height:1.4;}
@@ -589,7 +581,7 @@ svg{display:block;flex-shrink:0;}
 <div class="desktop-app">
   <div class="left" id="dLeft">
     <div class="left-top">
-      <div class="app-label" id="dOwnerLabel" onclick="_ownerAreaClick(this,event)" style="user-select:none;-webkit-tap-highlight-color:transparent;cursor:default">Dutch Pay <span id="appVersionD" style="font-size:10px;font-weight:400;opacity:.9;letter-spacing:0;text-transform:none;margin-left:16px"></span><span id="calcVerifyD" style="font-size:10px;font-weight:700;margin-left:3px"></span></div>
+      <div class="app-label" id="dOwnerLabel" onclick="_ownerAreaClick(this,event)" style="user-select:none;-webkit-tap-highlight-color:transparent;cursor:default">Dutch Pay <span id="appVersionD" style="font-size:10px;font-weight:400;opacity:.9;letter-spacing:0;text-transform:none;margin-left:16px"></span></div>
       <div class="app-title" onclick="dSetTab('input')" style="cursor:pointer">더치페이</div>
       <div style="margin-bottom:16px"></div>
       <div class="tab-row">
@@ -617,15 +609,6 @@ svg{display:block;flex-shrink:0;}
     <div class="items-scroll">
       <div class="ilist-label-row">
         <span class="ilist-label">지출</span>
-      </div>
-      <div class="ilist-label-row" id="dItemTools" style="display:none">
-        <div class="sinp-rel ilist-s-wrap">
-          <input type="search" class="ilist-search" id="dItemSearch" placeholder="검색" oninput="setItemSearch(this.value);_chkClear(this)"/>
-          <button class="sinp-clr" aria-label="검색어 지우기" onclick="_clrItemSearch()">✕</button>
-        </div>
-        <select class="ilist-sort" onchange="setItemSort(this.value)" id="dItemSort">
-          <option value="default">기본순</option>
-        </select>
       </div>
       <div id="dItemRows"></div>
       <div class="add-row" onclick="addItem()">
@@ -661,7 +644,7 @@ svg{display:block;flex-shrink:0;}
     <div class="mob-title-row">
       <div style="display:flex;align-items:center;gap:7px;min-width:0;">
         <span class="mob-title" onclick="mSetTab('input')" style="cursor:pointer">더치페이</span>
-        <button class="mob-ver-badge" id="appVersionM"></button><span id="calcVerifyM" style="font-size:10px;font-weight:700;margin-left:3px"></span>
+        <button class="mob-ver-badge" id="appVersionM"></button>
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
         <span style="font-size:11px;font-weight:600;color:var(--label3);">총 지출</span>
@@ -713,8 +696,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.32';
-const BUILD_TIME='2026-07-27 13:00';
+const APP_VERSION='v3.33';
+const BUILD_TIME='2026-07-28 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -814,9 +797,8 @@ function exportCurrentGroupCsv(){const g=getCurrentGroup();if(!g){toast('내보�
 
 
 
-function getDisplayItems(){let arr=items.slice();if(itemSearch.trim()){const q=itemSearch.trim().toLowerCase();arr=arr.filter(it=>(it.name||'').toLowerCase().includes(q));}if(itemSort==='amtDesc')arr.sort((a,b)=>(+b.amount||0)-(+a.amount||0));else if(itemSort==='amtAsc')arr.sort((a,b)=>(+a.amount||0)-(+b.amount||0));return arr;}
+function getDisplayItems(){return items.slice();}
 function setItemSort(v){itemSort=v;renderAll();}
-function setItemSearch(v){itemSearch=v;renderAll();}
 
 let _toastContainer=null;
 function _getToastContainer(){if(!_toastContainer||!document.body.contains(_toastContainer)){_toastContainer=document.createElement('div');_toastContainer.className='toast-container';document.body.appendChild(_toastContainer);}return _toastContainer;}
@@ -1644,26 +1626,6 @@ function _resultBreakdownHtml(paid,owes,txns){
   rows+=`<div class="rbd-sep"></div><div class="rbd-row rbd-total"><span class="rbd-lbl">내 부담</span><span class="rbd-val">${fmt(ownerBurden)}원</span></div>`;
   return`<div class="result-breakdown">${rows}</div>`;
 }
-function _verifySettlement(){
-  if(!people.length||!items.some(it=>+it.amount))return{ok:true};
-  const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
-  const bal={};people.forEach(p=>{bal[p]=(paid[p]||0)-(owes[p]||0);});
-  txns.forEach(t=>{bal[t.from]=(bal[t.from]||0)+t.amt;bal[t.to]=(bal[t.to]||0)-t.amt;});
-  const maxErr=Math.max(0,...Object.values(bal).map(Math.abs));
-  if(maxErr>1)console.error('[dutch-pay] 계산 오류 감지 (maxErr='+maxErr+'원)',bal);
-  return{ok:maxErr<=1,maxErr,bal};
-}
-function _updateVerifyBadge(){
-  const r=_verifySettlement();
-  const hasData=people.length&&items.some(it=>+it.amount);
-  ['calcVerifyD','calcVerifyM'].forEach(id=>{
-    const el=document.getElementById(id);if(!el)return;
-    if(!hasData){el.textContent='';return;}
-    el.textContent=r.ok?'✓':'⚠';
-    el.style.color=r.ok?'var(--green)':'var(--red)';
-    el.title=r.ok?'계산 검증 완료':'계산 오류 감지됨 (콘솔 확인)';
-  });
-}
 function _renderAllSafe(){
   const ae=document.activeElement;
   const _inp=ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT');
@@ -1677,14 +1639,14 @@ function _renderAllSafe(){
   renderPills();renderItemLists();updateTotals();
   if(!_skipD)renderDesktopRight();
   if(!_skipM)renderMobileBody();
-  refreshGroupSwitcher();_updateVerifyBadge();
+  refreshGroupSwitcher();
   const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
   _updateMobFab();
 }
 function renderAll(skipSave=false){
   const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
   const dTPay=document.getElementById('dTPayment');if(dTPay)dTPay.style.display=_ownerUnlocked?'':'none';
-  renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();_updateVerifyBadge();
+  renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
   const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
   _updateMobFab();if(!skipSave)saveState();
 }
@@ -1692,7 +1654,7 @@ function renderAll(skipSave=false){
 function _pillHtml(p){return `<span class="pill">${e(p)}<button class="pill-x" aria-label="${e(p)} 삭제" onclick="event.stopPropagation();removePerson(${ja(p)})">${svgX}</button></span>`;}
 function renderPills(){const el=document.getElementById('dPills');if(!people.length){el.innerHTML='<span class="pills-empty">이름을 입력하세요</span>';return;}el.innerHTML=people.map(_pillHtml).join('');}
 
-function renderItemLists(){const el=document.getElementById('dItemRows');const tools=document.getElementById('dItemTools');if(tools)tools.style.display=items.length>=10?'flex':'none';const sortEl=document.getElementById('dItemSort');if(sortEl)sortEl.value=itemSort;const searchEl=document.getElementById('dItemSearch');if(searchEl){searchEl.value=itemSearch;_chkClear(searchEl);}const list=getDisplayItems();if(!list.length){if(items.length){el.innerHTML='<div class="ilist-results-empty">검색 결과가 없어요</div>';}else{el.innerHTML='';}return;}el.innerHTML=list.map(it=>`<div class="item-row${it.id===selectedId?' sel':''}" onclick="selectItem(${it.id})"><div class="item-dot"></div><div class="item-info"><div class="item-name">${e(it.name)||'(이름 없음)'}</div><div class="item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('');}
+function renderItemLists(){const el=document.getElementById('dItemRows');const list=getDisplayItems();if(!list.length){el.innerHTML='';return;}el.innerHTML=list.map(it=>`<div class="item-row${it.id===selectedId?' sel':''}" onclick="selectItem(${it.id})"><div class="item-dot"></div><div class="item-info"><div class="item-name">${e(it.name)||'(이름 없음)'}</div><div class="item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join('');}
 
 function updateTotals(){const t=items.reduce((s,it)=>s+(+it.amount||0),0);const neg=t<0;const dEl=document.getElementById('dTotal');dEl.textContent=fmt(t)+'원';dEl.classList.toggle('amt-neg',neg);const mEl=document.getElementById('mTotal');if(mEl){mEl.textContent=fmt(t)+'원';mEl.classList.toggle('amt-neg',neg);}}
 
@@ -2010,7 +1972,7 @@ function _buildRecordCardHtml(r){
       <span class="rc-saved-at">${savedAtStr} 저장 · ${(r.people||[]).length}명</span>
       <div style="display:flex;gap:14px;align-items:center;">
         <button class="rc-load-btn" onclick="shareHistoryImage('${e(r.id)}')">이미지</button>
-        <button class="rc-pdf-btn" onclick="printHistoryRecord('${e(r.id)}')">PDF</button>
+
         <button class="rc-load-btn" onclick="loadHistoryAsGroup('${e(r.id)}')">불러오기</button>
         <button class="rc-load-btn" onclick="loadHistoryForEdit('${e(r.id)}')">수정</button>
         <button class="rc-del-btn" onclick="deleteHistoryRecord('${e(r.id)}')">삭제</button>
@@ -2058,7 +2020,6 @@ function _filterHistoryRecords(records,query){
 }
 function _chkClear(inp){const btn=inp.nextElementSibling;if(btn&&btn.classList.contains('sinp-clr'))btn.classList.toggle('vis',inp.value.length>0);}
 function _clrHistDr(){const i=document.getElementById('histDrSinp');if(i){i.value='';_chkClear(i);updateHistorySearch('');}}
-function _clrItemSearch(){const i=document.getElementById('dItemSearch');if(i){i.value='';_chkClear(i);setItemSearch('');}}
 function _clrPmSearch(){_pmSearchInput('');const r=document.querySelector('.pm-search');if(r){r.value='';_chkClear(r);}}
 function _clrHistSearch(){const i=document.querySelector('.hist-search');if(i){i.value='';_chkClear(i);updateHistorySearch('');}}
 function updateHistorySearch(val){
@@ -2614,24 +2575,12 @@ async function shareHistoryImage(id){
   }catch(err){toast('이미지 저장에 실패했어요',{type:'error'});}
 }
 
-function printHistoryRecord(id){
-  const rec=loadHistory().find(r=>r.id===id);if(!rec){toast('기록을 찾을 수 없어요',{type:'error'});return;}
-  const fhd=d=>{if(!d)return'';const[yr,m,day]=d.split('-');return`${yr}년 ${+m}월 ${+day}일`;};
-  const dateStr=rec.dateEnd&&rec.dateEnd!==rec.dateStart?`${fhd(rec.dateStart)} ~ ${fhd(rec.dateEnd)}`:fhd(rec.dateStart);
-  const ppl=rec.people||[];const total=rec.total||0;const perPerson=ppl.length?Math.floor(Math.abs(total)/ppl.length):0;
-  const validItems=(rec.items||[]).filter(it=>+it.amount!==0);const txns=rec.txns||[];const pmObj=rec.payments||{};
-  const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const itemsHtml=validItems.map(it=>{const mems=it.members&&it.members.length?it.members.join(', '):ppl.join(', ');return`<tr><td><strong>${esc(it.name||'(이름 없음)')}</strong></td><td class="s">${esc(it.payer||'')} 결제</td><td class="s">${esc(mems)}</td><td class="r">${fmt(+it.amount)}원</td></tr>`;}).join('');
-  const txnsHtml=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=pmObj[tkey]||{};const billing=t.amt;const received=pm.done?(pm.amount!=null?+pm.amount:billing):0;const diff=pm.done?received-billing:null;let st='미입금',sc='pending';if(pm.done){if(diff>0){st=`+${fmt(diff)}원 초과`;sc='excess';}else if(diff<0){st=`-${fmt(-diff)}원 부족`;sc='lack';}else{st='✓ 입금완료';sc='done';}}const ts=pm.timestamp?pm.timestamp.replace('T',' ').slice(0,16):'';return`<tr><td>${esc(t.from)} → ${esc(t.to)}</td><td class="r">${fmt(billing)}원</td><td><span class="badge ${sc}">${st}</span></td><td class="s">${ts}</td></tr>`;}).join('');
-  const html=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>정산내역 ${dateStr}</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:-apple-system,'Apple SD Gothic Neo',Arial,sans-serif;font-size:14px;color:#111;background:#fff;padding:32px;}h1{font-size:28px;font-weight:800;margin-bottom:4px;}.date{color:#888;font-size:14px;margin-bottom:20px;}.hero{background:#f5f5f7;border-radius:14px;padding:22px;text-align:center;margin-bottom:24px;}.hero-total{font-size:40px;font-weight:800;}.hero-sub{color:#888;margin-top:6px;font-size:13px;}.sec{margin-bottom:24px;}.sec-title{font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #eee;}table{width:100%;border-collapse:collapse;}td{padding:10px 6px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}td.r{text-align:right;font-weight:700;white-space:nowrap;}td.s{color:#888;font-size:12px;}.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}.badge.done{background:#e8fbe9;color:#1a7a3c;}.badge.excess{background:#ebf3ff;color:#0055b8;}.badge.lack{background:#ffeeee;color:#e53e3e;}.badge.pending{background:#f0f0f2;color:#888;}.foot{margin-top:24px;text-align:center;color:#bbb;font-size:11px;border-top:1px solid #eee;padding-top:14px;}@media print{body{padding:16px;}}</style></head><body><h1>정산 내역</h1><div class="date">${dateStr} · ${esc(ppl.join(', '))}</div><div class="hero"><div class="hero-total">${fmt(total)}원</div><div class="hero-sub">총 ${ppl.length}명 · 인당 평균 ${fmt(perPerson)}원</div></div><div class="sec"><div class="sec-title">지출 내역</div><table>${itemsHtml||'<tr><td colspan="4" style="color:#888;text-align:center;padding:20px">지출 내역이 없어요</td></tr>'}</table></div><div class="sec"><div class="sec-title">송금 내역</div><table>${txnsHtml||'<tr><td colspan="4" style="color:#888;text-align:center;padding:20px">송금 내역이 없어요</td></tr>'}</table></div><div class="foot">더치페이 ${APP_VERSION}</div><script>window.onload=function(){window.print();}<\/script></body></html>`;
-  const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();}else{toast('팝업이 차단됐어요. 브라우저 팝업 허용 후 다시 시도해주세요',{type:'error'});}
-}
 
 loadState();
 _migrateHistoryGroupNames();
 _deduplicateHistoryOnStartup();
 renderAll();
-(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_updateVerifyBadge();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;})();
+(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
 hDbxHandleCallback().then(()=>{if(hDbxGetToken())hSyncDropbox();});
