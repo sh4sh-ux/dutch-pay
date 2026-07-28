@@ -459,11 +459,13 @@ svg{display:block;flex-shrink:0;}
 .hmn-all{font-size:11px;font-weight:600;color:var(--label2);background:var(--fill);border:1px solid var(--sep2);cursor:pointer;padding:4px 10px;border-radius:20px;font-family:inherit;flex-shrink:0;}
 .hmn-all.on{background:var(--blue);color:#fff;border-color:var(--blue);}
 .hmn-stat{padding:9px 16px;font-size:12px;color:var(--label2);border-top:1px solid var(--sep);background:var(--fill2);font-variant-numeric:tabular-nums;text-align:right;}
-.hmn-stat-3{display:flex;align-items:stretch;border-top:1px solid var(--sep);background:var(--fill2);}
-.hmn-stat-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px 10px;gap:2px;}
-.hmn-stat-col-div{width:1px;background:var(--sep);margin:8px 0 10px;}
-.hmn-stat-col-lbl{font-size:10px;font-weight:600;color:var(--label3);letter-spacing:.2px;text-align:center;}
-.hmn-stat-col-val{font-size:13px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;text-align:center;}
+.hmn-stat-3{border-top:1px solid var(--sep);background:var(--card);}
+.hmn-stat-col{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;gap:8px;border-bottom:1px solid var(--sep);}
+.hmn-stat-col:last-child{border-bottom:none;}
+.hmn-stat-col-div{display:none;}
+.hmn-stat-col-lbl{font-size:13px;font-weight:500;color:var(--label2);flex-shrink:0;}
+.hmn-stat-col-val{font-size:14px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;text-align:right;}
+.hmn-stat-col-right{display:flex;align-items:center;gap:6px;justify-content:flex-end;min-width:0;}
 .hist-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;}
 .hist-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--label3);padding:5px 10px;border:1px solid var(--sep);background:var(--fill2);border-radius:20px;white-space:nowrap;}
 .hist-badge.connected{color:var(--green-txt);border-color:var(--green);background:var(--green-bg);}
@@ -741,8 +743,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.52';
-const BUILD_TIME='2026-07-28 14:00';
+const APP_VERSION='v3.53';
+const BUILD_TIME='2026-07-28 15:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1298,7 +1300,7 @@ function _histMonthNavHtml(allRecs,dispRecs){
       dispRecs.forEach(r=>{const d=_personSettleDelta(r,_historySearch.trim());if(d!==null){totalDelta+=d;hasD=true;}});
       if(hasD){if(totalDelta>0)settleHtml=`<span class="hmn-stat-settle pos">+${fmt(totalDelta)}원 초과</span>`;else if(totalDelta<0)settleHtml=`<span class="hmn-stat-settle neg">${fmt(-totalDelta)}원 부족</span>`;else settleHtml=`<span class="hmn-stat-settle zero">완납</span>`;}
     }
-    statHtml=`<div class="hmn-stat-3"><div class="hmn-stat-col" style="flex:.8"><span class="hmn-stat-col-lbl">모임</span><span class="hmn-stat-col-val">${dispRecs.length}회</span></div><div class="hmn-stat-col-div"></div><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">${payerLbl} 지출</span><span class="hmn-stat-col-val">${fmt(burdenAmt)}원</span>${settleHtml}</div><div class="hmn-stat-col-div"></div><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">총 지출</span><span class="hmn-stat-col-val">${fmt(total)}원</span></div></div>`;
+    statHtml=`<div class="hmn-stat-3"><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">모임</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${dispRecs.length}회</span></div></div><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">${payerLbl} 지출</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${fmt(burdenAmt)}원</span>${settleHtml}</div></div><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">총 지출</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${fmt(total)}원</span></div></div></div>`;
   }else{
     const total=dispRecs.reduce((s,r)=>s+(+r.total||0),0);
     const statStr=dispRecs.length?`${dispRecs.length}회 모임 · ${fmt(total)}원`:(_histMonthAllMode?'기록이 없어요':'이 달에 기록이 없어요');
