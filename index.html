@@ -715,8 +715,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.43';
-const BUILD_TIME='2026-07-29 02:00';
+const APP_VERSION='v3.44';
+const BUILD_TIME='2026-07-28 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1216,8 +1216,11 @@ function _histMonthNavHtml(allRecs,dispRecs){
     const q=_historySearch.trim().toLowerCase();
     const total=dispRecs.reduce((s,r)=>s+(+r.total||0),0);
     const payerAmt=dispRecs.reduce((s,r)=>s+(r.items||[]).reduce((ss,it)=>ss+((it.payer||'').toLowerCase().includes(q)?(+it.amount||0):0),0),0);
+    const txnOut=dispRecs.reduce((s,r)=>s+(r.txns||[]).reduce((ss,t)=>(t.from||'').toLowerCase().includes(q)?ss+(+t.amt||0):ss,0),0);
+    const txnIn=dispRecs.reduce((s,r)=>s+(r.txns||[]).reduce((ss,t)=>(t.to||'').toLowerCase().includes(q)?ss+(+t.amt||0):ss,0),0);
+    const burdenAmt=payerAmt+txnOut-txnIn;
     const payerLbl=e(_historySearch.length>5?_historySearch.slice(0,5)+'…':_historySearch);
-    statHtml=`<div class="hmn-stat-3"><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">모임</span><span class="hmn-stat-col-val">${dispRecs.length}회</span></div><div class="hmn-stat-col-div"></div><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">${payerLbl} 결제</span><span class="hmn-stat-col-val">${fmt(payerAmt)}원</span></div><div class="hmn-stat-col-div"></div><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">총 지출</span><span class="hmn-stat-col-val">${fmt(total)}원</span></div></div>`;
+    statHtml=`<div class="hmn-stat-3"><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">모임</span><span class="hmn-stat-col-val">${dispRecs.length}회</span></div><div class="hmn-stat-col-div"></div><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">${payerLbl} 부담</span><span class="hmn-stat-col-val">${fmt(burdenAmt)}원</span></div><div class="hmn-stat-col-div"></div><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">총 지출</span><span class="hmn-stat-col-val">${fmt(total)}원</span></div></div>`;
   }else{
     const total=dispRecs.reduce((s,r)=>s+(+r.total||0),0);
     const statStr=dispRecs.length?`${dispRecs.length}회 모임 · ${fmt(total)}원`:(_histMonthAllMode?'기록이 없어요':'이 달에 기록이 없어요');
