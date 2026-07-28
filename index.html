@@ -445,6 +445,14 @@ svg{display:block;flex-shrink:0;}
 .empty-sm{text-align:center;padding:24px 16px;color:var(--label3);font-size:13px;line-height:1.6;}
 
 /* ── 기록 보관함 ── */
+.toss-link{font-size:11px;font-weight:600;color:#0064FF;text-decoration:none;border:1px solid #0064FF;border-radius:12px;padding:2px 8px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
+.toss-link:hover{background:#EEF4FF;}
+.hist-stats{display:flex;align-items:stretch;background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.hist-stat{flex:1;display:flex;flex-direction:column;gap:3px;padding:14px 16px;}
+.hist-stat-lbl{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.3px;}
+.hist-stat-val{font-size:14px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
+.hist-stat-sub{font-size:11px;color:var(--label2);}
+.hist-stat-divider{width:1px;background:var(--sep);margin:12px 0;}
 .hist-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;}
 .hist-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--label3);padding:5px 10px;border:1px solid var(--sep);background:var(--fill2);border-radius:20px;white-space:nowrap;}
 .hist-badge.connected{color:var(--green-txt);border-color:var(--green);background:var(--green-bg);}
@@ -696,8 +704,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.33';
-const BUILD_TIME='2026-07-28 10:00';
+const APP_VERSION='v3.34';
+const BUILD_TIME='2026-07-28 11:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1389,8 +1397,11 @@ function _patchSummary(){
   });
 }
 
-function _txnRowsHtml(txns){
-  return txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('');
+function _txnRowsHtml(txns,showPayLinks=false){
+  return txns.map(t=>{
+    const link=showPayLinks?`<a class="toss-link" href="supertoss://send?amount=${t.amt}" onclick="event.stopPropagation()">토스</a>`:'';
+    return`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">${link}<span class="txn-amt">${fmt(t.amt)}원</span></div></div>`;
+  }).join('');
 }
 
 function _txnRowsOwnerHtml(txns){
@@ -1764,7 +1775,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const dateRow=`<div class="share-date-row">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")}${settleDateEnd?`<span class="share-date-sep">~</span>${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart)}<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
   const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
   const hero=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
-  const txnSection=txns.length?`<div class="pay-section-title">송금</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`:'<div class="empty" style="padding:20px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div>';
+  const txnSection=txns.length?`<div class="pay-section-title">송금</div><div class="txn-card">${_txnRowsHtml(txns,true)}</div>`:'<div class="empty" style="padding:20px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div>';
   const validItems=items.filter(it=>+it.amount!==0);
   const paySection=validItems.length?`<div class="pay-section-title">지출 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row" onclick="selectItem(${it.id})"><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉     👏👏👏</span>':''}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div><span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('')}</div>`:'';
   const noticeHtml=txns.length&&hasRounding?'<div class="notice">차액은 결제자에게 우선 부담돼요</div>':'';
@@ -1995,6 +2006,23 @@ function _buildHistoryInnerHtml(){
   if(!records.length){
     html+=`<div class="empty" style="padding:60px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>⋯ 메뉴에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
   }else{
+    const _now=new Date();const _ym=`${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+    const _monthRecs=records.filter(r=>(r.dateStart||'').startsWith(_ym));
+    const _monthTotal=_monthRecs.reduce((s,r)=>s+(+r.total||0),0);
+    const _allTotal=records.reduce((s,r)=>s+(+r.total||0),0);
+    html+=`<div class="hist-stats">
+      <div class="hist-stat">
+        <span class="hist-stat-lbl">이번 달</span>
+        <span class="hist-stat-val">${_monthRecs.length}회 모임</span>
+        <span class="hist-stat-sub">${_monthTotal?fmt(_monthTotal)+'원':'-'}</span>
+      </div>
+      <div class="hist-stat-divider"></div>
+      <div class="hist-stat">
+        <span class="hist-stat-lbl">전체 기록</span>
+        <span class="hist-stat-val">${records.length}회</span>
+        <span class="hist-stat-sub">${fmt(_allTotal)}원</span>
+      </div>
+    </div>`;
     const filtered=_filterHistoryRecords(records,_historySearch);
     html+=`<div class="hist-search-wrap"><div class="sinp-rel"><input type="search" class="hist-search" placeholder="이름, 참여자, 날짜 검색..." value="${e(_historySearch)}" oninput="updateHistorySearch(this.value);_chkClear(this)"><button class="sinp-clr${_historySearch?' vis':''}" onclick="_clrHistSearch()">✕</button></div></div>`;
     html+=`<div class="record-list" id="historyRecordList">`;
