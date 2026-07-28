@@ -715,7 +715,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.45';
+const APP_VERSION='v3.46';
 const BUILD_TIME='2026-07-28 10:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -2650,7 +2650,7 @@ loadState();
 _migrateHistoryGroupNames();
 _deduplicateHistoryOnStartup();
 renderAll();
-(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;})();
+(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;const _hdb=document.getElementById('histDrBody');if(_hdb)_hdb.addEventListener('scroll',()=>{const si=document.getElementById('histDrSinp');if(si&&si===document.activeElement)si.blur();},{passive:true});})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
 hDbxHandleCallback().then(()=>{if(hDbxGetToken())hSyncDropbox();});
