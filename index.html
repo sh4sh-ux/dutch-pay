@@ -702,8 +702,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.36';
-const BUILD_TIME='2026-07-28 13:00';
+const APP_VERSION='v3.37';
+const BUILD_TIME='2026-07-28 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1179,11 +1179,22 @@ function _refreshHistDrawer(){
   body.innerHTML=`<div class="hist-top" style="margin-bottom:8px"><div class="${connected?'hist-badge connected':'hist-badge'}" id="hDbxBadge">${badgeTxt}</div><button class="hist-dbx-btn" onclick="toggleHDbxPanel()">Dropbox 설정</button></div><div id="hDbxPanel" style="display:none"></div><div class="sync-info" id="hSyncInfo"></div><div id="histDrList">${_histDrListHtml(recs)}</div>`;
   _updateHSyncInfo();
 }
+function _histStatsHtml(recs){
+  const _now=new Date();const _ym=`${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+  const _monthRecs=recs.filter(r=>(r.dateStart||'').startsWith(_ym));
+  const _monthTotal=_monthRecs.reduce((s,r)=>s+(+r.total||0),0);
+  const _allTotal=recs.reduce((s,r)=>s+(+r.total||0),0);
+  return`<div class="hist-stats">
+    <div class="hist-stat"><span class="hist-stat-lbl">이번 달</span><span class="hist-stat-val">${_monthRecs.length}회 모임</span><span class="hist-stat-sub">${_monthTotal?fmt(_monthTotal)+'원':'-'}</span></div>
+    <div class="hist-stat-divider"></div>
+    <div class="hist-stat"><span class="hist-stat-lbl">전체 기록</span><span class="hist-stat-val">${recs.length}회</span><span class="hist-stat-sub">${fmt(_allTotal)}원</span></div>
+  </div>`;
+}
 function _histDrListHtml(recs){
   if(!recs.length)return`<div class="empty" style="padding:40px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>⋯ 메뉴에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
   let filtered=_filterHistoryRecords(recs,_historySearch);
   filtered=_sortHistRecs(filtered,_historySort);
-  return`<div class="record-list">${filtered.length?filtered.map(_buildRecordCardHtml).join(''):`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">'${e(_historySearch)}' 검색 결과가 없어요</p></div>`}</div>`;
+  return _histStatsHtml(recs)+`<div class="record-list">${filtered.length?filtered.map(_buildRecordCardHtml).join(''):`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">'${e(_historySearch)}' 검색 결과가 없어요</p></div>`}</div>`;
 }
 function _refreshHistDrList(){
   const el=document.getElementById('histDrList');if(!el)return;
@@ -2001,23 +2012,7 @@ function _buildHistoryInnerHtml(){
   if(!records.length){
     html+=`<div class="empty" style="padding:60px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>⋯ 메뉴에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
   }else{
-    const _now=new Date();const _ym=`${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
-    const _monthRecs=records.filter(r=>(r.dateStart||'').startsWith(_ym));
-    const _monthTotal=_monthRecs.reduce((s,r)=>s+(+r.total||0),0);
-    const _allTotal=records.reduce((s,r)=>s+(+r.total||0),0);
-    html+=`<div class="hist-stats">
-      <div class="hist-stat">
-        <span class="hist-stat-lbl">이번 달</span>
-        <span class="hist-stat-val">${_monthRecs.length}회 모임</span>
-        <span class="hist-stat-sub">${_monthTotal?fmt(_monthTotal)+'원':'-'}</span>
-      </div>
-      <div class="hist-stat-divider"></div>
-      <div class="hist-stat">
-        <span class="hist-stat-lbl">전체 기록</span>
-        <span class="hist-stat-val">${records.length}회</span>
-        <span class="hist-stat-sub">${fmt(_allTotal)}원</span>
-      </div>
-    </div>`;
+    html+=_histStatsHtml(records);
     const filtered=_filterHistoryRecords(records,_historySearch);
     html+=`<div class="hist-search-wrap"><div class="sinp-rel"><input type="search" class="hist-search" placeholder="이름, 참여자, 날짜 검색..." value="${e(_historySearch)}" oninput="updateHistorySearch(this.value);_chkClear(this)"><button class="sinp-clr${_historySearch?' vis':''}" onclick="_clrHistSearch()">✕</button></div></div>`;
     html+=`<div class="record-list" id="historyRecordList">`;
