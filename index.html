@@ -538,23 +538,21 @@ svg{display:block;flex-shrink:0;}
 .dbx-disconnect{font-size:12px;color:var(--red);border:none;background:transparent;font-weight:500;flex-shrink:0;cursor:pointer;font-family:inherit;}
 .dbx-btn-row{display:flex;gap:8px;}
 .dbx-btn-row .dbx-btn{flex:1;padding:9px;}
-/* ── 기록 보관함 드로어 ── */
-.hist-dr-ov{position:fixed;inset:0;background:rgba(0,0,0,.38);opacity:0;transition:opacity .3s ease;pointer-events:none;z-index:300;-webkit-backdrop-filter:blur(1px);backdrop-filter:blur(1px);}
-.hist-dr-ov.open{opacity:1;pointer-events:auto;cursor:pointer;}
-.hist-dr{position:fixed;bottom:-84dvh;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -4px 32px rgba(0,0,0,.12),0 -1px 4px rgba(0,0,0,.05);z-index:301;display:flex;flex-direction:column;height:84dvh;transition:bottom .36s cubic-bezier(.32,.72,0,1);}
-.hist-dr.open{bottom:0;}
-.hist-dr-handle{display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0;}
-.hist-dr-handle-bar{width:36px;height:4px;background:var(--sep2);border-radius:2px;}
-.hist-dr-hd{display:flex;align-items:center;padding:10px 16px 0;flex-shrink:0;gap:8px;}
-.hist-dr-title{font-size:17px;font-weight:700;color:var(--label);flex:1;}
-.hist-dr-cnt{font-size:13px;font-weight:500;color:var(--label3);}
-.hist-dr-close{width:28px;height:28px;border-radius:50%;background:var(--fill);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--label2);font-size:12px;font-weight:700;font-family:inherit;transition:background .12s;flex-shrink:0;}
-.hist-dr-close:hover{background:var(--sep2);}
-.hist-dr-sort{display:flex;gap:6px;padding:10px 16px 0;overflow-x:auto;flex-shrink:0;scrollbar-width:none;}
+/* ── 기록 보관함 풀스크린 ── */
+.hist-page{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .38s cubic-bezier(.32,.72,0,1);will-change:transform;}
+.hist-page.open{transform:translateY(0);}
+.hist-page-nav{background:var(--card);border-bottom:1px solid var(--sep);padding-top:max(env(safe-area-inset-top,0px),44px);flex-shrink:0;}
+.hist-page-nav-row{display:flex;align-items:center;height:44px;padding:0 8px 0 4px;position:relative;}
+.hist-back-btn{display:flex;align-items:center;gap:0;color:var(--blue);background:none;border:none;font-family:inherit;cursor:pointer;padding:4px 10px;-webkit-tap-highlight-color:transparent;z-index:1;flex-shrink:0;border-radius:8px;}
+.hist-back-arr{font-size:26px;line-height:1;font-weight:300;margin-top:-1px;}
+.hist-back-lbl{font-size:16px;font-weight:400;}
+.hist-page-title{position:absolute;left:0;right:0;text-align:center;font-size:17px;font-weight:700;color:var(--label);letter-spacing:-.3px;pointer-events:none;}
+.hist-cnt-badge{margin-left:auto;font-size:12px;font-weight:500;color:var(--label3);flex-shrink:0;padding-right:4px;}
+.hist-dr-sort{display:flex;gap:6px;padding:10px 16px 10px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;border-bottom:1px solid var(--sep);}
 .hist-dr-sort::-webkit-scrollbar{display:none;}
 .hist-dr-pill{flex-shrink:0;padding:5px 13px;border-radius:20px;border:1.5px solid var(--sep2);background:transparent;font-size:12px;font-weight:500;color:var(--label2);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap;}
 .hist-dr-pill.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue-txt);font-weight:600;}
-.hist-dr-sinp-wrap{position:sticky;top:0;z-index:2;background:var(--card);padding:10px 0 4px;overflow:hidden;}
+.hist-dr-sinp-wrap{position:sticky;top:0;z-index:2;background:var(--bg);padding:10px 0 4px;overflow:hidden;}
 .hist-dr-sinp{width:100%;background:var(--fill);border:none;border-radius:10px;padding:9px 12px 9px 34px;font-size:14px;color:var(--label);font-family:inherit;outline:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center;}
 .hist-dr-sinp::placeholder{color:var(--label3);}
 .hist-dr-sinp:focus{box-shadow:inset 0 0 0 2px var(--blue);}
@@ -690,14 +688,17 @@ svg{display:block;flex-shrink:0;}
   </div>
 </div>
 
-<!-- 기록 보관함 드로어 -->
-<div class="hist-dr-ov" id="histDrOv" onclick="closeHistDrawer()"></div>
-<div class="hist-dr" id="histDr">
-  <div class="hist-dr-handle"><div class="hist-dr-handle-bar"></div></div>
-  <div class="hist-dr-hd">
-    <div class="hist-dr-title">기록 보관함</div>
-    <span class="hist-dr-cnt" id="histDrCnt"></span>
-    <button class="hist-dr-close" aria-label="기록 보관함 닫기" onclick="closeHistDrawer()">✕</button>
+<!-- 기록 보관함 풀스크린 -->
+<div class="hist-page" id="histDr">
+  <div class="hist-page-nav">
+    <div class="hist-page-nav-row">
+      <button class="hist-back-btn" onclick="closeHistDrawer()" aria-label="닫기">
+        <span class="hist-back-arr">‹</span>
+        <span class="hist-back-lbl">더치페이</span>
+      </button>
+      <span class="hist-page-title">기록 보관함</span>
+      <span class="hist-cnt-badge" id="histDrCnt"></span>
+    </div>
   </div>
   <div class="hist-dr-sort">
     <button class="hist-dr-pill on" data-sort="newest" onclick="setHistorySort('newest')">최신순</button>
@@ -717,7 +718,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.49';
+const APP_VERSION='v3.50';
 const BUILD_TIME='2026-07-28 10:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -1149,13 +1150,17 @@ function openHistDrawer(){
   _historySearch='';
   const si=document.getElementById('histDrSinp');if(si){si.value='';_chkClear(si);}
   _refreshHistDrawer();
-  document.getElementById('histDrOv').classList.add('open');
-  document.getElementById('histDr').classList.add('open');
+  const dr=document.getElementById('histDr');
+  dr.style.transform='';
+  dr.classList.add('open');
+  const onEnd=()=>{dr.removeEventListener('transitionend',onEnd);if(dr.classList.contains('open'))dr.style.transform='none';};
+  dr.addEventListener('transitionend',onEnd);
 }
 function closeHistDrawer(){
   _histDrawerOpen=false;
-  document.getElementById('histDrOv').classList.remove('open');
-  document.getElementById('histDr').classList.remove('open');
+  const dr=document.getElementById('histDr');
+  dr.style.transform='';
+  requestAnimationFrame(()=>dr.classList.remove('open'));
 }
 function setHistorySort(val){
   _historySort=val;
