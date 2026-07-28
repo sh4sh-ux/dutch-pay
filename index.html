@@ -459,6 +459,11 @@ svg{display:block;flex-shrink:0;}
 .hmn-all{font-size:11px;font-weight:600;color:var(--label2);background:var(--fill);border:1px solid var(--sep2);cursor:pointer;padding:4px 10px;border-radius:20px;font-family:inherit;flex-shrink:0;}
 .hmn-all.on{background:var(--blue);color:#fff;border-color:var(--blue);}
 .hmn-stat{padding:9px 16px;font-size:12px;color:var(--label2);border-top:1px solid var(--sep);background:var(--fill2);font-variant-numeric:tabular-nums;text-align:right;}
+.hmn-stat-3{display:flex;align-items:stretch;border-top:1px solid var(--sep);background:var(--fill2);}
+.hmn-stat-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px 10px;gap:2px;}
+.hmn-stat-col-div{width:1px;background:var(--sep);margin:8px 0 10px;}
+.hmn-stat-col-lbl{font-size:10px;font-weight:600;color:var(--label3);letter-spacing:.2px;text-align:center;}
+.hmn-stat-col-val{font-size:13px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;text-align:center;}
 .hist-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;}
 .hist-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--label3);padding:5px 10px;border:1px solid var(--sep);background:var(--fill2);border-radius:20px;white-space:nowrap;}
 .hist-badge.connected{color:var(--green-txt);border-color:var(--green);background:var(--green-bg);}
@@ -710,8 +715,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.41';
-const BUILD_TIME='2026-07-28 18:00';
+const APP_VERSION='v3.42';
+const BUILD_TIME='2026-07-28 19:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1203,10 +1208,21 @@ function _histMonthNavHtml(allRecs,dispRecs){
   const now=new Date();const curY=now.getFullYear(),curM=now.getMonth()+1;
   const atMax=!_histMonthAllMode&&(_histMonthYear>curY||(_histMonthYear===curY&&_histMonthMonth>=curM));
   if(!dispRecs){const ym=`${_histMonthYear}-${String(_histMonthMonth).padStart(2,'0')}`;dispRecs=_histMonthAllMode?allRecs:allRecs.filter(r=>(r.dateStart||'').startsWith(ym)||(r.dateEnd||'').startsWith(ym));}
-  const total=dispRecs.reduce((s,r)=>s+(+r.total||0),0);
-  const statStr=dispRecs.length?`${dispRecs.length}회 모임 · ${fmt(total)}원`:(_histMonthAllMode?'기록이 없어요':'이 달에 기록이 없어요');
   const lbl=_histMonthAllMode?'전체 기록':`${_histMonthYear}년 ${_histMonthMonth}월`;
-  return`<div class="hist-month-nav"><div class="hmn-header"><button class="hmn-arr" onclick="_histMonthPrev()"${_histMonthAllMode?' disabled':''}>‹</button><span class="hmn-label">${lbl}</span><button class="hmn-arr" onclick="_histMonthNext()"${(_histMonthAllMode||atMax)?' disabled':''}>›</button><button class="hmn-all${_histMonthAllMode?' on':''}" onclick="_histMonthToggleAll()">전체</button></div><div class="hmn-stat">${statStr}</div></div>`;
+  const nav=`<div class="hmn-header"><button class="hmn-arr" onclick="_histMonthPrev()"${_histMonthAllMode?' disabled':''}>‹</button><span class="hmn-label">${lbl}</span><button class="hmn-arr" onclick="_histMonthNext()"${(_histMonthAllMode||atMax)?' disabled':''}>›</button><button class="hmn-all${_histMonthAllMode?' on':''}" onclick="_histMonthToggleAll()">전체</button></div>`;
+  let statHtml;
+  if(_historySearch.trim()&&dispRecs.length){
+    const q=_historySearch.trim().toLowerCase();
+    const total=dispRecs.reduce((s,r)=>s+(+r.total||0),0);
+    const payerAmt=dispRecs.reduce((s,r)=>s+(r.items||[]).reduce((ss,it)=>ss+((it.payer||'').toLowerCase().includes(q)?(+it.amount||0):0),0),0);
+    const payerLbl=e(_historySearch.length>5?_historySearch.slice(0,5)+'…':_historySearch);
+    statHtml=`<div class="hmn-stat-3"><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">모임</span><span class="hmn-stat-col-val">${dispRecs.length}회</span></div><div class="hmn-stat-col-div"></div><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">${payerLbl} 결제</span><span class="hmn-stat-col-val">${fmt(payerAmt)}원</span></div><div class="hmn-stat-col-div"></div><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">총 지출</span><span class="hmn-stat-col-val">${fmt(total)}원</span></div></div>`;
+  }else{
+    const total=dispRecs.reduce((s,r)=>s+(+r.total||0),0);
+    const statStr=dispRecs.length?`${dispRecs.length}회 모임 · ${fmt(total)}원`:(_histMonthAllMode?'기록이 없어요':'이 달에 기록이 없어요');
+    statHtml=`<div class="hmn-stat">${statStr}</div>`;
+  }
+  return`<div class="hist-month-nav">${nav}${statHtml}</div>`;
 }
 function _histMonthPrev(){
   if(_histMonthAllMode)return;
