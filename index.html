@@ -452,13 +452,13 @@ svg{display:block;flex-shrink:0;}
 .hist-stat-sub{font-size:11px;color:var(--label2);}
 .hist-stat-divider{width:1px;background:var(--sep);margin:12px 0;}
 .hist-month-nav{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;margin-bottom:10px;}
-.hmn-header{display:flex;align-items:center;padding:12px 14px;gap:6px;}
+.hmn-header{display:flex;align-items:center;padding:14px 16px;gap:6px;}
 .hmn-arr{background:none;border:none;font-size:22px;font-weight:600;color:var(--blue);cursor:pointer;padding:2px 8px;border-radius:6px;line-height:1;font-family:inherit;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
 .hmn-arr:disabled{color:var(--label3);pointer-events:none;}
 .hmn-label{flex:1;text-align:center;font-size:14px;font-weight:600;color:var(--label);letter-spacing:-.2px;}
 .hmn-all{font-size:11px;font-weight:600;color:var(--label2);background:var(--fill);border:1px solid var(--sep2);cursor:pointer;padding:4px 10px;border-radius:20px;font-family:inherit;flex-shrink:0;}
 .hmn-all.on{background:var(--blue);color:#fff;border-color:var(--blue);}
-.hmn-stat{padding:8px 16px 10px;font-size:12px;color:var(--label2);border-top:1px solid var(--sep);background:var(--fill2);font-variant-numeric:tabular-nums;}
+.hmn-stat{padding:9px 16px;font-size:12px;color:var(--label2);border-top:1px solid var(--sep);background:var(--fill2);font-variant-numeric:tabular-nums;text-align:right;}
 .hist-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;}
 .hist-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--label3);padding:5px 10px;border:1px solid var(--sep);background:var(--fill2);border-radius:20px;white-space:nowrap;}
 .hist-badge.connected{color:var(--green-txt);border-color:var(--green);background:var(--green-bg);}
@@ -710,8 +710,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.39';
-const BUILD_TIME='2026-07-28 16:00';
+const APP_VERSION='v3.40';
+const BUILD_TIME='2026-07-28 17:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1187,13 +1187,12 @@ function _refreshHistDrawer(){
   body.innerHTML=`<div class="sync-info" id="hSyncInfo"></div><div id="histDrList">${_histDrListHtml(recs)}</div>`;
   _updateHSyncInfo();
 }
-function _histMonthNavHtml(allRecs){
+function _histMonthNavHtml(allRecs,dispRecs){
   const now=new Date();const curY=now.getFullYear(),curM=now.getMonth()+1;
   const atMax=!_histMonthAllMode&&(_histMonthYear>curY||(_histMonthYear===curY&&_histMonthMonth>=curM));
-  const ym=`${_histMonthYear}-${String(_histMonthMonth).padStart(2,'0')}`;
-  const filtRecs=_histMonthAllMode?allRecs:allRecs.filter(r=>(r.dateStart||'').startsWith(ym)||(r.dateEnd||'').startsWith(ym));
-  const total=filtRecs.reduce((s,r)=>s+(+r.total||0),0);
-  const statStr=filtRecs.length?`${filtRecs.length}회 모임 · ${fmt(total)}원`:'이 달에 기록이 없어요';
+  if(!dispRecs){const ym=`${_histMonthYear}-${String(_histMonthMonth).padStart(2,'0')}`;dispRecs=_histMonthAllMode?allRecs:allRecs.filter(r=>(r.dateStart||'').startsWith(ym)||(r.dateEnd||'').startsWith(ym));}
+  const total=dispRecs.reduce((s,r)=>s+(+r.total||0),0);
+  const statStr=dispRecs.length?`${dispRecs.length}회 모임 · ${fmt(total)}원`:(_histMonthAllMode?'기록이 없어요':'이 달에 기록이 없어요');
   const lbl=_histMonthAllMode?'전체 기록':`${_histMonthYear}년 ${_histMonthMonth}월`;
   return`<div class="hist-month-nav"><div class="hmn-header"><button class="hmn-arr" onclick="_histMonthPrev()"${_histMonthAllMode?' disabled':''}>‹</button><span class="hmn-label">${lbl}</span><button class="hmn-arr" onclick="_histMonthNext()"${(_histMonthAllMode||atMax)?' disabled':''}>›</button><button class="hmn-all${_histMonthAllMode?' on':''}" onclick="_histMonthToggleAll()">전체</button></div><div class="hmn-stat">${statStr}</div></div>`;
 }
@@ -1223,7 +1222,7 @@ function _histDrListHtml(recs){
   let filtered=_filterHistoryRecords(recs,_historySearch);
   filtered=_sortHistRecs(filtered,_historySort);
   const noMsg=_historySearch?`'${e(_historySearch)}' 검색 결과가 없어요`:(_histMonthAllMode?'기록이 없어요':'이 달에 저장된 기록이 없어요');
-  return _histMonthNavHtml(recs)+`<div class="record-list">${filtered.length?filtered.map(_buildRecordCardHtml).join(''):`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">${noMsg}</p></div>`}</div>`;
+  return _histMonthNavHtml(recs,filtered)+`<div class="record-list">${filtered.length?filtered.map(_buildRecordCardHtml).join(''):`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">${noMsg}</p></div>`}</div>`;
 }
 function _refreshHistDrList(){
   const el=document.getElementById('histDrList');if(!el)return;
@@ -2029,8 +2028,8 @@ function _buildHistoryInnerHtml(){
   if(!records.length){
     html+=`<div class="empty" style="padding:60px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>⋯ 메뉴에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
   }else{
-    html+=_histMonthNavHtml(records);
     const filtered=_filterHistoryRecords(records,_historySearch);
+    html+=_histMonthNavHtml(records,filtered);
     html+=`<div class="hist-search-wrap"><div class="sinp-rel"><input type="search" class="hist-search" placeholder="이름, 참여자, 날짜 검색..." value="${e(_historySearch)}" oninput="updateHistorySearch(this.value);_chkClear(this)"><button class="sinp-clr${_historySearch?' vis':''}" onclick="_clrHistSearch()">✕</button></div></div>`;
     const noMsg=_historySearch?`'${e(_historySearch)}' 검색 결과가 없어요`:(_histMonthAllMode?'기록이 없어요':'이 달에 저장된 기록이 없어요');
     html+=`<div class="record-list" id="historyRecordList">`;
@@ -2065,9 +2064,12 @@ function updateHistorySearch(val){
   if(!el)return;
   const records=loadHistory();
   const filtered=_filterHistoryRecords(records,val);
+  const nav=document.querySelector('.hist-month-nav');
+  if(nav)nav.outerHTML=_histMonthNavHtml(records,filtered);
+  const noMsg=val?`'${e(val)}' 검색 결과가 없어요`:(_histMonthAllMode?'기록이 없어요':'이 달에 저장된 기록이 없어요');
   el.innerHTML=filtered.length
     ?filtered.map(_buildRecordCardHtml).join('')
-    :`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">'${e(val)}' 검색 결과가 없어요</p></div>`;
+    :`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">${noMsg}</p></div>`;
 }
 function loadHistoryAsGroup(id){
   const records=loadHistory();
