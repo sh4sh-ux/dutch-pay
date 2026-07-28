@@ -541,8 +541,8 @@ svg{display:block;flex-shrink:0;}
 /* ── 기록 보관함 드로어 ── */
 .hist-dr-ov{position:fixed;inset:0;background:rgba(0,0,0,.38);opacity:0;transition:opacity .3s ease;pointer-events:none;z-index:300;-webkit-backdrop-filter:blur(1px);backdrop-filter:blur(1px);}
 .hist-dr-ov.open{opacity:1;pointer-events:auto;cursor:pointer;}
-.hist-dr{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -4px 32px rgba(0,0,0,.12),0 -1px 4px rgba(0,0,0,.05);z-index:301;display:flex;flex-direction:column;height:84dvh;transform:translateY(100%);transition:transform .36s cubic-bezier(.32,.72,0,1);will-change:transform;}
-.hist-dr.open{transform:translateY(0);}
+.hist-dr{position:fixed;bottom:-84dvh;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -4px 32px rgba(0,0,0,.12),0 -1px 4px rgba(0,0,0,.05);z-index:301;display:flex;flex-direction:column;height:84dvh;transition:bottom .36s cubic-bezier(.32,.72,0,1);}
+.hist-dr.open{bottom:0;}
 .hist-dr-handle{display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0;}
 .hist-dr-handle-bar{width:36px;height:4px;background:var(--sep2);border-radius:2px;}
 .hist-dr-hd{display:flex;align-items:center;padding:10px 16px 0;flex-shrink:0;gap:8px;}
@@ -715,7 +715,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.47';
+const APP_VERSION='v3.48';
 const BUILD_TIME='2026-07-28 10:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
