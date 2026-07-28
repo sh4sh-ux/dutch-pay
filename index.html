@@ -554,11 +554,11 @@ svg{display:block;flex-shrink:0;}
 .hist-dr-sort::-webkit-scrollbar{display:none;}
 .hist-dr-pill{flex-shrink:0;padding:5px 13px;border-radius:20px;border:1.5px solid var(--sep2);background:transparent;font-size:12px;font-weight:500;color:var(--label2);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap;}
 .hist-dr-pill.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue-txt);font-weight:600;}
-.hist-dr-sinp-wrap{padding:8px 16px 2px;flex-shrink:0;overflow:hidden;}
+.hist-dr-sinp-wrap{position:sticky;top:0;z-index:2;background:var(--card);padding:10px 0 4px;overflow:hidden;}
 .hist-dr-sinp{width:100%;background:var(--fill);border:none;border-radius:10px;padding:9px 12px 9px 34px;font-size:14px;color:var(--label);font-family:inherit;outline:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center;}
 .hist-dr-sinp::placeholder{color:var(--label3);}
 .hist-dr-sinp:focus{box-shadow:inset 0 0 0 2px var(--blue);}
-.hist-dr-body{overflow-y:auto;flex:1;padding:10px 16px 40px;-webkit-overflow-scrolling:touch;}
+.hist-dr-body{overflow-y:auto;flex:1;padding:0 16px 40px;}
 .sinp-rel{position:relative;display:flex;align-items:center;width:100%;}
 .sinp-rel > input{padding-right:26px;}
 .sinp-clr{position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--label3);font-size:14px;line-height:1;cursor:pointer;padding:2px 4px;display:none;-webkit-appearance:none;appearance:none;touch-action:manipulation;}
@@ -705,17 +705,19 @@ svg{display:block;flex-shrink:0;}
     <button class="hist-dr-pill" data-sort="amtDesc" onclick="setHistorySort('amtDesc')">금액 큰 순</button>
     <button class="hist-dr-pill" data-sort="amtAsc" onclick="setHistorySort('amtAsc')">금액 작은 순</button>
   </div>
-  <div class="hist-dr-sinp-wrap">
-    <div class="sinp-rel">
-      <input class="hist-dr-sinp" id="histDrSinp" type="search" placeholder="이름, 참여자, 날짜 검색…" oninput="updateHistorySearch(this.value);_chkClear(this)">
-      <button class="sinp-clr" aria-label="검색어 지우기" onclick="_clrHistDr()">✕</button>
+  <div class="hist-dr-body" id="histDrBody">
+    <div class="hist-dr-sinp-wrap">
+      <div class="sinp-rel">
+        <input class="hist-dr-sinp" id="histDrSinp" type="search" placeholder="이름, 참여자, 날짜 검색…" oninput="updateHistorySearch(this.value);_chkClear(this)">
+        <button class="sinp-clr" aria-label="검색어 지우기" onclick="_clrHistDr()">✕</button>
+      </div>
     </div>
+    <div id="histDrContent"></div>
   </div>
-  <div class="hist-dr-body" id="histDrBody"></div>
 </div>
 
 <script>
-const APP_VERSION='v3.48';
+const APP_VERSION='v3.49';
 const BUILD_TIME='2026-07-28 10:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -1201,8 +1203,8 @@ function _refreshHistDrawer(){
   _hPanelOpen=false;
   const recs=loadHistory();
   const cnt=document.getElementById('histDrCnt');if(cnt)cnt.textContent=recs.length?`${recs.length}건`:'';
-  const body=document.getElementById('histDrBody');if(!body)return;
-  body.innerHTML=`<div class="sync-info" id="hSyncInfo"></div><div id="histDrList">${_histDrListHtml(recs)}</div>`;
+  const content=document.getElementById('histDrContent');if(!content)return;
+  content.innerHTML=`<div class="sync-info" id="hSyncInfo"></div><div id="histDrList">${_histDrListHtml(recs)}</div>`;
   _updateHSyncInfo();
 }
 function _histMonthNavHtml(allRecs,dispRecs){
