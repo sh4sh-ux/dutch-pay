@@ -718,7 +718,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.50';
+const APP_VERSION='v3.51';
 const BUILD_TIME='2026-07-28 10:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -1177,7 +1177,7 @@ function _sortHistRecs(recs,sort){
 function _initMobTitle(){
   const title=document.getElementById('mobTitleEl');if(!title)return;
   let _lp=null;
-  const _longPress=()=>{_lp=null;navigator.vibrate&&navigator.vibrate(30);goToHistory();};
+  const _longPress=()=>{_lp=null;navigator.vibrate&&navigator.vibrate(30);showDataMenu(title,{stopPropagation:()=>{},preventDefault:()=>{}});};
   const _shortTap=()=>mSetTab('input');
   title.addEventListener('touchstart',e=>{e.preventDefault();_lp=setTimeout(_longPress,600);},{passive:false});
   title.addEventListener('touchend',e=>{e.preventDefault();if(_lp){clearTimeout(_lp);_lp=null;_shortTap();}});
