@@ -702,8 +702,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.37';
-const BUILD_TIME='2026-07-28 14:00';
+const APP_VERSION='v3.38';
+const BUILD_TIME='2026-07-28 15:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -777,12 +777,13 @@ function showDataMenu(anchorEl,ev){
   const pop=document.createElement('div');pop.className='data-pop';
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
-  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
+  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
-      if(dbxGetToken()){syncFromDropbox();toast('Dropbox 동기화 중...');}
-      else{goToHistory();}
+      if(dbxGetToken()){syncFromDropbox();hSyncDropbox();toast('Dropbox 동기화 중...');}
+      else{_hDbxConnectDirect();}
       pop.remove();
     }else if(action==='dbxRename'){pop.remove();_dbxRenameExistingFiles();}
+    else if(action==='dbxDisconnect'){hDbxDisconnect();pop.remove();}
     else if(action==='openHistory'){goToHistory();pop.remove();}
     else if(action==='saveHistory'){saveToHistory();pop.remove();}
     else if(action==='exportCsv'){exportCurrentGroupCsv();pop.remove();}
@@ -1174,9 +1175,7 @@ function _refreshHistDrawer(){
   const recs=loadHistory();
   const cnt=document.getElementById('histDrCnt');if(cnt)cnt.textContent=recs.length?`${recs.length}건`:'';
   const body=document.getElementById('histDrBody');if(!body)return;
-  const connected=!!hDbxGetToken();
-  const badgeTxt=connected?'☁ Dropbox 연결됨':'☁ Dropbox 미연결';
-  body.innerHTML=`<div class="hist-top" style="margin-bottom:8px"><div class="${connected?'hist-badge connected':'hist-badge'}" id="hDbxBadge">${badgeTxt}</div><button class="hist-dbx-btn" onclick="toggleHDbxPanel()">Dropbox 설정</button></div><div id="hDbxPanel" style="display:none"></div><div class="sync-info" id="hSyncInfo"></div><div id="histDrList">${_histDrListHtml(recs)}</div>`;
+  body.innerHTML=`<div class="sync-info" id="hSyncInfo"></div><div id="histDrList">${_histDrListHtml(recs)}</div>`;
   _updateHSyncInfo();
 }
 function _histStatsHtml(recs){
@@ -1855,10 +1854,6 @@ function saveToHistory(){
 }
 
 // ── 기록 보관함 (SPA) ──
-const DBX_H_APPKEY='dutchpay_dbx_appkey';
-const DBX_H_TOKEN='dutchpay_dbx_token';
-const DBX_H_REFRESH='dutchpay_dbx_refresh';
-const DBX_H_ACCOUNT='dutchpay_dbx_account';
 const DBX_H_LASTSYNC='dutchpay_dbx_lastsync';
 const DBX_H_FILE='/01_Personal/Dutch-Pay/dutch-pay_history.json';
 const svgArrowH='<svg width="13" height="13" viewBox="0 0 24 24"><line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M13 6 L22 12 L13 18 Z" fill="currentColor"/></svg>';
@@ -2000,15 +1995,7 @@ function _buildRecordCardHtml(r){
 
 function _buildHistoryInnerHtml(){
   const records=loadHistory();
-  const connected=!!hDbxGetToken();
-  const badgeCls=connected?'hist-badge connected':'hist-badge';
-  const badgeTxt=connected?'☁ Dropbox 연결됨':'☁ Dropbox 미연결';
-  let html=`<div class="hist-top">
-    <div class="${badgeCls}" id="hDbxBadge">${badgeTxt}</div>
-    <button class="hist-dbx-btn" onclick="toggleHDbxPanel()">Dropbox 설정</button>
-  </div>
-  <div id="hDbxPanel" style="display:none"></div>
-  <div class="sync-info" id="hSyncInfo"></div>`;
+  let html=`<div class="sync-info" id="hSyncInfo"></div>`;
   if(!records.length){
     html+=`<div class="empty" style="padding:60px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>⋯ 메뉴에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
   }else{
@@ -2106,7 +2093,7 @@ function renderHistoryBody(el){
 }
 
 // Dropbox (기록 보관함 전용)
-function hDbxGetToken(){return localStorage.getItem(DBX_H_TOKEN);}
+function hDbxGetToken(){return dbxGetToken();}
 
 function _updateHDbxBadge(){
   const el=document.getElementById('hDbxBadge');if(!el)return;
@@ -2133,10 +2120,10 @@ function toggleHDbxPanel(){
 function _renderHDbxPanel(){
   const panel=document.getElementById('hDbxPanel');if(!panel)return;
   const token=hDbxGetToken();
-  const appKey=localStorage.getItem(DBX_H_APPKEY)||'';
+  const appKey=localStorage.getItem('dutchpay_dbx_appkey')||'';
   let acHtml='';
   if(token){
-    try{const ac=JSON.parse(localStorage.getItem(DBX_H_ACCOUNT)||'{}');if(ac.name){acHtml=`<div class="dbx-account"><div class="dbx-account-info"><div class="dbx-account-name">${e(ac.name)}</div><div class="dbx-account-email">${e(ac.email)}</div></div><button class="dbx-disconnect" onclick="hDbxDisconnect()">연결 해제</button></div>`;}}catch(e2){}
+    try{const ac=JSON.parse(localStorage.getItem('dutchpay_dbx_account')||'{}');if(ac.name){acHtml=`<div class="dbx-account"><div class="dbx-account-info"><div class="dbx-account-name">${e(ac.name)}</div><div class="dbx-account-email">${e(ac.email)}</div></div><button class="dbx-disconnect" onclick="hDbxDisconnect()">연결 해제</button></div>`;}}catch(e2){}
     panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body">${acHtml}<div class="dbx-btn-row"><button class="dbx-btn secondary" onclick="hSyncDropbox()">지금 동기화</button></div><div style="font-size:11px;color:var(--label3);margin-top:10px;text-align:center">파일: 01_Personal/Dutch-Pay/dutch-pay_history.json</div></div></div>`;
   }else{
     const redirectUri=location.origin+location.pathname;
@@ -2147,9 +2134,20 @@ function _renderHDbxPanel(){
 async function hDbxConnect(){
   const appKey=(document.getElementById('hDbxAppKey')?.value||'').trim();
   if(!appKey){toast('App Key를 입력해주세요',{type:'error'});return;}
-  localStorage.setItem(DBX_H_APPKEY,appKey);
+  localStorage.setItem('dutchpay_dbx_appkey',appKey);
   const verifier=_hRandomStr(64);
   const challenge=await _hSha256b64url(verifier);
+  localStorage.setItem('h_dbx_verifier',verifier);
+  const redirectUri=location.origin+location.pathname;
+  const params=new URLSearchParams({client_id:appKey,redirect_uri:redirectUri,response_type:'code',code_challenge:challenge,code_challenge_method:'S256',token_access_type:'offline'});
+  location.href=`https://www.dropbox.com/oauth2/authorize?${params}`;
+}
+
+async function _hDbxConnectDirect(){
+  let appKey=(localStorage.getItem('dutchpay_dbx_appkey')||'').trim();
+  if(!appKey){appKey=(prompt('Dropbox App Key를 입력하세요\n(개발자 콘솔 → 앱 키 복사)')||'').trim();if(!appKey)return;}
+  localStorage.setItem('dutchpay_dbx_appkey',appKey);
+  const verifier=_hRandomStr(64);const challenge=await _hSha256b64url(verifier);
   localStorage.setItem('h_dbx_verifier',verifier);
   const redirectUri=location.origin+location.pathname;
   const params=new URLSearchParams({client_id:appKey,redirect_uri:redirectUri,response_type:'code',code_challenge:challenge,code_challenge_method:'S256',token_access_type:'offline'});
@@ -2164,29 +2162,24 @@ async function hDbxHandleCallback(){
   const verifier=localStorage.getItem('h_dbx_verifier');
   if(!verifier){toast('연결에 실패했어요. 다시 시도해주세요.',{type:'error'});return;}
   localStorage.removeItem('h_dbx_verifier');
-  const appKey=localStorage.getItem(DBX_H_APPKEY);
+  const appKey=localStorage.getItem('dutchpay_dbx_appkey');
   const redirectUri=location.origin+location.pathname;
   try{
     const res=await fetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({code,grant_type:'authorization_code',client_id:appKey,redirect_uri:redirectUri,code_verifier:verifier})});
     const data=await res.json();
     if(data.error)throw new Error(data.error_description||data.error);
-    localStorage.setItem(DBX_H_TOKEN,data.access_token);
-    if(data.refresh_token)localStorage.setItem(DBX_H_REFRESH,data.refresh_token);
-    try{const acRes=await fetch('https://api.dropboxapi.com/2/users/get_current_account',{method:'POST',headers:{Authorization:`Bearer ${data.access_token}`}});const ac=await acRes.json();localStorage.setItem(DBX_H_ACCOUNT,JSON.stringify({name:ac.name?.display_name||'',email:ac.email||''}));}catch(e2){}
+    localStorage.setItem('dutchpay_dbx_token',data.access_token);
+    if(data.refresh_token)localStorage.setItem('dutchpay_dbx_refresh',data.refresh_token);
+    try{const acRes=await fetch('https://api.dropboxapi.com/2/users/get_current_account',{method:'POST',headers:{Authorization:`Bearer ${data.access_token}`}});const ac=await acRes.json();localStorage.setItem('dutchpay_dbx_account',JSON.stringify({name:ac.name?.display_name||'',email:ac.email||''}));}catch(e2){}
     toast('Dropbox 연결됐어요!',{type:'success'});
     goToHistory();
   }catch(err){toast('연결 실패: '+err.message,{type:'error'});}
 }
 
-async function _hDbxRefreshToken(){
-  const refresh=localStorage.getItem(DBX_H_REFRESH);const appKey=localStorage.getItem(DBX_H_APPKEY);
-  if(!refresh||!appKey)return null;
-  try{const res=await fetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh,client_id:appKey})});const data=await res.json();if(data.access_token){localStorage.setItem(DBX_H_TOKEN,data.access_token);return data.access_token;}return null;}catch(e){return null;}
-}
 
 function hDbxDisconnect(){
   if(!confirm('Dropbox 연결을 해제할까요?'))return;
-  [DBX_H_TOKEN,DBX_H_REFRESH,DBX_H_ACCOUNT,DBX_H_LASTSYNC].forEach(k=>localStorage.removeItem(k));
+  ['dutchpay_dbx_token','dutchpay_dbx_refresh','dutchpay_dbx_account',DBX_H_LASTSYNC].forEach(k=>localStorage.removeItem(k));
   toast('Dropbox 연결 해제됨');
   if(_histDrawerOpen){_refreshHistDrawer();return;}
   if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
@@ -2197,15 +2190,11 @@ let _hSyncing=false;
 async function hSyncDropbox(uploadOnly=false){
   const token=hDbxGetToken();if(!token)return;
   if(_hSyncing)return;_hSyncing=true;
-  const badge=document.getElementById('hDbxBadge');if(badge){badge.className='hist-badge syncing';badge.textContent='동기화 중...';}
   try{
     const local=loadHistory();
     if(!uploadOnly){
-      let dlToken=token;
-      let res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${dlToken}`,'Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE})}});
-      if(res.status===401){dlToken=await _hDbxRefreshToken();if(dlToken)res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${dlToken}`,'Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE})}});}
-      if(res&&res.ok){
-        const raw=JSON.parse(await res.text());
+      const raw=await _dbxDownload(token,DBX_H_FILE);
+      if(raw){
         const remoteRecs=Array.isArray(raw)?raw:(raw.records||[]);
         const delIds=_mergeDelIds(Array.isArray(raw)?[]:(raw.deletedIds||[]));
         const map=new Map();
@@ -2215,13 +2204,11 @@ async function hSyncDropbox(uploadOnly=false){
       }
     }
     const toUpload={records:loadHistory(),deletedIds:[..._loadDelIds()]};
-    let uploadToken=hDbxGetToken();
-    const uploadRes=await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${uploadToken}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE,mode:'overwrite',autorename:false,mute:true})},body:JSON.stringify(toUpload,null,2)});
-    if(uploadRes.status===401){uploadToken=await _hDbxRefreshToken();if(uploadToken)await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${uploadToken}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':JSON.stringify({path:DBX_H_FILE,mode:'overwrite',autorename:false,mute:true})},body:JSON.stringify(toUpload,null,2)});}
+    await _dbxUpload(dbxGetToken(),DBX_H_FILE,JSON.stringify(toUpload,null,2));
     localStorage.setItem(DBX_H_LASTSYNC,new Date().toISOString());
     if(_histDrawerOpen){_refreshHistDrawer();}
     else{if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}}
-  }catch(err){toast('동기화 실패: '+err.message,{type:'error'});_updateHDbxBadge();}
+  }catch(err){toast('동기화 실패: '+err.message,{type:'error'});}
   finally{_hSyncing=false;}
 }
 
