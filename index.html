@@ -657,7 +657,7 @@ svg{display:block;flex-shrink:0;}
   <div class="mob-header">
     <div class="mob-title-row">
       <div style="display:flex;align-items:center;gap:7px;min-width:0;">
-        <span class="mob-title" onclick="mSetTab('input')" style="cursor:pointer">더치페이</span>
+        <span class="mob-title" id="mobTitleEl" style="cursor:pointer">더치페이</span>
         <button class="mob-ver-badge" id="appVersionM"></button>
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
@@ -710,8 +710,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.40';
-const BUILD_TIME='2026-07-28 17:00';
+const APP_VERSION='v3.41';
+const BUILD_TIME='2026-07-28 18:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1161,6 +1161,18 @@ function _sortHistRecs(recs,sort){
   if(sort==='amtDesc')return a.sort((x,y)=>_recTot(y)-_recTot(x));
   if(sort==='amtAsc')return a.sort((x,y)=>_recTot(x)-_recTot(y));
   return a.sort((x,y)=>(y.dateStart||'').localeCompare(x.dateStart||''));
+}
+function _initMobTitle(){
+  const title=document.getElementById('mobTitleEl');if(!title)return;
+  let _lp=null;
+  const _longPress=()=>{_lp=null;navigator.vibrate&&navigator.vibrate(30);goToHistory();};
+  const _shortTap=()=>mSetTab('input');
+  title.addEventListener('touchstart',()=>{_lp=setTimeout(_longPress,600);},{passive:true});
+  title.addEventListener('touchend',e=>{if(_lp){clearTimeout(_lp);_lp=null;e.preventDefault();_shortTap();}});
+  title.addEventListener('touchcancel',()=>{if(_lp){clearTimeout(_lp);_lp=null;}});
+  title.addEventListener('mousedown',()=>{_lp=setTimeout(_longPress,600);});
+  title.addEventListener('mouseup',()=>{if(_lp){clearTimeout(_lp);_lp=null;_shortTap();}});
+  title.addEventListener('mouseleave',()=>{if(_lp){clearTimeout(_lp);_lp=null;}});
 }
 function _initVerBadge(){
   const badge=document.getElementById('appVersionM');if(!badge)return;
@@ -2618,7 +2630,7 @@ loadState();
 _migrateHistoryGroupNames();
 _deduplicateHistoryOnStartup();
 renderAll();
-(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;})();
+(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
 hDbxHandleCallback().then(()=>{if(hDbxGetToken())hSyncDropbox();});
