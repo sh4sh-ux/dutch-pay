@@ -778,8 +778,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.59';
-const BUILD_TIME='2026-07-29 18:00';
+const APP_VERSION='v3.60';
+const BUILD_TIME='2026-07-30 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -848,19 +848,20 @@ function _ownerLock(){
   renderAll();toast('🔒 잠금됨',{type:'success'});
 }
 function _ownerAreaClick(anchorEl,ev){
-  if(_ownerUnlocked){showDataMenu(anchorEl,ev);return;}
-  _ownerTapCount++;
-  if(_ownerTapCount>=5){_ownerUnlocked=true;_ownerTapCount=0;localStorage.setItem('dutchpay_owner_unlocked','1');renderAll();showDataMenu(anchorEl,ev);}
+  showDataMenu(anchorEl,ev);
 }
 function _updateDataMenuBtns(){}
 function showDataMenu(anchorEl,ev){
-  if(!_ownerUnlocked)return;
   if(ev){ev.stopPropagation();ev.preventDefault();}
   document.querySelectorAll('.icon-pop,.rounder-pop,.group-pop,.data-pop').forEach(el=>el.remove());
   const pop=document.createElement('div');pop.className='data-pop';
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
-  pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
+  if(_ownerUnlocked){
+    pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
+  } else {
+    pop.innerHTML=`<button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-version" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
+  }
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
       if(dbxGetToken()){syncFromDropbox();hSyncDropbox();toast('Dropbox 동기화 중...');}
       else{_hDbxConnectDirect();}
@@ -875,7 +876,8 @@ function showDataMenu(anchorEl,ev){
     else if(action==='toggleDark'){_toggleDarkMode();pop.remove();}
     else if(action==='resetCurrent'){resetCurrentSettlement();pop.remove();}
     else if(action==='reset'){resetAllData();pop.remove();}
-    else if(action==='lockOwner'){_ownerLock();pop.remove();}});
+    else if(action==='lockOwner'){_ownerLock();pop.remove();}
+    else if(action==='unlockTap'){_ownerTapCount++;if(_ownerTapCount>=5){_ownerUnlocked=true;_ownerTapCount=0;localStorage.setItem('dutchpay_owner_unlocked','1');renderAll();pop.remove();showDataMenu(anchorEl,null);}}});
   document.body.appendChild(pop);_positionPopover(pop,anchorEl,true);
   setTimeout(()=>{const h=(e3)=>{if(!pop.contains(e3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=(e3)=>{if(e3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);
 }
