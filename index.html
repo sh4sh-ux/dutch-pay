@@ -820,8 +820,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.66';
-const BUILD_TIME='2026-08-02 15:00';
+const APP_VERSION='v3.67';
+const BUILD_TIME='2026-08-02 16:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2147,9 +2147,16 @@ function saveToHistory(){
         localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
         toast('기록이 업데이트됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
       }else{
-        arr.unshift(record);
-        localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
-        toast('기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+        const softIdx=arr.findIndex(r=>_histSoftFingerprint(r)===_histSoftFingerprint(record));
+        if(softIdx>=0){
+          arr[softIdx]={...arr[softIdx],people:record.people,items:record.items,total:record.total,payments:record.payments,txns:record.txns,savedAt:record.savedAt};
+          localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
+          toast('기록이 업데이트됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+        }else{
+          arr.unshift(record);
+          localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
+          toast('기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+        }
       }
     }
     if(hDbxGetToken())hSyncDropbox(true);
@@ -2168,6 +2175,7 @@ function _loadDelIds(){try{return new Set(JSON.parse(localStorage.getItem(HISTOR
 function _saveDelId(id){try{const s=_loadDelIds();s.add(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
 function _mergeDelIds(remoteIds){try{const s=_loadDelIds();(remoteIds||[]).forEach(id=>s.add(id));localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));return s;}catch(e){return _loadDelIds();}}
 function _histFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|'),(r.items||[]).map(i=>`${i.name||''}|${+i.amount||0}|${i.payer||''}|${i.isTreat?1:0}`).sort().join(',')].join('§');}
+function _histSoftFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|')].join('§');}
 function _dedupHistory(arr){const map=new Map();arr.forEach(r=>{const fp=_histFingerprint(r);const ex=map.get(fp);if(!ex){map.set(fp,r);}else{const isNewer=(r.savedAt||'')>(ex.savedAt||'');const winner=isNewer?r:ex,loser=isNewer?ex:r;map.set(fp,{...winner,payments:{...(loser.payments||{}),...(winner.payments||{})}});}});return Array.from(map.values());}
 function saveHistory(arr){try{const deduped=_dedupHistory(arr);const removed=arr.length-deduped.length;localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));if(removed>0)setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),50);}catch(e){toast('저장 공간이 부족해 기록을 저장하지 못했어요',{type:'error'});}}
 function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const deduped=_dedupHistory(arr);const removed=arr.length-deduped.length;if(removed>0){localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),400);}}catch(e){}}
