@@ -396,9 +396,14 @@ svg{display:block;flex-shrink:0;}
 .pm-month-person-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;}
 .pm-month-person-row:not(:last-child){border-bottom:1px solid var(--sep);}
 .pm-month-person-name{font-size:13px;font-weight:500;color:var(--label);}
-.pm-month-person-right{font-size:12px;color:var(--label2);display:flex;gap:8px;}
-.pm-month-person-right .neg{color:var(--red);}
-.pm-month-person-right .pos{color:var(--green);}
+.pm-month-person-right{font-size:12px;color:var(--label2);display:flex;align-items:center;gap:5px;}
+.pm-month-delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;}
+.pm-month-delta.pos{color:var(--green);}
+.pm-month-delta.neg{color:var(--red);}
+.pm-month-status{font-size:12px;font-weight:600;min-width:22px;text-align:right;}
+.pm-month-status.pos{color:var(--green);}
+.pm-month-status.neg{color:var(--red);}
+.pm-month-status.done{color:var(--green);}
 .txn-people{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .txn-from{font-size:14px;font-weight:600;color:var(--label);}
 .txn-arr{color:var(--label);display:flex;align-items:center;}
@@ -805,8 +810,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.61';
-const BUILD_TIME='2026-08-02 10:00';
+const APP_VERSION='v3.62';
+const BUILD_TIME='2026-08-02 11:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1796,9 +1801,10 @@ function _pmMonthlyHtml(allRecs){
     const ymId=ym.replace('-','_');
     const isOpen=_pmMonthsOpen.has(ymId);
     const peopleRows=Object.entries(personStats).sort((a,b)=>b[1].billed-a[1].billed).map(([nm,s])=>{
-      const unpaid=s.billed-s.received;
-      const unpaidHtml=unpaid>0?`<span class="neg">미수 ${fmt(unpaid)}원</span>`:`<span class="pos">완납</span>`;
-      return `<div class="pm-month-person-row"><span class="pm-month-person-name">${e(nm)}</span><div class="pm-month-person-right"><span>청구 ${fmt(s.billed)}원</span>${unpaidHtml}</div></div>`;
+      const net=s.received-s.billed;
+      const deltaHtml=net>0?`<span class="pm-month-delta pos">+${fmt(net)}원</span>`:net<0?`<span class="pm-month-delta neg">-${fmt(-net)}원</span>`:'';
+      const statusHtml=net>0?`<span class="pm-month-status pos">초과</span>`:net<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
+      return `<div class="pm-month-person-row"><span class="pm-month-person-name">${e(nm)}</span><div class="pm-month-person-right">${deltaHtml}<span>청구 ${fmt(s.billed)}원</span>${statusHtml}</div></div>`;
     }).join('');
     return `<div class="pm-month-card" id="pmc_${ymId}"><div class="pm-month-hd" onclick="togglePmMonth('${ymId}')"><div class="pm-month-hd-left"><span class="pm-month-label">${label}</span><span class="pm-month-count">${count}회 · ${fmt(totalSpend)}원</span></div><div class="pm-month-hd-right"><span class="pm-month-chev${isOpen?' open':''}">▼</span></div></div><div class="pm-month-detail" id="pmcd_${ymId}" style="display:${isOpen?'block':'none'}"><div class="pm-month-stats-row"><div class="pm-mstat"><div class="pm-mstat-lbl">청구</div><div class="pm-mstat-val">${fmt(totalBilled)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">수령</div><div class="pm-mstat-val pos">${fmt(totalReceived)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">미수</div><div class="pm-mstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?fmt(totalUnpaid)+'원':'없음'}</div></div></div>${peopleRows?`<div class="pm-month-people">${peopleRows}</div>`:''}</div></div>`;
   }).join('');
