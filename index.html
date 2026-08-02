@@ -385,16 +385,16 @@ svg{display:block;flex-shrink:0;}
 .pm-month-chev{font-size:9px;color:var(--label3);transition:transform .2s;}
 .pm-month-chev.open{transform:rotate(180deg);}
 .pm-month-detail{border-top:1px solid var(--sep);padding:12px 14px;}
-.pm-month-stats-block{margin-bottom:10px;}
-.pm-month-stats-lbls{display:flex;font-size:11px;color:var(--label3);margin-bottom:3px;}
-.pm-month-stats-lbls span{flex:1;}
-.pm-month-stats-vals{display:flex;align-items:center;}
-.pm-month-stats-vals>span:not(.pm-month-net){flex:1;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--label);}
-.pm-month-stats-vals>.pos{color:var(--green);}
-.pm-month-stats-vals>.neg{color:var(--red);}
-.pm-month-net{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;margin-left:auto;padding-left:8px;}
-.pm-month-net.pos{color:var(--green);}
-.pm-month-net.neg{color:var(--red);}
+.pm-month-stats-row{display:flex;gap:0;margin-bottom:10px;}
+.pm-mstat{flex:1;text-align:center;padding:8px 0;}
+.pm-mstat:not(:last-child){border-right:1px solid var(--sep);}
+.pm-mstat-lbl{font-size:11px;color:var(--label3);margin-bottom:3px;display:flex;align-items:center;justify-content:center;gap:3px;}
+.pm-mstat-val{font-size:13px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;}
+.pm-mstat-val.pos{color:var(--green);}
+.pm-mstat-val.neg{color:var(--red);}
+.pm-month-net-inline{font-size:10px;font-weight:700;font-variant-numeric:tabular-nums;}
+.pm-month-net-inline.pos{color:var(--green);}
+.pm-month-net-inline.neg{color:var(--red);}
 .pm-month-people{border-top:1px solid var(--sep);padding-top:8px;}
 .pm-month-person-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;}
 .pm-month-person-row:not(:last-child){border-bottom:1px solid var(--sep);}
@@ -409,7 +409,6 @@ svg{display:block;flex-shrink:0;}
 .pm-month-status.pos{color:var(--green);}
 .pm-month-status.neg{color:var(--red);}
 .pm-month-status.done{color:var(--green);}
-.pm-month-my-row{background:var(--fill);border-radius:6px;padding:4px 6px!important;margin-bottom:4px;border-bottom:none!important;}
 .pm-month-my-lbl{font-size:11px;color:var(--label3);}
 .txn-people{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .txn-from{font-size:14px;font-weight:600;color:var(--label);}
@@ -817,8 +816,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.63';
-const BUILD_TIME='2026-08-02 12:00';
+const APP_VERSION='v3.64';
+const BUILD_TIME='2026-08-02 13:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1814,9 +1813,9 @@ function _pmMonthlyHtml(allRecs){
     const net=totalReceived-totalBilled;
     const ymId=ym.replace('-','_');
     const isOpen=_pmMonthsOpen.has(ymId);
-    const netHtml=net!==0?`<span class="pm-month-net ${net>0?'pos':'neg'}">${net>0?'+':'-'}${fmt(Math.abs(net))}원</span>`:'';
-    const statsHtml=`<div class="pm-month-stats-block"><div class="pm-month-stats-lbls"><span>청구</span><span>수령</span><span>미수</span></div><div class="pm-month-stats-vals"><span>${fmt(totalBilled)}원</span><span class="pos">${fmt(totalReceived)}원</span><span${totalUnpaid>0?' class="neg"':''}>${totalUnpaid>0?fmt(totalUnpaid)+'원':'없음'}</span>${netHtml}</div></div>`;
-    const myRow=(_myName&&mySpend>0)?`<div class="pm-month-person-row pm-month-my-row"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-person-cnt">${mySettleCount}회</span></div><div class="pm-month-person-right"><span class="pm-month-my-lbl">결제</span><span style="font-weight:600;color:var(--label)">${fmt(mySpend)}원</span></div></div>`:'';
+    const netInline=net!==0?`<span class="pm-month-net-inline ${net>0?'pos':'neg'}">${net>0?'+':'-'}${fmt(Math.abs(net))}원</span>`:'';
+    const statsHtml=`<div class="pm-month-stats-row"><div class="pm-mstat"><div class="pm-mstat-lbl">청구</div><div class="pm-mstat-val">${fmt(totalBilled)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">수령${netInline}</div><div class="pm-mstat-val pos">${fmt(totalReceived)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">미수</div><div class="pm-mstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?fmt(totalUnpaid)+'원':'없음'}</div></div></div>`;
+    const myRow=(_myName&&mySpend>0)?`<div class="pm-month-person-row"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-person-cnt">${mySettleCount}회</span></div><div class="pm-month-person-right"><span class="pm-month-my-lbl">결제</span><span style="font-weight:600;color:var(--label);font-variant-numeric:tabular-nums">${fmt(mySpend)}원</span></div></div>`:'';
     const peopleRows=Object.entries(personStats).sort((a,b)=>b[1].billed-a[1].billed).map(([nm,s])=>{
       const pnet=s.received-s.billed;
       const deltaHtml=pnet>0?`<span class="pm-month-delta pos">+${fmt(pnet)}원</span>`:pnet<0?`<span class="pm-month-delta neg">-${fmt(-pnet)}원</span>`:'';
