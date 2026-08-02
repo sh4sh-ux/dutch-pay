@@ -372,6 +372,33 @@ svg{display:block;flex-shrink:0;}
 .pm-allrec-card.open{border-radius:12px 12px 0 0;margin-bottom:0;}
 .pm-allrec-chev{font-size:9px;color:var(--label3);margin-left:2px;}
 .pm-allrec-detail{background:var(--detail-bg);border-radius:0 0 12px 12px;margin-bottom:8px;overflow:hidden;}
+.pm-view-toggle{display:flex;gap:6px;margin:8px 0 10px;}
+.pm-view-btn{flex:1;padding:8px;background:var(--fill);color:var(--label2);border:none;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;}
+.pm-view-btn.on{background:var(--blue);color:var(--bg);}
+.pm-month-card{background:var(--card);border-radius:12px;margin-bottom:8px;overflow:hidden;box-shadow:0 2px 8px rgba(20,25,40,.07);}
+.pm-month-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;user-select:none;}
+.pm-month-hd-left{display:flex;align-items:center;gap:8px;}
+.pm-month-label{font-size:15px;font-weight:600;color:var(--label);}
+.pm-month-count{font-size:12px;color:var(--label3);background:var(--fill);padding:2px 7px;border-radius:100px;}
+.pm-month-hd-right{display:flex;align-items:center;gap:8px;}
+.pm-month-spend{font-size:16px;font-weight:700;color:var(--label);}
+.pm-month-chev{font-size:9px;color:var(--label3);transition:transform .2s;}
+.pm-month-chev.open{transform:rotate(180deg);}
+.pm-month-detail{border-top:1px solid var(--sep);padding:12px 14px;}
+.pm-month-stats-row{display:flex;gap:0;margin-bottom:2px;}
+.pm-mstat{flex:1;text-align:center;padding:6px 0;}
+.pm-mstat:not(:last-child){border-right:1px solid var(--sep);}
+.pm-mstat-lbl{font-size:11px;color:var(--label3);margin-bottom:3px;}
+.pm-mstat-val{font-size:14px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;}
+.pm-mstat-val.pos{color:var(--green);}
+.pm-mstat-val.neg{color:var(--red);}
+.pm-month-people{margin-top:10px;border-top:1px solid var(--sep);padding-top:8px;}
+.pm-month-person-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;}
+.pm-month-person-row:not(:last-child){border-bottom:1px solid var(--sep);}
+.pm-month-person-name{font-size:13px;font-weight:500;color:var(--label);}
+.pm-month-person-right{font-size:12px;color:var(--label2);display:flex;gap:8px;}
+.pm-month-person-right .neg{color:var(--red);}
+.pm-month-person-right .pos{color:var(--green);}
 .txn-people{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .txn-from{font-size:14px;font-weight:600;color:var(--label);}
 .txn-arr{color:var(--label);display:flex;align-items:center;}
@@ -778,14 +805,15 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.60';
-const BUILD_TIME='2026-07-30 10:00';
+const APP_VERSION='v3.61';
+const BUILD_TIME='2026-08-02 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
 let payments={};
 let _justAddedId=null;
-let _pmHistTab='current',_pmHistSearch='',_pmHistSort='newest',_pmHistFilter='all';
+let _pmHistTab='current',_pmHistSearch='',_pmHistSort='newest',_pmHistFilter='all',_pmViewMode='list';
+const _pmMonthsOpen=new Set();
 let _dbxAutoSavedFp='';
 let _myName=localStorage.getItem('dutchpay_my_name')||'';
 let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked');
@@ -1665,6 +1693,8 @@ function _pmHistResultsHtml(){
   if(!name){
     const allRecs=loadHistory().sort((a,b)=>(b.dateStart||b.savedAt||'').localeCompare(a.dateStart||a.savedAt||''));
     if(!allRecs.length)return '<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">저장된 정산 기록이 없어요</p></div>';
+    const viewToggle=`<div class="pm-view-toggle"><button class="pm-view-btn${_pmViewMode==='list'?' on':''}" onclick="_pmSetViewMode('list')">목록</button><button class="pm-view-btn${_pmViewMode==='monthly'?' on':''}" onclick="_pmSetViewMode('monthly')">월별 통계</button></div>`;
+    if(_pmViewMode==='monthly')return viewToggle+_pmMonthlyHtml(allRecs);
     const recsHtml=allRecs.map(rec=>{
       const dateStr=rec.dateStart?rec.dateStart.slice(2).replace(/-/g,'. ')+'.':rec.savedAt?rec.savedAt.slice(0,10):'';
       const txnsList=rec.txns||[];
@@ -1678,7 +1708,7 @@ function _pmHistResultsHtml(){
       const rid=ea(rec.id);
       return `<div class="pm-allrec-card" data-rec-id="${rid}" onclick="toggleAllRecCard('${rid}')"><div class="pm-allrec-left"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((rec.people||[]).join(', ')||rec.groupName||'')}</div></div><div class="pm-allrec-right"><div class="pm-record-total">${fmt(rec.total||0)}원</div>${statusHtml}<span class="pm-allrec-chev">▼</span><button class="rc-del-btn" style="margin-top:2px" onclick="_pmDelRec('${rid}',event)">삭제</button></div></div>`;
     }).join('');
-    return `<div class="pay-section-title" style="margin-top:8px">전체 기록 · ${allRecs.length}건</div>`+recsHtml;
+    return viewToggle+`<div class="pay-section-title" style="margin-top:8px">전체 기록 · ${allRecs.length}건</div>`+recsHtml;
   }
   let allRec=[];try{const raw=localStorage.getItem(HISTORY_KEY);allRec=raw?JSON.parse(raw):[];}catch(ex){}
   let cards=[];
@@ -1721,6 +1751,58 @@ function _pmHistResultsHtml(){
 
 function _pmHistoryHtml(){
   return `<div class="pm-search-wrap"><div class="sinp-rel"><input class="pm-search" type="text" placeholder="이름으로 검색" value="${ea(_pmHistSearch)}" oninput="_pmSearchInput(this.value);_chkClear(this)"/><button class="sinp-clr${_pmHistSearch?' vis':''}" onclick="_clrPmSearch()">✕</button></div></div><div class="pm-hist-results">${_pmHistResultsHtml()}</div>`;
+}
+function _pmSetViewMode(v){_pmViewMode=v;_patchHistResults();}
+function togglePmMonth(ymId){
+  const detail=document.getElementById('pmcd_'+ymId);
+  const chev=document.querySelector('#pmc_'+ymId+' .pm-month-chev');
+  if(!detail)return;
+  const isOpen=_pmMonthsOpen.has(ymId);
+  if(isOpen){_pmMonthsOpen.delete(ymId);detail.style.display='none';}
+  else{_pmMonthsOpen.add(ymId);detail.style.display='block';}
+  if(chev)chev.classList.toggle('open',!isOpen);
+}
+function _pmMonthlyHtml(allRecs){
+  const months={};
+  allRecs.forEach(rec=>{
+    const ym=(rec.dateStart||rec.savedAt||'').slice(0,7);
+    if(!ym)return;
+    if(!months[ym])months[ym]=[];
+    months[ym].push(rec);
+  });
+  const keys=Object.keys(months).sort().reverse();
+  if(!keys.length)return '<div class="empty" style="padding:30px 0"><p style="color:var(--label3)">기록이 없어요</p></div>';
+  const cardsHtml=keys.map(ym=>{
+    const recs=months[ym];
+    const [y,mo]=ym.split('-');
+    const label=`${y}년 ${+mo}월`;
+    const count=recs.length;
+    const totalSpend=recs.reduce((s,r)=>s+(+r.total||0),0);
+    let totalBilled=0,totalReceived=0;
+    const personStats={};
+    recs.forEach(rec=>{
+      (rec.txns||[]).forEach(t=>{
+        totalBilled+=t.amt;
+        const pm=(rec.payments||{})[`${t.from}|${t.to}`]||{};
+        const va=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);
+        const recv=pm.done?(va?+pm.amount:t.amt):0;
+        totalReceived+=recv;
+        if(!personStats[t.from])personStats[t.from]={billed:0,received:0};
+        personStats[t.from].billed+=t.amt;
+        personStats[t.from].received+=recv;
+      });
+    });
+    const totalUnpaid=totalBilled-totalReceived;
+    const ymId=ym.replace('-','_');
+    const isOpen=_pmMonthsOpen.has(ymId);
+    const peopleRows=Object.entries(personStats).sort((a,b)=>b[1].billed-a[1].billed).map(([nm,s])=>{
+      const unpaid=s.billed-s.received;
+      const unpaidHtml=unpaid>0?`<span class="neg">미수 ${fmt(unpaid)}원</span>`:`<span class="pos">완납</span>`;
+      return `<div class="pm-month-person-row"><span class="pm-month-person-name">${e(nm)}</span><div class="pm-month-person-right"><span>청구 ${fmt(s.billed)}원</span>${unpaidHtml}</div></div>`;
+    }).join('');
+    return `<div class="pm-month-card" id="pmc_${ymId}"><div class="pm-month-hd" onclick="togglePmMonth('${ymId}')"><div class="pm-month-hd-left"><span class="pm-month-label">${label}</span><span class="pm-month-count">${count}회 · ${fmt(totalSpend)}원</span></div><div class="pm-month-hd-right"><span class="pm-month-chev${isOpen?' open':''}">▼</span></div></div><div class="pm-month-detail" id="pmcd_${ymId}" style="display:${isOpen?'block':'none'}"><div class="pm-month-stats-row"><div class="pm-mstat"><div class="pm-mstat-lbl">청구</div><div class="pm-mstat-val">${fmt(totalBilled)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">수령</div><div class="pm-mstat-val pos">${fmt(totalReceived)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">미수</div><div class="pm-mstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?fmt(totalUnpaid)+'원':'없음'}</div></div></div>${peopleRows?`<div class="pm-month-people">${peopleRows}</div>`:''}</div></div>`;
+  }).join('');
+  return `<div class="pay-section-title" style="margin-top:8px">월별 통계 · ${keys.length}개월</div>`+cardsHtml;
 }
 
 function toggleHistRecordPanel(recId,txnKey){
