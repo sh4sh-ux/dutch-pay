@@ -410,6 +410,7 @@ svg{display:block;flex-shrink:0;}
 .pm-month-status.neg{color:var(--red);}
 .pm-month-status.done{color:var(--green);}
 .pm-month-my-lbl{font-size:11px;color:var(--label3);}
+.pm-month-my-pay{font-size:11px;color:var(--label2);background:var(--fill);padding:1px 7px;border-radius:100px;font-variant-numeric:tabular-nums;white-space:nowrap;}
 .txn-people{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .txn-from{font-size:14px;font-weight:600;color:var(--label);}
 .txn-arr{color:var(--label);display:flex;align-items:center;}
@@ -816,8 +817,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.64';
-const BUILD_TIME='2026-08-02 13:00';
+const APP_VERSION='v3.65';
+const BUILD_TIME='2026-08-02 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1791,7 +1792,7 @@ function _pmMonthlyHtml(allRecs){
     const totalSpend=recs.reduce((s,r)=>s+(+r.total||0),0);
     let totalBilled=0,totalReceived=0;
     const personStats={},personCount={};
-    let mySpend=0,mySettleCount=0;
+    let mySpend=0,mySettleCount=0,myBilled=0,myReceived=0;
     recs.forEach(rec=>{
       (rec.people||[]).forEach(p=>{personCount[p]=(personCount[p]||0)+1;});
       (rec.txns||[]).forEach(t=>{
@@ -1803,6 +1804,7 @@ function _pmMonthlyHtml(allRecs){
         if(!personStats[t.from])personStats[t.from]={billed:0,received:0};
         personStats[t.from].billed+=t.amt;
         personStats[t.from].received+=recv;
+        if(_myName&&t.to===_myName){myBilled+=t.amt;myReceived+=recv;}
       });
       if(_myName){
         (rec.items||[]).forEach(it=>{if(it.payer===_myName)mySpend+=(+it.amount||0);});
@@ -1815,7 +1817,10 @@ function _pmMonthlyHtml(allRecs){
     const isOpen=_pmMonthsOpen.has(ymId);
     const netInline=net!==0?`<span class="pm-month-net-inline ${net>0?'pos':'neg'}">${net>0?'+':'-'}${fmt(Math.abs(net))}원</span>`:'';
     const statsHtml=`<div class="pm-month-stats-row"><div class="pm-mstat"><div class="pm-mstat-lbl">청구</div><div class="pm-mstat-val">${fmt(totalBilled)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">수령${netInline}</div><div class="pm-mstat-val pos">${fmt(totalReceived)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">미수</div><div class="pm-mstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?fmt(totalUnpaid)+'원':'없음'}</div></div></div>`;
-    const myRow=(_myName&&mySpend>0)?`<div class="pm-month-person-row"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-person-cnt">${mySettleCount}회</span></div><div class="pm-month-person-right"><span class="pm-month-my-lbl">결제</span><span style="font-weight:600;color:var(--label);font-variant-numeric:tabular-nums">${fmt(mySpend)}원</span></div></div>`:'';
+    const myNet=myReceived-myBilled;
+    const myDelta=myNet>0?`<span class="pm-month-delta pos">+${fmt(myNet)}원</span>`:myNet<0?`<span class="pm-month-delta neg">-${fmt(-myNet)}원</span>`:'';
+    const myStatus=myNet>0?`<span class="pm-month-status pos">초과</span>`:myNet<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
+    const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-person-cnt">${mySettleCount}회</span>${mySpend>0?`<span class="pm-month-my-pay">결제 ${fmt(mySpend)}원</span>`:''}</div><div class="pm-month-person-right">${myDelta}<span>청구 ${fmt(myBilled)}원</span>${myStatus}</div></div>`:'';
     const peopleRows=Object.entries(personStats).sort((a,b)=>b[1].billed-a[1].billed).map(([nm,s])=>{
       const pnet=s.received-s.billed;
       const deltaHtml=pnet>0?`<span class="pm-month-delta pos">+${fmt(pnet)}원</span>`:pnet<0?`<span class="pm-month-delta neg">-${fmt(-pnet)}원</span>`:'';
