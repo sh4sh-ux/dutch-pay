@@ -372,6 +372,11 @@ svg{display:block;flex-shrink:0;}
 .pm-allrec-card.open{border-radius:12px 12px 0 0;margin-bottom:0;}
 .pm-allrec-chev{font-size:9px;color:var(--label3);margin-left:2px;}
 .pm-allrec-detail{background:var(--detail-bg);border-radius:0 0 12px 12px;margin-bottom:8px;overflow:hidden;}
+.rc-owner-actions{display:flex;gap:8px;padding:8px 14px 14px;}
+.rc-owner-btn{flex:1;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;}
+.rc-owner-btn.edit{background:var(--blue);color:#fff;}
+.rc-owner-btn.del{background:var(--red-bg);color:var(--red);}
+.rc-owner-btn:active{opacity:.8;}
 .pm-view-toggle{display:flex;gap:6px;margin:8px 0 10px;}
 .pm-view-btn{flex:1;padding:8px;background:var(--fill);color:var(--label2);border:none;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;}
 .pm-view-btn.on{background:var(--blue);color:var(--bg);}
@@ -820,8 +825,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.67';
-const BUILD_TIME='2026-08-02 16:00';
+const APP_VERSION='v3.68';
+const BUILD_TIME='2026-08-03 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1685,9 +1690,10 @@ function toggleAllRecCard(recId){
   const rec=loadHistory().find(r=>r.id===recId);if(!rec)return;
   const txns=rec.txns||[];const pmObj=rec.payments||{};
   const detail=document.createElement('div');detail.className='pm-allrec-detail';
-  const dbxBtn=hDbxGetToken()?`<div style="padding:10px 14px 12px"><button class="pm-dbx-btn" style="margin-top:0" onclick="saveHistRecToDropbox('${ea(recId)}')">☁️ Dropbox에 이미지 저장</button></div>`:'';
-  if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>'+dbxBtn;}
-  else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va2=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va2?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">✓ 입금완료</span>`):`<span class="pm-badge pending">미입금</span>`;const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+dbxBtn;}
+  const dbxBtn=hDbxGetToken()?`<div style="padding:10px 14px 4px"><button class="pm-dbx-btn" style="margin-top:0" onclick="saveHistRecToDropbox('${ea(recId)}')">☁️ Dropbox에 이미지 저장</button></div>`:'';
+  const ownerBtns=_ownerUnlocked?`<div class="rc-owner-actions"><button class="rc-owner-btn edit" onclick="loadHistoryForEdit('${ea(recId)}')">✏️ 불러오기</button><button class="rc-owner-btn del" onclick="_pmDelRec('${ea(recId)}',event)">🗑 삭제</button></div>`:'';
+  if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>'+dbxBtn+ownerBtns;}
+  else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va2=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va2?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">✓ 입금완료</span>`):`<span class="pm-badge pending">미입금</span>`;const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+dbxBtn+ownerBtns;}
   card.insertAdjacentElement('afterend',detail);
 }
 
@@ -1721,7 +1727,7 @@ function _pmHistResultsHtml(){
         :doneCount===0?`<span class="pm-badge pending">${totalCount}명 미입금</span>`
         :`<span class="pm-badge pending">${totalCount-doneCount}명 미입금</span>`;
       const rid=ea(rec.id);
-      return `<div class="pm-allrec-card" data-rec-id="${rid}" onclick="toggleAllRecCard('${rid}')"><div class="pm-allrec-left"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((rec.people||[]).join(', ')||rec.groupName||'')}</div></div><div class="pm-allrec-right"><div class="pm-record-total">${fmt(rec.total||0)}원</div>${statusHtml}<span class="pm-allrec-chev">▼</span><button class="rc-del-btn" style="margin-top:2px" onclick="_pmDelRec('${rid}',event)">삭제</button></div></div>`;
+      return `<div class="pm-allrec-card" data-rec-id="${rid}" onclick="toggleAllRecCard('${rid}')"><div class="pm-allrec-left"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((rec.people||[]).join(', ')||rec.groupName||'')}</div></div><div class="pm-allrec-right"><div class="pm-record-total">${fmt(rec.total||0)}원</div>${statusHtml}<span class="pm-allrec-chev">▼</span></div></div>`;
     }).join('');
     return viewToggle+`<div class="pay-section-title" style="margin-top:8px">전체 기록 · ${allRecs.length}건</div>`+recsHtml;
   }
