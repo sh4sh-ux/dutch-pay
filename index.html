@@ -854,8 +854,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.84';
-const BUILD_TIME='2026-08-04 01:00';
+const APP_VERSION='v3.85';
+const BUILD_TIME='2026-08-04 02:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1848,7 +1848,7 @@ function _pmHistResultsHtml(){
       amtHtml=`<div class="pm-record-total">${fmt(c.billing)}원</div>`;
     }
     const personTreatAmt=(!c.isParticipant)?(c.rec.items||[]).filter(it=>it.payer===name&&it.isTreat).reduce((s,it)=>s+(+it.amount||0),0):0;
-    const treatLineHtml=personTreatAmt>0?`<div class="pm-record-treat-line">한턱 ${fmt(personTreatAmt)}원</div>`:'';
+    const treatLineHtml=personTreatAmt>0?`<span class="pm-net-badge treat">한턱 ${fmt(personTreatAmt)}원</span>`:'';
     const recValCls=c.done?(c.diff<0?' neg':' done-clr'):'';
     const rid=ea(c.rec.id||'');const rkey=ea(c.key||'__attend__');
     const recItems=(c.rec.items||[]).filter(it=>+it.amount!==0);
