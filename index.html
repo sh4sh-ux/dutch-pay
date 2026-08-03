@@ -575,6 +575,9 @@ svg{display:block;flex-shrink:0;}
 .rc-item-row:last-child{border-bottom:none;}
 .pm-rec-items{border-top:1px solid var(--sep);}
 .pm-rec-items-title{font-size:11px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.04em;padding:8px 16px 4px;}
+.pm-rec-edit-row{padding:8px 16px 12px;border-top:1px solid var(--sep);}
+.pm-rec-edit-btn{background:var(--fill2);color:var(--label2);border:1px solid var(--sep2);border-radius:8px;padding:7px 16px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;}
+.pm-rec-edit-btn:active{opacity:.8;}
 .rc-item-info{flex:1;min-width:0;}
 .rc-item-name-row{display:flex;align-items:center;gap:5px;padding-left:8px;min-width:0;}
 .rc-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:1;}
@@ -829,8 +832,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.70';
-const BUILD_TIME='2026-08-03 12:00';
+const APP_VERSION='v3.71';
+const BUILD_TIME='2026-08-03 13:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1684,7 +1687,8 @@ function _pmSearchInput(v){_pmHistSearch=v;_patchHistResults();}
 function _pmFilterByName(name){_pmHistSearch=name;const inp=document.querySelector('.pm-search');if(inp){inp.value=name;_chkClear(inp);}_patchHistResults();}
 function _pmDelRec(id,e){e.stopPropagation();if(!confirm('이 기록을 삭제할까요?'))return;_saveDelId(id);saveHistory(loadHistory().filter(r=>r.id!==id));toast('기록이 삭제됐어요');if(hDbxGetToken())hSyncDropbox(true);_patchHistResults();}
 function _reRenderPayment(){if(window.innerWidth<700){const el=document.getElementById('mBody');if(el&&mTab==='payment')renderPaymentBody(el);}else{if(dTab==='payment')renderPaymentView('dREye','dRTitle','dRSub','dRBody');}}
-function _patchHistResults(){const el=document.querySelector('.pm-hist-results');if(!el)return;const openCard=el.querySelector('.pm-allrec-card.open');const openRecId=openCard?openCard.dataset.recId:null;el.innerHTML=_pmHistResultsHtml();if(openRecId)toggleAllRecCard(openRecId);}
+function _patchHistResults(){const el=document.querySelector('.pm-hist-results');if(!el)return;const openAllRec=el.querySelector('.pm-allrec-card.open');const openAllRecId=openAllRec?openAllRec.dataset.recId:null;const openRec=el.querySelector('.pm-record-card.open');const openRecId=openRec?openRec.dataset.recId:null;const openRecTxn=openRec?openRec.dataset.txnKey:null;el.innerHTML=_pmHistResultsHtml();if(openAllRecId)toggleAllRecCard(openAllRecId);if(openRecId&&openRecTxn)togglePmRecCard(openRecId,openRecTxn);}
+function togglePmRecCard(rid,rkey){const card=document.querySelector(`.pm-record-card[data-rec-id="${CSS.escape(rid)}"]`);if(!card)return;const detail=card.querySelector('.pm-rec-detail');if(!detail)return;const chev=card.querySelector('.pm-record-chev');const isOpen=detail.style.display!=='none';if(isOpen){detail.style.display='none';card.classList.remove('open');if(chev)chev.classList.remove('open');card.querySelector('.pm-hist-edit-panel')?.remove();}else{detail.style.display='block';card.classList.add('open');if(chev)chev.classList.add('open');}}
 function toggleAllRecCard(recId){
   const card=document.querySelector(`.pm-allrec-card[data-rec-id="${CSS.escape(recId)}"]`);if(!card)return;
   const next=card.nextElementSibling;
@@ -1768,11 +1772,13 @@ function _pmHistResultsHtml(){
     const statusHtml=c.done?(c.diff>0?`<span class="pm-badge pos">+${fmt(c.diff)}원 초과</span>`:c.diff<0?`<span class="pm-badge neg">-${fmt(-c.diff)}원 부족</span>`:`<span class="pm-badge done">✓ 입금완료</span>`):`<span class="pm-badge pending">미입금</span>`;
     const recValCls=c.done?(c.diff<0?' neg':' done-clr'):'';
     const rid=ea(c.rec.id||'');const rkey=ea(c.key);
-    const hdClick=c.isOwnerTxn?` onclick="toggleHistRecordPanel('${rid}','${rkey}')"`:' style="cursor:default"';
-    const chevHtml=c.isOwnerTxn?'<span class="pm-record-chev">▼</span>':'';
+    const chevHtml='<span class="pm-record-chev">▼</span>';
     const recItems=(c.rec.items||[]).filter(it=>+it.amount!==0);
     const itemsHtml=recItems.length?`<div class="pm-rec-items"><div class="pm-rec-items-title">지출 내역</div>${recItems.map(it=>{const mems=(it.members&&it.members.length)?it.members.join(', '):(c.rec.people||[]).join(', ');return `<div class="rc-item-row"><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span></div><div class="rc-item-meta">${e(mems)}</div></div><span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>`;}).join('')}</div>`:'';
-    return `<div class="pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="pm-record-hd"${hdClick}><div class="pm-record-meta"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="pm-record-members">${e(members)}</div></div><div class="pm-record-right"><div class="pm-record-total">${fmt(c.billing)}원</div>${chevHtml}</div></div><div class="pm-record-body">${c.done?`<div class="pm-record-row"><span class="pm-record-lbl">실수령액</span><span class="pm-record-val${recValCls}">${fmt(c.received)}원</span></div>`:''}<div class="pm-record-row"><span class="pm-record-lbl">상태</span>${statusHtml}</div></div>${c.pm.account||c.pm.timestamp?`<div class="pm-record-foot"><span class="pm-record-account">${e(c.pm.account||'')}</span><span class="pm-record-ts">${c.pm.timestamp?_dtpFmt(c.pm.timestamp):''}</span></div>`:''}${itemsHtml}</div>`;
+    const bodyHtml=c.done?`<div class="pm-record-body"><div class="pm-record-row"><span class="pm-record-lbl">실수령액</span><span class="pm-record-val${recValCls}">${fmt(c.received)}원</span></div></div>`:'';
+    const footHtml=c.pm.account||c.pm.timestamp?`<div class="pm-record-foot"><span class="pm-record-account">${e(c.pm.account||'')}</span><span class="pm-record-ts">${c.pm.timestamp?_dtpFmt(c.pm.timestamp):''}</span></div>`:'';
+    const editBtnHtml=c.isOwnerTxn?`<div class="pm-rec-edit-row"><button class="pm-rec-edit-btn" onclick="event.stopPropagation();toggleHistRecordPanel('${rid}','${rkey}')">✏️ 수정</button></div>`:'';
+    return `<div class="pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="pm-record-hd" onclick="togglePmRecCard('${rid}','${rkey}')"><div class="pm-record-meta"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="pm-record-members">${e(members)}</div></div><div class="pm-record-right"><div class="pm-record-total">${fmt(c.billing)}원</div>${statusHtml}${chevHtml}</div></div><div class="pm-rec-detail" style="display:none">${itemsHtml}${bodyHtml}${footHtml}${editBtnHtml}</div></div>`;
   }).join('');
   return summaryHtml+controlsHtml+`<div class="pay-section-title" style="margin-top:14px">정산 기록 · ${cards.length}건</div>`+cardsHtml;
 }
