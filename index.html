@@ -313,7 +313,7 @@ svg{display:block;flex-shrink:0;}
 .pm-net-badge.pos{background:var(--green-bg);color:var(--green-txt);}
 .pm-net-badge.neg{background:var(--red-bg);color:var(--red);}
 .pm-net-badge.zero{background:var(--fill2);color:var(--green-txt);}
-.pm-net-badge.treat{background:#FEF9C3;color:#92400E;}
+.pm-net-badge.treat{background:#FFF7ED;color:#EA580C;}
 .pm-person-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
 .pm-pstat{text-align:center;background:var(--fill);border-radius:10px;padding:10px 4px;}
 .pm-pstat-lbl{font-size:10px;color:var(--label3);margin-bottom:4px;}
@@ -333,7 +333,7 @@ svg{display:block;flex-shrink:0;}
 .pm-record-hd{padding:14px 16px 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;cursor:pointer;user-select:none;}
 .pm-record-meta{flex:1;min-width:0;}
 .pm-record-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
-.pm-record-treat-line{font-size:11px;color:#B45309;font-weight:600;text-align:right;}
+.pm-record-treat-line{font-size:11px;color:#EA580C;font-weight:600;text-align:right;}
 .pm-record-total{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
 .pm-record-chev{font-size:10px;color:var(--label3);transition:transform .15s;}
 .pm-record-chev.open{transform:rotate(180deg);}
@@ -356,10 +356,10 @@ svg{display:block;flex-shrink:0;}
 .pm-badge.pos{background:var(--green-bg);color:var(--green-txt);}
 .pm-badge.neg{background:var(--red-bg);color:var(--red);}
 .pm-badge.pending{background:var(--fill2);color:var(--label3);}
-.pm-badge.treat{background:#FEF9C3;color:#92400E;}
+.pm-badge.treat{background:#FFF7ED;color:#EA580C;}
 .pm-badge.attend{background:var(--fill2);color:var(--label2);}
-@media(prefers-color-scheme:dark){.pm-badge.treat{background:#422006;color:#FCD34D;}}
-:root[data-theme="dark"] .pm-badge.treat{background:#422006;color:#FCD34D;}
+@media(prefers-color-scheme:dark){.pm-badge.treat{background:#431407;color:#FB923C;}}
+:root[data-theme="dark"] .pm-badge.treat{background:#431407;color:#FB923C;}
 .pm-allrec-card{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--card);border-radius:12px;margin-bottom:8px;box-shadow:0 2px 8px rgba(20,25,40,.07);}
 .pm-allrec-left{flex:1;min-width:0;}
 .pm-allrec-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
@@ -426,14 +426,14 @@ svg{display:block;flex-shrink:0;}
 .pm-month-status.pos{color:var(--green);}
 .pm-month-status.neg{color:var(--red);}
 .pm-month-status.done{color:var(--green);}
-.pm-month-status.treat{color:#B45309;font-size:11px;}
+.pm-month-status.treat{color:#EA580C;font-size:11px;}
 .pm-month-status.attend{color:var(--label3);font-size:11px;}
 .pm-month-sort-row{display:flex;align-items:center;gap:6px;padding:2px 0 10px;}
 .pm-month-sort-lbl{font-size:12px;color:var(--label3);margin-right:2px;}
 .pm-month-sort-btn{background:var(--fill2);border:1px solid var(--sep2);border-radius:100px;padding:4px 10px;font-size:12px;font-weight:500;font-family:inherit;color:var(--label2);cursor:pointer;}
 .pm-month-sort-btn.on{background:var(--blue);color:#fff;border-color:transparent;}
-@media(prefers-color-scheme:dark){.pm-month-status.treat{color:#FCD34D;}}
-:root[data-theme="dark"] .pm-month-status.treat{color:#FCD34D;}
+@media(prefers-color-scheme:dark){.pm-month-status.treat{color:#FB923C;}}
+:root[data-theme="dark"] .pm-month-status.treat{color:#FB923C;}
 .pm-month-my-stats{display:flex;gap:0;padding:6px 0 4px;border-bottom:1px solid var(--sep);}
 .pm-month-my-stat{flex:1;display:flex;flex-direction:column;gap:2px;text-align:center;}
 .pm-month-my-stat:not(:last-child){border-right:1px solid var(--sep);}
@@ -850,8 +850,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.81';
-const BUILD_TIME='2026-08-03 22:00';
+const APP_VERSION='v3.82';
+const BUILD_TIME='2026-08-03 23:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
