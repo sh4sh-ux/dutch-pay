@@ -402,6 +402,8 @@ svg{display:block;flex-shrink:0;}
 .pm-month-net-inline.neg{color:var(--red);}
 .pm-month-people{border-top:1px solid var(--sep);padding-top:8px;}
 .pm-month-person-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;}
+.pm-name-tap{cursor:pointer;border-radius:6px;margin:0 -6px;padding:5px 6px;}
+.pm-name-tap:active{background:var(--fill);}
 .pm-month-person-row:not(:last-child){border-bottom:1px solid var(--sep);}
 .pm-month-person-left{display:flex;align-items:center;gap:5px;}
 .pm-month-person-name{font-size:13px;font-weight:500;color:var(--label);}
@@ -825,8 +827,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.68';
-const BUILD_TIME='2026-08-03 10:00';
+const APP_VERSION='v3.69';
+const BUILD_TIME='2026-08-03 11:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1677,6 +1679,7 @@ function _pmSetTab(t){_pmHistTab=t;_reRenderPayment();}
 function _pmSetSort(v){_pmHistSort=v;_patchHistResults();}
 function _pmSetFilter(v){_pmHistFilter=v;_patchHistResults();}
 function _pmSearchInput(v){_pmHistSearch=v;_patchHistResults();}
+function _pmFilterByName(name){_pmHistSearch=name;const inp=document.querySelector('.pm-search');if(inp){inp.value=name;_chkClear(inp);}_patchHistResults();}
 function _pmDelRec(id,e){e.stopPropagation();if(!confirm('이 기록을 삭제할까요?'))return;_saveDelId(id);saveHistory(loadHistory().filter(r=>r.id!==id));toast('기록이 삭제됐어요');if(hDbxGetToken())hSyncDropbox(true);_patchHistResults();}
 function _reRenderPayment(){if(window.innerWidth<700){const el=document.getElementById('mBody');if(el&&mTab==='payment')renderPaymentBody(el);}else{if(dTab==='payment')renderPaymentView('dREye','dRTitle','dRSub','dRBody');}}
 function _patchHistResults(){const el=document.querySelector('.pm-hist-results');if(!el)return;const openCard=el.querySelector('.pm-allrec-card.open');const openRecId=openCard?openCard.dataset.recId:null;el.innerHTML=_pmHistResultsHtml();if(openRecId)toggleAllRecCard(openRecId);}
@@ -1836,13 +1839,13 @@ function _pmMonthlyHtml(allRecs){
     const myStatus=myNet>0?`<span class="pm-month-status pos">초과</span>`:myNet<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
     const myActual=mySpend-myBilled;
     const mySubStats=(_myName&&mySpend>0)?`<div class="pm-month-my-stats"><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">결제</div><div class="pm-month-my-stat-val">${fmt(mySpend)}원</div></div><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">지출</div><div class="pm-month-my-stat-val">${fmt(myActual)}원</div></div><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">쏜 금액</div><div class="pm-month-my-stat-val">${fmt(myTreat)}원</div></div></div>`:'';
-    const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row" style="border-bottom:${mySubStats?'none':'1px solid var(--sep)'}"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-person-cnt">${mySettleCount}회</span></div><div class="pm-month-person-right">${myDelta}<span>청구 ${fmt(myBilled)}원</span>${myStatus}</div></div>${mySubStats}`:'';
+    const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row pm-name-tap" style="border-bottom:${mySubStats?'none':'1px solid var(--sep)'}" onclick="_pmFilterByName('${ea(_myName)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-person-cnt">${mySettleCount}회</span></div><div class="pm-month-person-right">${myDelta}<span>청구 ${fmt(myBilled)}원</span>${myStatus}</div></div>${mySubStats}`:'';
     const peopleRows=Object.entries(personStats).sort((a,b)=>b[1].billed-a[1].billed).map(([nm,s])=>{
       const pnet=s.received-s.billed;
       const deltaHtml=pnet>0?`<span class="pm-month-delta pos">+${fmt(pnet)}원</span>`:pnet<0?`<span class="pm-month-delta neg">-${fmt(-pnet)}원</span>`:'';
       const statusHtml=pnet>0?`<span class="pm-month-status pos">초과</span>`:pnet<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
       const cnt=personCount[nm]||1;
-      return `<div class="pm-month-person-row"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span></div><div class="pm-month-person-right">${deltaHtml}<span>청구 ${fmt(s.billed)}원</span>${statusHtml}</div></div>`;
+      return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span></div><div class="pm-month-person-right">${deltaHtml}<span>청구 ${fmt(s.billed)}원</span>${statusHtml}</div></div>`;
     }).join('');
     const peopleSection=(myRow||peopleRows)?`<div class="pm-month-people">${myRow}${peopleRows}</div>`:'';
     return `<div class="pm-month-card" id="pmc_${ymId}"><div class="pm-month-hd" onclick="togglePmMonth('${ymId}')"><div class="pm-month-hd-left"><span class="pm-month-label">${label}</span><span class="pm-month-count">${count}회 · ${fmt(totalSpend)}원</span></div><div class="pm-month-hd-right"><span class="pm-month-chev${isOpen?' open':''}">▼</span></div></div><div class="pm-month-detail" id="pmcd_${ymId}" style="display:${isOpen?'block':'none'}">${statsHtml}${peopleSection}</div></div>`;
