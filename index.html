@@ -848,7 +848,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.77';
+const APP_VERSION='v3.78';
 const BUILD_TIME='2026-08-03 19:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -1949,7 +1949,7 @@ function _pmMonthlyHtml(allRecs){
     const peopleSection=(myRow||peopleRows||participantRows)?`<div class="pm-month-people">${myRow}${peopleRows}${participantRows}</div>`:'';
     return `<div class="pm-month-card" id="pmc_${ymId}"><div class="pm-month-hd" onclick="togglePmMonth('${ymId}')"><div class="pm-month-hd-left"><span class="pm-month-label">${label}</span><span class="pm-month-count">${count}회 · ${fmt(totalSpend)}원</span></div><div class="pm-month-hd-right"><span class="pm-month-chev${isOpen?' open':''}">▼</span></div></div><div class="pm-month-detail" id="pmcd_${ymId}" style="display:${isOpen?'block':'none'}">${statsHtml}${peopleSection}</div></div>`;
   }).join('');
-  const monthSortCtrl=`<div class="pm-month-sort-row"><span class="pm-month-sort-lbl">인원 정렬</span><button class="pm-month-sort-btn${_pmMonthPeopleSort==='amt'?' on':''}" onclick="_pmSetMonthPeopleSort('amt')">금액순</button><button class="pm-month-sort-btn${_pmMonthPeopleSort==='cnt'?' on':''}" onclick="_pmSetMonthPeopleSort('cnt')">회수순</button><button class="pm-month-sort-btn${_pmMonthPeopleSort==='name'?' on':''}" onclick="_pmSetMonthPeopleSort('name')">이름순</button></div>`;
+  const monthSortCtrl=`<div class="pm-month-sort-row"><span class="pm-month-sort-lbl">인원 정렬</span><button class="pm-month-sort-btn${_pmMonthPeopleSort==='amt'?' on':''}" onclick="_pmSetMonthPeopleSort('amt')">금액순</button><button class="pm-month-sort-btn${_pmMonthPeopleSort==='cnt'?' on':''}" onclick="_pmSetMonthPeopleSort('cnt')">횟수순</button><button class="pm-month-sort-btn${_pmMonthPeopleSort==='name'?' on':''}" onclick="_pmSetMonthPeopleSort('name')">이름순</button></div>`;
   return `<div class="pay-section-title" style="margin-top:8px">월별 통계 · ${keys.length}개월</div>${monthSortCtrl}`+cardsHtml;
 }
 
