@@ -844,8 +844,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.75';
-const BUILD_TIME='2026-08-03 17:00';
+const APP_VERSION='v3.76';
+const BUILD_TIME='2026-08-03 18:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1775,12 +1775,7 @@ function _pmHistResultsHtml(){
     const treatAmt=treatItems.reduce((s,it)=>s+(+it.amount||0),0);
     _participantCards.push({rec,key:'__attend__',billing:0,received:0,diff:null,pm:{},done:false,isOwnerTxn:false,isParticipant:true,isTreat:treatAmt>0,treatAmt});
   });
-  const totalBilled=_txnCards.reduce((s,c)=>s+c.billing,0);
-  const totalReceived=_txnCards.filter(c=>c.done).reduce((s,c)=>s+c.received,0);
-  const totalUnpaid=totalBilled-totalReceived;
-  const net=totalReceived-totalBilled;
-  const netBadge=totalBilled===0?'':net>0?`<span class="pm-net-badge pos">+${fmt(net)}원 초과</span>`:net<0?`<span class="pm-net-badge neg">-${fmt(-net)}원 미수</span>`:`<span class="pm-net-badge zero">✓ 완납</span>`;
-  const summaryHtml=`<div class="pm-person-card"><div class="pm-person-name-row"><span class="pm-person-name">${e(name)}</span>${netBadge}</div><div class="pm-person-stats"><div class="pm-pstat"><div class="pm-pstat-lbl">총 청구</div><div class="pm-pstat-val">${fmt(totalBilled)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">총 수령</div><div class="pm-pstat-val${totalReceived>0?' pos':''}">${fmt(totalReceived)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">미수</div><div class="pm-pstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?'-'+fmt(totalUnpaid)+'원':'없음'}</div></div></div></div>`;
+  let summaryHtml='';
   let cards=_pmHistFilter==='unpaid'?_txnCards.filter(c=>!c.done):[..._txnCards,..._participantCards];
   if(_pmHistSort==='newest')cards.sort((a,b)=>(b.rec.dateStart||b.rec.savedAt).localeCompare(a.rec.dateStart||a.rec.savedAt));
   else if(_pmHistSort==='oldest')cards.sort((a,b)=>(a.rec.dateStart||a.rec.savedAt).localeCompare(b.rec.dateStart||b.rec.savedAt));
@@ -1797,6 +1792,14 @@ function _pmHistResultsHtml(){
   const controlsHtml=`<div class="pm-controls"><div class="pm-controls-top"><select class="pm-sort-sel" onchange="_pmSetSort(this.value)"><option value="newest"${_pmHistSort==='newest'?' selected':''}>최신순</option><option value="oldest"${_pmHistSort==='oldest'?' selected':''}>오래된순</option><option value="amtDesc"${_pmHistSort==='amtDesc'?' selected':''}>금액 높은순</option><option value="amtAsc"${_pmHistSort==='amtAsc'?' selected':''}>금액 낮은순</option></select><select class="pm-sort-sel" onchange="_pmSetGroup(this.value)">${periodOptsHtml}</select><div class="pm-filter-chips" style="margin-left:auto"><button class="pm-filter-chip${_pmHistFilter==='all'?' on':''}" onclick="_pmSetFilter('all')">전체</button><button class="pm-filter-chip${_pmHistFilter==='unpaid'?' on':''}" onclick="_pmSetFilter('unpaid')">미수</button></div></div></div>`;
   // 기간 필터 적용
   const displayCards=_pmHistGroup==='all'?cards:cards.filter(c=>(c.rec.dateStart||c.rec.savedAt||'').startsWith(_pmHistGroup));
+  const _dTxnCards=displayCards.filter(c=>!c.isParticipant);
+  const totalBilled=_dTxnCards.reduce((s,c)=>s+c.billing,0);
+  const totalReceived=_dTxnCards.filter(c=>c.done).reduce((s,c)=>s+c.received,0);
+  const totalUnpaid=totalBilled-totalReceived;
+  const net=totalReceived-totalBilled;
+  const netBadge=totalBilled===0?'':net>0?`<span class="pm-net-badge pos">+${fmt(net)}원 초과</span>`:net<0?`<span class="pm-net-badge neg">-${fmt(-net)}원 미수</span>`:`<span class="pm-net-badge zero">✓ 완납</span>`;
+  const _pLbl=_pmHistGroup==='all'?'총':_pmHistGroup.length===7?(()=>{const[y,mo]=_pmHistGroup.split('-');return `${+mo}월`;})():_pmHistGroup+'년';
+  summaryHtml=`<div class="pm-person-card"><div class="pm-person-name-row"><span class="pm-person-name">${e(name)}</span>${netBadge}</div><div class="pm-person-stats"><div class="pm-pstat"><div class="pm-pstat-lbl">${_pLbl} 청구</div><div class="pm-pstat-val">${fmt(totalBilled)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">${_pLbl} 수령</div><div class="pm-pstat-val${totalReceived>0?' pos':''}">${fmt(totalReceived)}원</div></div><div class="pm-pstat"><div class="pm-pstat-lbl">미수</div><div class="pm-pstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?'-'+fmt(totalUnpaid)+'원':'없음'}</div></div></div></div>`;
   if(!displayCards.length)return summaryHtml+controlsHtml+'<div class="empty" style="padding:30px 0"><p style="color:var(--label3)">해당하는 기록이 없어요</p></div>';
   const _renderCard=c=>{
     const dateStr=c.rec.dateStart?c.rec.dateStart.slice(2).replace(/-/g,'. ')+'.':c.rec.savedAt.slice(0,10);
