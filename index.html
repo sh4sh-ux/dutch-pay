@@ -867,8 +867,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.92';
-const BUILD_TIME='2026-08-05 14:00';
+const APP_VERSION='v3.93';
+const BUILD_TIME='2026-08-05 15:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1865,7 +1865,7 @@ function _pmHistResultsHtml(){
     const recValCls=c.done?(c.diff<0?' neg':' done-clr'):'';
     const rid=ea(c.rec.id||'');const rkey=ea(c.key||'__attend__');
     const recItems=(c.rec.items||[]).filter(it=>+it.amount!==0);
-    const itemsHtml=recItems.length?`<div class="pm-rec-items"><div class="pm-rec-items-title">지출 내역</div>${recItems.map(it=>{const uid='rcpt_'+(c.rec.id||'')+'_'+(it.id||'');const _mems=(it.members&&it.members.length)?it.members:(c.rec.people||[]);const _ws=(it.watchers||[]).filter(w=>!_mems.includes(w));const memsStr=it.isTreat?[..._mems,..._ws].map(m=>e(m)).join(', '):[..._mems.map(m=>e(m)),..._ws.map(w=>`${e(w)}(깍두기)`)].join(', ');return `<div class="rc-item-row"><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉&nbsp;&nbsp;&nbsp;👏👏👏</span>':''}${it.receiptText?`<button type="button" class="rc-receipt-btn" data-rcpt="${uid}" onclick="toggleItemReceipt('${uid}',event)">영수증 ▼</button>`:''}</div><div class="rc-item-meta">${memsStr}</div></div><span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid)}`;}).join('')}</div>`:'';
+    const itemsHtml=recItems.length?`<div class="pm-rec-items"><div class="pm-rec-items-title">지출 내역</div>${recItems.map(it=>{const uid='rcpt_'+(c.rec.id||'')+'_'+(it.id||'');const _mems=(it.members&&it.members.length)?it.members:(c.rec.people||[]);const _ws=(it.watchers||[]).filter(w=>!_mems.includes(w));const memsStr=it.isTreat?[..._mems,..._ws].map(m=>e(m)).join(', '):[..._mems.map(m=>e(m)),..._ws.map(w=>`${e(w)}(깍두기)`)].join(', ');const rowClick=it.receiptText?` onclick="toggleItemReceipt('${uid}',event)" style="cursor:pointer"`:'';const chev=it.receiptText?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';return `<div class="rc-item-row"${rowClick}><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉&nbsp;&nbsp;&nbsp;👏👏👏</span>':''}</div><div class="rc-item-meta">${memsStr}</div></div>${chev}<span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid)}`;}).join('')}</div>`:'';
     const bodyHtml=!c.isParticipant&&c.done?`<div class="pm-record-body"><div class="pm-record-row"><span class="pm-record-lbl">실수령액</span><span class="pm-record-val${recValCls}">${fmt(c.received)}원</span></div></div>`:'';
     const footHtml=!c.isParticipant&&(c.pm.account||c.pm.timestamp)?`<div class="pm-record-foot"><span class="pm-record-account">${e(c.pm.account||'')}</span><span class="pm-record-ts">${c.pm.timestamp?_dtpFmt(c.pm.timestamp):''}</span></div>`:'';
     const editBtnHtml=!c.isParticipant&&c.isOwnerTxn?`<div class="pm-rec-edit-row"><button class="pm-rec-edit-btn" onclick="event.stopPropagation();toggleHistRecordPanel('${rid}','${rkey}')">✏️ 수정</button></div>`:'';
