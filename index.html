@@ -868,8 +868,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.96';
-const BUILD_TIME='2026-08-05 18:00';
+const APP_VERSION='v3.97';
+const BUILD_TIME='2026-08-05 19:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2686,7 +2686,7 @@ function formatShareDate(startDate,endDate){
 
   if(!startDate)return '';
   if(!endDate||startDate===endDate)return fmtDate(startDate);
-  return `${fmtDate(startDate)} - ${fmtDate(endDate)}`;
+  return `${fmtDate(startDate)} ~ ${fmtDate(endDate)}`;
 }
 
 function truncateCanvasText(ctx,text,maxWidth){
