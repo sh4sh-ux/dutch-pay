@@ -866,8 +866,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.87';
-const BUILD_TIME='2026-08-05 09:00';
+const APP_VERSION='v3.88';
+const BUILD_TIME='2026-08-05 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2407,8 +2407,9 @@ function _buildRecordCardHtml(r){
   const rcItems=(r.items||[]).filter(it=>+it.amount!==0);
   const itemsHtml=rcItems.length
     ?`<div class="rc-section-title">지출 내역</div>`+rcItems.map(it=>{
+        const uid='hist_'+sid+'_'+(it.id||'');
         const mems=(it.members&&it.members.length)?it.members.join(', '):(r.people||[]).join(', ');
-        return `<div class="rc-item-row"><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span></div><div class="rc-item-meta">${e(mems)}</div></div><span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>`;
+        return `<div class="rc-item-row"><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉&nbsp;&nbsp;&nbsp;👏👏👏</span>':''}${it.receiptText?`<button type="button" class="rc-receipt-btn" data-rcpt="${uid}" onclick="toggleItemReceipt('${uid}',event)">영수증 ▼</button>`:''}</div><div class="rc-item-meta">${e(mems)}</div></div><span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid)}`;
       }).join(''):'';
   const pmObj=r.payments||{};
   const txnHtml=txns.length
@@ -2500,7 +2501,7 @@ function loadHistoryAsGroup(id){
   closeHistDrawer();closeSheet();
   syncCurrentToGroup();
   let newIdc=0;
-  const newItems=(r.items||[]).map(it=>({id:++newIdc,name:it.name||'',amount:it.amount||0,payer:it.payer||'',members:[...(it.members||[])],watchers:[...(it.watchers||[])],isTreat:it.isTreat||false,rounderOverride:it.rounderOverride||null,iconOverride:it.iconOverride||null}));
+  const newItems=(r.items||[]).map(it=>({id:++newIdc,name:it.name||'',amount:it.amount||0,payer:it.payer||'',members:[...(it.members||[])],watchers:[...(it.watchers||[])],isTreat:it.isTreat||false,rounderOverride:it.rounderOverride||null,iconOverride:it.iconOverride||null,receiptText:it.receiptText||''}));
   const newId=_newGroupId();
   const _cleanPm=v=>{const amt=(v.amount!==null&&v.amount!==undefined&&v.amount!==''&&!isNaN(+v.amount))?+v.amount:null;return{done:!!v.done,amount:amt,timestamp:v.timestamp||'',account:v.account||'',memo:v.memo||''};};
   const cleanPayments={};Object.entries(r.payments||{}).forEach(([k,v])=>{cleanPayments[k]=_cleanPm(v);});
@@ -2518,7 +2519,7 @@ function loadHistoryForEdit(id){
   closeHistDrawer();closeSheet();
   syncCurrentToGroup();
   let newIdc=0;
-  const newItems=(r.items||[]).map(it=>({id:++newIdc,name:it.name||'',amount:it.amount||0,payer:it.payer||'',members:[...(it.members||[])],watchers:[...(it.watchers||[])],isTreat:it.isTreat||false,rounderOverride:it.rounderOverride||null,iconOverride:it.iconOverride||null}));
+  const newItems=(r.items||[]).map(it=>({id:++newIdc,name:it.name||'',amount:it.amount||0,payer:it.payer||'',members:[...(it.members||[])],watchers:[...(it.watchers||[])],isTreat:it.isTreat||false,rounderOverride:it.rounderOverride||null,iconOverride:it.iconOverride||null,receiptText:it.receiptText||''}));
   const newId=_newGroupId();
   const _cleanPm=v=>{const amt=(v.amount!==null&&v.amount!==undefined&&v.amount!==''&&!isNaN(+v.amount))?+v.amount:null;return{done:!!v.done,amount:amt,timestamp:v.timestamp||'',account:v.account||'',memo:v.memo||''};};
   const cleanPayments={};Object.entries(r.payments||{}).forEach(([k,v])=>{cleanPayments[k]=_cleanPm(v);});
