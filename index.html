@@ -608,7 +608,7 @@ svg{display:block;flex-shrink:0;}
 .rc-body.open{display:block;}
 .rc-section-title{font-size:12px;font-weight:600;color:var(--label2);padding:10px 16px 6px;}
 .rc-item-row{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--sep);gap:10px;}
-.rc-item-row:last-child{border-bottom:none;}
+.rc-item-row:last-child,.pm-rec-items>.rc-item-row:has(+.rc-receipt-wrap:last-child){border-bottom:none;}
 .pm-rec-items{border-top:1px solid var(--sep);}
 .pm-rec-items-title{font-size:11px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.04em;padding:8px 16px 4px;}
 .pm-rec-edit-row{padding:8px 16px 12px;border-top:1px solid var(--sep);}
@@ -868,8 +868,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v3.98';
-const BUILD_TIME='2026-08-06 10:00';
+const APP_VERSION='v3.99';
+const BUILD_TIME='2026-08-06 11:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
