@@ -252,6 +252,8 @@ svg{display:block;flex-shrink:0;}
 .txn-row.expandable:hover{background:var(--fill);}
 .txn-row.pm-done{background:linear-gradient(90deg,rgba(52,199,89,.07) 0%,var(--card) 70%);}
 .txn-row.pm-diff{background:linear-gradient(90deg,rgba(255,59,48,.06) 0%,var(--card) 70%);}
+.txn-group:not(:first-child){border-top:1px solid var(--sep);}
+.txn-group-hd{padding:7px 18px 3px;font-size:11px;font-weight:700;letter-spacing:.05em;}
 .txn-status-ic{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--sep2);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .txn-status-ic.done{background:var(--green);border-color:var(--green);}
 .txn-status-ic.diff{background:var(--red);border-color:var(--red);}
@@ -872,8 +874,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.05';
-const BUILD_TIME='2026-08-09 13:00';
+const APP_VERSION='v4.06';
+const BUILD_TIME='2026-08-09 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1685,7 +1687,12 @@ function _patchSummary(){
 }
 
 function _txnRowsHtml(txns){
-  return txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('');
+  if(!txns.length)return'';
+  const seen=[],gmap={};
+  txns.forEach(t=>{if(!gmap[t.to]){gmap[t.to]=[];seen.push(t.to);}gmap[t.to].push(t);});
+  if(seen.length<=1)return txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('');
+  const C=['#FF9F0A','#0A84FF','#32D74B','#BF5AF2','#FF453A'];
+  return seen.map((to,i)=>{const c=C[i%C.length];return`<div class="txn-group"><div class="txn-group-hd" style="color:${c}">→ ${e(to)}</div>${gmap[to].map(t=>`<div class="txn-row" style="background:color-mix(in srgb,${c} 7%,var(--card))"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')}</div>`;}).join('');
 }
 
 function _txnRowsOwnerHtml(txns){
