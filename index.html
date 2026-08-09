@@ -872,8 +872,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.02';
-const BUILD_TIME='2026-08-06 14:00';
+const APP_VERSION='v4.04';
+const BUILD_TIME='2026-08-09 12:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1293,7 +1293,7 @@ function selectItemMob(id){_checkAutoDelete();selectedId=id;if(mTab!=='input'){m
 
 let _ufTimer=null;
 function _flushUpdateField(){clearTimeout(_ufTimer);_ufTimer=null;saveState();}
-function updateField(id,field,val){const it=items.find(i=>i.id===id);if(!it)return;it[field]=val;if(_justAddedId===id&&(field==='name'||field==='amount')&&val)_justAddedId=null;updateTotals();if(field==='name'){document.getElementById('dREye').textContent='지출 편집';document.getElementById('dRTitle').textContent=val||'새 지출';const mst=document.getElementById('mSheetTitle');if(mst)mst.textContent=val||'새 지출';}clearTimeout(_ufTimer);_ufTimer=setTimeout(_flushUpdateField,600);}
+function updateField(id,field,val){const it=items.find(i=>i.id===id);if(!it)return;it[field]=val;if(_justAddedId===id&&(field==='name'||field==='amount')&&val)_justAddedId=null;updateTotals();if(field==='name'){document.getElementById('dREye').textContent='지출 편집';document.getElementById('dRTitle').textContent=val||'새 지출';const mst=document.getElementById('mSheetTitle');if(mst)mst.textContent=val||'새 지출';}if(field==='payer'){renderItemLists();refreshMobItems();}clearTimeout(_ufTimer);_ufTimer=setTimeout(_flushUpdateField,600);}
 
 function toggleMember(id,name,btn){const it=items.find(i=>i.id===id);if(!it)return;if(!it.watchers)it.watchers=[];const isIn=it.members.includes(name);const isW=it.watchers.includes(name);if(isIn){// 포함 → 깍두기
 if(it.members.length>1)it.members=it.members.filter(m=>m!==name);else return;it.watchers.push(name);}else if(isW){// 깍두기 → 제외
@@ -2164,8 +2164,8 @@ function computeShares(){
   items.forEach(it=>{
     if(!it.amount||+it.amount===0)return;if(it.isTreat)return;
     const amt=+it.amount,mems=it.members.length?it.members:[...people],n=mems.length;
-    paid[it.payer]=(paid[it.payer]||0)+amt;
-    if(it.payer)payerSet[it.payer]=true;
+    if(it.payer&&people.includes(it.payer))paid[it.payer]=(paid[it.payer]||0)+amt;
+    if(it.payer&&people.includes(it.payer))payerSet[it.payer]=true;
     const override=it.rounderOverride;
     if(override&&mems.includes(override)){
       const base=Math.floor(amt/n),rem=amt-base*n;
