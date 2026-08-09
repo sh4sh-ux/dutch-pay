@@ -879,8 +879,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.07';
-const BUILD_TIME='2026-08-09 15:00';
+const APP_VERSION='v4.08';
+const BUILD_TIME='2026-08-09 16:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2057,14 +2057,16 @@ function renderPaymentView(eyeId,titleId,subId,bodyId){
   const body=document.getElementById(bodyId);
   const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
   _cleanStalePayments(txns);
-  body.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(txns):_pmHistoryHtml());
+  const myTxns=_myName?txns.filter(t=>t.to===_myName):txns;
+  body.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(myTxns):_pmHistoryHtml());
   if(_pmHistTab==='current')_checkAllPaidAutoSave();
 }
 
 function renderPaymentBody(el){
   const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
   _cleanStalePayments(txns);
-  el.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(txns):_pmHistoryHtml());
+  const myTxns=_myName?txns.filter(t=>t.to===_myName):txns;
+  el.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(myTxns):_pmHistoryHtml());
   if(_pmHistTab==='current')_checkAllPaidAutoSave();
 }
 
