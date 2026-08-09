@@ -252,6 +252,8 @@ svg{display:block;flex-shrink:0;}
 .txn-row.expandable:hover{background:var(--fill);}
 .txn-row.pm-done{background:linear-gradient(90deg,rgba(52,199,89,.07) 0%,var(--card) 70%);}
 .txn-row.pm-diff{background:linear-gradient(90deg,rgba(255,59,48,.06) 0%,var(--card) 70%);}
+.txn-group:not(:first-child){border-top:1px solid var(--sep);}
+.txn-group-hd{padding:7px 18px 3px;font-size:11px;font-weight:700;letter-spacing:.05em;}
 .txn-status-ic{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--sep2);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .txn-status-ic.done{background:var(--green);border-color:var(--green);}
 .txn-status-ic.diff{background:var(--red);border-color:var(--red);}
@@ -872,8 +874,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.04';
-const BUILD_TIME='2026-08-09 12:00';
+const APP_VERSION='v4.06';
+const BUILD_TIME='2026-08-09 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1685,7 +1687,12 @@ function _patchSummary(){
 }
 
 function _txnRowsHtml(txns){
-  return txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('');
+  if(!txns.length)return'';
+  const seen=[],gmap={};
+  txns.forEach(t=>{if(!gmap[t.to]){gmap[t.to]=[];seen.push(t.to);}gmap[t.to].push(t);});
+  if(seen.length<=1)return txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('');
+  const C=['#FF9F0A','#0A84FF','#32D74B','#BF5AF2','#FF453A'];
+  return seen.map((to,i)=>{const c=C[i%C.length];return`<div class="txn-group"><div class="txn-group-hd" style="color:${c}">→ ${e(to)}</div>${gmap[to].map(t=>`<div class="txn-row" style="background:color-mix(in srgb,${c} 7%,var(--card))"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('')}</div>`;}).join('');
 }
 
 function _txnRowsOwnerHtml(txns){
@@ -2183,15 +2190,31 @@ function computeShares(){
   return{paid,owes,details,hasRounding:diff!==0};
 }
 
-// calcTxns: 최소 송금 수로 정산 (그리디, 채권·채무 반복 상계)
+// calcTxns: 결제자별 채무 직접 정산 — 같은 (채무자, 채권자) 쌍끼리 상계
 function calcTxns(paid,owes){
-  const bal={};people.forEach(p=>{bal[p]=(paid[p]||0)-(owes[p]||0);});
-  const creds=[],debts=[];
-  Object.entries(bal).forEach(([p,b])=>{if(b>0.5)creds.push({p,b});else if(b<-0.5)debts.push({p,b:-b});});
-  creds.sort((a,z)=>z.b-a.b);debts.sort((a,z)=>z.b-a.b);
-  const txns=[],cs=creds.map(c=>({...c})),ds=debts.map(d=>({...d}));
-  let ci=0,di=0;
-  while(ci<cs.length&&di<ds.length){const c=cs[ci],d=ds[di],amt=Math.min(c.b,d.b);if(amt>0.5)txns.push({from:d.p,to:c.p,amt:Math.round(amt)});c.b-=amt;d.b-=amt;if(c.b<0.5)ci++;if(d.b<0.5)di++;}
+  const dm={};people.forEach(p=>{dm[p]={};});
+  items.forEach(it=>{
+    if(!it.amount||+it.amount===0||it.isTreat)return;
+    if(!it.payer||!people.includes(it.payer))return;
+    const mems=it.members.length?it.members:[...people],n=mems.length;
+    const override=it.rounderOverride;
+    if(override&&mems.includes(override)){
+      const base=Math.floor(+it.amount/n),rem=+it.amount-base*n;
+      mems.forEach(m=>{if(m!==it.payer&&people.includes(m)){const s=m===override?base+rem:base;dm[m][it.payer]=(dm[m][it.payer]||0)+s;}});
+    }else{
+      const s=+it.amount/n;
+      mems.forEach(m=>{if(m!==it.payer&&people.includes(m))dm[m][it.payer]=(dm[m][it.payer]||0)+s;});
+    }
+  });
+  people.forEach((a,i)=>people.slice(i+1).forEach(b=>{
+    const ab=dm[a][b]||0,ba=dm[b][a]||0;
+    if(ab>0&&ba>0){if(ab>=ba){dm[a][b]=ab-ba;dm[b][a]=0;}else{dm[a][b]=0;dm[b][a]=ba-ab;}}
+  }));
+  const txns=[];
+  people.forEach(debtor=>people.forEach(creditor=>{
+    const amt=Math.round(dm[debtor][creditor]||0);
+    if(amt>0)txns.push({from:debtor,to:creditor,amt});
+  }));
   return txns;
 }
 
