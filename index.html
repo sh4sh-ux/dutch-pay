@@ -879,8 +879,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.11';
-const BUILD_TIME='2026-08-09 19:00';
+const APP_VERSION='v4.12';
+const BUILD_TIME='2026-08-09 20:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1754,7 +1754,7 @@ function toggleAllRecCard(recId){
   document.querySelectorAll('.pm-allrec-card.open').forEach(c=>{c.classList.remove('open');const ch=c.querySelector('.pm-allrec-chev');if(ch)ch.textContent='▼';});
   card.classList.add('open');const chev=card.querySelector('.pm-allrec-chev');if(chev)chev.textContent='▲';
   const rec=loadHistory().find(r=>r.id===recId);if(!rec)return;
-  const txns=rec.txns||[];const pmObj=rec.payments||{};
+  const txns=_myName?(rec.txns||[]).filter(t=>t.to===_myName):(rec.txns||[]);const pmObj=rec.payments||{};
   const detail=document.createElement('div');detail.className='pm-allrec-detail';
   const dbxBtn=hDbxGetToken()?`<div style="padding:10px 14px 4px"><button class="pm-dbx-btn" style="margin-top:0" onclick="saveHistRecToDropbox('${ea(recId)}')">☁️ Dropbox에 이미지 저장</button></div>`:'';
   const ownerBtns=_ownerUnlocked?`<div class="rc-owner-actions"><button class="rc-owner-btn edit" onclick="loadHistoryForEdit('${ea(recId)}')">✏️ 불러오기</button><button class="rc-owner-btn del" onclick="_pmDelRec('${ea(recId)}',event)">🗑 삭제</button></div>`:'';
@@ -1937,7 +1937,7 @@ function _pmMonthlyHtml(allRecs){
     let mySpend=0,myTreat=0,mySettleCount=0,myBilled=0,myReceived=0;
     recs.forEach(rec=>{
       (rec.people||[]).forEach(p=>{personCount[p]=(personCount[p]||0)+1;});
-      (rec.txns||[]).forEach(t=>{
+      (_myName?(rec.txns||[]).filter(t=>t.to===_myName):(rec.txns||[])).forEach(t=>{
         totalBilled+=t.amt;
         const pm=(rec.payments||{})[`${t.from}|${t.to}`]||{};
         const va=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);
