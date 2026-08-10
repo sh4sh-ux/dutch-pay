@@ -879,8 +879,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.09';
-const BUILD_TIME='2026-08-09 17:00';
+const APP_VERSION='v4.10';
+const BUILD_TIME='2026-08-09 18:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2928,17 +2928,19 @@ async function shareSettleImage(){
 async function generateHistoryCanvas(rec){
   const W=1080,PAD=42,TOP_PAD=56;
   const FF="'system-ui','-apple-system','BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif";
-  const C={bg:'#FFFFFF',card:'#FFFFFF',text:'#111111',muted:'#8E8E93',label:'#666666',line:'#E9E9EC',blue:'#4355E8',blueBg:'#EBF3FF',red:'#E53E3E',green:'#1A7A3C',greenBg:'#E8FBE9',grayBg:'#F0F0F2'};
+  const C={bg:'#FFFFFF',card:'#FFFFFF',text:'#111111',muted:'#8E8E93',label:'#666666',line:'#E9E9EC',blue:'#4355E8',amber:'#FF9500',blueBg:'#EBF3FF',red:'#E53E3E',green:'#1A7A3C',greenBg:'#E8FBE9',grayBg:'#F0F0F2'};
   const cardX=PAD,cardW=W-PAD*2;
   const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=40,TOTAL_CARD_H=230,ITEM_ROW_H=152,TXN_ROW_H=96,EMPTY_CARD_H=192,FOOTER_H=100,BOTTOM_PAD=20;
   const _hOwner=_myName||'';
-  const validItems=(rec.items||[]).filter(it=>+it.amount!==0&&(!_hOwner||it.payer===_hOwner));
+  const validItems=(rec.items||[]).filter(it=>+it.amount!==0);
   const txns=_hOwner?(rec.txns||[]).filter(t=>t.to===_hOwner):(rec.txns||[]);
+  const hTxnSeen=[],hTxnGmap={};txns.forEach(t=>{if(!hTxnGmap[t.to]){hTxnGmap[t.to]=[];hTxnSeen.push(t.to);}hTxnGmap[t.to].push(t);});
+  const hDivH=3,hAddDivs=hTxnSeen.length>=1;
   const pmObj=rec.payments||{};
   const people=rec.people||[];
   const total=rec.total!=null?rec.total:(rec.items||[]).reduce((s,it)=>s+(+it.amount||0),0);
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
-  const txnCardH=txns.length?txns.length*TXN_ROW_H:EMPTY_CARD_H;
+  const txnCardH=txns.length?(txns.length*TXN_ROW_H+(hAddDivs?hTxnSeen.length*hDivH:0)):EMPTY_CARD_H;
   const iconMap=new Map();
   for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#4355E8'));}catch(e){iconMap.set(svg,null);}}}
   const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+itemCardH+SECTION_GAP+SECTION_LABEL_H+txnCardH+FOOTER_H+BOTTOM_PAD;
@@ -3020,49 +3022,51 @@ async function generateHistoryCanvas(rec){
     else{drawEmpty('모두 정산 완료 ✓',y,txnCardH);}
   }
   else{
-    txns.forEach((t,i)=>{
-      const ry=y+i*TXN_ROW_H+TXN_ROW_H/2;
-      const tkey=`${t.from}|${t.to}`;const pm=pmObj[tkey]||{};
-      const billing=t.amt;const _va4=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va4?+pm.amount:billing):0;
-      const diff=pm.done?received-billing:null;
-      // 배지 텍스트/색상
-      const badgeTxt=pm.done?(diff>0?`✓ + ${fmt(diff)}원 초과`:diff<0?`-${fmt(-diff)}원 부족`:'✓ 입금완료'):'미입금';
-      const badgeBg=pm.done?(diff<0?'#FFEEEE':C.greenBg):C.grayBg;
-      const badgeFg=pm.done?(diff<0?C.red:C.green):C.muted;
-      setFont(22,600);const btw=ctx.measureText(badgeTxt).width;
-      const bph=16,bpv=7,bH=22+bpv*2,bW=btw+bph*2;
-      // 금액 (우측)
-      const amtTxt=fmt(billing)+'원';
-      ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
-      const amtX=cardX+cardW-38;const amtW=ctx.measureText(amtTxt).width;ctx.fillText(amtTxt,amtX,ry);
-      // from → to (좌측, 1줄)
-      const leftX=cardX+38;
-      setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
-      const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry);
-      const fw=ctx.measureText(fromTxt).width;
-      const AGAP=20,AH=9,AL=36,headW=AH*1.8;
-      const AX=leftX+fw+AGAP,AEX=AX+AL;
-      ctx.strokeStyle=C.text;ctx.lineWidth=2.5;ctx.lineCap='round';
-      ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
-      ctx.fillStyle=C.text;ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
-      const toStartX=AEX+AGAP;
-      const maxToW=amtX-amtW-30-bW-14-toStartX;
-      const toTxt=truncateCanvasText(ctx,t.to||'',Math.max(maxToW,40));
-      ctx.fillStyle=C.text;ctx.textAlign='left';ctx.fillText(toTxt,toStartX,ry);
-      const toW=ctx.measureText(toTxt).width;
-      // 배지 (to 바로 옆 인라인)
-      const bX=toStartX+toW+14;
-      ctx.fillStyle=badgeBg;roundRectPath(ctx,bX,ry-bH/2,bW,bH,bH/2);ctx.fill();
-      setFont(22,600);ctx.fillStyle=badgeFg;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(badgeTxt,bX+bph,ry);
-      // 입금 일자·금융기관 (배지 바로 오른쪽)
-      if(pm.done&&(pm.timestamp||pm.account)){
-        const metaParts=[];
-        if(pm.timestamp){const[dd,tt]=(pm.timestamp||'').split('T');if(dd){const[y2,m2,d2]=dd.split('-');const tm=tt?tt.slice(0,5):'';metaParts.push(`${y2.slice(2)}.${m2}.${d2}${tm?' '+tm:''}`);}};
-        if(pm.account)metaParts.push(pm.account);
-        if(metaParts.length){const metaX=bX+bW+14;const maxMetaW=amtX-amtW-30-metaX;if(maxMetaW>30){setFont(22,400);ctx.fillStyle=C.muted;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(truncateCanvasText(ctx,metaParts.join(' '),maxMetaW),metaX,ry);}}
-      }
-      if(i<txns.length-1)drawDivider(y+(i+1)*TXN_ROW_H);
+    let curY=y;
+    if(hAddDivs){ctx.save();roundRectPath(ctx,cardX,y,cardW,txnCardH,28);ctx.clip();}
+    hTxnSeen.forEach(to=>{
+      if(hAddDivs){ctx.fillStyle=(_myName&&to===_myName)?C.blue:C.amber;ctx.fillRect(cardX,curY,cardW,hDivH);curY+=hDivH;}
+      hTxnGmap[to].forEach((t,ri)=>{
+        const ry=curY+TXN_ROW_H/2;
+        const tkey=`${t.from}|${t.to}`;const pm=pmObj[tkey]||{};
+        const billing=t.amt;const _va4=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va4?+pm.amount:billing):0;
+        const diff=pm.done?received-billing:null;
+        const badgeTxt=pm.done?(diff>0?`✓ + ${fmt(diff)}원 초과`:diff<0?`-${fmt(-diff)}원 부족`:'✓ 입금완료'):'미입금';
+        const badgeBg=pm.done?(diff<0?'#FFEEEE':C.greenBg):C.grayBg;
+        const badgeFg=pm.done?(diff<0?C.red:C.green):C.muted;
+        setFont(22,600);const btw=ctx.measureText(badgeTxt).width;
+        const bph=16,bpv=7,bH=22+bpv*2,bW=btw+bph*2;
+        const amtTxt=fmt(billing)+'원';
+        ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
+        const amtX=cardX+cardW-38;const amtW=ctx.measureText(amtTxt).width;ctx.fillText(amtTxt,amtX,ry);
+        const leftX=cardX+38;
+        setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
+        const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry);
+        const fw=ctx.measureText(fromTxt).width;
+        const AGAP=20,AH=9,AL=36,headW=AH*1.8;
+        const AX=leftX+fw+AGAP,AEX=AX+AL;
+        ctx.strokeStyle=C.text;ctx.lineWidth=2.5;ctx.lineCap='round';
+        ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
+        ctx.fillStyle=C.text;ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
+        const toStartX=AEX+AGAP;
+        const maxToW=amtX-amtW-30-bW-14-toStartX;
+        const toTxt=truncateCanvasText(ctx,t.to||'',Math.max(maxToW,40));
+        ctx.fillStyle=C.text;ctx.textAlign='left';ctx.fillText(toTxt,toStartX,ry);
+        const toW=ctx.measureText(toTxt).width;
+        const bX=toStartX+toW+14;
+        ctx.fillStyle=badgeBg;roundRectPath(ctx,bX,ry-bH/2,bW,bH,bH/2);ctx.fill();
+        setFont(22,600);ctx.fillStyle=badgeFg;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(badgeTxt,bX+bph,ry);
+        if(pm.done&&(pm.timestamp||pm.account)){
+          const metaParts=[];
+          if(pm.timestamp){const[dd,tt]=(pm.timestamp||'').split('T');if(dd){const[y2,m2,d2]=dd.split('-');const tm=tt?tt.slice(0,5):'';metaParts.push(`${y2.slice(2)}.${m2}.${d2}${tm?' '+tm:''}`);}};
+          if(pm.account)metaParts.push(pm.account);
+          if(metaParts.length){const metaX=bX+bW+14;const maxMetaW=amtX-amtW-30-metaX;if(maxMetaW>30){setFont(22,400);ctx.fillStyle=C.muted;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(truncateCanvasText(ctx,metaParts.join(' '),maxMetaW),metaX,ry);}}
+        }
+        curY+=TXN_ROW_H;
+        if(ri<hTxnGmap[to].length-1)drawDivider(curY);
+      });
     });
+    if(hAddDivs)ctx.restore();
   }
   y+=txnCardH+32;
   // 푸터
