@@ -879,8 +879,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.12';
-const BUILD_TIME='2026-08-09 20:00';
+const APP_VERSION='v4.13';
+const BUILD_TIME='2026-08-09 21:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1784,7 +1784,7 @@ function _pmHistResultsHtml(){
     if(_pmViewMode==='monthly')return viewToggle+_pmMonthlyHtml(allRecs);
     const recsHtml=allRecs.map(rec=>{
       const dateStr=rec.dateStart?rec.dateStart.slice(2).replace(/-/g,'. ')+'.':rec.savedAt?rec.savedAt.slice(0,10):'';
-      const txnsList=rec.txns||[];
+      const txnsList=_myName?(rec.txns||[]).filter(t=>t.to===_myName):(rec.txns||[]);
       const pmObj=rec.payments||{};
       const doneCount=txnsList.filter(t=>!!(pmObj[`${t.from}|${t.to}`]||{}).done).length;
       const totalCount=txnsList.length;
