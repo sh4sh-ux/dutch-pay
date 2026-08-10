@@ -879,8 +879,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.08';
-const BUILD_TIME='2026-08-09 16:00';
+const APP_VERSION='v4.09';
+const BUILD_TIME='2026-08-09 17:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2931,8 +2931,9 @@ async function generateHistoryCanvas(rec){
   const C={bg:'#FFFFFF',card:'#FFFFFF',text:'#111111',muted:'#8E8E93',label:'#666666',line:'#E9E9EC',blue:'#4355E8',blueBg:'#EBF3FF',red:'#E53E3E',green:'#1A7A3C',greenBg:'#E8FBE9',grayBg:'#F0F0F2'};
   const cardX=PAD,cardW=W-PAD*2;
   const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=40,TOTAL_CARD_H=230,ITEM_ROW_H=152,TXN_ROW_H=96,EMPTY_CARD_H=192,FOOTER_H=100,BOTTOM_PAD=20;
-  const validItems=(rec.items||[]).filter(it=>+it.amount!==0);
-  const txns=rec.txns||[];
+  const _hOwner=_myName||'';
+  const validItems=(rec.items||[]).filter(it=>+it.amount!==0&&(!_hOwner||it.payer===_hOwner));
+  const txns=_hOwner?(rec.txns||[]).filter(t=>t.to===_hOwner):(rec.txns||[]);
   const pmObj=rec.payments||{};
   const people=rec.people||[];
   const total=rec.total!=null?rec.total:(rec.items||[]).reduce((s,it)=>s+(+it.amount||0),0);
