@@ -879,8 +879,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.14';
-const BUILD_TIME='2026-08-09 22:00';
+const APP_VERSION='v4.15';
+const BUILD_TIME='2026-08-15 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2212,8 +2212,8 @@ function calcTxns(paid,owes){
       const base=Math.floor(+it.amount/n),rem=+it.amount-base*n;
       mems.forEach(m=>{if(m!==it.payer&&people.includes(m)){const s=m===override?base+rem:base;dm[m][it.payer]=(dm[m][it.payer]||0)+s;}});
     }else{
-      const base=Math.floor(+it.amount/n);
-      mems.forEach(m=>{if(m!==it.payer&&people.includes(m))dm[m][it.payer]=(dm[m][it.payer]||0)+base;});
+      const s=+it.amount/n;
+      mems.forEach(m=>{if(m!==it.payer&&people.includes(m))dm[m][it.payer]=(dm[m][it.payer]||0)+s;});
     }
   });
   people.forEach((a,i)=>people.slice(i+1).forEach(b=>{
@@ -2222,7 +2222,7 @@ function calcTxns(paid,owes){
   }));
   const txns=[];
   people.forEach(debtor=>people.forEach(creditor=>{
-    const amt=Math.round(dm[debtor][creditor]||0);
+    const amt=Math.floor(dm[debtor][creditor]||0);
     if(amt>0)txns.push({from:debtor,to:creditor,amt});
   }));
   return txns;
