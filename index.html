@@ -889,8 +889,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.16';
-const BUILD_TIME='2026-08-16 12:00';
+const APP_VERSION='v4.17';
+const BUILD_TIME='2026-08-16 13:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2866,8 +2866,7 @@ async function generateSettleCanvas(){
     ctx.fillStyle=C.text;ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
     ctx.fillText(truncateCanvasText(ctx,t.to||'',Math.max(maxLeftW-fw-AGAP-AL-AGAP,40)),AEX+AGAP,ry);
   };
-  const txnLabel=coupleCardH?'송금 ①':'송금';
-  y=drawSectionLabel(txnLabel,y);
+  y=drawSectionLabel('송금',y);
   drawCard(cardX,y,cardW,txnCardH);
   if(!normalTxns.length){
     drawEmpty('송금할 내역이 없어요',y,txnCardH);
@@ -2887,7 +2886,7 @@ async function generateSettleCanvas(){
   y+=txnCardH;
   if(coupleCardH){
     y+=SECTION_GAP;
-    y=drawSectionLabel('송금 ②',y);
+    y=drawSectionLabel('송금',y);
     drawCard(cardX,y,cardW,coupleCardH);
     drawTxnRow(coupleTxnRows[0],y,coupleCardH);
     y+=coupleCardH;
