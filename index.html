@@ -889,8 +889,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.17';
-const BUILD_TIME='2026-08-16 13:00';
+const APP_VERSION='v4.18';
+const BUILD_TIME='2026-08-16 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2809,7 +2809,7 @@ async function generateSettleCanvas(){
   const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+(addGrpDivs?txnSeen.length*DIV_H:0)):EMPTY_CARD_H;
   const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*TXN_ROW_H:0;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
-  const coupleSection=coupleCardH?(SECTION_GAP+SECTION_LABEL_H+coupleCardH):0;
+  const coupleSection=coupleCardH?(SECTION_GAP+coupleCardH):0;
   const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+coupleSection+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;
   const canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;const ctx=canvas.getContext('2d');ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,W*2,H*2);ctx.scale(2,2);
   const FF="'system-ui','-apple-system','BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif";
@@ -2886,7 +2886,6 @@ async function generateSettleCanvas(){
   y+=txnCardH;
   if(coupleCardH){
     y+=SECTION_GAP;
-    y=drawSectionLabel('송금',y);
     drawCard(cardX,y,cardW,coupleCardH);
     drawTxnRow(coupleTxnRows[0],y,coupleCardH);
     y+=coupleCardH;
