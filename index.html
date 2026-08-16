@@ -524,6 +524,16 @@ svg{display:block;flex-shrink:0;}
 .data-pop-btn.danger:hover{background:var(--red-bg);}
 .data-pop-divider{height:1px;background:var(--sep);margin:4px 4px;}
 .data-pop-version{padding:10px 10px 6px;font-size:11px;color:var(--label3);text-align:center;letter-spacing:.3px;}
+.couple-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;display:flex;align-items:center;justify-content:center;}
+.couple-modal{background:var(--card);border-radius:20px;padding:28px 24px;width:320px;max-width:92vw;}
+.couple-title{font-size:17px;font-weight:700;color:var(--label);margin-bottom:8px;}
+.couple-desc{font-size:13px;color:var(--label3);margin-bottom:20px;line-height:1.4;}
+.couple-row{display:flex;align-items:center;gap:10px;margin-bottom:24px;}
+.couple-row select{flex:1;padding:10px 10px;border:1px solid var(--sep);border-radius:10px;background:var(--fill);color:var(--label);font-size:15px;font-family:inherit;min-width:0;}
+.couple-amp{color:var(--label3);font-size:18px;font-weight:500;flex-shrink:0;}
+.couple-actions{display:flex;gap:8px;}
+.couple-save{flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;}
+.couple-clear,.couple-cancel{padding:12px 14px;background:var(--fill2);color:var(--label2);border:none;border-radius:10px;font-size:15px;font-family:inherit;cursor:pointer;}
 .rounder-pop-hd{font-size:11px;font-weight:600;color:var(--label3);text-transform:uppercase;padding:6px 8px 4px;}
 .rounder-opt{display:block;width:100%;text-align:left;border:none;background:transparent;padding:8px 10px;font-size:13px;cursor:pointer;border-radius:6px;color:var(--label);font-family:inherit;}
 .rounder-opt:hover{background:var(--fill);}
@@ -879,8 +889,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.14';
-const BUILD_TIME='2026-08-09 22:00';
+const APP_VERSION='v4.18';
+const BUILD_TIME='2026-08-16 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -908,12 +918,12 @@ function _groupHash(g){return _dataHash({name:g.name,nameAuto:g.nameAuto,data:g.
 function _loadSyncedHashes(){try{return JSON.parse(localStorage.getItem(SYNC_HASHES_KEY)||'{}')||{};}catch(e){return {};}}
 function _saveSyncedHashes(h){try{localStorage.setItem(SYNC_HASHES_KEY,JSON.stringify(h));}catch(e){}}
 
-function _emptyGroupData(){return{people:[],items:[],idc:0,settleDateStart:new Date().toISOString().slice(0,10),settleDateEnd:null,itemSort:'default',itemSearch:'',payments:{}};}
+function _emptyGroupData(){return{people:[],items:[],idc:0,settleDateStart:new Date().toISOString().slice(0,10),settleDateEnd:null,itemSort:'default',itemSearch:'',payments:{},couples:[]};}
 function _autoGroupName(p){return(!p||!p.length)?'모임명 또는 참여자':p.join(', ');}
 function _updateAutoNameIfNeeded(){const g=getCurrentGroup();if(!g||!g.nameAuto)return;g.name=_autoGroupName(people);}
 function _newGroupId(){return 'g'+Date.now()+Math.floor(Math.random()*1000);}
 function getCurrentGroup(){return groups.find(g=>g.id===currentGroupId);}
-function syncCurrentToGroup(){const g=getCurrentGroup();if(!g)return;if(!g.createdAt)g.createdAt=new Date().toISOString();const nextData={people:people.slice(),items:JSON.parse(JSON.stringify(items)),idc,settleDateStart,settleDateEnd,itemSort,itemSearch,payments:JSON.parse(JSON.stringify(payments))};const nextStr=JSON.stringify(nextData);if(nextStr!==_syncSnapshots[g.id]){g.updatedAt=new Date().toISOString();_syncSnapshots[g.id]=nextStr;}g.data=nextData;}
+function syncCurrentToGroup(){const g=getCurrentGroup();if(!g)return;if(!g.createdAt)g.createdAt=new Date().toISOString();const nextData={people:people.slice(),items:JSON.parse(JSON.stringify(items)),idc,settleDateStart,settleDateEnd,itemSort,itemSearch,payments:JSON.parse(JSON.stringify(payments)),couples:g.data?.couples||[]};const nextStr=JSON.stringify(nextData);if(nextStr!==_syncSnapshots[g.id]){g.updatedAt=new Date().toISOString();_syncSnapshots[g.id]=nextStr;}g.data=nextData;}
 function loadGroupData(g){people=(g.data.people||[]).slice();items=JSON.parse(JSON.stringify(g.data.items||[]));idc=g.data.idc||0;settleDateStart=g.data.settleDateStart||new Date().toISOString().slice(0,10);settleDateEnd=g.data.settleDateEnd!==undefined?g.data.settleDateEnd:null;itemSort=g.data.itemSort||'default';itemSearch=g.data.itemSearch||'';payments=JSON.parse(JSON.stringify(g.data.payments||{}));selectedId=null;}
 function switchGroup(id){if(id===currentGroupId)return;syncCurrentToGroup();currentGroupId=id;const g=getCurrentGroup();if(g)loadGroupData(g);_loadedHistId=null;renderAll();}
 function createGroup(name){const id=_newGroupId();syncCurrentToGroup();const trimmed=(name||'').trim();const isAuto=!trimmed;const now=new Date().toISOString();groups.push({id,name:trimmed||_autoGroupName([]),nameAuto:isAuto,createdAt:now,updatedAt:now,data:_emptyGroupData()});currentGroupId=id;loadGroupData(groups[groups.length-1]);renderAll();toast(trimmed?`'${trimmed}' 그룹 생성됨`:'새 그룹이 생성됐어요',{type:'success'});}
@@ -960,7 +970,7 @@ function showDataMenu(anchorEl,ev){
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
   if(_ownerUnlocked){
-    pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
+    pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><button class="data-pop-btn" data-action="setCouples">💑 공유 이미지 커플 설정</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
   } else {
     pop.innerHTML=`<button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-version" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
   }
@@ -972,6 +982,7 @@ function showDataMenu(anchorEl,ev){
     else if(action==='dbxDisconnect'){hDbxDisconnect();pop.remove();}
     else if(action==='openHistory'){goToHistory();pop.remove();}
     else if(action==='saveHistory'){saveToHistory();pop.remove();}
+    else if(action==='setCouples'){pop.remove();showCoupleSettings();}
     else if(action==='exportCsv'){exportCurrentGroupCsv();pop.remove();}
     else if(action==='export'){exportData();pop.remove();}
     else if(action==='setMyName'){const n=prompt('더치페이에서 나의 이름을 입력하세요\n(입금 관리에서 나에게 오는 입금만 수정 가능해져요)',_myName);if(n===null)return;_myName=n.trim();localStorage.setItem('dutchpay_my_name',_myName);pop.remove();toast(_myName?`내 이름이 "${_myName}"으로 설정됐어요`:'내 이름 설정이 해제됐어요',{type:'success'});}
@@ -984,6 +995,34 @@ function showDataMenu(anchorEl,ev){
   setTimeout(()=>{const h=(e3)=>{if(!pop.contains(e3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=(e3)=>{if(e3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);
 }
 
+function showCoupleSettings(){
+  const g=getCurrentGroup();if(!g)return;
+  const cur=(g.data?.couples||[])[0]||[];
+  const pOpts=(sel)=>[''].concat(people).map(p=>`<option value="${e(p)}"${p===sel?' selected':''}>${p?e(p):'(선택 안 함)'}</option>`).join('');
+  const ov=document.createElement('div');ov.className='couple-ov';ov.id='coupleSettingOv';
+  ov.innerHTML=`<div class="couple-modal"><div class="couple-title">커플 설정</div><div class="couple-desc">두 명을 선택하면 공유 이미지에서 송금이 합산 카드로 표시돼요</div><div class="couple-row"><select id="coupleSelA">${pOpts(cur[0]||'')}</select><span class="couple-amp">·</span><select id="coupleSelB">${pOpts(cur[1]||'')}</select></div><div class="couple-actions"><button class="couple-save" onclick="saveCoupleSettings()">저장</button><button class="couple-clear" onclick="clearCoupleSettings()">해제</button><button class="couple-cancel" onclick="document.getElementById('coupleSettingOv')?.remove()">취소</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',(ev)=>{if(ev.target===ov)ov.remove();});
+}
+function saveCoupleSettings(){
+  const a=document.getElementById('coupleSelA')?.value.trim();
+  const b=document.getElementById('coupleSelB')?.value.trim();
+  if(!a||!b||a===b){toast('서로 다른 두 사람을 선택해주세요',{type:'error'});return;}
+  const g=getCurrentGroup();if(!g)return;
+  if(!g.data)g.data={};
+  g.data.couples=[[a,b]];
+  saveState();
+  document.getElementById('coupleSettingOv')?.remove();
+  toast(`${a} · ${b} 커플 설정됐어요`,{type:'success'});
+}
+function clearCoupleSettings(){
+  const g=getCurrentGroup();if(!g)return;
+  if(!g.data)g.data={};
+  g.data.couples=[];
+  saveState();
+  document.getElementById('coupleSettingOv')?.remove();
+  toast('커플 설정이 해제됐어요',{type:'success'});
+}
 function refreshGroupSwitcher(){const g=getCurrentGroup();const name=g?g.name:'모임명 또는 참여자';document.querySelectorAll('.group-switcher-name').forEach(el=>{el.textContent=name;});}
 
 function exportData(){syncCurrentToGroup();const payload={version:2,exportedAt:new Date().toISOString(),groups,currentGroupId};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.download=`더치페이_백업_${new Date().toISOString().slice(0,10)}.json`;a.href=url;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);toast('백업 파일이 다운로드됐어요',{type:'success'});}
@@ -2212,8 +2251,8 @@ function calcTxns(paid,owes){
       const base=Math.floor(+it.amount/n),rem=+it.amount-base*n;
       mems.forEach(m=>{if(m!==it.payer&&people.includes(m)){const s=m===override?base+rem:base;dm[m][it.payer]=(dm[m][it.payer]||0)+s;}});
     }else{
-      const base=Math.floor(+it.amount/n);
-      mems.forEach(m=>{if(m!==it.payer&&people.includes(m))dm[m][it.payer]=(dm[m][it.payer]||0)+base;});
+      const s=+it.amount/n;
+      mems.forEach(m=>{if(m!==it.payer&&people.includes(m))dm[m][it.payer]=(dm[m][it.payer]||0)+s;});
     }
   });
   people.forEach((a,i)=>people.slice(i+1).forEach(b=>{
@@ -2222,7 +2261,7 @@ function calcTxns(paid,owes){
   }));
   const txns=[];
   people.forEach(debtor=>people.forEach(creditor=>{
-    const amt=Math.round(dm[debtor][creditor]||0);
+    const amt=Math.floor(dm[debtor][creditor]||0);
     if(amt>0)txns.push({from:debtor,to:creditor,amt});
   }));
   return txns;
@@ -2746,15 +2785,32 @@ async function generateSettleCanvas(){
   const total=items.reduce((s,it)=>s+(+it.amount||0),0);
   const{paid,owes,hasRounding}=computeShares();
   const txns=calcTxns(paid,owes);
+  const coupleConfig=(getCurrentGroup()?.data?.couples||[])[0]||[];
+  const hasCouple=coupleConfig.length===2&&coupleConfig.every(n=>people.includes(n));
+  let normalTxns=txns,coupleTxnRows=[];
+  if(hasCouple){
+    const[ca,cb]=coupleConfig;
+    const aTxn=txns.find(t=>t.from===ca);
+    const bTxn=txns.find(t=>t.from===cb);
+    normalTxns=txns.filter(t=>t.from!==ca&&t.from!==cb);
+    if(aTxn&&bTxn&&aTxn.to===bTxn.to){
+      coupleTxnRows=[{from:`${ca} · ${cb}`,to:aTxn.to,amt:aTxn.amt+bTxn.amt}];
+    }else{
+      if(aTxn)normalTxns=[...normalTxns,aTxn];
+      if(bTxn)normalTxns=[...normalTxns,bTxn];
+    }
+  }
   const validItems=items.filter(it=>+it.amount!==0);
   const iconMap=new Map();for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#4355E8'));}catch(e){iconMap.set(svg,null);}}}
   const W=1080,PAD=42,TOP_PAD=56,cardX=PAD,cardW=W-PAD*2;
   const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=245,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78;
-  const txnSeen=[],txnGmap={};txns.forEach(t=>{if(!txnGmap[t.to]){txnGmap[t.to]=[];txnSeen.push(t.to);}txnGmap[t.to].push(t);});
+  const txnSeen=[],txnGmap={};normalTxns.forEach(t=>{if(!txnGmap[t.to]){txnGmap[t.to]=[];txnSeen.push(t.to);}txnGmap[t.to].push(t);});
   const addGrpDivs=txnSeen.length>1,DIV_H=3;
-  const txnCardH=txns.length?(txns.length*TXN_ROW_H+(addGrpDivs?txnSeen.length*DIV_H:0)):EMPTY_CARD_H;
+  const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+(addGrpDivs?txnSeen.length*DIV_H:0)):EMPTY_CARD_H;
+  const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*TXN_ROW_H:0;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
-  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;
+  const coupleSection=coupleCardH?(SECTION_GAP+coupleCardH):0;
+  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+coupleSection+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;
   const canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;const ctx=canvas.getContext('2d');ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,W*2,H*2);ctx.scale(2,2);
   const FF="'system-ui','-apple-system','BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif";
   const setFont=(s,w)=>{ctx.font=`${w||'normal'} ${s}px ${FF}`;};
@@ -2792,9 +2848,27 @@ async function generateSettleCanvas(){
   ctx.fillStyle=C.muted;setFont(28,500);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원`,W/2,y+198);
   y+=TOTAL_CARD_H+SECTION_GAP;
 
+  const drawTxnRow=(t,curY,rowH)=>{
+    const ry=curY+rowH/2;
+    const amountText=fmt(t.amt)+'원';
+    ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
+    const amountX=cardX+cardW-38,amW=ctx.measureText(amountText).width;
+    ctx.fillText(amountText,amountX,ry);
+    const leftX=cardX+38,maxLeftW=amountX-amW-34-leftX;
+    const AGAP=20,AH=9,AL=36,headW=AH*1.8;
+    setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
+    const fromTxt=truncateCanvasText(ctx,t.from||'',Math.floor((maxLeftW-AL-AGAP*3)*0.45));
+    ctx.fillText(fromTxt,leftX,ry);
+    const fw=ctx.measureText(fromTxt).width;
+    const AX=leftX+fw+AGAP,AEX=AX+AL;
+    ctx.strokeStyle=C.text;ctx.lineWidth=2.5;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
+    ctx.fillStyle=C.text;ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
+    ctx.fillText(truncateCanvasText(ctx,t.to||'',Math.max(maxLeftW-fw-AGAP-AL-AGAP,40)),AEX+AGAP,ry);
+  };
   y=drawSectionLabel('송금',y);
   drawCard(cardX,y,cardW,txnCardH);
-  if(!txns.length){
+  if(!normalTxns.length){
     drawEmpty('송금할 내역이 없어요',y,txnCardH);
   }else{
     let curY=y;
@@ -2802,28 +2876,21 @@ async function generateSettleCanvas(){
     txnSeen.forEach(to=>{
       if(addGrpDivs){ctx.fillStyle=(_myName&&to===_myName)?C.blue:C.amber;ctx.fillRect(cardX,curY,cardW,DIV_H);curY+=DIV_H;}
       txnGmap[to].forEach((t,ri)=>{
-        const ry=curY+TXN_ROW_H/2;
-        const amountText=fmt(t.amt)+'원';
-        ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
-        const amountX=cardX+cardW-38,amountW=ctx.measureText(amountText).width;
-        ctx.fillText(amountText,amountX,ry);
-        const leftX=cardX+38,maxLeftW=amountX-amountW-34-leftX;
-        const AGAP=20,AH=9,AL=36,headW=AH*1.8;
-        setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
-        const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry);
-        const fw=ctx.measureText(fromTxt).width;
-        const AX=leftX+fw+AGAP,AEX=AX+AL;
-        ctx.strokeStyle=C.text;ctx.lineWidth=2.5;ctx.lineCap='round';
-        ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
-        ctx.fillStyle=C.text;ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
-        ctx.fillText(truncateCanvasText(ctx,t.to||'',Math.max(maxLeftW-fw-AGAP-AL-AGAP,40)),AEX+AGAP,ry);
+        drawTxnRow(t,curY,TXN_ROW_H);
         curY+=TXN_ROW_H;
         if(ri<txnGmap[to].length-1)drawDivider(curY);
       });
     });
     if(addGrpDivs)ctx.restore();
   }
-  y+=txnCardH+SECTION_GAP;
+  y+=txnCardH;
+  if(coupleCardH){
+    y+=SECTION_GAP;
+    drawCard(cardX,y,cardW,coupleCardH);
+    drawTxnRow(coupleTxnRows[0],y,coupleCardH);
+    y+=coupleCardH;
+  }
+  y+=SECTION_GAP;
 
   y=drawSectionLabel('지출 내역',y);
   drawCard(cardX,y,cardW,itemCardH);
