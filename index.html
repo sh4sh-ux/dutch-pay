@@ -889,8 +889,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.19';
-const BUILD_TIME='2026-08-16 15:00';
+const APP_VERSION='v4.20';
+const BUILD_TIME='2026-08-17 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -998,9 +998,11 @@ function showDataMenu(anchorEl,ev){
 
 function showCoupleSettings(){
   const cur=_coupleNames||[];
-  const pOpts=(sel)=>[''].concat(people).map(p=>`<option value="${e(p)}"${p===sel?' selected':''}>${p?e(p):'(선택 안 함)'}</option>`).join('');
+  const allPeople=[...new Set([...people,...cur])].filter(Boolean);
+  const pOpts=(sel)=>[''].concat(allPeople).map(p=>`<option value="${e(p)}"${p===sel?' selected':''}>${e(p)}</option>`).join('');
+  const curLabel=cur.length===2?`현재: ${e(cur[0])} · ${e(cur[1])}`:'현재 설정 없음';
   const ov=document.createElement('div');ov.className='couple-ov';ov.id='coupleSettingOv';
-  ov.innerHTML=`<div class="couple-modal"><div class="couple-title">커플 설정</div><div class="couple-desc">두 명을 선택하면 모든 모임의 공유 이미지에서 송금이 합산 카드로 표시돼요</div><div class="couple-row"><select id="coupleSelA">${pOpts(cur[0]||'')}</select><span class="couple-amp">·</span><select id="coupleSelB">${pOpts(cur[1]||'')}</select></div><div class="couple-actions"><button class="couple-save" onclick="saveCoupleSettings()">저장</button><button class="couple-clear" onclick="clearCoupleSettings()">해제</button><button class="couple-cancel" onclick="document.getElementById('coupleSettingOv')?.remove()">취소</button></div></div>`;
+  ov.innerHTML=`<div class="couple-modal"><div class="couple-title">커플 설정</div><div class="couple-desc">두 명을 선택하면 모든 모임의 공유 이미지에서 송금이 합산 카드로 표시돼요<br><span style="color:var(--blue);font-weight:600">${curLabel}</span></div><div class="couple-row"><select id="coupleSelA"><option value="">선택 안 함</option>${pOpts(cur[0]||'')}</select><span class="couple-amp">·</span><select id="coupleSelB"><option value="">선택 안 함</option>${pOpts(cur[1]||'')}</select></div><div class="couple-actions"><button class="couple-save" onclick="saveCoupleSettings()">저장</button><button class="couple-clear" onclick="clearCoupleSettings()">해제</button><button class="couple-cancel" onclick="document.getElementById('coupleSettingOv')?.remove()">취소</button></div></div>`;
   document.body.appendChild(ov);
   ov.addEventListener('click',(ev)=>{if(ev.target===ov)ov.remove();});
 }
@@ -1120,7 +1122,7 @@ async function syncToDropbox(){
   _syncing=true;
   try{
     syncCurrentToGroup();
-    const ok=await _dbxUpload(dbxGetToken(),DBX_MAIN_FILE,JSON.stringify({version:2,groups,currentGroupId,deletedGroups,syncedAt:new Date().toISOString()}));
+    const ok=await _dbxUpload(dbxGetToken(),DBX_MAIN_FILE,JSON.stringify({version:2,groups,currentGroupId,deletedGroups,coupleNames:_coupleNames||[],syncedAt:new Date().toISOString()}));
     if(ok){
       localStorage.setItem(DBX_LASTSYNC_MAIN,new Date().toISOString());
       const hashes={};groups.forEach(g=>{hashes[g.id]=_groupHash(g);});
@@ -1135,6 +1137,7 @@ async function syncFromDropbox(){
   try{
     const remote=await _dbxDownload(token,DBX_MAIN_FILE);
     if(!remote||!Array.isArray(remote.groups)||!remote.groups.length){await syncToDropbox();return;}
+    if(remote.coupleNames?.length&&!localStorage.getItem('dutchpay_couple')){_coupleNames=remote.coupleNames;localStorage.setItem('dutchpay_couple',JSON.stringify(_coupleNames));}
 
     // 삭제 툼스톤 병합 (양쪽 tombstone 합집합)
     const mergedDeleted={...deletedGroups,...(remote.deletedGroups||{})};
@@ -1238,7 +1241,7 @@ function _updateSyncBadge(){
 }
 
 function saveState(){try{syncCurrentToGroup();localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:new Date().toISOString(),groups,currentGroupId,deletedGroups}));_scheduleSyncToDropbox();}catch(e){toast('저장 공간이 부족해 데이터를 저장하지 못했어요',{type:'error'});}}
-function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if((d.version===2||d.version===3)&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;deletedGroups=d.deletedGroups||{};currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);groups.forEach(g=>{_syncSnapshots[g.id]=JSON.stringify(g.data);});}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
+function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if((d.version===2||d.version===3)&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;deletedGroups=d.deletedGroups||{};currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);groups.forEach(g=>{_syncSnapshots[g.id]=JSON.stringify(g.data);});if(!localStorage.getItem('dutchpay_couple')){for(const grp of groups){const c=(grp.data?.couples||[])[0];if(c?.length){_coupleNames=c;localStorage.setItem('dutchpay_couple',JSON.stringify(c));break;}}}}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
 function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;_autoBackup('전체 초기화 전');if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const now=new Date().toISOString();groups.forEach(g=>{deletedGroups[g.id]=now;});const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:now,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
 function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;_autoBackup('이번 정산 초기화 전');people=[];items=[];payments={};idc=0;settleDateStart=new Date().toISOString().slice(0,10);settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
 
