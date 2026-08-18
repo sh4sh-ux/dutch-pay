@@ -889,8 +889,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.20';
-const BUILD_TIME='2026-08-17 10:00';
+const APP_VERSION='v4.22';
+const BUILD_TIME='2026-08-18 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2337,7 +2337,8 @@ function saveToHistory(){
     total,
     items:JSON.parse(JSON.stringify(items)),
     txns,
-    payments:JSON.parse(JSON.stringify(payments))
+    payments:JSON.parse(JSON.stringify(payments)),
+    coupleNames:_coupleNames.slice()
   };
   try{
     const raw=localStorage.getItem(HISTORY_KEY);
@@ -2584,7 +2585,9 @@ function loadHistoryAsGroup(id){
   const _cleanPm=v=>{const amt=(v.amount!==null&&v.amount!==undefined&&v.amount!==''&&!isNaN(+v.amount))?+v.amount:null;return{done:!!v.done,amount:amt,timestamp:v.timestamp||'',account:v.account||'',memo:v.memo||''};};
   const cleanPayments={};Object.entries(r.payments||{}).forEach(([k,v])=>{cleanPayments[k]=_cleanPm(v);});
   const newGroup={id:newId,name:displayName,nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||new Date().toISOString().slice(0,10),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:'',payments:cleanPayments}};
-  groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);saveState();
+  groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);
+  if(r.coupleNames?.length){_coupleNames=r.coupleNames.slice();localStorage.setItem('dutchpay_couple',JSON.stringify(_coupleNames));}
+  saveState();
   if(window.innerWidth<700){mTab='input';renderMobileBody();window.scrollTo(0,0);}
   else{dTab='input';renderAll();}
   toast(`'${newGroup.name}' 그룹으로 불러왔어요`,{type:'success'});
@@ -2602,7 +2605,9 @@ function loadHistoryForEdit(id){
   const _cleanPm=v=>{const amt=(v.amount!==null&&v.amount!==undefined&&v.amount!==''&&!isNaN(+v.amount))?+v.amount:null;return{done:!!v.done,amount:amt,timestamp:v.timestamp||'',account:v.account||'',memo:v.memo||''};};
   const cleanPayments={};Object.entries(r.payments||{}).forEach(([k,v])=>{cleanPayments[k]=_cleanPm(v);});
   const newGroup={id:newId,name:displayName,nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||new Date().toISOString().slice(0,10),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:'',payments:cleanPayments}};
-  groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);_loadedHistId=id;saveState();
+  groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);_loadedHistId=id;
+  if(r.coupleNames?.length){_coupleNames=r.coupleNames.slice();localStorage.setItem('dutchpay_couple',JSON.stringify(_coupleNames));}
+  saveState();
   if(window.innerWidth<700){mTab='input';renderMobileBody();window.scrollTo(0,0);}
   else{dTab='input';renderAll();}
   toast(`수정 중: '${displayName}' — 변경 후 ⋯ → 기록 보관함에 저장`,{type:'info',duration:5000});
