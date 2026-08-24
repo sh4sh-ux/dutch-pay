@@ -889,8 +889,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.23';
-const BUILD_TIME='2026-08-20 10:00';
+const APP_VERSION='v4.24';
+const BUILD_TIME='2026-08-24 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2530,7 +2530,7 @@ function _buildHistoryInnerHtml(){
   }else{
     const filtered=_filterHistoryRecords(records,_historySearch);
     html+=_histMonthNavHtml(records,filtered);
-    html+=`<div class="hist-search-wrap"><div class="sinp-rel"><input type="search" class="hist-search" placeholder="이름, 참여자, 날짜 검색..." value="${e(_historySearch)}" oninput="updateHistorySearch(this.value);_chkClear(this)"><button class="sinp-clr${_historySearch?' vis':''}" onclick="_clrHistSearch()">✕</button></div></div>`;
+    html+=`<div class="hist-search-wrap"><div class="sinp-rel"><input type="search" class="hist-search" placeholder="상호명, 참여자, 날짜 검색..." value="${e(_historySearch)}" oninput="updateHistorySearch(this.value);_chkClear(this)"><button class="sinp-clr${_historySearch?' vis':''}" onclick="_clrHistSearch()">✕</button></div></div>`;
     const noMsg=_historySearch?`'${e(_historySearch)}' 검색 결과가 없어요`:(_histMonthAllMode?'기록이 없어요':'이 달에 저장된 기록이 없어요');
     html+=`<div class="record-list" id="historyRecordList">`;
     html+=filtered.length?filtered.map(_buildRecordCardHtml).join(''):`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">${noMsg}</p></div>`;
@@ -2546,6 +2546,7 @@ function _filterHistoryRecords(records,query){
   const q=query.toLowerCase().trim();
   const fhd=d=>{if(!d)return'';const[y,m,day]=d.split('-');return`${y}년 ${+m}월 ${+day}일`;};
   return recs.filter(r=>{
+    if((r.groupName||'').toLowerCase().includes(q))return true;
     if((r.people||[]).some(p=>p.toLowerCase().includes(q)))return true;
     if((r.items||[]).some(it=>(it.name||'').toLowerCase().includes(q)))return true;
     const dateDisplay=r.dateEnd&&r.dateEnd!==r.dateStart?`${fhd(r.dateStart)} ~ ${fhd(r.dateEnd)}`:fhd(r.dateStart);
