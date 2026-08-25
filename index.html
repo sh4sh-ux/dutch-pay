@@ -814,6 +814,9 @@ svg{display:block;flex-shrink:0;}
   .pm-month-person-row{background:transparent !important;padding-left:4px !important;padding-right:4px !important;}
   .pm-month-my-stats{margin:0 0 4px !important;border-radius:12px !important;overflow:hidden;}
 }
+
+/* v4.58 monthly row alignment */
+@media(max-width:700px){.pm-month-person-left{transform:translateX(12px)}.pm-month-status{transform:translateX(-12px)}}
 </style>
 </head>
 <body>
@@ -951,7 +954,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.57';
+const APP_VERSION='v4.58';
 const BUILD_TIME='2026-08-26 06:08';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
