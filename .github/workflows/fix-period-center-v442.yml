@@ -1,0 +1,83 @@
+name: Fix period center v4.42
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-period-center-v442.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch period controls and cache version
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          # Version bump for visible verification
+          s = re.sub(r"const APP_VERSION='v4\.41';", "const APP_VERSION='v4.42';", s, count=1)
+          s = re.sub(r"const BUILD_TIME='[^']*';", "const BUILD_TIME='2026-08-26 05:56';", s, count=1)
+
+          # Replace the period control CSS with strict 36px centered boxes.
+          s = re.sub(
+              r"\.share-date-row\{[^}]*\}",
+              ".share-date-row{margin-bottom:14px;display:grid;grid-template-columns:minmax(0,1fr) 36px;column-gap:8px;row-gap:8px;align-items:center;}",
+              s, count=1)
+          s = re.sub(
+              r"\.share-date-sep\{[^}]*\}",
+              ".share-date-sep{width:36px;height:36px;display:flex;align-items:center;justify-content:center;justify-self:center;align-self:center;color:var(--label3);padding:0;margin:0;line-height:0;box-sizing:border-box;}",
+              s, count=1)
+          s = re.sub(
+              r"\.share-date-add\{[^}]*\}",
+              ".share-date-add{-webkit-appearance:none;appearance:none;width:100%;height:36px;font-size:13px;padding:0;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--fill);color:var(--label);cursor:pointer;font-family:inherit;white-space:nowrap;display:flex;align-items:center;justify-content:center;justify-self:stretch;align-self:center;box-sizing:border-box;font-weight:500;line-height:1;margin:0;}",
+              s, count=1)
+          s = re.sub(
+              r"\.share-date-rm\{[^}]*\}",
+              ".share-date-rm{-webkit-appearance:none;appearance:none;width:36px;height:36px;border:none;background:transparent;color:var(--label3);cursor:pointer;padding:0;margin:0;font-family:inherit;display:flex;align-items:center;justify-content:center;justify-self:center;align-self:center;line-height:0;box-sizing:border-box;border-radius:8px;}",
+              s, count=1)
+
+          # Add SVG sizing once, next to period control rules.
+          marker = '.share-date-rm:hover{background:var(--red-bg);color:var(--red);}'
+          extra = marker + '\n.share-date-sep svg,.share-date-rm svg{width:16px;height:16px;display:block;overflow:visible;}'
+          if marker in s and '.share-date-sep svg,.share-date-rm svg' not in s:
+              s = s.replace(marker, extra, 1)
+
+          # SVG markup removes font-baseline drift completely.
+          sep_svg = '<span class="share-date-sep" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13c2.7 0 2.7-3 5.3-3s2.7 3 5.3 3 2.7-3 5.4-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>'
+          rm_svg = '<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>'
+          s = s.replace('<span class="share-date-sep">~</span>', sep_svg)
+          s = s.replace('<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()">×</button>', rm_svg)
+
+          # Fail loudly if old text controls remain.
+          if '<span class="share-date-sep">~</span>' in s or '>×</button>' in s:
+              raise SystemExit('Old text period controls still present')
+          if "const APP_VERSION='v4.42';" not in s:
+              raise SystemExit('Version bump failed')
+
+          p.write_text(s, encoding='utf-8')
+
+          sw = Path('sw.js')
+          w = sw.read_text(encoding='utf-8')
+          w = w.replace('const CACHE_NAME = "dutch-pay-v4.41";', 'const CACHE_NAME = "dutch-pay-v4.42";', 1)
+          if 'dutch-pay-v4.42' not in w:
+              raise SystemExit('Service worker cache bump failed')
+          sw.write_text(w, encoding='utf-8')
+          PY
+
+      - name: Commit patch and remove one-time workflow
+        run: |
+          rm -f .github/workflows/fix-period-center-v442.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js .github/workflows/fix-period-center-v442.yml
+          git commit -m "Fix period controls centering and bump v4.42 [skip ci]"
+          git push
