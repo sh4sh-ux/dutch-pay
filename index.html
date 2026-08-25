@@ -471,7 +471,9 @@ svg{display:block;flex-shrink:0;}
 .pm-month-my-stat{flex:1;display:flex;flex-direction:column;gap:2px;text-align:center;}
 .pm-month-my-stat:not(:last-child){border-right:1px solid var(--sep);}
 .pm-month-my-stat-lbl{font-size:10px;color:var(--label3);}
-.pm-month-my-stat-val{font-size:12px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;}
+.pm-month-my-stat-val{font-size:12px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;}.pm-month-my-stat-val.treat{color:#EA580C;}
+@media(prefers-color-scheme:dark){.pm-month-my-stat-val.treat{color:#FB923C;}}
+:root[data-theme="dark"] .pm-month-my-stat-val.treat{color:#FB923C;}
 .txn-people{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .txn-from{font-size:14px;font-weight:600;color:var(--label);}
 .txn-arr{color:var(--label);display:flex;align-items:center;}
@@ -894,8 +896,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.35';
-const BUILD_TIME='2026-08-25 23:55';
+const APP_VERSION='v4.36';
+const BUILD_TIME='2026-08-26 00:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2021,7 +2023,7 @@ function _pmMonthlyHtml(allRecs){
     const myDelta=myNet>0?`<span class="pm-month-delta pos">+${fmt(myNet)}원</span>`:myNet<0?`<span class="pm-month-delta neg">-${fmt(-myNet)}원</span>`:'';
     const myStatus=myNet>0?`<span class="pm-month-status pos">초과</span>`:myNet<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
     const myActual=mySpend-myBilled;
-    const mySubStats=(_myName&&mySpend>0)?`<div class="pm-month-my-stats"><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">결제</div><div class="pm-month-my-stat-val">${fmt(mySpend)}원</div></div><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">지출</div><div class="pm-month-my-stat-val">${fmt(myActual)}원</div></div><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">쏜 금액</div><div class="pm-month-my-stat-val">${fmt(myTreat)}원</div></div></div>`:'';
+    const mySubStats=(_myName&&mySpend>0)?`<div class="pm-month-my-stats"><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">결제</div><div class="pm-month-my-stat-val">${fmt(mySpend)}원</div></div><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">지출</div><div class="pm-month-my-stat-val">${fmt(myActual)}원</div></div><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">쏜 금액</div><div class="pm-month-my-stat-val${myTreat>0?' treat':''}">${fmt(myTreat)}원</div></div></div>`:'';
     const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row pm-name-tap" style="border-bottom:${mySubStats?'none':'1px solid var(--sep)'}" onclick="_pmFilterByName('${ea(_myName)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-person-cnt">${mySettleCount}회</span></div><div class="pm-month-person-right">${myDelta}<span>청구 ${fmt(myBilled)}원</span>${myStatus}</div></div>${mySubStats}`:'';
     const _pplSort=(a,b)=>_pmMonthPeopleSort==='cnt'?(personCount[b[0]]||0)-(personCount[a[0]]||0):_pmMonthPeopleSort==='name'?a[0].localeCompare(b[0],'ko'):b[1].billed-a[1].billed;
     const peopleRows=Object.entries(personStats).sort(_pplSort).map(([nm,s])=>{
