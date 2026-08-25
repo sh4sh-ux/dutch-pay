@@ -1,0 +1,2 @@
+Deploy marker for v4.42 period-control centering fix.
+2026-08-26 06:00 KST
