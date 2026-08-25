@@ -1,0 +1,203 @@
+name: Monthly stats redesign v4.56
+on:
+  push:
+    paths:
+      - '.github/workflows/monthly-stats-redesign-v456.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch v4.56 monthly stats UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old="const APP_VERSION='v4.55';"
+          if old not in s:
+              raise SystemExit('v4.55 app version not found')
+          s=s.replace(old,"const APP_VERSION='v4.56';",1)
+
+          marker='/* v4.56 monthly stats redesign */'
+          css=r'''
+/* v4.56 monthly stats redesign */
+@media(max-width:700px){
+  .pm-month-card{
+    background:var(--card);
+    border:1px solid var(--sep);
+    border-radius:18px;
+    box-shadow:0 6px 20px rgba(0,0,0,.045);
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .pm-month-hd{
+    min-height:64px;
+    padding:0 18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--card);
+  }
+  .pm-month-hd-left{display:flex;align-items:center;gap:10px;min-width:0;}
+  .pm-month-label{font-size:18px;font-weight:700;letter-spacing:-.3px;color:var(--label);white-space:nowrap;}
+  .pm-month-count{
+    display:inline-flex;
+    align-items:center;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    background:var(--fill);
+    color:var(--label3);
+    font-size:12px;
+    white-space:nowrap;
+  }
+  .pm-month-detail{padding:0 14px 14px;background:var(--card);}
+  .pm-month-stats-row{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:0;
+    margin:0 0 10px;
+    border:1px solid var(--sep);
+    border-radius:15px;
+    overflow:hidden;
+    background:var(--card);
+  }
+  .pm-mstat{
+    min-width:0;
+    padding:14px 8px 13px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    border-right:1px solid var(--sep);
+    text-align:center;
+  }
+  .pm-mstat:last-child{border-right:none;}
+  .pm-mstat-lbl{font-size:11px;font-weight:600;color:var(--label3);line-height:1.2;}
+  .pm-mstat-val{font-size:15px;font-weight:700;letter-spacing:-.25px;color:var(--label);white-space:nowrap;}
+  .pm-mstat-val.pos{color:var(--green);}
+  .pm-month-net-inline{margin-left:4px;font-size:11px;font-weight:700;}
+
+  .pm-month-people{
+    border:1px solid var(--sep);
+    border-radius:15px;
+    overflow:hidden;
+    background:var(--card);
+  }
+  .pm-month-person-row{
+    min-height:46px;
+    padding:0 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    border-bottom:1px solid var(--sep);
+    background:var(--card);
+  }
+  .pm-month-person-left{display:flex;align-items:center;gap:7px;min-width:0;}
+  .pm-month-person-name{font-size:14px;font-weight:600;color:var(--label);white-space:nowrap;}
+  .pm-month-person-cnt{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:30px;
+    height:21px;
+    padding:0 7px;
+    border-radius:999px;
+    background:var(--fill);
+    color:var(--label3);
+    font-size:10px;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .pm-month-person-right{
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:7px;
+    min-width:0;
+    font-size:12px;
+    color:var(--label2);
+    white-space:nowrap;
+  }
+  .pm-month-delta{font-size:13px;font-weight:700;}
+  .pm-month-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:2px 0;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:700;
+  }
+  .pm-month-status.pos,.pm-month-status.done{color:var(--green);}
+
+  .pm-month-my-stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:0;
+    margin:0;
+    padding:0;
+    border-bottom:1px solid var(--sep);
+    background:var(--fill2);
+  }
+  .pm-month-my-stat{
+    position:relative;
+    min-width:0;
+    padding:12px 6px 13px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    text-align:center;
+  }
+  .pm-month-my-stat:not(:last-child)::after{
+    content:'';
+    position:absolute;
+    right:0;
+    top:12px;
+    bottom:12px;
+    width:1px;
+    background:var(--sep);
+  }
+  .pm-month-my-stat-lbl{font-size:10px;color:var(--label3);font-weight:600;}
+  .pm-month-my-stat-val{font-size:14px;font-weight:700;color:var(--label);white-space:nowrap;}
+  .pm-month-my-stat-val.treat{color:#FF8A26;}
+
+  .pm-month-card:not(:has(.pm-month-detail[style*="block"])){
+    border-radius:16px;
+  }
+  .pm-month-card:not(:has(.pm-month-detail[style*="block"])) .pm-month-hd{
+    min-height:60px;
+  }
+
+  .pm-month-sort-row{margin:2px 0 12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .pm-month-sort-lbl{font-size:12px;color:var(--label3);margin-right:2px;}
+  .pm-month-sort-btn{height:30px;padding:0 13px;border-radius:999px;font-size:12px;}
+}
+'''
+          if marker not in s:
+              pos=s.rfind('</style>')
+              if pos<0:
+                  raise SystemExit('style closing tag not found')
+              s=s[:pos]+css+s[pos:]
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('sw.js')
+          t=sw.read_text(encoding='utf-8')
+          if 'dutch-pay-v4.55' not in t:
+              raise SystemExit('v4.55 cache not found')
+          t=t.replace('dutch-pay-v4.55','dutch-pay-v4.56',1)
+          sw.write_text(t,encoding='utf-8')
+          PY
+          rm .github/workflows/monthly-stats-redesign-v456.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js .github/workflows/monthly-stats-redesign-v456.yml
+          git commit -m 'Redesign monthly stats UI v4.56'
+          git push
