@@ -1,0 +1,65 @@
+name: Tune period UI v4.46
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tune-period-ui-v446.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tune wave size and date gap
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          # Version bump
+          s, n = re.subn(r"const APP_VERSION='v4\.45';", "const APP_VERSION='v4.46';", s, count=1)
+          if n != 1:
+              raise SystemExit('APP_VERSION v4.45 not found')
+
+          # Reduce vertical gap between the two date rows.
+          s, n = re.subn(
+              r'(\.share-date-row\{[^}]*?)row-gap:\s*\d+px;',
+              lambda m: m.group(1) + 'row-gap:4px;',
+              s,
+              count=1
+          )
+          if n != 1:
+              raise SystemExit('share-date-row row-gap not found')
+
+          # Separate wave and X sizing so wave is slightly smaller.
+          old = '.share-date-sep svg,.share-date-rm svg{width:16px;height:16px;display:block;overflow:visible;}'
+          new = '.share-date-sep svg{width:13px;height:13px;display:block;overflow:visible;}\n.share-date-rm svg{width:14px;height:14px;display:block;overflow:visible;}'
+          if old not in s:
+              raise SystemExit('combined symbol svg rule not found')
+          s = s.replace(old, new, 1)
+
+          p.write_text(s, encoding='utf-8')
+
+          sw = Path('sw.js')
+          t = sw.read_text(encoding='utf-8')
+          t, n = re.subn(r'dutch-pay-v4\.45', 'dutch-pay-v4.46', t, count=1)
+          if n != 1:
+              raise SystemExit('sw v4.45 cache not found')
+          sw.write_text(t, encoding='utf-8')
+          PY
+
+      - name: Remove one-time workflow and commit
+        run: |
+          rm -f .github/workflows/tune-period-ui-v446.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js .github/workflows/tune-period-ui-v446.yml
+          git commit -m "Tune period UI spacing and wave size v4.46"
+          git push
