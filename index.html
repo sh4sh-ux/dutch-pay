@@ -889,8 +889,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.26';
-const BUILD_TIME='2026-08-25 14:00';
+const APP_VERSION='v4.27';
+const BUILD_TIME='2026-08-25 16:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1565,8 +1565,9 @@ function _currentSettleRec(){
 async function _checkAllPaidAutoSave(){
   if(!hDbxGetToken())return;
   const rec=_currentSettleRec();
-  if(!rec.txns.length)return;
-  if(!rec.txns.every(t=>rec.payments[`${t.from}|${t.to}`]?.done))return;
+  const _ownerTxns=_myName?rec.txns.filter(t=>t.to===_myName):rec.txns;
+  if(!_ownerTxns.length)return;
+  if(!_ownerTxns.every(t=>rec.payments[`${t.from}|${t.to}`]?.done))return;
   const fp=_settleAutoSaveFp();if(_dbxAutoSavedFp===fp)return;
   try{
     const canvas=await generateHistoryCanvas(rec);
@@ -1602,9 +1603,10 @@ async function saveHistRecToDropbox(recId){
 }
 async function _checkAllPaidAutoSaveForRec(rec){
   if(!hDbxGetToken()||!rec)return;
-  const txns=rec.txns||[];if(!txns.length)return;
-  const pm=rec.payments||{};
-  if(!txns.every(t=>pm[`${t.from}|${t.to}`]?.done))return;
+  const txns=rec.txns||[];const pm=rec.payments||{};
+  const _ownerTxnsRec=_myName?txns.filter(t=>t.to===_myName):txns;
+  if(!_ownerTxnsRec.length)return;
+  if(!_ownerTxnsRec.every(t=>pm[`${t.from}|${t.to}`]?.done))return;
   try{
     const canvas=await generateHistoryCanvas(rec);
     const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob)return;
