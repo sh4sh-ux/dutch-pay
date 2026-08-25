@@ -1,0 +1,46 @@
+name: Tighten share date gap v4.54
+on:
+  push:
+    paths:
+      - '.github/workflows/tighten-share-gap-v454.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch v4.54
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old="const APP_VERSION='v4.53';"
+          if old not in s:
+              raise SystemExit('v4.53 app version not found')
+          s=s.replace(old,"const APP_VERSION='v4.54';",1)
+
+          marker='/* v4.54 tighten actual second date child only */'
+          css='''\n/* v4.54 tighten actual second date child only */\n@media(max-width:700px){\n  .share-date-row > .share-date-dp:nth-child(3),\n  .share-date-row > .share-date-rm:nth-child(4){transform:translateY(-8px);}\n}\n'''
+          if marker not in s:
+              pos=s.find('.share-actions{')
+              if pos < 0:
+                  raise SystemExit('share-actions CSS anchor not found')
+              s=s[:pos]+css+s[pos:]
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('sw.js')
+          t=sw.read_text(encoding='utf-8')
+          if 'dutch-pay-v4.53' not in t:
+              raise SystemExit('v4.53 cache not found')
+          t=t.replace('dutch-pay-v4.53','dutch-pay-v4.54',1)
+          sw.write_text(t,encoding='utf-8')
+          PY
+          rm .github/workflows/tighten-share-gap-v454.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js .github/workflows/tighten-share-gap-v454.yml
+          git commit -m 'Tighten share date gap v4.54'
+          git push
