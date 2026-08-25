@@ -825,6 +825,11 @@ svg{display:block;flex-shrink:0;}
   .pm-month-amount{min-width:0!important;text-align:right!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
   .pm-month-status{width:44px!important;min-width:44px!important;text-align:left!important;white-space:nowrap!important;justify-self:start!important;}
 }
+/* v4.60 monthly row alignment all screens */
+.pm-month-person-left{transform:none!important;padding-left:12px!important;}
+.pm-month-right{display:grid!important;grid-template-columns:minmax(0,1fr) 48px!important;column-gap:10px!important;align-items:center!important;min-width:0!important;padding-right:10px!important;}
+.pm-month-amount{min-width:0!important;text-align:right!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.pm-month-status{transform:none!important;width:48px!important;min-width:48px!important;text-align:left!important;white-space:nowrap!important;justify-self:start!important;}
 </style>
 </head>
 <body>
@@ -962,7 +967,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.59';
+const APP_VERSION='v4.60';
 const BUILD_TIME='2026-08-26 06:08';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
