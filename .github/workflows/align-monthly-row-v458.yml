@@ -1,0 +1,50 @@
+name: Align monthly row v4.58
+on:
+  push:
+    paths:
+      - '.github/workflows/align-monthly-row-v458.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch monthly row alignment
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          if "const APP_VERSION='v4.57';" not in s:
+              raise SystemExit('v4.57 app version not found')
+          s=s.replace("const APP_VERSION='v4.57';","const APP_VERSION='v4.58';",1)
+
+          marker='/* v4.58 monthly row alignment */'
+          css=r'''
+/* v4.58 monthly row alignment */
+@media(max-width:700px){
+  .pm-month-person-left{transform:translateX(12px);}
+  .pm-month-status{transform:translateX(-12px);}
+}
+'''
+          if marker not in s:
+              pos=s.rfind('</style>')
+              if pos<0:
+                  raise SystemExit('style closing tag not found')
+              s=s[:pos]+css+s[pos:]
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('sw.js')
+          t=sw.read_text(encoding='utf-8')
+          if 'dutch-pay-v4.57' not in t:
+              raise SystemExit('v4.57 cache not found')
+          t=t.replace('dutch-pay-v4.57','dutch-pay-v4.58',1)
+          sw.write_text(t,encoding='utf-8')
+          PY
+          rm .github/workflows/align-monthly-row-v458.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js .github/workflows/align-monthly-row-v458.yml
+          git commit -m 'Align monthly names and statuses v4.58'
+          git push
