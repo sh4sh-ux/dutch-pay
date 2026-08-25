@@ -1,0 +1,47 @@
+name: Fix period column v4.43
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-period-column-v443.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Widen period column and center controls
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=re.sub(r"const APP_VERSION='v4\.42';","const APP_VERSION='v4.43';",s,count=1)
+          s=re.sub(r"const BUILD_TIME='[^']*';","const BUILD_TIME='2026-08-26 06:03';",s,count=1)
+          s=s.replace('grid-template-columns:minmax(0,1fr) 36px;','grid-template-columns:minmax(0,1fr) 60px;',1)
+          s=s.replace('.share-date-sep{width:36px;height:36px;','.share-date-sep{width:60px;height:36px;',1)
+          s=s.replace('.share-date-rm{-webkit-appearance:none;appearance:none;width:36px;height:36px;','.share-date-rm{-webkit-appearance:none;appearance:none;width:60px;height:36px;',1)
+          s=s.replace('.share-date-add{-webkit-appearance:none;appearance:none;width:100%;height:36px;','.share-date-add{-webkit-appearance:none;appearance:none;width:60px;height:36px;',1)
+          if "const APP_VERSION='v4.43';" not in s:
+              raise SystemExit('version bump failed')
+          if 'grid-template-columns:minmax(0,1fr) 60px;' not in s:
+              raise SystemExit('column width update failed')
+          p.write_text(s,encoding='utf-8')
+          sw=Path('sw.js')
+          w=sw.read_text(encoding='utf-8').replace('dutch-pay-v4.42','dutch-pay-v4.43',1)
+          if 'dutch-pay-v4.43' not in w:
+              raise SystemExit('cache bump failed')
+          sw.write_text(w,encoding='utf-8')
+          PY
+      - name: Commit and remove one-time workflow
+        run: |
+          rm -f .github/workflows/fix-period-column-v443.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js .github/workflows/fix-period-column-v443.yml
+          git commit -m "Widen period control column and center symbols v4.43 [skip ci]"
+          git push
