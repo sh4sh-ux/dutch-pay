@@ -568,7 +568,7 @@ svg{display:block;flex-shrink:0;}
 .detail-members{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:11px;}
 .detail-amt{font-size:15px;font-weight:700;flex-shrink:0;min-width:88px;text-align:right;}
 .pay-ic{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.share-date-row{margin-bottom:14px;display:grid;grid-template-columns:minmax(0,1fr) 60px;column-gap:8px;row-gap:8px;align-items:center;}
+.share-date-row{margin-bottom:14px;display:grid;grid-template-columns:minmax(0,1fr) 60px;column-gap:8px;row-gap:4px;align-items:center;}
 .share-date-inp{font-size:13px;padding:6px 10px;border:1px solid var(--sep2);border-radius:8px;background-color:var(--card);color:var(--label);font-family:inherit;outline:none;cursor:pointer;flex:1;min-width:0;}
 .share-date-inp:hover{border-color:var(--label3);}
 .share-date-inp:focus{border-color:var(--blue);}
@@ -577,7 +577,8 @@ svg{display:block;flex-shrink:0;}
 .share-date-add:hover{border-color:var(--blue);color:var(--blue);}
 .share-date-rm{-webkit-appearance:none;appearance:none;width:60px;height:36px;border:none;background:transparent;color:var(--label3);cursor:pointer;padding:0;margin:0;font-family:inherit;display:flex;align-items:center;justify-content:center;justify-self:center;align-self:center;line-height:0;box-sizing:border-box;border-radius:8px;}
 .share-date-rm:hover{background:var(--red-bg);color:var(--red);}
-.share-date-sep svg,.share-date-rm svg{width:16px;height:16px;display:block;overflow:visible;}
+.share-date-sep svg{width:13px;height:13px;display:block;overflow:visible;}
+.share-date-rm svg{width:14px;height:14px;display:block;overflow:visible;}
 @media(max-width:700px){.share-date-sep,.share-date-rm,.share-date-add{transform:translateY(-10px);}}
 .share-actions{margin-top:20px;position:sticky;bottom:0;padding:12px 0 4px;background:linear-gradient(to bottom,transparent,var(--panel-bg) 30%);z-index:5;}
 .saved-badge{margin-top:10px;text-align:center;font-size:13px;color:var(--green);font-weight:600;}
@@ -898,7 +899,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.45';
+const APP_VERSION='v4.46';
 const BUILD_TIME='2026-08-26 06:08';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
