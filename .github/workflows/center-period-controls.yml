@@ -1,0 +1,53 @@
+name: Center period controls
+
+on:
+  push:
+    paths:
+      - '.github/workflows/center-period-controls.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Center + period, tilde and close controls
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old = '.share-date-sep{width:36px;text-align:center;color:var(--label3);font-size:15px;white-space:nowrap;}'
+          new = '.share-date-sep{width:36px;height:36px;color:var(--label3);font-size:15px;white-space:nowrap;display:flex;align-items:center;justify-content:center;justify-self:center;align-self:center;line-height:1;padding:0;margin:0;box-sizing:border-box;}'
+          if old not in s:
+              raise SystemExit('share-date-sep CSS not found')
+          s = s.replace(old, new, 1)
+
+          old = '.share-date-add{-webkit-appearance:none;appearance:none;font-size:13px;padding:0 12px;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--fill);color:var(--label);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;height:36px;box-sizing:border-box;font-weight:500;}'
+          new = '.share-date-add{-webkit-appearance:none;appearance:none;font-size:13px;padding:0 12px;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--fill);color:var(--label);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;justify-content:center;align-self:center;height:36px;box-sizing:border-box;font-weight:500;line-height:1;margin:0;}'
+          if old not in s:
+              raise SystemExit('share-date-add CSS not found')
+          s = s.replace(old, new, 1)
+
+          old = '.share-date-rm{width:36px;text-align:center;border:none;background:transparent;color:var(--label3);cursor:pointer;font-size:15px;padding:0;font-family:inherit;}'
+          new = '.share-date-rm{-webkit-appearance:none;appearance:none;width:36px;height:36px;border:none;background:transparent;color:var(--label3);cursor:pointer;font-size:15px;padding:0;margin:0;font-family:inherit;display:flex;align-items:center;justify-content:center;justify-self:center;align-self:center;line-height:1;box-sizing:border-box;}'
+          if old not in s:
+              raise SystemExit('share-date-rm CSS not found')
+          s = s.replace(old, new, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Remove one-time workflow and commit
+        run: |
+          rm -f .github/workflows/center-period-controls.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/center-period-controls.yml
+          git commit -m "Center period controls [skip ci]"
+          git push
