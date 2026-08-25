@@ -1,0 +1,53 @@
+name: Fix monthly row desktop v4.60
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-monthly-row-desktop-v460.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply desktop and mobile monthly row alignment
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s,n=re.subn(r"const APP_VERSION='v\d+\.\d+';", "const APP_VERSION='v4.60';", s, count=1)
+          if n != 1:
+              raise SystemExit('APP_VERSION not found')
+
+          marker='/* v4.60 monthly row alignment all screens */'
+          css='''
+/* v4.60 monthly row alignment all screens */
+.pm-month-person-left{transform:none!important;padding-left:12px!important;}
+.pm-month-right{display:grid!important;grid-template-columns:minmax(0,1fr) 48px!important;column-gap:10px!important;align-items:center!important;min-width:0!important;padding-right:10px!important;}
+.pm-month-amount{min-width:0!important;text-align:right!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.pm-month-status{transform:none!important;width:48px!important;min-width:48px!important;text-align:left!important;white-space:nowrap!important;justify-self:start!important;}
+'''
+          if marker not in s:
+              pos=s.rfind('</style>')
+              if pos < 0:
+                  raise SystemExit('style closing tag not found')
+              s=s[:pos]+css+s[pos:]
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('sw.js')
+          t=sw.read_text(encoding='utf-8')
+          t,n=re.subn(r'dutch-pay-v\d+\.\d+', 'dutch-pay-v4.60', t, count=1)
+          if n != 1:
+              raise SystemExit('cache version not found')
+          sw.write_text(t,encoding='utf-8')
+          PY
+          rm .github/workflows/fix-monthly-row-desktop-v460.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Apply monthly row alignment on desktop v4.60'
+          git push
