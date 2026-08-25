@@ -220,6 +220,9 @@ svg{display:block;flex-shrink:0;}
 .rbd-hint{font-size:11px;color:var(--label3);margin-left:5px;font-weight:400;}
 .rbd-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--label);}
 .rbd-val.rbd-neg{color:var(--green);}
+.rbd-val.treat{color:#EA580C;}
+@media(prefers-color-scheme:dark){.rbd-val.treat{color:#FB923C;}}
+:root[data-theme="dark"] .rbd-val.treat{color:#FB923C;}
 .rbd-sep{height:1px;background:var(--sep);margin:0 16px;}
 .rbd-row.rbd-total .rbd-lbl{color:var(--blue);font-weight:600;}
 .rbd-row.rbd-total .rbd-val{color:var(--blue);}
@@ -891,8 +894,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.33';
-const BUILD_TIME='2026-08-25 23:00';
+const APP_VERSION='v4.34';
+const BUILD_TIME='2026-08-25 23:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2141,7 +2144,7 @@ function _resultBreakdownHtml(paid,owes,txns){
   const ownerSends=txns.filter(t=>t.from===ownerName).reduce((s,t)=>s+t.amt,0);
   let rows='';
   if(ownerPaid>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">내가 결제한 금액</span><span class="rbd-val">${fmt(ownerPaid)}원</span></div>`;
-  if(treatTotal>0){const tr=items.find(it=>it.isTreat)?.payer||'';const hintHtml=tr?'<span class="rbd-hint">'+e(tr)+' 쏨</span>':'';rows+='<div class="rbd-row"><span class="rbd-lbl">한턱 혜택'+hintHtml+'</span><span class="rbd-val">'+fmt(treatTotal)+'원</span></div>';}
+  if(treatTotal>0){const tr=items.find(it=>it.isTreat)?.payer||'';const hintHtml=tr?'<span class="rbd-hint">'+e(tr)+' 쏨</span>':'';rows+='<div class="rbd-row"><span class="rbd-lbl">한턱 혜택'+hintHtml+'</span><span class="rbd-val treat">'+fmt(treatTotal)+'원</span></div>';}
   if(ownerReceives>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">돌려받을 금액</span><span class="rbd-val rbd-neg">${fmt(ownerReceives)}원</span></div>`;
   if(ownerSends>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">보낼 금액</span><span class="rbd-val">${fmt(ownerSends)}원</span></div>`;
   rows+=`<div class="rbd-sep"></div><div class="rbd-row rbd-total"><span class="rbd-lbl">내 부담</span><span class="rbd-val">${fmt(ownerBurden)}원</span></div>`;
