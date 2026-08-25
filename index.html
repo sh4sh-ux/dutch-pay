@@ -857,9 +857,9 @@ svg{display:block;flex-shrink:0;}
   .pm-month-person-left{display:flex;align-items:center;gap:7px;min-width:0;padding-left:12px!important;}
   .pm-month-person-name{font-size:14px;font-weight:600;color:var(--label);white-space:nowrap;}
   .pm-month-person-cnt{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:21px;padding:0 7px;border-radius:999px;background:var(--fill);color:var(--label3);font-size:10px;font-weight:600;white-space:nowrap;}
-  .pm-month-person-right{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:7px;min-width:0;padding-right:10px;font-size:12px;color:var(--label2);white-space:nowrap;}
+  .pm-month-person-right{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:7px;min-width:0;padding-right:0;font-size:12px;color:var(--label2);white-space:nowrap;}
   .pm-month-delta{font-size:13px;font-weight:700;}
-  .pm-month-status{display:inline-flex;align-items:center;justify-content:flex-start;font-size:11px;font-weight:700;}
+  .pm-month-status{display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
   .pm-month-status.pos,.pm-month-status.done{color:var(--green);}
   .pm-month-my-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:0 0 4px;padding:0;border-bottom:1px solid var(--sep);border-radius:12px;overflow:hidden;background:var(--fill2);}
   .pm-month-my-stat{position:relative;min-width:0;padding:12px 6px 13px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;}
@@ -875,7 +875,8 @@ svg{display:block;flex-shrink:0;}
 @media(min-width:701px){
   .pm-month-person-name{letter-spacing:.04em;}
   .pm-month-delta{font-size:11px;font-weight:600;}
-  .pm-month-status.treat{width:auto!important;min-width:0!important;margin-right:29px;}
+  .pm-month-person-right > .pm-month-status:not(.treat):not(.attend){margin-left:-14.5px;}
+  .pm-month-status.treat{width:auto!important;min-width:0!important;margin-right:14.5px;}
 }
 /* v4.65 apply the same monthly row refinements on mobile */
 @media(max-width:700px){
@@ -1021,7 +1022,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.67';
+const APP_VERSION='v4.68';
 const BUILD_TIME='2026-08-26 06:08';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
