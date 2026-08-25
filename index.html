@@ -568,15 +568,16 @@ svg{display:block;flex-shrink:0;}
 .detail-members{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:11px;}
 .detail-amt{font-size:15px;font-weight:700;flex-shrink:0;min-width:88px;text-align:right;}
 .pay-ic{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.share-date-row{margin-bottom:14px;display:grid;grid-template-columns:1fr auto;row-gap:6px;align-items:center;}
+.share-date-row{margin-bottom:14px;display:grid;grid-template-columns:minmax(0,1fr) 36px;column-gap:8px;row-gap:8px;align-items:center;}
 .share-date-inp{font-size:13px;padding:6px 10px;border:1px solid var(--sep2);border-radius:8px;background-color:var(--card);color:var(--label);font-family:inherit;outline:none;cursor:pointer;flex:1;min-width:0;}
 .share-date-inp:hover{border-color:var(--label3);}
 .share-date-inp:focus{border-color:var(--blue);}
-.share-date-sep{width:36px;height:36px;color:var(--label3);font-size:15px;white-space:nowrap;display:flex;align-items:center;justify-content:center;justify-self:center;align-self:center;line-height:1;padding:0;margin:0;box-sizing:border-box;}
-.share-date-add{-webkit-appearance:none;appearance:none;font-size:13px;padding:0 12px;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--fill);color:var(--label);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;justify-content:center;align-self:center;height:36px;box-sizing:border-box;font-weight:500;line-height:1;margin:0;}
+.share-date-sep{width:36px;height:36px;display:flex;align-items:center;justify-content:center;justify-self:center;align-self:center;color:var(--label3);padding:0;margin:0;line-height:0;box-sizing:border-box;}
+.share-date-add{-webkit-appearance:none;appearance:none;width:100%;height:36px;font-size:13px;padding:0;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--fill);color:var(--label);cursor:pointer;font-family:inherit;white-space:nowrap;display:flex;align-items:center;justify-content:center;justify-self:stretch;align-self:center;box-sizing:border-box;font-weight:500;line-height:1;margin:0;}
 .share-date-add:hover{border-color:var(--blue);color:var(--blue);}
-.share-date-rm{-webkit-appearance:none;appearance:none;width:36px;height:36px;border:none;background:transparent;color:var(--label3);cursor:pointer;font-size:15px;padding:0;margin:0;font-family:inherit;display:flex;align-items:center;justify-content:center;justify-self:center;align-self:center;line-height:1;box-sizing:border-box;}
+.share-date-rm{-webkit-appearance:none;appearance:none;width:36px;height:36px;border:none;background:transparent;color:var(--label3);cursor:pointer;padding:0;margin:0;font-family:inherit;display:flex;align-items:center;justify-content:center;justify-self:center;align-self:center;line-height:0;box-sizing:border-box;border-radius:8px;}
 .share-date-rm:hover{background:var(--red-bg);color:var(--red);}
+.share-date-sep svg,.share-date-rm svg{width:16px;height:16px;display:block;overflow:visible;}
 .share-actions{margin-top:20px;position:sticky;bottom:0;padding:12px 0 4px;background:linear-gradient(to bottom,transparent,var(--panel-bg) 30%);z-index:5;}
 .saved-badge{margin-top:10px;text-align:center;font-size:13px;color:var(--green);font-weight:600;}
 .share-save-btn{width:100%;border:none;border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;background:var(--label);color:var(--bg);cursor:pointer;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:8px;}
@@ -896,8 +897,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.41';
-const BUILD_TIME='2026-08-25 05:50';
+const APP_VERSION='v4.42';
+const BUILD_TIME='2026-08-26 05:56';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2205,7 +2206,7 @@ function renderMobileBody(){
     const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);
     if(!total){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>지출을 먼저 입력해주세요</p><button style="margin-top:16px;padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="switchToInputTab()">지출 추가하기</button></div>';return;}
     const txns=calcTxns(paid,owes);
-    let html=`<div class="share-date-row">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")}${settleDateEnd?'<span class="share-date-sep">~</span>':'<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>'}${settleDateEnd?`${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart)}<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()">×</button>`:''}</div>`;
+    let html=`<div class="share-date-row">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")}${settleDateEnd?'<span class="share-date-sep" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13c2.7 0 2.7-3 5.3-3s2.7 3 5.3 3 2.7-3 5.4-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>':'<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>'}${settleDateEnd?`${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart)}<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>`:''}</div>`;
     const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
     html+=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
     if(txns.length){html+=`<div class="pay-section-title">송금</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`;}
@@ -2303,7 +2304,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);
   if(!total){body.innerHTML='<div class="empty"><div class="empty-icon">'+svgEmpty+'</div><p>지출을 먼저 입력해주세요</p><button style="margin-top:16px;padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="switchToInputTab()">지출 추가하기</button></div>';return;}
   const txns=calcTxns(paid,owes);
-  const dateRow=`<div class="share-date-row">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")}${settleDateEnd?'<span class="share-date-sep">~</span>':'<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>'}${settleDateEnd?`${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart)}<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()">×</button>`:''}</div>`;
+  const dateRow=`<div class="share-date-row">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")}${settleDateEnd?'<span class="share-date-sep" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13c2.7 0 2.7-3 5.3-3s2.7 3 5.3 3 2.7-3 5.4-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>':'<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>'}${settleDateEnd?`${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart)}<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>`:''}</div>`;
   const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
   const hero=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
   const txnSection=txns.length?`<div class="pay-section-title">송금</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`:'<div class="empty" style="padding:20px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div>';
