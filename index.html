@@ -889,8 +889,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.24';
-const BUILD_TIME='2026-08-24 10:00';
+const APP_VERSION='v4.25';
+const BUILD_TIME='2026-08-25 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1797,7 +1797,7 @@ function toggleAllRecCard(recId){
   const dbxBtn=hDbxGetToken()?`<div style="padding:10px 14px 4px"><button class="pm-dbx-btn" style="margin-top:0" onclick="saveHistRecToDropbox('${ea(recId)}')">☁️ Dropbox에 이미지 저장</button></div>`:'';
   const ownerBtns=_ownerUnlocked?`<div class="rc-owner-actions"><button class="rc-owner-btn edit" onclick="loadHistoryForEdit('${ea(recId)}')">✏️ 불러오기</button><button class="rc-owner-btn del" onclick="_pmDelRec('${ea(recId)}',event)">🗑 삭제</button></div>`:'';
   if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>'+dbxBtn+ownerBtns;}
-  else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va2=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va2?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">✓ 입금완료</span>`):`<span class="pm-badge pending">미입금</span>`;const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+dbxBtn+ownerBtns;}
+  else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va2=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va2?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">✓ 입금완료</span>`):`<span class="pm-badge pending">${t.to===_myName?'미입금':'미확인'}</span>`;const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+dbxBtn+ownerBtns;}
   card.insertAdjacentElement('afterend',detail);
 }
 
@@ -2422,12 +2422,13 @@ function toggleRcTxnPanel(recId,txnKey){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   const pm=(rec.payments||{})[txnKey]||{};
   const txn=(rec.txns||[]).find(t=>`${t.from}|${t.to}`===txnKey);
+  const _rcPendingLbl=(txnKey.split('|')[1]||'')=== _myName?'미입금':'미확인';
   const baseAmt=txn?txn.amt:0;
   const diffVal=(pm.amount!=null&&pm.amount!=='')?(+pm.amount-baseAmt):null;
   const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
   const panel=document.createElement('div');panel.className='rc-txn-edit-panel';
   panel.setAttribute('data-rec-id',recId);panel.setAttribute('data-txn-key',txnKey);
-  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="rcTxnToggleDone('${ea(recId)}','${ea(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':'미입금'}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="rcTxnUpdateAmt('${ea(recId)}','${ea(txnKey)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="rcTxnSetNow('${ea(recId)}','${ea(txnKey)}')">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span><select class="pay-sel" onchange="rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','account',this.value)"><option value="">선택</option><option value="케이뱅크"${pm.account==='케이뱅크'?' selected':''}>케이뱅크</option><option value="카카오페이"${pm.account==='카카오페이'?' selected':''}>카카오페이</option><option value="토스뱅크"${pm.account==='토스뱅크'?' selected':''}>토스뱅크</option><option value="우리은행"${pm.account==='우리은행'?' selected':''}>우리은행</option><option value="현금"${pm.account==='현금'?' selected':''}>현금</option></select></div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="_closeRcTxnPanel('${ea(recId)}','${ea(txnKey)}')">저장</button>`;
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="rcTxnToggleDone('${ea(recId)}','${ea(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':_rcPendingLbl}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="rcTxnUpdateAmt('${ea(recId)}','${ea(txnKey)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="rcTxnSetNow('${ea(recId)}','${ea(txnKey)}')">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span><select class="pay-sel" onchange="rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','account',this.value)"><option value="">선택</option><option value="케이뱅크"${pm.account==='케이뱅크'?' selected':''}>케이뱅크</option><option value="카카오페이"${pm.account==='카카오페이'?' selected':''}>카카오페이</option><option value="토스뱅크"${pm.account==='토스뱅크'?' selected':''}>토스뱅크</option><option value="우리은행"${pm.account==='우리은행'?' selected':''}>우리은행</option><option value="현금"${pm.account==='현금'?' selected':''}>현금</option></select></div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="_closeRcTxnPanel('${ea(recId)}','${ea(txnKey)}')">저장</button>`;
   row.insertAdjacentElement('afterend',panel);
 }
 function rcTxnToggleDone(recId,txnKey){
@@ -2437,7 +2438,7 @@ function rcTxnToggleDone(recId,txnKey){
   saveHistory(allRec);_patchHistResults();
   if(rec.payments[txnKey].done)_checkAllPaidAutoSaveForRec(rec);
   const panel=document.querySelector(`.rc-txn-edit-panel[data-rec-id="${CSS.escape(recId)}"][data-txn-key="${CSS.escape(txnKey)}"]`);
-  if(panel){const done=rec.payments[txnKey].done;const track=panel.querySelector('.pay-toggle-track');const lbl=panel.querySelector('.pay-toggle-lbl');if(track)track.className='pay-toggle-track'+(done?' on':'');if(lbl){lbl.className='pay-toggle-lbl'+(done?' on':'');lbl.textContent=done?'입금완료':'미입금';}}
+  if(panel){const done=rec.payments[txnKey].done;const track=panel.querySelector('.pay-toggle-track');const lbl=panel.querySelector('.pay-toggle-lbl');if(track)track.className='pay-toggle-track'+(done?' on':'');if(lbl){lbl.className='pay-toggle-lbl'+(done?' on':'');lbl.textContent=done?'입금완료':((txnKey.split('|')[1]||'')=== _myName?'미입금':'미확인');}}
 }
 function rcTxnUpdate(recId,txnKey,field,val){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
@@ -2492,7 +2493,7 @@ function _buildRecordCardHtml(r){
       }).join(''):'';
   const pmObj=r.payments||{};
   const txnHtml=txns.length
-    ?`<div class="rc-section-title">송금</div><div class="rc-txns">`+txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va3=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va3?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">✓ 입금완료</span>`):`<span class="pm-badge pending">미입금</span>`;const rid=ea(r.id);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+`</div>`
+    ?`<div class="rc-section-title">송금</div><div class="rc-txns">`+txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va3=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va3?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">✓ 입금완료</span>`):`<span class="pm-badge pending">${t.to===_myName?'미입금':'미확인'}</span>`;const rid=ea(r.id);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+`</div>`
     :`<div class="rc-no-txn">모두 정산 완료 ✓</div>`;
   const savedAtStr=(()=>{try{const d=new Date(r.savedAt);return d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e2){return '';}})();
   return `<div class="record-card" data-rec-id="${e(r.id)}">
@@ -3097,7 +3098,7 @@ async function generateHistoryCanvas(rec){
       const tkey=`${t.from}|${t.to}`;const pm=pmObj[tkey]||{};
       const billing=t.amt;const _va4=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va4?+pm.amount:billing):0;
       const diff=pm.done?received-billing:null;
-      const badgeTxt=pm.done?(diff>0?`✓ + ${fmt(diff)}원 초과`:diff<0?`-${fmt(-diff)}원 부족`:'✓ 입금완료'):'미입금';
+      const badgeTxt=pm.done?(diff>0?`✓ + ${fmt(diff)}원 초과`:diff<0?`-${fmt(-diff)}원 부족`:'✓ 입금완료'):(t.to===_myName?'미입금':'미확인');
       const badgeBg=pm.done?(diff<0?'#FFEEEE':C.greenBg):C.grayBg;
       const badgeFg=pm.done?(diff<0?C.red:C.green):C.muted;
       setFont(22,600);const btw=ctx.measureText(badgeTxt).width;
