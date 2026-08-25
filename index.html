@@ -568,7 +568,8 @@ svg{display:block;flex-shrink:0;}
 .detail-members{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:11px;}
 .detail-amt{font-size:15px;font-weight:700;flex-shrink:0;min-width:88px;text-align:right;}
 .pay-ic{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.share-date-row{margin-bottom:5px;display:grid;grid-template-columns:minmax(0,1fr) 60px;column-gap:8px;row-gap:0;align-items:center;}
+.share-date-block{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.share-date-row{margin:0;display:grid;grid-template-columns:minmax(0,1fr) 60px;column-gap:8px;align-items:center;height:36px;}
 .share-date-inp{font-size:13px;padding:6px 10px;border:1px solid var(--sep2);border-radius:8px;background-color:var(--card);color:var(--label);font-family:inherit;outline:none;cursor:pointer;flex:1;min-width:0;}
 .share-date-inp:hover{border-color:var(--label3);}
 .share-date-inp:focus{border-color:var(--blue);}
@@ -579,7 +580,7 @@ svg{display:block;flex-shrink:0;}
 .share-date-rm:hover{background:var(--red-bg);color:var(--red);}
 .share-date-sep svg{width:13px;height:13px;display:block;overflow:visible;}
 .share-date-rm svg{width:14px;height:14px;display:block;overflow:visible;}
-@media(max-width:700px){.share-date-sep,.share-date-rm,.share-date-add{transform:translateY(-10px);}}
+@media(max-width:700px){.share-date-sep,.share-date-rm,.share-date-add{transform:none;}}
 .share-actions{margin-top:20px;position:sticky;bottom:0;padding:12px 0 4px;background:linear-gradient(to bottom,transparent,var(--panel-bg) 30%);z-index:5;}
 .saved-badge{margin-top:10px;text-align:center;font-size:13px;color:var(--green);font-weight:600;}
 .share-save-btn{width:100%;border:none;border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;background:var(--label);color:var(--bg);cursor:pointer;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:8px;}
@@ -900,7 +901,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.51';
+const APP_VERSION='v4.52';
 const BUILD_TIME='2026-08-26 06:08';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -2197,19 +2198,12 @@ function renderMobileBody(){
   if(mTab==='history'){renderHistoryBody(el);return;}
   if(mTab==='payment'){renderPaymentBody(el);return;}
   if(mTab==='result'){
-    let html='';const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);const vc=items.filter(it=>+it.amount!==0).length;
-    if(!vc){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>금액이 입력된 지출이 없어요</p><button style="margin-top:16px;padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="switchToInputTab()">지출 추가하기</button></div>';return;}
-    const txns=calcTxns(paid,owes);
-    html+=_resultBreakdownHtml(paid,owes,txns);
-    if(txns.length){html+=`<div class="pay-section-title">송금 내역</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`;}else{html+=`<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>`;}
-    const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const uid='mob_'+it.id;const rowClick=it.receiptText?` onclick="toggleItemReceipt('${uid}',event)"`:'';const chev=it.receiptText?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';return `<div class="detail-row"${rowClick}><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉     👏👏👏</span>':''}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div>${chev}<span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid)}`;}).join('');
-    html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;el.innerHTML=html;return;
-  }
-  if(mTab==='settle'){
-    const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);
-    if(!total){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>지출을 먼저 입력해주세요</p><button style="margin-top:16px;padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="switchToInputTab()">지출 추가하기</button></div>';return;}
-    const txns=calcTxns(paid,owes);
-    let html=`<div class="share-date-row">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")}${settleDateEnd?'<span class="share-date-sep" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13c2.7 0 2.7-3 5.3-3s2.7 3 5.3 3 2.7-3 5.4-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>':'<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>'}${settleDateEnd?`${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart)}<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>`:''}</div>`;
+    let html='<div class="share-date-block"><div class="share-date-row">'
+      + _dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")
+      + (settleDateEnd ? '<span class="share-date-sep" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13c2.7 0 2.7-3 5.3-3s2.7 3 5.3 3 2.7-3 5.4-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>' : '<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>')
+      + '</div>'
+      + (settleDateEnd ? '<div class="share-date-row">' + _dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart) + '<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' + '</div>' : '')
+      + '</div>';
     const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
     html+=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
     if(txns.length){html+=`<div class="pay-section-title">송금</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`;}
@@ -2307,7 +2301,12 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);
   if(!total){body.innerHTML='<div class="empty"><div class="empty-icon">'+svgEmpty+'</div><p>지출을 먼저 입력해주세요</p><button style="margin-top:16px;padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="switchToInputTab()">지출 추가하기</button></div>';return;}
   const txns=calcTxns(paid,owes);
-  const dateRow=`<div class="share-date-row">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")}${settleDateEnd?'<span class="share-date-sep" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13c2.7 0 2.7-3 5.3-3s2.7 3 5.3 3 2.7-3 5.4-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>':'<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>'}${settleDateEnd?`${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart)}<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>`:''}</div>`;
+  const dateRow='<div class="share-date-block"><div class="share-date-row">'
+    + _dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")
+    + (settleDateEnd ? '<span class="share-date-sep" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13c2.7 0 2.7-3 5.3-3s2.7 3 5.3 3 2.7-3 5.4-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>' : '<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>')
+    + '</div>'
+    + (settleDateEnd ? '<div class="share-date-row">' + _dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart) + '<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' + '</div>' : '')
+    + '</div>';
   const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
   const hero=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
   const txnSection=txns.length?`<div class="pay-section-title">송금</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`:'<div class="empty" style="padding:20px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div>';
