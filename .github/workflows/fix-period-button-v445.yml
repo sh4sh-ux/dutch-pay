@@ -1,0 +1,50 @@
+name: Fix period button v4.45
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-period-button-v445.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Align period button with date field
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old = '@media(max-width:700px){.share-date-sep,.share-date-rm{transform:translateY(-10px);}}'
+          new = '@media(max-width:700px){.share-date-sep,.share-date-rm,.share-date-add{transform:translateY(-10px);}}'
+          if old not in s:
+              raise SystemExit('mobile period alignment rule not found')
+          s = s.replace(old, new, 1)
+
+          s = s.replace("const APP_VERSION='v4.44';", "const APP_VERSION='v4.45';", 1)
+          s = s.replace("const BUILD_TIME='2026-08-26 06:07';", "const BUILD_TIME='2026-08-26 06:12';", 1)
+          p.write_text(s, encoding='utf-8')
+
+          sw = Path('sw.js')
+          t = sw.read_text(encoding='utf-8')
+          if 'dutch-pay-v4.44' not in t:
+              raise SystemExit('service worker version not found')
+          t = t.replace('dutch-pay-v4.44', 'dutch-pay-v4.45', 1)
+          sw.write_text(t, encoding='utf-8')
+          PY
+
+      - name: Commit fix
+        run: |
+          rm -f .github/workflows/fix-period-button-v445.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js .github/workflows/fix-period-button-v445.yml
+          git commit -m "Align period button with date field v4.45"
+          git push
