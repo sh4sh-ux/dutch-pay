@@ -1,0 +1,67 @@
+name: Tune period gap v4.48
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tune-period-gap-v448.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tighten period date spacing and bump version
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          # Tighten date row gap from 2px to 0px, preserving column gap.
+          if 'row-gap:2px;' in s:
+              s = s.replace('row-gap:2px;', 'row-gap:0;', 1)
+          elif 'row-gap: 2px;' in s:
+              s = s.replace('row-gap: 2px;', 'row-gap:0;', 1)
+          elif 'row-gap:4px;' in s:
+              s = s.replace('row-gap:4px;', 'row-gap:0;', 1)
+          elif 'row-gap: 4px;' in s:
+              s = s.replace('row-gap: 4px;', 'row-gap:0;', 1)
+          else:
+              raise SystemExit('period row-gap declaration not found')
+
+          # Remove any residual vertical margins on period date wrappers.
+          marker = '.dp-wrap.share-date-dp{'
+          i = s.find(marker)
+          if i != -1:
+              j = s.find('}', i)
+              block = s[i:j+1]
+              if 'margin:' not in block:
+                  new_block = block[:-1] + 'margin:0;}'
+                  s = s[:i] + new_block + s[j+1:]
+
+          s = s.replace("const APP_VERSION='v4.47';", "const APP_VERSION='v4.48';", 1)
+          s = s.replace('const APP_VERSION="v4.47";', 'const APP_VERSION="v4.48";', 1)
+          s = s.replace("const BUILD_TIME='2026-08-26 06:20';", "const BUILD_TIME='2026-08-26 06:27';", 1)
+          s = s.replace('const BUILD_TIME="2026-08-26 06:20";', 'const BUILD_TIME="2026-08-26 06:27";', 1)
+
+          p.write_text(s, encoding='utf-8')
+
+          sw = Path('sw.js')
+          t = sw.read_text(encoding='utf-8')
+          t = t.replace('dutch-pay-v4.47', 'dutch-pay-v4.48')
+          sw.write_text(t, encoding='utf-8')
+          PY
+
+      - name: Remove one-time workflow and commit
+        run: |
+          rm -f .github/workflows/tune-period-gap-v448.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js .github/workflows/tune-period-gap-v448.yml
+          git commit -m "Tighten period date spacing v4.48"
+          git push
