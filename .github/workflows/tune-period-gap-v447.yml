@@ -1,0 +1,50 @@
+name: Tune period gap v4.47
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tune-period-gap-v447.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reduce date row gap and bump version
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          if 'row-gap:4px;' not in s:
+              raise SystemExit('row-gap:4px not found')
+          s = s.replace('row-gap:4px;', 'row-gap:2px;', 1)
+
+          if "const APP_VERSION='v4.46';" not in s:
+              raise SystemExit('APP_VERSION v4.46 not found')
+          s = s.replace("const APP_VERSION='v4.46';", "const APP_VERSION='v4.47';", 1)
+
+          p.write_text(s, encoding='utf-8')
+
+          sw = Path('sw.js')
+          t = sw.read_text(encoding='utf-8')
+          if 'dutch-pay-v4.46' not in t:
+              raise SystemExit('sw cache v4.46 not found')
+          t = t.replace('dutch-pay-v4.46', 'dutch-pay-v4.47', 1)
+          sw.write_text(t, encoding='utf-8')
+          PY
+
+      - name: Remove one-time workflow and commit
+        run: |
+          rm -f .github/workflows/tune-period-gap-v447.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js .github/workflows/tune-period-gap-v447.yml
+          git commit -m "Tighten period date spacing v4.47"
+          git push
