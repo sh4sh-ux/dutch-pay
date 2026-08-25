@@ -412,8 +412,8 @@ svg{display:block;flex-shrink:0;}
   
 /* v4.54 tighten actual second date child only */
 @media(max-width:700px){
-  .share-date-row > .share-date-dp:nth-child(3),
-  .share-date-row > .share-date-rm:nth-child(4){transform:translateY(-8px);}
+  .share-date-row > .share-date-dp:nth-child(3){transform:translateY(-8px);}
+  .share-date-row > .share-date-rm:nth-child(4){transform:translateY(-17px);}
 }
 .share-actions{background:linear-gradient(to bottom,transparent,var(--bg) 30%);bottom:calc(env(safe-area-inset-bottom,0px) + 72px);}
 .rc-txn-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;flex-wrap:wrap;}
@@ -906,7 +906,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.54';
+const APP_VERSION='v4.55';
 const BUILD_TIME='2026-08-26 06:08';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
