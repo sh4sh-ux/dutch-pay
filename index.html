@@ -578,6 +578,7 @@ svg{display:block;flex-shrink:0;}
 .share-date-rm{-webkit-appearance:none;appearance:none;width:60px;height:36px;border:none;background:transparent;color:var(--label3);cursor:pointer;padding:0;margin:0;font-family:inherit;display:flex;align-items:center;justify-content:center;justify-self:center;align-self:center;line-height:0;box-sizing:border-box;border-radius:8px;}
 .share-date-rm:hover{background:var(--red-bg);color:var(--red);}
 .share-date-sep svg,.share-date-rm svg{width:16px;height:16px;display:block;overflow:visible;}
+@media(max-width:700px){.share-date-sep,.share-date-rm{transform:translateY(-10px);}}
 .share-actions{margin-top:20px;position:sticky;bottom:0;padding:12px 0 4px;background:linear-gradient(to bottom,transparent,var(--panel-bg) 30%);z-index:5;}
 .saved-badge{margin-top:10px;text-align:center;font-size:13px;color:var(--green);font-weight:600;}
 .share-save-btn{width:100%;border:none;border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;background:var(--label);color:var(--bg);cursor:pointer;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:8px;}
@@ -897,8 +898,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.43';
-const BUILD_TIME='2026-08-26 06:03';
+const APP_VERSION='v4.44';
+const BUILD_TIME='2026-08-26 06:08';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
