@@ -38,12 +38,12 @@ jobs:
           rm = '<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>'
 
           mobile_repl = "    let html='<div class=\"share-date-block\"><div class=\"share-date-row\">'\n      + _dpHtml(settleDateStart,\"updateSettleDate('start',this.value)\",\"share-date-dp\")\n      + (settleDateEnd ? " + repr(wave) + " : " + repr(add) + ")\n      + '</div>'\n      + (settleDateEnd ? '<div class=\"share-date-row\">' + _dpHtml(settleDateEnd,\"updateSettleDate('end',this.value)\",\"share-date-dp\",settleDateStart) + " + repr(rm) + " + '</div>' : '')\n      + '</div>';\n    const peopleCount="
-          s, n = re.subn(r"    let html=`<div class=\\\"share-date-row\\\">.*?</div>`;\n    const peopleCount=", mobile_repl, s, count=1, flags=re.S)
+          s, n = re.subn(r"    let html=.*?share-date-row.*?\n    const peopleCount=", mobile_repl, s, count=1, flags=re.S)
           if n != 1:
               raise SystemExit('mobile date row renderer not found exactly once')
 
           desktop_repl = "  const dateRow='<div class=\"share-date-block\"><div class=\"share-date-row\">'\n    + _dpHtml(settleDateStart,\"updateSettleDate('start',this.value)\",\"share-date-dp\")\n    + (settleDateEnd ? " + repr(wave) + " : " + repr(add) + ")\n    + '</div>'\n    + (settleDateEnd ? '<div class=\"share-date-row\">' + _dpHtml(settleDateEnd,\"updateSettleDate('end',this.value)\",\"share-date-dp\",settleDateStart) + " + repr(rm) + " + '</div>' : '')\n    + '</div>';\n  const peopleCount="
-          s, n = re.subn(r"  const dateRow=`<div class=\\\"share-date-row\\\">.*?</div>`;\n  const peopleCount=", desktop_repl, s, count=1, flags=re.S)
+          s, n = re.subn(r"  const dateRow=.*?share-date-row.*?\n  const peopleCount=", desktop_repl, s, count=1, flags=re.S)
           if n != 1:
               raise SystemExit('desktop date row renderer not found exactly once')
 
