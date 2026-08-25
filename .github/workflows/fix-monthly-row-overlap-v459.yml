@@ -1,8 +1,7 @@
 name: Fix monthly row overlap v4.59
-on:
+"on":
   push:
-    paths:
-      - '.github/workflows/fix-monthly-row-overlap-v459.yml'
+    branches: [main]
 permissions:
   contents: write
 jobs:
@@ -10,44 +9,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fix monthly amount/status overlap
+      - name: Patch
+        shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import base64
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          if "const APP_VERSION='v4.58';" not in s:
+          old="const APP_VERSION='v4.58';"
+          if old not in s:
               raise SystemExit('v4.58 app version not found')
-          s=s.replace("const APP_VERSION='v4.58';","const APP_VERSION='v4.59';",1)
-
+          s=s.replace(old,"const APP_VERSION='v4.59';",1)
           marker='/* v4.59 monthly row overlap fix */'
-          css=r'''
-/* v4.59 monthly row overlap fix */
-@media(max-width:700px){
-  .pm-month-person-left{transform:none!important;padding-left:12px;}
-  .pm-month-status{transform:none!important;}
-  .pm-month-right{display:grid!important;grid-template-columns:minmax(0,1fr) 44px!important;column-gap:8px!important;align-items:center!important;min-width:0!important;padding-right:8px!important;}
-  .pm-month-amount{min-width:0!important;text-align:right!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
-  .pm-month-status{width:44px!important;min-width:44px!important;text-align:left!important;white-space:nowrap!important;justify-self:start!important;}
-}
-'''
+          css=base64.b64decode('LyogdjQuNTkgbW9udGhseSByb3cgb3ZlcmxhcCBmaXggKi8KQG1lZGlhKG1heC13aWR0aDo3MDBweCl7CiAgLnBtLW1vbnRoLXBlcnNvbi1sZWZ0e3RyYW5zZm9ybTpub25lIWltcG9ydGFudDtwYWRkaW5nLWxlZnQ6MTJweDt9CiAgLnBtLW1vbnRoLXN0YXR1c3t0cmFuc2Zvcm06bm9uZSFpbXBvcnRhbnQ7fQogIC5wbS1tb250aC1yaWdodHtkaXNwbGF5OmdyaWQhaW1wb3J0YW50O2dyaWQtdGVtcGxhdGUtY29sdW1uczptaW5tYXgoMCwxZnIpIDQ0cHghaW1wb3J0YW50O2NvbHVtbi1nYXA6OHB4IWltcG9ydGFudDthbGlnbi1pdGVtczpjZW50ZXIhaW1wb3J0YW50O21pbi13aWR0aDowIWltcG9ydGFudDtwYWRkaW5nLXJpZ2h0OjhweCFpbXBvcnRhbnQ7fQogIC5wbS1tb250aC1hbW91bnR7bWluLXdpZHRoOjAhaW1wb3J0YW50O3RleHQtYWxpZ246cmlnaHQhaW1wb3J0YW50O3doaXRlLXNwYWNlOm5vd3JhcCFpbXBvcnRhbnQ7b3ZlcmZsb3c6aGlkZGVuIWltcG9ydGFudDt0ZXh0LW92ZXJmbG93OmVsbGlwc2lzIWltcG9ydGFudDt9CiAgLnBtLW1vbnRoLXN0YXR1c3t3aWR0aDo0NHB4IWltcG9ydGFudDttaW4td2lkdGg6NDRweCFpbXBvcnRhbnQ7dGV4dC1hbGlnbjpsZWZ0IWltcG9ydGFudDt3aGl0ZS1zcGFjZTpub3dyYXAhaW1wb3J0YW50O2p1c3RpZnktc2VsZjpzdGFydCFpbXBvcnRhbnQ7fQp9Cg==').decode()
           if marker not in s:
               pos=s.rfind('</style>')
-              if pos<0:
-                  raise SystemExit('style closing tag not found')
+              if pos < 0: raise SystemExit('no style close')
               s=s[:pos]+css+s[pos:]
           p.write_text(s,encoding='utf-8')
-
           sw=Path('sw.js')
           t=sw.read_text(encoding='utf-8')
-          if 'dutch-pay-v4.58' not in t:
-              raise SystemExit('v4.58 cache not found')
-          t=t.replace('dutch-pay-v4.58','dutch-pay-v4.59',1)
-          sw.write_text(t,encoding='utf-8')
+          if 'dutch-pay-v4.58' not in t: raise SystemExit('v4.58 cache not found')
+          sw.write_text(t.replace('dutch-pay-v4.58','dutch-pay-v4.59',1),encoding='utf-8')
           PY
           rm .github/workflows/fix-monthly-row-overlap-v459.yml
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html sw.js .github/workflows/fix-monthly-row-overlap-v459.yml
-          git commit -m 'Fix monthly amount status overlap v4.59'
+          rm -f .github/workflows/fix-monthly-row-overlap-v459b.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Fix monthly amount status overlap v4.59"
           git push
