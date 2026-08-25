@@ -566,7 +566,7 @@ svg{display:block;flex-shrink:0;}
 .detail-members{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:11px;}
 .detail-amt{font-size:15px;font-weight:700;flex-shrink:0;min-width:88px;text-align:right;}
 .pay-ic{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.share-date-row{display:grid;grid-template-columns:1fr auto;gap:6px;margin-bottom:14px;align-items:center;}
+.share-date-row{margin-bottom:14px;display:flex;flex-direction:column;gap:6px;}.share-date-line{display:flex;align-items:center;gap:6px;}
 .share-date-inp{font-size:13px;padding:6px 10px;border:1px solid var(--sep2);border-radius:8px;background-color:var(--card);color:var(--label);font-family:inherit;outline:none;cursor:pointer;flex:1;min-width:0;}
 .share-date-inp:hover{border-color:var(--label3);}
 .share-date-inp:focus{border-color:var(--blue);}
@@ -894,8 +894,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.34';
-const BUILD_TIME='2026-08-25 23:30';
+const APP_VERSION='v4.35';
+const BUILD_TIME='2026-08-25 23:55';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2203,7 +2203,7 @@ function renderMobileBody(){
     const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);
     if(!total){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>지출을 먼저 입력해주세요</p><button style="margin-top:16px;padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="switchToInputTab()">지출 추가하기</button></div>';return;}
     const txns=calcTxns(paid,owes);
-    let html=`<div class="share-date-row">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")}${settleDateEnd?`<span class="share-date-sep">~</span>${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart)}<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
+    let html=`<div class="share-date-row"><div class="share-date-line">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")}${settleDateEnd?'<span class="share-date-sep">~</span>':'<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>'}</div>${settleDateEnd?`<div class="share-date-line">${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart)}<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()">×</button></div>`:''}</div>`;
     const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
     html+=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
     if(txns.length){html+=`<div class="pay-section-title">송금</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`;}
@@ -2301,7 +2301,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);
   if(!total){body.innerHTML='<div class="empty"><div class="empty-icon">'+svgEmpty+'</div><p>지출을 먼저 입력해주세요</p><button style="margin-top:16px;padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="switchToInputTab()">지출 추가하기</button></div>';return;}
   const txns=calcTxns(paid,owes);
-  const dateRow=`<div class="share-date-row">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")}${settleDateEnd?`<span class="share-date-sep">~</span>${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart)}<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()">×</button>`:`<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>`}</div>`;
+  const dateRow=`<div class="share-date-row"><div class="share-date-line">${_dpHtml(settleDateStart,"updateSettleDate('start',this.value)","share-date-dp")}${settleDateEnd?'<span class="share-date-sep">~</span>':'<button class="share-date-add" onclick="addSettleEndDate()">+ 기간</button>'}</div>${settleDateEnd?`<div class="share-date-line">${_dpHtml(settleDateEnd,"updateSettleDate('end',this.value)","share-date-dp",settleDateStart)}<button class="share-date-rm" aria-label="종료 날짜 삭제" onclick="clearSettleEndDate()">×</button></div>`:''}</div>`;
   const peopleCount=people.length;const perPerson=peopleCount?Math.floor(Math.abs(total)/peopleCount):0;
   const hero=`<div class="pay-section-title">총 지출금액</div><div class="settle-hero"><div class="sh-num${total<0?' amt-neg':''}">${fmt(total)}원</div><div class="sh-divider"></div><div class="sh-sub">총 ${peopleCount}명 · 인당 평균 ${fmt(perPerson)}원</div></div>`;
   const txnSection=txns.length?`<div class="pay-section-title">송금</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`:'<div class="empty" style="padding:20px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div>';
