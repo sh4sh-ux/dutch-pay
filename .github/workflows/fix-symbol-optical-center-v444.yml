@@ -1,0 +1,55 @@
+name: Fix symbol optical center v4.44
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-symbol-optical-center-v444.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch mobile symbol optical center
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          s = s.replace("const APP_VERSION='v4.43';", "const APP_VERSION='v4.44';", 1)
+          s = re.sub(r"const BUILD_TIME='[^']*';", "const BUILD_TIME='2026-08-26 06:08';", s, count=1)
+
+          marker = '.share-date-sep svg,.share-date-rm svg{width:16px;height:16px;display:block;overflow:visible;}'
+          extra = marker + '\n@media(max-width:700px){.share-date-sep,.share-date-rm{transform:translateY(-10px);}}'
+          if '@media(max-width:700px){.share-date-sep,.share-date-rm{transform:translateY(-10px);}}' not in s:
+              if marker not in s:
+                  raise SystemExit('symbol sizing marker not found')
+              s = s.replace(marker, extra, 1)
+
+          if "const APP_VERSION='v4.44';" not in s:
+              raise SystemExit('version bump failed')
+          p.write_text(s, encoding='utf-8')
+
+          sw = Path('sw.js')
+          w = sw.read_text(encoding='utf-8')
+          w = w.replace('const CACHE_NAME = "dutch-pay-v4.43";', 'const CACHE_NAME = "dutch-pay-v4.44";', 1)
+          if 'dutch-pay-v4.44' not in w:
+              raise SystemExit('service worker bump failed')
+          sw.write_text(w, encoding='utf-8')
+          PY
+
+      - name: Commit and trigger Pages deploy
+        run: |
+          rm -f .github/workflows/fix-symbol-optical-center-v444.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js .github/workflows/fix-symbol-optical-center-v444.yml
+          git commit -m "Optically center period symbols on mobile v4.44"
+          git push
