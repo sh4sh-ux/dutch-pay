@@ -14,7 +14,7 @@ jobs:
           fetch-depth: 0
       - name: Restore known-good share structure and bump version
         run: |
-          git checkout 6d1f1696600ade667e3c35049ae6276c85a5edc3 -- index.html sw.js
+          git checkout 6d1f1696600ade733f6efd2abe2b0e12eae6fe5f -- index.html sw.js
           python3 - <<'PY'
           from pathlib import Path
           p=Path('index.html')
