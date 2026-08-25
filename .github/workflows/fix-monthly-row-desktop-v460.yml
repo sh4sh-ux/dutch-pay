@@ -1,5 +1,5 @@
 name: Fix monthly row desktop v4.60
-on:
+"on":
   push:
     paths:
       - '.github/workflows/fix-monthly-row-desktop-v460.yml'
