@@ -1,0 +1,37 @@
+name: Align monthly row v4.58b
+on:
+  push:
+    paths:
+      - .github/workflows/align-monthly-row-v458b.yml
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+          s = s.replace("const APP_VERSION='v4.57';", "const APP_VERSION='v4.58';", 1)
+          css = "\n/* v4.58 monthly row alignment */\n@media(max-width:700px){.pm-month-person-left{transform:translateX(12px)}.pm-month-status{transform:translateX(-12px)}}\n"
+          i = s.rfind("</style>")
+          if i < 0:
+              raise SystemExit("style tag not found")
+          if "v4.58 monthly row alignment" not in s:
+              s = s[:i] + css + s[i:]
+          p.write_text(s, encoding="utf-8")
+          sw = Path("sw.js")
+          t = sw.read_text(encoding="utf-8").replace("dutch-pay-v4.57", "dutch-pay-v4.58", 1)
+          sw.write_text(t, encoding="utf-8")
+          PY
+          rm -f .github/workflows/align-monthly-row-v458.yml .github/workflows/align-monthly-row-v458b.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Align monthly names and statuses v4.58"
+          git push
