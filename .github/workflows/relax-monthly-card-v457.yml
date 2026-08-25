@@ -1,0 +1,80 @@
+name: Relax monthly card v4.57
+on:
+  push:
+    paths:
+      - '.github/workflows/relax-monthly-card-v457.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch v4.57 monthly stats spacing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old="const APP_VERSION='v4.56';"
+          if old not in s:
+              raise SystemExit('v4.56 app version not found')
+          s=s.replace(old,"const APP_VERSION='v4.57';",1)
+
+          marker='/* v4.57 relax monthly nested cards */'
+          css=r'''
+/* v4.57 relax monthly nested cards */
+@media(max-width:700px){
+  .pm-month-detail{
+    padding:14px 14px 16px !important;
+  }
+  .pm-month-stats-row{
+    margin:0 0 16px !important;
+    border:none !important;
+    border-radius:14px !important;
+    background:var(--fill2) !important;
+    overflow:hidden;
+  }
+  .pm-mstat{
+    background:transparent !important;
+    padding:14px 8px 13px !important;
+  }
+  .pm-month-people{
+    margin-top:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    overflow:visible !important;
+    background:transparent !important;
+  }
+  .pm-month-person-row{
+    background:transparent !important;
+    padding-left:4px !important;
+    padding-right:4px !important;
+  }
+  .pm-month-my-stats{
+    margin:0 0 4px !important;
+    border-radius:12px !important;
+    overflow:hidden;
+  }
+}
+'''
+          if marker not in s:
+              pos=s.rfind('</style>')
+              if pos<0:
+                  raise SystemExit('style closing tag not found')
+              s=s[:pos]+css+s[pos:]
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('sw.js')
+          t=sw.read_text(encoding='utf-8')
+          if 'dutch-pay-v4.56' not in t:
+              raise SystemExit('v4.56 cache not found')
+          t=t.replace('dutch-pay-v4.56','dutch-pay-v4.57',1)
+          sw.write_text(t,encoding='utf-8')
+          PY
+          rm .github/workflows/relax-monthly-card-v457.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js .github/workflows/relax-monthly-card-v457.yml
+          git commit -m 'Relax monthly stats nested cards v4.57'
+          git push
