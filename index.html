@@ -457,6 +457,7 @@ svg{display:block;flex-shrink:0;}
 .pm-month-person-left{display:flex;align-items:center;gap:5px;}
 .pm-month-person-name{font-size:13px;font-weight:500;color:var(--label);}
 .pm-month-person-cnt{font-size:11px;color:var(--label3);background:var(--fill);padding:1px 6px;border-radius:100px;}
+.pm-month-person-paid{font-size:11px;color:var(--blue-txt);background:var(--blue-bg);padding:1px 6px;border-radius:100px;font-weight:600;}
 .pm-month-person-right{font-size:12px;color:var(--label2);display:flex;align-items:center;gap:5px;}
 .pm-month-delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;}
 .pm-month-delta.pos{color:var(--green);}
@@ -1021,8 +1022,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.70';
-const BUILD_TIME='2026-08-26 10:30';
+const APP_VERSION='v4.71';
+const BUILD_TIME='2026-08-26 11:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2108,7 +2109,7 @@ function _pmMonthlyHtml(allRecs){
     const count=recs.length;
     const totalSpend=recs.reduce((s,r)=>s+(+r.total||0),0);
     let totalBilled=0,totalReceived=0;
-    const personStats={},personCount={},personTreat={};
+    const personStats={},personCount={},personTreat={},personPaid={};
     let mySpend=0,myTreat=0,mySettleCount=0,myBilled=0,myReceived=0;
     recs.forEach(rec=>{
       (rec.people||[]).forEach(p=>{personCount[p]=(personCount[p]||0)+1;});
@@ -2126,6 +2127,9 @@ function _pmMonthlyHtml(allRecs){
       (rec.items||[]).forEach(it=>{
         if(it.isTreat&&it.payer&&(!_myName||it.payer!==_myName)){
           personTreat[it.payer]=(personTreat[it.payer]||0)+(+it.amount||0);
+        }
+        if(it.payer&&(!_myName||it.payer!==_myName)){
+          personPaid[it.payer]=(personPaid[it.payer]||0)+(+it.amount||0);
         }
       });
       if(_myName){
@@ -2156,14 +2160,18 @@ function _pmMonthlyHtml(allRecs){
       const deltaHtml=pnet>0?`<span class="pm-month-delta pos">+${fmt(pnet)}원</span>`:pnet<0?`<span class="pm-month-delta neg">-${fmt(-pnet)}원</span>`:'';
       const statusHtml=pnet>0?`<span class="pm-month-status pos">초과</span>`:pnet<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
       const cnt=personCount[nm]||1;
-      return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span></div><div class="pm-month-person-right">${deltaHtml}<span>청구 ${fmt(s.billed)}원</span>${statusHtml}</div></div>`;
+      const paidAmt=personPaid[nm]||0;
+      const paidBadge=paidAmt>0?`<span class="pm-month-person-paid">결제 ${fmt(paidAmt)}원</span>`:'';
+      return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span>${paidBadge}</div><div class="pm-month-person-right">${deltaHtml}<span>청구 ${fmt(s.billed)}원</span>${statusHtml}</div></div>`;
     }).join('');
     const _ptSort=(a,b)=>_pmMonthPeopleSort==='cnt'?(personCount[b]||0)-(personCount[a]||0):_pmMonthPeopleSort==='name'?a.localeCompare(b,'ko'):(personTreat[b]||0)-(personTreat[a]||0);
     const participantRows=Object.keys(personCount).filter(nm=>!personStats[nm]&&(!_myName||nm!==_myName)).sort(_ptSort).map(nm=>{
       const cnt=personCount[nm];
       const treatAmt=personTreat[nm]||0;
       const badge=treatAmt>0?`<span class="pm-month-status treat">한턱 ${fmt(treatAmt)}원</span>`:`<span class="pm-month-status attend">참석</span>`;
-      return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span></div><div class="pm-month-person-right">${badge}</div></div>`;
+      const paidAmt2=personPaid[nm]||0;
+      const paidBadge2=paidAmt2>0?`<span class="pm-month-person-paid">결제 ${fmt(paidAmt2)}원</span>`:'';
+      return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span>${paidBadge2}</div><div class="pm-month-person-right">${badge}</div></div>`;
     }).join('');
     const peopleSection=(myRow||peopleRows||participantRows)?`<div class="pm-month-people">${myRow}${peopleRows}${participantRows}</div>`:'';
     return `<div class="pm-month-card" id="pmc_${ymId}"><div class="pm-month-hd" onclick="togglePmMonth('${ymId}')"><div class="pm-month-hd-left"><span class="pm-month-label">${label}</span><span class="pm-month-count">${count}회 · ${fmt(totalSpend)}원</span></div><div class="pm-month-hd-right"><span class="pm-month-chev${isOpen?' open':''}">▼</span></div></div><div class="pm-month-detail" id="pmcd_${ymId}" style="display:${isOpen?'block':'none'}">${statsHtml}${peopleSection}</div></div>`;
