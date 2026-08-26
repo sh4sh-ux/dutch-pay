@@ -499,7 +499,7 @@ svg{display:block;flex-shrink:0;}
 .pm-month-my-stat{flex:1;display:flex;flex-direction:column;gap:2px;text-align:center;}
 .pm-month-my-stat:not(:last-child){border-right:1px solid var(--sep);}
 .pm-month-my-stat-lbl{font-size:10px;color:var(--label3);}
-.pm-month-my-stat-val{font-size:12px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;}.pm-month-my-stat-val.treat{color:#EA580C;}
+.pm-month-my-stat-val{font-size:12px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;}.pm-month-my-stat-val.treat{color:#EA580C;}.pm-month-my-stat-tap{cursor:pointer;}.pm-month-my-stat-tap:active{background:var(--fill);}
 @media(prefers-color-scheme:dark){.pm-month-my-stat-val.treat{color:#FB923C;}}
 :root[data-theme="dark"] .pm-month-my-stat-val.treat{color:#FB923C;}
 .txn-people{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
@@ -1043,8 +1043,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.80';
-const BUILD_TIME='2026-08-26 16:00';
+const APP_VERSION='v4.81';
+const BUILD_TIME='2026-08-26 17:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1965,6 +1965,33 @@ function _pmShowPayerItems(nm,ym){
   const html=`<div class="pm-payer-modal-bg" onclick="this.remove()"><div class="pm-payer-modal" onclick="event.stopPropagation()"><div class="pm-payer-modal-handle"></div><div class="pm-payer-modal-hd"><div class="pm-payer-modal-name">${e(nm)}</div><div class="pm-payer-modal-sub">${label} 결제내역</div><button class="pm-payer-modal-close" onclick="this.closest('.pm-payer-modal-bg').remove()">✕</button></div><div class="pm-payer-modal-body">${rowsHtml||'<p style="padding:16px 16px;color:var(--label3);font-size:13px">항목이 없어요</p>'}</div><div class="pm-payer-modal-foot"><span class="pm-payer-modal-foot-lbl">합계</span><span class="pm-payer-modal-foot-amt">${fmt(total)}원</span></div></div></div>`;
   document.body.insertAdjacentHTML('beforeend',html);
 }
+function _pmShowTreatItems(nm,ym){
+  const allRecs=loadHistory();
+  const recs=allRecs.filter(r=>(r.dateStart||r.savedAt||'').slice(0,7)===ym);
+  const items=[];
+  recs.forEach(rec=>{
+    const dateStr=(rec.dateStart||'').slice(0,10).replace(/-/g,'.');
+    (rec.items||[]).forEach(it=>{
+      if(it.payer===nm&&it.isTreat)items.push({name:it.name||'',amount:+it.amount||0,members:it.members||[],watchers:it.watchers||[],date:dateStr,iconSvg:getIconSvg(it),receiptText:it.receiptText||''});
+    });
+  });
+  const [y,mo]=ym.split('-');
+  const label=`${y}년 ${+mo}월`;
+  const total=items.reduce((s,it)=>s+it.amount,0);
+  document.querySelectorAll('.pm-payer-modal-bg').forEach(el=>el.remove());
+  const pfx=`ptrt_m${Date.now()}`;
+  const rowsHtml=items.map((it,idx)=>{
+    const memsText=[...it.members||[],...(it.watchers||[])].join(', ');
+    const uid=`${pfx}_${idx}`;const hasReceipt=!!it.receiptText;
+    const rowClick=hasReceipt?` onclick="toggleItemReceipt('${uid}',event)" style="cursor:pointer"`:'';
+    const chev=hasReceipt?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';
+    const receiptHtml=hasReceipt?_receiptTableHtml(it,uid):'';
+    const dateHtml=it.date?`<div class="rc-item-meta" style="opacity:.6;font-size:10px;">${it.date}</div>`:'';
+    return `<div class="rc-item-row"${rowClick}><span class="pay-ic">${it.iconSvg}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'항목')}</span></div>${memsText?`<div class="rc-item-meta">${e(memsText)}</div>`:''}${dateHtml}</div>${chev}<span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${receiptHtml}`;
+  }).join('');
+  const html=`<div class="pm-payer-modal-bg" onclick="this.remove()"><div class="pm-payer-modal" onclick="event.stopPropagation()"><div class="pm-payer-modal-handle"></div><div class="pm-payer-modal-hd"><div class="pm-payer-modal-name">${e(nm)}</div><div class="pm-payer-modal-sub">${label} 한턱 내역</div><button class="pm-payer-modal-close" onclick="this.closest('.pm-payer-modal-bg').remove()">✕</button></div><div class="pm-payer-modal-body">${rowsHtml||'<p style="padding:16px 16px;color:var(--label3);font-size:13px">한턱 항목이 없어요</p>'}</div><div class="pm-payer-modal-foot"><span class="pm-payer-modal-foot-lbl">합계</span><span class="pm-payer-modal-foot-amt">${fmt(total)}원</span></div></div></div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+}
 function _pmDelRec(id,e){e.stopPropagation();if(!confirm('이 기록을 삭제할까요?'))return;_saveDelId(id);saveHistory(loadHistory().filter(r=>r.id!==id));toast('기록이 삭제됐어요');if(hDbxGetToken())hSyncDropbox(true);_patchHistResults();}
 function _reRenderPayment(){if(window.innerWidth<700){const el=document.getElementById('mBody');if(el&&mTab==='payment')renderPaymentBody(el);}else{if(dTab==='payment')renderPaymentView('dREye','dRTitle','dRSub','dRBody');}}
 function _patchHistResults(){const el=document.querySelector('.pm-hist-results');if(!el)return;const openAllRec=el.querySelector('.pm-allrec-card.open');const openAllRecId=openAllRec?openAllRec.dataset.recId:null;const openRec=el.querySelector('.pm-record-card.open');const openRecId=openRec?openRec.dataset.recId:null;const openRecTxn=openRec?openRec.dataset.txnKey:null;el.innerHTML=_pmHistResultsHtml();if(openAllRecId)toggleAllRecCard(openAllRecId);if(openRecId&&openRecTxn)togglePmRecCard(openRecId,openRecTxn);}
@@ -2201,7 +2228,7 @@ function _pmMonthlyHtml(allRecs){
     const myDelta=myNet>0?`<span class="pm-month-delta pos">+${fmt(myNet)}원</span>`:myNet<0?`<span class="pm-month-delta neg">-${fmt(-myNet)}원</span>`:'';
     const myStatus=myNet>0?`<span class="pm-month-status pos">초과</span>`:myNet<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
     const myActual=mySpend-myBilled;
-    const mySubStats=(_myName&&mySpend>0)?`<div class="pm-month-my-stats"><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">결제</div><div class="pm-month-my-stat-val">${fmt(mySpend)}원</div></div><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">지출</div><div class="pm-month-my-stat-val">${fmt(myActual)}원</div></div><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">쏜 금액</div><div class="pm-month-my-stat-val${myTreat>0?' treat':''}">${fmt(myTreat)}원</div></div></div>`:'';
+    const mySubStats=(_myName&&mySpend>0)?`<div class="pm-month-my-stats"><div class="pm-month-my-stat pm-month-my-stat-tap" onclick="event.stopPropagation();_pmShowPayerItems('${ea(_myName)}','${ym}')"><div class="pm-month-my-stat-lbl">결제</div><div class="pm-month-my-stat-val">${fmt(mySpend)}원</div></div><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">지출</div><div class="pm-month-my-stat-val">${fmt(myActual)}원</div></div><div class="pm-month-my-stat${myTreat>0?' pm-month-my-stat-tap':''}"${myTreat>0?` onclick="event.stopPropagation();_pmShowTreatItems('${ea(_myName)}','${ym}')"`:''}><div class="pm-month-my-stat-lbl">쏜 금액</div><div class="pm-month-my-stat-val${myTreat>0?' treat':''}">${fmt(myTreat)}원</div></div></div>`:'';
     const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row pm-name-tap" style="border-bottom:${mySubStats?'none':'1px solid var(--sep)'}" onclick="_pmFilterByName('${ea(_myName)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-person-cnt">${mySettleCount}회</span></div><div class="pm-month-person-right">${myDelta}<span>청구 ${fmt(myBilled)}원</span>${myStatus}</div></div>${mySubStats}`:'';
     const _pplSort=(a,b)=>_pmMonthPeopleSort==='cnt'?(personCount[b[0]]||0)-(personCount[a[0]]||0):_pmMonthPeopleSort==='name'?a[0].localeCompare(b[0],'ko'):b[1].billed-a[1].billed;
     const peopleRows=Object.entries(personStats).sort(_pplSort).map(([nm,s])=>{

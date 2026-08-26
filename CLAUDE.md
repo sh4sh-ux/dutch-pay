@@ -21,11 +21,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v4.80** (2026-08-26) — main 브랜치
+**v4.81** (2026-08-26) — main 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v4.81 | 월별 통계 "결제"·"쏜 금액" 셀 클릭 → 결제·한턱 내역 모달; _pmShowTreatItems 추가 |
 | v4.80 | 버그수정: uid 충돌·빈 상태 패딩; Dead CSS 5개·_togglePayerDetail 제거; CLAUDE.md 갱신 |
 | v4.79 | 송금완료/입금완료 레이블 — toggleAllRecCard·renderHistoryView 추가 수정 |
 | v4.78 | 한턱 참석 카드 "한턱 X원" 배지 통합; 송금완료 레이블 1차 수정 |
