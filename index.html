@@ -484,7 +484,7 @@ svg{display:block;flex-shrink:0;}
 .pm-payer-share-row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px;}
 .pm-payer-share-name{color:var(--label3);}
 .pm-payer-share-amt{color:var(--label);font-weight:600;font-variant-numeric:tabular-nums;}
-.pm-payer-modal-foot{padding:14px 18px;border-top:1px solid var(--sep);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.pm-payer-modal-foot{padding:14px 18px calc(20px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--sep);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
 .pm-payer-modal-foot-lbl{font-size:13px;color:var(--label3);font-weight:500;}
 .pm-payer-modal-foot-amt{font-size:16px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
 @media(min-width:700px){
@@ -493,6 +493,7 @@ svg{display:block;flex-shrink:0;}
   @keyframes pmScaleIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
   .pm-payer-modal-handle{display:none;}
   .pm-payer-modal-hd{padding-top:18px;}
+  .pm-payer-modal-foot{padding-bottom:14px;}
 }
 .pm-month-person-right{font-size:12px;color:var(--label2);display:flex;align-items:center;gap:5px;}
 .pm-month-delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;}
@@ -1058,8 +1059,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.75';
-const BUILD_TIME='2026-08-26 13:00';
+const APP_VERSION='v4.76';
+const BUILD_TIME='2026-08-26 13:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
