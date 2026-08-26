@@ -21,11 +21,15 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v4.20** (2026-08-17) — main 브랜치
+**v4.68** (2026-08-25) — main 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v4.68 | 데스크탑 월별 통계 inset을 모바일과 맞춤 |
+| v4.48 | 공유 탭 기간 기호 SVG로 교체, grid minmax(0,1fr) 60px, 모바일 translateY 보정 |
+| v4.41 | 공유 탭 기간 날짜 .share-date-line 래퍼 제거 (이전 세션) |
+| v4.36 | 수금 탭 월별통계 쏜 금액 orange 색상 |
 | v4.20 | 코드 리뷰 버그 4건: 마이그레이션·Dropbox coupleNames·드롭다운 UX·sw.js 버전 동기화 |
 | v4.19 | 커플 설정 전역화 — dutchpay_couple localStorage (_myName과 동일 방식) |
 | v4.18 | 커플 카드 위 "송금" 레이블 제거 |
