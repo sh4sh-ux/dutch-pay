@@ -1059,8 +1059,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.77';
-const BUILD_TIME='2026-08-26 14:00';
+const APP_VERSION='v4.78';
+const BUILD_TIME='2026-08-26 14:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2117,7 +2117,7 @@ function _pmHistResultsHtml(){
       statusHtml=c.isTreat?`<span class="pm-badge treat">한턱 ${fmt(c.treatAmt)}원</span>`:`<span class="pm-badge attend">참석</span>`;
       amtHtml='';
     }else{
-      statusHtml=c.done?(c.diff>0?`<span class="pm-badge pos">+${fmt(c.diff)}원 초과</span>`:c.diff<0?`<span class="pm-badge neg">-${fmt(-c.diff)}원 부족</span>`:`<span class="pm-badge done">✓ 입금완료</span>`):`<span class="pm-badge pending">${c.isOwnerTxn?'미입금':'미확인'}</span>`;
+      statusHtml=c.done?(c.diff>0?`<span class="pm-badge pos">+${fmt(c.diff)}원 초과</span>`:c.diff<0?`<span class="pm-badge neg">-${fmt(-c.diff)}원 부족</span>`:`<span class="pm-badge done">${c.isOwnerTxn?'✓ 입금완료':'✓ 송금완료'}</span>`):`<span class="pm-badge pending">${c.isOwnerTxn?'미입금':'미확인'}</span>`;
       amtHtml=`<div class="pm-record-total">${fmt(c.billing)}원</div>`;
     }
     const personTreatAmt=(!c.isParticipant)?(c.rec.items||[]).filter(it=>it.payer===name&&it.isTreat).reduce((s,it)=>s+(+it.amount||0),0):0;
