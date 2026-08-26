@@ -454,10 +454,23 @@ svg{display:block;flex-shrink:0;}
 .pm-name-tap{cursor:pointer;border-radius:6px;margin:0 -6px;padding:5px 6px;}
 .pm-name-tap:active{background:var(--fill);}
 .pm-month-person-row:not(:last-child){border-bottom:1px solid var(--sep);}
-.pm-month-person-left{display:flex;align-items:center;gap:5px;}
+.pm-month-person-left{display:flex;align-items:center;gap:10px;}
 .pm-month-person-name{font-size:13px;font-weight:500;color:var(--label);}
 .pm-month-person-cnt{font-size:11px;color:var(--label3);background:var(--fill);padding:1px 6px;border-radius:100px;}
-.pm-month-person-paid{font-size:11px;color:var(--blue-txt);background:var(--blue-bg);padding:1px 6px;border-radius:100px;font-weight:600;}
+.pm-month-person-paid{font-size:11px;color:var(--label3);background:var(--fill);padding:1px 6px;border-radius:100px;font-weight:500;cursor:pointer;}
+.pm-payer-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:flex-end;justify-content:center;}
+.pm-payer-modal{background:var(--card);border-radius:18px 18px 0 0;width:100%;max-width:480px;max-height:65vh;display:flex;flex-direction:column;overflow:hidden;}
+.pm-payer-modal-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;border-bottom:1px solid var(--sep);flex-shrink:0;}
+.pm-payer-modal-title{font-size:14px;font-weight:700;color:var(--label);}
+.pm-payer-modal-close{background:none;border:none;font-size:20px;color:var(--label3);cursor:pointer;padding:0 4px;line-height:1;}
+.pm-payer-modal-body{overflow-y:auto;padding:4px 16px;}
+.pm-payer-item-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--sep);}
+.pm-payer-item-row:last-child{border-bottom:none;}
+.pm-payer-item-left{display:flex;align-items:center;gap:7px;}
+.pm-payer-item-name{font-size:13px;color:var(--label);font-weight:500;}
+.pm-payer-item-group{font-size:11px;color:var(--label3);background:var(--fill);padding:1px 6px;border-radius:100px;}
+.pm-payer-item-amt{font-size:13px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;}
+.pm-payer-modal-foot{padding:12px 16px;border-top:1px solid var(--sep);font-size:13px;font-weight:700;color:var(--label);text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0;}
 .pm-month-person-right{font-size:12px;color:var(--label2);display:flex;align-items:center;gap:5px;}
 .pm-month-delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;}
 .pm-month-delta.pos{color:var(--green);}
@@ -1022,8 +1035,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.71';
-const BUILD_TIME='2026-08-26 11:00';
+const APP_VERSION='v4.72';
+const BUILD_TIME='2026-08-26 11:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1916,6 +1929,18 @@ function _pmSetGroup(v){_pmHistGroup=v;_patchHistResults();}
 function _pmSetMonthPeopleSort(v){_pmMonthPeopleSort=v;_patchHistResults();}
 function _pmSearchInput(v){_pmHistSearch=v;_patchHistResults();}
 function _pmFilterByName(name){_pmHistSearch=name;const inp=document.querySelector('.pm-search');if(inp){inp.value=name;_chkClear(inp);}_patchHistResults();}
+function _pmShowPayerItems(nm,ym){
+  const allRecs=loadHistory();
+  const recs=allRecs.filter(r=>(r.dateStart||r.savedAt||'').slice(0,7)===ym);
+  const items=[];
+  recs.forEach(rec=>{(rec.items||[]).forEach(it=>{if(it.payer===nm)items.push({name:it.name||'',amount:+it.amount||0,groupName:rec.name||rec.groupName||'',isTreat:!!it.isTreat});});});
+  const [y,mo]=ym.split('-');
+  const label=`${y}년 ${+mo}월`;
+  const total=items.reduce((s,it)=>s+it.amount,0);
+  const rowsHtml=items.map(it=>`<div class="pm-payer-item-row"><div class="pm-payer-item-left"><span class="pm-payer-item-name">${e(it.name||'항목')}</span>${it.groupName?`<span class="pm-payer-item-group">${e(it.groupName)}</span>`:''}</div><span class="pm-payer-item-amt">${fmt(it.amount)}원</span></div>`).join('');
+  const html=`<div class="pm-payer-modal-bg" onclick="this.remove()"><div class="pm-payer-modal" onclick="event.stopPropagation()"><div class="pm-payer-modal-hd"><span class="pm-payer-modal-title">${e(nm)} · ${label} 결제내역</span><button class="pm-payer-modal-close" onclick="this.closest('.pm-payer-modal-bg').remove()">×</button></div><div class="pm-payer-modal-body">${rowsHtml||'<p style="padding:16px 0;color:var(--label3);font-size:13px">항목이 없어요</p>'}</div><div class="pm-payer-modal-foot">합계 ${fmt(total)}원</div></div></div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+}
 function _pmDelRec(id,e){e.stopPropagation();if(!confirm('이 기록을 삭제할까요?'))return;_saveDelId(id);saveHistory(loadHistory().filter(r=>r.id!==id));toast('기록이 삭제됐어요');if(hDbxGetToken())hSyncDropbox(true);_patchHistResults();}
 function _reRenderPayment(){if(window.innerWidth<700){const el=document.getElementById('mBody');if(el&&mTab==='payment')renderPaymentBody(el);}else{if(dTab==='payment')renderPaymentView('dREye','dRTitle','dRSub','dRBody');}}
 function _patchHistResults(){const el=document.querySelector('.pm-hist-results');if(!el)return;const openAllRec=el.querySelector('.pm-allrec-card.open');const openAllRecId=openAllRec?openAllRec.dataset.recId:null;const openRec=el.querySelector('.pm-record-card.open');const openRecId=openRec?openRec.dataset.recId:null;const openRecTxn=openRec?openRec.dataset.txnKey:null;el.innerHTML=_pmHistResultsHtml();if(openAllRecId)toggleAllRecCard(openAllRecId);if(openRecId&&openRecTxn)togglePmRecCard(openRecId,openRecTxn);}
@@ -2161,7 +2186,7 @@ function _pmMonthlyHtml(allRecs){
       const statusHtml=pnet>0?`<span class="pm-month-status pos">초과</span>`:pnet<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
       const cnt=personCount[nm]||1;
       const paidAmt=personPaid[nm]||0;
-      const paidBadge=paidAmt>0?`<span class="pm-month-person-paid">결제 ${fmt(paidAmt)}원</span>`:'';
+      const paidBadge=paidAmt>0?`<span class="pm-month-person-paid" onclick="event.stopPropagation();_pmShowPayerItems('${ea(nm)}','${ym}')">결제 ${fmt(paidAmt)}원</span>`:'';
       return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span>${paidBadge}</div><div class="pm-month-person-right">${deltaHtml}<span>청구 ${fmt(s.billed)}원</span>${statusHtml}</div></div>`;
     }).join('');
     const _ptSort=(a,b)=>_pmMonthPeopleSort==='cnt'?(personCount[b]||0)-(personCount[a]||0):_pmMonthPeopleSort==='name'?a.localeCompare(b,'ko'):(personTreat[b]||0)-(personTreat[a]||0);
@@ -2170,7 +2195,7 @@ function _pmMonthlyHtml(allRecs){
       const treatAmt=personTreat[nm]||0;
       const badge=treatAmt>0?`<span class="pm-month-status treat">한턱 ${fmt(treatAmt)}원</span>`:`<span class="pm-month-status attend">참석</span>`;
       const paidAmt2=personPaid[nm]||0;
-      const paidBadge2=paidAmt2>0?`<span class="pm-month-person-paid">결제 ${fmt(paidAmt2)}원</span>`:'';
+      const paidBadge2=paidAmt2>0?`<span class="pm-month-person-paid" onclick="event.stopPropagation();_pmShowPayerItems('${ea(nm)}','${ym}')">결제 ${fmt(paidAmt2)}원</span>`:'';
       return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span>${paidBadge2}</div><div class="pm-month-person-right">${badge}</div></div>`;
     }).join('');
     const peopleSection=(myRow||peopleRows||participantRows)?`<div class="pm-month-people">${myRow}${peopleRows}${participantRows}</div>`:'';
