@@ -551,7 +551,7 @@ svg{display:block;flex-shrink:0;}
 .group-more-opt.danger:hover{background:var(--red-bg);}
 .group-add{display:block;width:100%;text-align:center;border:1px dashed var(--sep2);background:transparent;padding:12px;font-size:13px;cursor:pointer;border-radius:10px;color:var(--green);font-family:inherit;font-weight:600;margin-top:6px;}
 .group-add:hover{background:var(--green-bg);border-color:var(--green);}
-.data-pop{position:absolute;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.15);padding:6px;z-index:200;min-width:220px;}
+.data-pop{position:absolute;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.15);padding:6px;z-index:200;min-width:220px;max-height:calc(100vh - 24px);overflow-y:auto;overscroll-behavior:contain;}
 .data-pop-hd{font-size:12px;font-weight:600;color:var(--label3);padding:8px 8px 6px;}
 .data-pop-btn{display:flex;width:100%;text-align:left;align-items:center;border:none;background:transparent;padding:10px 10px;font-size:13px;cursor:pointer;border-radius:6px;color:var(--label);font-family:inherit;}
 .data-pop-btn:hover{background:var(--fill);}
@@ -907,9 +907,11 @@ svg{display:block;flex-shrink:0;}
   .pm-month-status.treat{width:auto!important;min-width:0!important;margin-right:14.5px;}
 }
 
-/* ── v4.84: 영수증 DB와 연결되는 공통 앱 셸 ── */
-.desktop-shell{align-items:center;padding:24px 32px;}
-.desktop-app{grid-template-columns:72px 318px minmax(0,1fr);height:calc(100vh - 48px);min-height:640px;max-height:820px;max-width:1280px;border-radius:22px;}
+/* ==========================================
+   DESKTOP APP SHELL
+========================================== */
+.desktop-shell{align-items:center;padding:30px 28px;}
+.desktop-app{--desktop-header-h:126px;grid-template-columns:72px 318px minmax(0,1fr);height:calc(100vh - 60px);min-height:min(780px,calc(100vh - 60px));max-height:none;max-width:1540px;border-radius:22px;}
 .app-rail{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 10px;background:var(--fill2);border-right:1px solid var(--sep);}
 .app-rail-logo{display:flex;align-items:center;justify-content:center;width:46px;height:46px;margin-bottom:12px;border-radius:15px;background:var(--blue);color:#fff;font-size:20px;font-weight:700;box-shadow:0 9px 24px rgba(67,85,232,.22);}
 .app-rail-btn{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:13px;background:transparent;color:var(--label3);transition:background .15s,color .15s;}
@@ -917,15 +919,19 @@ svg{display:block;flex-shrink:0;}
 .app-rail-btn.on{background:var(--blue-bg);color:var(--blue);}
 .app-rail-btn svg{width:20px;height:20px;}
 .app-rail-menu{margin-top:auto;}
-.left-top{padding:27px 22px 0;}
+.left,.right{min-height:0;overflow:hidden;}
+.left-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:27px 22px 0;border-bottom:1px solid var(--sep);}
+.left-controls{flex:0 0 auto;max-height:268px;overflow-y:auto;overscroll-behavior:contain;padding:18px 22px 0;}
+.left-controls::-webkit-scrollbar{width:3px;}
+.left-controls::-webkit-scrollbar-thumb{background:var(--sep2);border-radius:2px;}
 .left .tab-row{display:none;}
 .app-label{letter-spacing:1.1px;margin-bottom:8px;}
-.app-title{font-size:25px;margin-bottom:23px;}
-.items-scroll{padding-top:17px;}
+.app-title{font-size:25px;margin-bottom:0;}
+.items-scroll{min-height:0;padding-top:17px;overscroll-behavior:contain;}
 .ilist-label-row,.item-row,.add-row{--pad-x:22px;}
-.left-foot{padding:16px 22px;}
-.right-top{padding:29px 34px 21px;}
-.right-body{padding:26px 34px;}
+.left-foot{flex:0 0 auto;padding:16px 22px;}
+.right-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:29px 34px 21px;}
+.right-body{min-height:0;padding:26px 34px;}
 
 @media(max-width:700px){
   .mobile-shell{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px));}
@@ -964,8 +970,11 @@ svg{display:block;flex-shrink:0;}
     <button class="app-rail-btn" type="button" data-dutch-nav="settle" aria-label="공유" onclick="dSetTab('settle')">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
     </button>
+    <button class="app-rail-btn" id="dRailPayment" type="button" data-dutch-nav="payment" aria-label="수금" onclick="dSetTab('payment')" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 8h12M6 12h12M8 4l-3 4 3 4M16 12l3 4-3 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
     <button class="app-rail-btn app-rail-menu" type="button" aria-label="설정 및 데이터 관리" onclick="showDataMenu(this,event)">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6l-.04.08h-4l-.04-.08a1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1l-.08-.04v-4L4 9.92a1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6l.04-.08h4l.04.08a1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.08.38.3.73.6 1l.08.04v4L20 14c-.3.27-.52.62-.6 1Z" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
   </nav>
   <div class="left" id="dLeft">
@@ -980,6 +989,8 @@ svg{display:block;flex-shrink:0;}
         <button class="tab" id="dTHistory" onclick="dSetTab('history')" style="display:none">기록</button>
         <button class="tab" id="dTPayment" onclick="dSetTab('payment')" style="display:none">수금</button>
       </div>
+    </div>
+    <div class="left-controls">
       <div style="margin-bottom:14px;">
         <div class="dp-wrap" onclick="_dpPick(this)"><div class="dp-txt" id="meetingDateDisp"></div><input type="date" id="meetingDateInp" class="dp-inp" onclick="event.stopPropagation();try{this.showPicker();}catch(e){this.focus();}" onchange="updateMeetingDate(this.value);_dpSync(this)"/></div>
       </div>
@@ -1098,8 +1109,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.84';
-const BUILD_TIME='2026-08-28 08:35';
+const APP_VERSION='v4.87';
+const BUILD_TIME='2026-08-28 18:24';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1154,7 +1165,24 @@ function showGroupManager(anchorEl,ev){
   setTimeout(()=>{const h=(e3)=>{if(!pop.contains(e3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=(e3)=>{if(e3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);
 }
 
-function _positionPopover(pop,anchorEl,rightAlign){const r=anchorEl.getBoundingClientRect();pop.style.top=(r.bottom+window.scrollY+6)+'px';const isMobile=window.innerWidth<700;if(isMobile){pop.style.left='12px';pop.style.right='12px';pop.style.width='auto';pop.style.maxWidth='none';}else{pop.style.right='auto';pop.style.width='auto';const pr=pop.getBoundingClientRect();let left=rightAlign?r.right-pr.width+window.scrollX:r.left+window.scrollX;if(left+pr.width>window.innerWidth-8)left=window.innerWidth-pr.width-8;pop.style.left=Math.max(8,left)+'px';}}
+function _positionPopover(pop,anchorEl,rightAlign){
+  const r=anchorEl.getBoundingClientRect();
+  const isMobile=window.innerWidth<700;
+  const margin=12,gap=6;
+  pop.style.maxHeight=Math.max(180,window.innerHeight-margin*2)+'px';
+  if(isMobile){pop.style.left='12px';pop.style.right='12px';pop.style.width='auto';pop.style.maxWidth='none';}
+  else{pop.style.right='auto';pop.style.width='auto';}
+  const pr=pop.getBoundingClientRect();
+  let top=r.bottom+gap;
+  if(top+pr.height>window.innerHeight-margin)top=r.top-pr.height-gap;
+  top=Math.max(margin,Math.min(top,window.innerHeight-pr.height-margin));
+  pop.style.top=(top+window.scrollY)+'px';
+  if(!isMobile){
+    let left=rightAlign?r.right-pr.width:r.left;
+    left=Math.max(margin,Math.min(left,window.innerWidth-pr.width-margin));
+    pop.style.left=(left+window.scrollX)+'px';
+  }
+}
 
 function _openGroupMorePop(anchorBtn,id,parentPop){document.querySelectorAll('.group-more-pop').forEach(el=>el.remove());const g=groups.find(x=>x.id===id);if(!g)return;const canDelete=groups.length>1;const menu=document.createElement('div');menu.className='group-more-pop';menu.innerHTML=`<button class="group-more-opt" data-mact="duplicate">${svgCopy}<span>복사</span></button><button class="group-more-opt" data-mact="rename">${svgPencil}<span>이름 변경</span></button>${canDelete?`<button class="group-more-opt danger" data-mact="delete">${svgTrash}<span>삭제</span></button>`:''}`;document.body.appendChild(menu);const r=anchorBtn.getBoundingClientRect();const mr=menu.getBoundingClientRect();let top=r.bottom+4;if(top+mr.height>window.innerHeight-8)top=r.top-mr.height-4;let left=r.right-mr.width;if(left<8)left=8;menu.style.top=top+'px';menu.style.left=left+'px';menu.addEventListener('click',(e2)=>{e2.stopPropagation();const b=e2.target.closest('[data-mact]');if(!b)return;const mact=b.dataset.mact;menu.remove();if(parentPop&&parentPop.remove)parentPop.remove();if(mact==='duplicate'){duplicateGroup(id);}else if(mact==='rename'){const newName=prompt('새 이름:',g.name);if(newName&&newName.trim())renameGroup(id,newName);}else if(mact==='delete'){if(confirm(`'${g.name}' 그룹을 삭제할까요?`))deleteGroup(id);}});setTimeout(()=>{const close=(ev)=>{if(!menu.contains(ev.target)){menu.remove();document.removeEventListener('click',close);document.removeEventListener('keydown',esc);}};const esc=(ev)=>{if(ev.key==='Escape'){menu.remove();document.removeEventListener('click',close);document.removeEventListener('keydown',esc);}};document.addEventListener('click',close);document.addEventListener('keydown',esc);},0);}
 
@@ -2427,6 +2455,7 @@ function _renderAllSafe(){
   const _skipM=_inp&&((mBody&&mBody.contains(ae))||(mSheet&&mSheet.contains(ae)));
   const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
   const dTPay=document.getElementById('dTPayment');if(dTPay)dTPay.style.display=_ownerUnlocked?'':'none';
+  const dRPay=document.getElementById('dRailPayment');if(dRPay)dRPay.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();
   if(!_skipD)renderDesktopRight();
   if(!_skipM)renderMobileBody();
@@ -2437,6 +2466,7 @@ function _renderAllSafe(){
 function renderAll(skipSave=false){
   const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
   const dTPay=document.getElementById('dTPayment');if(dTPay)dTPay.style.display=_ownerUnlocked?'':'none';
+  const dRPay=document.getElementById('dRailPayment');if(dRPay)dRPay.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
   const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
   _updateMobFab();if(!skipSave)saveState();
