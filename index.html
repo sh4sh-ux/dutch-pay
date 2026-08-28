@@ -189,10 +189,10 @@ svg{display:block;flex-shrink:0;}
 .right-body::-webkit-scrollbar-thumb{background:var(--sep2);border-radius:2px;}
 
 .field-g{margin-bottom:18px;}
-.field-lbl{font-size:12px;font-weight:600;color:var(--label2);margin-bottom:6px;}
-.field-inp{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 12px;font-size:14px;background:var(--bg);color:var(--label);outline:none;}
+.field-lbl{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:16px;margin-bottom:8px;font-size:12px;font-weight:600;line-height:1.35;color:var(--label2);}
+.field-inp{width:100%;min-height:42px;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 12px;font-size:14px;background:var(--bg);color:var(--label);outline:none;}
 .field-inp:focus{border-color:var(--blue);}
-.field-sel{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 12px;font-size:14px;background:var(--bg);color:var(--label);outline:none;appearance:none;cursor:pointer;}
+.field-sel{width:100%;min-height:42px;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 12px;font-size:14px;background:var(--bg);color:var(--label);outline:none;appearance:none;cursor:pointer;}
 .amt-wrap{position:relative;}
 .amt-wrap input{padding-left:44px;padding-right:30px;}
 .amt-unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--label3);pointer-events:none;}
@@ -619,6 +619,16 @@ svg{display:block;flex-shrink:0;}
 .share-save-btn{width:100%;border:none;border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;background:var(--label);color:var(--bg);cursor:pointer;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .share-save-btn:hover{opacity:.88;}
 .share-save-btn:active{transform:scale(.99);}
+.share-save-btn:disabled{cursor:wait;opacity:.55;}
+.share-fallback{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.58);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+.share-fallback-card{width:min(420px,100%);max-height:calc(100vh - 40px);overflow-y:auto;padding:18px;border-radius:18px;background:var(--card);box-shadow:0 20px 60px rgba(0,0,0,.28);}
+.share-fallback-title{font-size:17px;font-weight:700;letter-spacing:-.3px;}
+.share-fallback-sub{margin:6px 0 14px;font-size:12px;line-height:1.5;color:var(--label2);}
+.share-fallback-img{display:block;width:100%;max-height:52vh;object-fit:contain;border:1px solid var(--sep);border-radius:12px;background:#fff;}
+.share-fallback-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+.share-fallback-btn{display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid var(--sep2);border-radius:10px;background:var(--fill);color:var(--label);font-size:13px;font-weight:600;text-decoration:none;}
+.share-fallback-btn.primary{border-color:var(--blue);background:var(--blue);color:#fff;}
+.share-fallback-close{width:100%;margin-top:8px;padding:10px;border:0;background:transparent;color:var(--label2);font-size:13px;}
 .share-hist-btn{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:12px;font-size:14px;font-weight:600;background:var(--fill);color:var(--label);cursor:pointer;transition:background .12s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
 .share-hist-btn:hover{background:var(--fill2);}
 .notice{font-size:11px;color:var(--label3);text-align:center;margin-top:12px;line-height:1.6;}
@@ -911,24 +921,24 @@ svg{display:block;flex-shrink:0;}
    DESKTOP APP SHELL
 ========================================== */
 .desktop-shell{align-items:center;padding:30px 28px;}
-.desktop-app{--desktop-header-h:126px;grid-template-columns:72px 318px minmax(0,1fr);height:calc(100vh - 60px);min-height:min(780px,calc(100vh - 60px));max-height:none;max-width:1540px;border-radius:22px;}
-.app-rail{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 10px;background:var(--fill2);border-right:1px solid var(--sep);}
-.app-rail-logo{display:flex;align-items:center;justify-content:center;width:46px;height:46px;margin-bottom:12px;border:0;outline:0;border-radius:15px;background:var(--blue);color:#fff;font-size:20px;font-weight:700;box-shadow:0 8px 20px rgba(67,85,232,.18);appearance:none;-webkit-appearance:none;}
-.app-rail-btn{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:13px;background:transparent;color:var(--label3);transition:background .15s,color .15s;}
+.desktop-app{--desktop-header-h:126px;grid-template-columns:76px 360px minmax(0,1fr);height:calc(100vh - 60px);min-height:min(780px,calc(100vh - 60px));max-height:none;max-width:1540px;border-radius:22px;}
+.app-rail{display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 10px;background:var(--fill2);border-right:1px solid var(--sep);}
+.app-rail-logo{display:flex;align-items:center;justify-content:center;width:48px;height:48px;margin-bottom:12px;border:0;outline:0;border-radius:15px;background:var(--blue);color:#fff;font-size:22px;font-weight:700;box-shadow:0 8px 20px rgba(67,85,232,.18);appearance:none;-webkit-appearance:none;}
+.app-rail-btn{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border:0;border-radius:14px;background:transparent;color:var(--label3);transition:background .15s,color .15s;}
 .app-rail-btn:hover{background:var(--fill);color:var(--label2);}
 .app-rail-btn.on{background:var(--blue-bg);color:var(--blue);}
-.app-rail-btn svg{width:20px;height:20px;}
+.app-rail-btn svg{width:22px;height:22px;}
 .app-rail-menu{margin-top:auto;}
 .left,.right{min-height:0;overflow:hidden;}
-.left-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:27px 22px 0;border-bottom:1px solid var(--sep);}
-.left-controls{flex:0 0 auto;max-height:268px;overflow-y:auto;overscroll-behavior:contain;padding:18px 22px 0;}
+.left-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:27px 28px 0;border-bottom:1px solid var(--sep);}
+.left-controls{flex:0 0 auto;max-height:268px;overflow-y:auto;overscroll-behavior:contain;padding:18px 28px 0;}
 .left-controls::-webkit-scrollbar{width:3px;}
 .left-controls::-webkit-scrollbar-thumb{background:var(--sep2);border-radius:2px;}
 .left .tab-row{display:none;}
 .app-label{letter-spacing:.8px;margin-bottom:8px;}
 .app-title{font-size:23px;letter-spacing:-.55px;margin-bottom:0;}
 .items-scroll{min-height:0;padding-top:17px;overscroll-behavior:contain;}
-.ilist-label-row,.item-row,.add-row{--pad-x:22px;}
+.ilist-label-row,.item-row,.add-row{--pad-x:28px;}
 .item-row{position:relative;min-height:64px;box-sizing:border-box;padding-top:12px;padding-bottom:12px;}
 .item-row:hover{background:var(--fill2);}
 .item-row.sel{background:var(--blue-bg);}
@@ -938,10 +948,31 @@ svg{display:block;flex-shrink:0;}
 .item-row.sel .item-name{color:var(--blue-txt);font-weight:600;}
 .item-meta{margin-top:3px;line-height:1.35;}
 .item-amt{font-size:13.5px;letter-spacing:-.1px;}
-.left-foot{flex:0 0 auto;padding:16px 22px;}
+.left-foot{flex:0 0 auto;padding:16px 28px;}
 .right-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:29px 34px 21px;}
 .right-body{min-height:0;padding:26px 34px;}
 .r-title{font-size:24px;letter-spacing:-.6px;line-height:1.2;}
+.expense-editor-card{max-width:920px;padding:20px;background:var(--fill2);border:1px solid var(--sep);border-radius:14px;}
+.expense-editor-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px 14px;}
+.expense-editor-grid .field-g{min-width:0;margin:0;}
+.expense-editor-grid .editor-span-2{grid-column:1/-1;}
+.expense-editor-grid .field-inp,.expense-editor-grid .field-sel{background:var(--card);}
+.expense-editor-grid .chips{min-height:36px;align-items:center;}
+.expense-editor-grid .treat-toggle{min-height:42px;background:var(--card);}
+.expense-editor-grid .treat-toggle.on{background:#FFF8EE;}
+.expense-editor-grid .editor-receipt{min-height:104px;resize:vertical;font-size:12px;line-height:1.6;font-family:inherit;}
+.expense-editor-actions{max-width:920px;margin-top:14px;}
+
+@media(max-width:1100px) and (min-width:701px){
+  .desktop-shell{padding-left:18px;padding-right:18px;}
+  .desktop-app{grid-template-columns:64px 310px minmax(0,1fr);}
+  .app-rail-logo{width:44px;height:44px;border-radius:13px;font-size:20px;}
+  .app-rail-btn{width:44px;height:44px;}
+  .right-top{padding-left:28px;padding-right:28px;}
+  .right-body{padding-left:28px;padding-right:28px;}
+  .expense-editor-grid{grid-template-columns:1fr;}
+  .expense-editor-grid .editor-span-2{grid-column:auto;}
+}
 
 @media(max-width:700px){
   .mobile-shell{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px));}
@@ -981,7 +1012,7 @@ svg{display:block;flex-shrink:0;}
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
     </button>
     <button class="app-rail-btn" id="dRailPayment" type="button" data-dutch-nav="payment" aria-label="수금" onclick="dSetTab('payment')" style="display:none">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 8h12M6 12h12M8 4l-3 4 3 4M16 12l3 4-3 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="9" cy="5.5" rx="5.5" ry="2.25"/><path d="M3.5 5.5v4c0 1.25 2.45 2.25 5.5 2.25 1.1 0 2.1-.13 2.95-.37M3.5 9.5v4c0 1.25 2.45 2.25 5.5 2.25.72 0 1.4-.06 2.02-.17"/><circle cx="16.5" cy="15.5" r="5"/><path d="m13.85 13.25 1.2 4.5 1.45-3.25 1.45 3.25 1.2-4.5M13.7 14.75h5.6M14 16.1h5"/></svg>
     </button>
     <button class="app-rail-btn app-rail-menu" type="button" aria-label="설정 및 데이터 관리" onclick="showDataMenu(this,event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -1067,7 +1098,7 @@ svg{display:block;flex-shrink:0;}
       <button class="mob-tab" id="mTResult" data-dutch-nav="result" onclick="mSetTab('result')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>정산</span></button>
       <button class="mob-tab" id="mTSettle" data-dutch-nav="settle" onclick="mSetTab('settle')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>공유</span></button>
       <button class="mob-tab" id="mTHistory" data-dutch-nav="history" onclick="mSetTab('history')" style="display:none"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>기록</span></button>
-      <button class="mob-tab" id="mTPayment" data-dutch-nav="payment" onclick="mSetTab('payment')" style="display:none"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 8h12M6 12h12M8 4l-3 4 3 4M16 12l3 4-3 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>수금</span></button>
+      <button class="mob-tab" id="mTPayment" data-dutch-nav="payment" onclick="mSetTab('payment')" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="9" cy="5.5" rx="5.5" ry="2.25"/><path d="M3.5 5.5v4c0 1.25 2.45 2.25 5.5 2.25 1.1 0 2.1-.13 2.95-.37M3.5 9.5v4c0 1.25 2.45 2.25 5.5 2.25.72 0 1.4-.06 2.02-.17"/><circle cx="16.5" cy="15.5" r="5"/><path d="m13.85 13.25 1.2 4.5 1.45-3.25 1.45 3.25 1.2-4.5M13.7 14.75h5.6M14 16.1h5"/></svg><span>수금</span></button>
     </nav>
   </div>
   <div class="mob-body" id="mBody"></div>
@@ -1119,8 +1150,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.88';
-const BUILD_TIME='2026-08-28 18:38';
+const APP_VERSION='v4.90';
+const BUILD_TIME='2026-08-28 23:08';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1521,7 +1552,7 @@ const svgFood='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" strok
 const svgCafe='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>';
 const svgBeer='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.57.5 2.5.5C9.44 3.5 10 3 11 3s1.44.5 3 .5 2.5-1 4-1 1.5 2.5 0 5-2.5.5-4 .5z"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg>';
 const svgMic='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>';
-const svgCar='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>';
+const svgCar='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="17" rx="3"/><path d="M8 2.5h8M9 5.5h6"/><rect x="7" y="7" width="10" height="6" rx="1"/><path d="M5 8.5H3v4M19 8.5h2v4"/><circle cx="8" cy="16" r="1.25"/><circle cx="16" cy="16" r="1.25"/><path d="M7.5 19.5V22M16.5 19.5V22"/></svg>';
 const svgShop='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
 const svgMovie='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>';
 const svgBed='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M2 18h20"/></svg>';
@@ -2493,7 +2524,49 @@ function updateTotals(){const t=items.reduce((s,it)=>s+(+it.amount||0),0);const 
 
 function renderDesktopRight(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='history'){renderHistoryView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='payment'){renderPaymentView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');return;}document.getElementById('dREye').textContent='시작하기';if(!people.length){document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{renderResultView('dREye','dRTitle','dRSub','dRBody');document.getElementById('dRSub').textContent='지출을 선택하면 편집 모드로 전환돼요.';}}
 
-function renderEditor(id,eyeId,titleId,subId,bodyId){const it=items.find(i=>i.id===id);if(!it)return;document.getElementById(eyeId).textContent='지출 편집';document.getElementById(titleId).textContent=it.name||'새 지출';document.getElementById(subId).textContent='금액과 결제자, 참여자를 입력하세요.';const opts=people.map(p=>`<option value="${ea(p)}"${it.payer===p?' selected':''}>${e(p)}</option>`).join('');const memOpts=(it.members.length?it.members:people);const rounderOpts='<option value="">자동 (결제자 우선)</option>'+memOpts.map(p=>`<option value="${ea(p)}"${it.rounderOverride===p?' selected':''}>${e(p)}</option>`).join('');document.getElementById(bodyId).innerHTML=`<div class="field-g"><label class="field-lbl" for="fname">지출 이름</label><input class="field-inp" id="fname" placeholder="예: 저녁식사, 택시비" value="${ea(it.name)}" oninput="updateField(${id},'name',this.value)"/></div><div class="field-g"><label class="field-lbl" for="famt_${id}">금액</label><div class="amt-wrap"><button type="button" class="amt-sign-btn${(+it.amount<0)?' on':''}" aria-label="금액 부호 변경" onclick="toggleAmtSign(${id})">−</button><input class="field-inp" id="famt_${id}" type="text" inputmode="numeric" placeholder="0" value="${fmtAmt(it.amount)}" onkeydown="handleAmtKeydown(event)" oninput="handleAmtInput(${id},this)"/><span class="amt-unit">원</span></div></div><div class="field-g"><label class="field-lbl" for="fpayer_${id}">결제자</label><select id="fpayer_${id}" class="field-sel" onchange="updateField(${id},'payer',this.value)">${opts}</select></div><div class="field-g"><div class="field-lbl">참여자 <span style="font-size:11px;font-weight:400;text-transform:none;color:var(--label3)">· 포함 → 깍두기 → 제외</span></div><div class="chips">${people.map(p=>{const isIn=it.members.includes(p);const isW=(it.watchers||[]).includes(p);return `<button class="chip${isIn?' on':''}${isW?' watch':''}" onclick="toggleMember(${id},${ja(p)},this)">${e(p)}${isW?'<span class="chip-watch-lbl"> 깍두기</span>':''}</button>`;}).join('')}</div></div><div class="field-g"><label class="field-lbl" for="frounder_${id}">차액 부담자 <span style="font-size:11px;font-weight:400;text-transform:none;color:var(--label3)">· 차액 발생 시</span></label><select id="frounder_${id}" class="field-sel" onchange="updateField(${id},'rounderOverride',this.value||null)">${rounderOpts}</select></div><div class="field-g"><button class="treat-toggle${it.isTreat?' on':''}" aria-pressed="${it.isTreat}" onclick="toggleTreat(${id})">${it.isTreat?'🎉 한턱 설정됨 — 더치페이 계산 제외':'🎉 한턱 설정하기'}</button></div><div class="field-g" style="margin-top:4px"><label class="field-lbl">영수증 상세 <span style="font-size:11px;font-weight:400;text-transform:none;color:var(--label3)">품목명 | 수량 | 단가 | 금액</span></label><textarea class="field-inp" style="height:88px;resize:vertical;font-size:12px;line-height:1.6;font-family:inherit" placeholder="곱창구이(250g) | 2 | 24,000 | 48,000" oninput="updateField(${id},'receiptText',this.value)">${e(it.receiptText||'')}</textarea></div><button class="del-btn" onclick="removeItem(${id})">${svgTrash} 지출 삭제</button>`;}
+function renderEditor(id,eyeId,titleId,subId,bodyId){
+  const it=items.find(i=>i.id===id);if(!it)return;
+  document.getElementById(eyeId).textContent='지출 편집';
+  document.getElementById(titleId).textContent=it.name||'새 지출';
+  document.getElementById(subId).textContent='금액과 결제자, 참여자를 입력하세요.';
+  const opts=people.map(p=>`<option value="${ea(p)}"${it.payer===p?' selected':''}>${e(p)}</option>`).join('');
+  const memOpts=(it.members.length?it.members:people);
+  const rounderOpts='<option value="">자동 (결제자 우선)</option>'+memOpts.map(p=>`<option value="${ea(p)}"${it.rounderOverride===p?' selected':''}>${e(p)}</option>`).join('');
+  document.getElementById(bodyId).innerHTML=`
+    <section class="expense-editor-card" aria-label="지출 정보">
+      <div class="expense-editor-grid">
+        <div class="field-g editor-span-2">
+          <label class="field-lbl" for="fname">지출 이름</label>
+          <input class="field-inp" id="fname" placeholder="예: 저녁식사, 택시비" value="${ea(it.name)}" oninput="updateField(${id},'name',this.value)"/>
+        </div>
+        <div class="field-g">
+          <label class="field-lbl" for="famt_${id}">금액</label>
+          <div class="amt-wrap"><button type="button" class="amt-sign-btn${(+it.amount<0)?' on':''}" aria-label="금액 부호 변경" onclick="toggleAmtSign(${id})">−</button><input class="field-inp" id="famt_${id}" type="text" inputmode="numeric" placeholder="0" value="${fmtAmt(it.amount)}" onkeydown="handleAmtKeydown(event)" oninput="handleAmtInput(${id},this)"/><span class="amt-unit">원</span></div>
+        </div>
+        <div class="field-g">
+          <label class="field-lbl" for="fpayer_${id}">결제자</label>
+          <select id="fpayer_${id}" class="field-sel" onchange="updateField(${id},'payer',this.value)">${opts}</select>
+        </div>
+        <div class="field-g editor-span-2">
+          <div class="field-lbl">참여자 <span style="font-size:11px;font-weight:400;text-transform:none;color:var(--label3)">포함 → 깍두기 → 제외</span></div>
+          <div class="chips">${people.map(p=>{const isIn=it.members.includes(p);const isW=(it.watchers||[]).includes(p);return `<button class="chip${isIn?' on':''}${isW?' watch':''}" onclick="toggleMember(${id},${ja(p)},this)">${e(p)}${isW?'<span class="chip-watch-lbl"> 깍두기</span>':''}</button>`;}).join('')}</div>
+        </div>
+        <div class="field-g">
+          <label class="field-lbl" for="frounder_${id}">차액 부담자 <span style="font-size:11px;font-weight:400;text-transform:none;color:var(--label3)">차액 발생 시</span></label>
+          <select id="frounder_${id}" class="field-sel" onchange="updateField(${id},'rounderOverride',this.value||null)">${rounderOpts}</select>
+        </div>
+        <div class="field-g">
+          <div class="field-lbl">한턱 <span style="font-size:11px;font-weight:400;color:var(--label3)">정산 제외</span></div>
+          <button class="treat-toggle${it.isTreat?' on':''}" aria-pressed="${it.isTreat}" onclick="toggleTreat(${id})">${it.isTreat?'🎉 한턱 설정됨':'🎉 한턱 설정하기'}</button>
+        </div>
+        <div class="field-g editor-span-2">
+          <label class="field-lbl">영수증 상세 <span style="font-size:11px;font-weight:400;text-transform:none;color:var(--label3)">품목명 | 수량 | 단가 | 금액</span></label>
+          <textarea class="field-inp editor-receipt" placeholder="곱창구이(250g) | 2 | 24,000 | 48,000" oninput="updateField(${id},'receiptText',this.value)">${e(it.receiptText||'')}</textarea>
+        </div>
+      </div>
+    </section>
+    <div class="expense-editor-actions"><button class="del-btn" onclick="removeItem(${id})">${svgTrash} 지출 삭제</button></div>`;
+}
 
 function renderMobileBody(){
   const el=document.getElementById('mBody');if(!el)return;
@@ -3312,14 +3385,25 @@ function _afterShare(){
   if(_isAlreadySaved()){toast('이미지 공유 완료',{type:'success'});return;}
   toast('공유 완료 — 기록 보관함에도 저장할까요?',{type:'success',action:()=>saveToHistory(),actionLabel:'저장'});
 }
+let _shareBusy=false;
+function _setShareBusy(busy){_shareBusy=busy;document.querySelectorAll('.share-save-btn').forEach(btn=>{btn.disabled=busy;btn.setAttribute('aria-busy',busy?'true':'false');});}
+function _canShareFiles(shareData){if(!navigator.share)return false;if(!navigator.canShare)return true;try{return navigator.canShare(shareData);}catch(err){return false;}}
+function _downloadShareBlob(blob,filename){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.download=filename;a.href=url;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);}
+function _openShareFallback(blob,file,filename){document.querySelector('.share-fallback')?.remove();const url=URL.createObjectURL(blob);const ov=document.createElement('div');ov.className='share-fallback';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.innerHTML=`<div class="share-fallback-card"><div class="share-fallback-title">정산 이미지가 준비됐어요</div><div class="share-fallback-sub">공유가 바로 열리지 않으면 아래 버튼으로 다시 시도하거나 이미지를 길게 눌러 저장하세요.</div><img class="share-fallback-img" alt="더치페이 정산 이미지 미리보기"><div class="share-fallback-actions"><button class="share-fallback-btn primary" type="button">다시 공유</button><a class="share-fallback-btn" download="${ea(filename)}">이미지 저장</a></div><button class="share-fallback-close" type="button">닫기</button></div>`;ov.querySelector('img').src=url;const close=()=>{URL.revokeObjectURL(url);ov.remove();};ov.querySelector('.share-fallback-close').onclick=close;ov.addEventListener('click',ev=>{if(ev.target===ov)close();});const save=ov.querySelector('a');save.href=url;save.onclick=()=>setTimeout(()=>toast('이미지를 저장했어요',{type:'success'}),0);const retry=ov.querySelector('.share-fallback-btn.primary');const shareData={files:[file],title:'더치페이 정산 내역'};const canShare=_canShareFiles(shareData);if(!canShare){retry.style.display='none';ov.querySelector('.share-fallback-actions').style.gridTemplateColumns='1fr';}else retry.onclick=async()=>{try{await navigator.share(shareData);close();_afterShare();}catch(err){if(err?.name!=='AbortError')toast('공유를 열지 못했어요. 이미지를 길게 눌러 저장해주세요.',{type:'error'});}};document.body.appendChild(ov);}
 async function shareSettleImage(){
+  if(_shareBusy)return;
   const total=items.reduce((s,it)=>s+(+it.amount||0),0);if(!total){toast('공유할 정산 내역이 없어요',{type:'error'});return;}
   const inApp=detectInAppBrowser();if(inApp){const ok=confirm(`${inApp.name} 내부 브라우저는 이미지 공유가 제한돼요.\n외부 브라우저에서 열어주세요.\n\n지금 외부 브라우저로 열까요?`);if(ok){openInExternalBrowser();return;}}
-  const canvas=await generateSettleCanvas();const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob){toast('이미지 생성에 실패했어요',{type:'error'});return;}
-  const date=new Date().toISOString().slice(0,10);const filename=`정산_${date}.png`;const file=new File([blob],filename,{type:'image/png'});
-  if(navigator.share&&!inApp){try{await navigator.share({files:[file]});_afterShare();return;}catch(e){if(e&&e.name==='AbortError')return;}}
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.download=filename;a.href=url;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);
-  _afterShare();
+  _setShareBusy(true);
+  try{
+    const canvas=await generateSettleCanvas();const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob){toast('이미지 생성에 실패했어요',{type:'error'});return;}
+    const date=new Date().toISOString().slice(0,10);const filename=`정산_${date}.png`;const file=new File([blob],filename,{type:'image/png'});const shareData={files:[file],title:'더치페이 정산 내역'};
+    const canNativeShare=!inApp&&_canShareFiles(shareData);
+    if(canNativeShare){try{await navigator.share(shareData);_afterShare();return;}catch(err){if(err?.name==='AbortError')return;console.warn('Native image share failed',err);}}
+    if(window.matchMedia('(max-width:700px)').matches){_openShareFallback(blob,file,filename);toast('이미지를 준비했어요. 공유 버튼을 다시 눌러주세요.',{type:'success'});return;}
+    _downloadShareBlob(blob,filename);_afterShare();
+  }catch(err){console.error('shareSettleImage failed',err);toast('이미지 공유 중 오류가 발생했어요',{type:'error'});}
+  finally{_setShareBusy(false);}
 }
 
 async function generateHistoryCanvas(rec){
