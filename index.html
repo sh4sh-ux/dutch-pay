@@ -693,8 +693,8 @@ svg{display:block;flex-shrink:0;}
 .rc-txn-amt{font-weight:600;flex-shrink:0;}
 .result-amt-hero,.sh-num,.txn-amt,.detail-amt,.rc-item-amt,.rc-txn-amt,.sh-sub,.item-amt,.rbd-val,#dTotal,#mTotal{font-family:system-ui,-apple-system,'BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif;}
 .rc-no-txn{font-size:13px;color:var(--green);padding:10px 16px;text-align:center;}
-.rc-foot{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--fill2);border-top:1px solid var(--sep);}
-.rc-saved-at{font-size:11px;color:var(--label3);}
+.rc-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 16px;background:var(--fill2);border-top:1px solid var(--sep);}
+.rc-saved-at{font-size:11px;color:var(--label3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
 .rc-del-btn{font-size:12px;color:var(--red);border:none;background:transparent;font-weight:500;padding:8px 6px;cursor:pointer;}
 .rc-del-btn:hover{opacity:.7;}
 .rc-load-btn{font-size:12px;color:var(--blue);border:none;background:transparent;font-weight:500;padding:8px 6px;cursor:pointer;}
@@ -1043,8 +1043,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.82';
-const BUILD_TIME='2026-08-26 18:00';
+const APP_VERSION='v4.83';
+const BUILD_TIME='2026-08-28 08:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2739,9 +2739,8 @@ function _buildRecordCardHtml(r){
     <div class="rc-body" id="rcb_${sid}">${itemsHtml}${txnHtml}</div>
     <div class="rc-foot">
       <span class="rc-saved-at">${savedAtStr} 저장 · ${(r.people||[]).length}명</span>
-      <div style="display:flex;gap:14px;align-items:center;">
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
         <button class="rc-load-btn" onclick="shareHistoryImage('${e(r.id)}')">이미지</button>
-
         <button class="rc-load-btn" onclick="loadHistoryAsGroup('${e(r.id)}')">불러오기</button>
         <button class="rc-load-btn" onclick="loadHistoryForEdit('${e(r.id)}')">수정</button>
         <button class="rc-del-btn" onclick="deleteHistoryRecord('${e(r.id)}')">삭제</button>
