@@ -913,7 +913,7 @@ svg{display:block;flex-shrink:0;}
 .desktop-shell{align-items:center;padding:30px 28px;}
 .desktop-app{--desktop-header-h:126px;grid-template-columns:72px 318px minmax(0,1fr);height:calc(100vh - 60px);min-height:min(780px,calc(100vh - 60px));max-height:none;max-width:1540px;border-radius:22px;}
 .app-rail{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 10px;background:var(--fill2);border-right:1px solid var(--sep);}
-.app-rail-logo{display:flex;align-items:center;justify-content:center;width:46px;height:46px;margin-bottom:12px;border-radius:15px;background:var(--blue);color:#fff;font-size:20px;font-weight:700;box-shadow:0 9px 24px rgba(67,85,232,.22);}
+.app-rail-logo{display:flex;align-items:center;justify-content:center;width:46px;height:46px;margin-bottom:12px;border:0;outline:0;border-radius:15px;background:var(--blue);color:#fff;font-size:20px;font-weight:700;box-shadow:0 8px 20px rgba(67,85,232,.18);appearance:none;-webkit-appearance:none;}
 .app-rail-btn{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:13px;background:transparent;color:var(--label3);transition:background .15s,color .15s;}
 .app-rail-btn:hover{background:var(--fill);color:var(--label2);}
 .app-rail-btn.on{background:var(--blue-bg);color:var(--blue);}
@@ -925,13 +925,23 @@ svg{display:block;flex-shrink:0;}
 .left-controls::-webkit-scrollbar{width:3px;}
 .left-controls::-webkit-scrollbar-thumb{background:var(--sep2);border-radius:2px;}
 .left .tab-row{display:none;}
-.app-label{letter-spacing:1.1px;margin-bottom:8px;}
-.app-title{font-size:25px;margin-bottom:0;}
+.app-label{letter-spacing:.8px;margin-bottom:8px;}
+.app-title{font-size:23px;letter-spacing:-.55px;margin-bottom:0;}
 .items-scroll{min-height:0;padding-top:17px;overscroll-behavior:contain;}
 .ilist-label-row,.item-row,.add-row{--pad-x:22px;}
+.item-row{position:relative;min-height:64px;box-sizing:border-box;padding-top:12px;padding-bottom:12px;}
+.item-row:hover{background:var(--fill2);}
+.item-row.sel{background:var(--blue-bg);}
+.item-row.sel::before{content:"";position:absolute;top:0;bottom:0;left:0;width:3px;background:var(--blue);}
+.item-dot{display:none;}
+.item-name{font-size:13.5px;letter-spacing:-.1px;}
+.item-row.sel .item-name{color:var(--blue-txt);font-weight:600;}
+.item-meta{margin-top:3px;line-height:1.35;}
+.item-amt{font-size:13.5px;letter-spacing:-.1px;}
 .left-foot{flex:0 0 auto;padding:16px 22px;}
 .right-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:29px 34px 21px;}
 .right-body{min-height:0;padding:26px 34px;}
+.r-title{font-size:24px;letter-spacing:-.6px;line-height:1.2;}
 
 @media(max-width:700px){
   .mobile-shell{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px));}
@@ -961,7 +971,7 @@ svg{display:block;flex-shrink:0;}
 <div class="desktop-app">
   <nav class="app-rail" aria-label="주요 메뉴">
     <button class="app-rail-logo" type="button" aria-label="입력 화면" onclick="dSetTab('input')">D</button>
-    <button class="app-rail-btn on" type="button" data-dutch-nav="input" aria-label="입력" onclick="dSetTab('input')">
+    <button class="app-rail-btn on" type="button" data-dutch-nav="input" aria-label="지출 추가" onclick="startNewExpense()">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>
     <button class="app-rail-btn" type="button" data-dutch-nav="result" aria-label="정산" onclick="dSetTab('result')">
@@ -1109,8 +1119,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.87';
-const BUILD_TIME='2026-08-28 18:24';
+const APP_VERSION='v4.88';
+const BUILD_TIME='2026-08-28 18:38';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1168,6 +1178,7 @@ function showGroupManager(anchorEl,ev){
 function _positionPopover(pop,anchorEl,rightAlign){
   const r=anchorEl.getBoundingClientRect();
   const isMobile=window.innerWidth<700;
+  const rail=!isMobile?anchorEl.closest('.app-rail'):null;
   const margin=12,gap=6;
   pop.style.maxHeight=Math.max(180,window.innerHeight-margin*2)+'px';
   if(isMobile){pop.style.left='12px';pop.style.right='12px';pop.style.width='auto';pop.style.maxWidth='none';}
@@ -1178,7 +1189,7 @@ function _positionPopover(pop,anchorEl,rightAlign){
   top=Math.max(margin,Math.min(top,window.innerHeight-pr.height-margin));
   pop.style.top=(top+window.scrollY)+'px';
   if(!isMobile){
-    let left=rightAlign?r.right-pr.width:r.left;
+    let left=rail?rail.getBoundingClientRect().right+gap:(rightAlign?r.right-pr.width:r.left);
     left=Math.max(margin,Math.min(left,window.innerWidth-pr.width-margin));
     pop.style.left=(left+window.scrollX)+'px';
   }
@@ -1566,6 +1577,7 @@ function showIconPicker(itemId,anchorEl,ev){if(ev){ev.stopPropagation();ev.preve
 function showRounderPicker(itemId,anchorEl,ev){if(ev){ev.stopPropagation();ev.preventDefault();}document.querySelectorAll('.rounder-pop').forEach(el=>el.remove());const it=items.find(i=>i.id===itemId);if(!it)return;const memOpts=it.members.length?it.members:people;const cur=it.rounderOverride||'';const pop=document.createElement('div');pop.className='rounder-pop';pop.innerHTML=`<div class="rounder-pop-hd">차액 부담자</div>`+[{v:'',label:'자동 (결제자 우선)'}].concat(memOpts.map(p=>({v:p,label:e(p)+' 부담'}))).map(o=>`<button class="rounder-opt${cur===o.v?' on':''}" data-val="${ea(o.v)}">${o.label}</button>`).join('');pop.addEventListener('click',ev2=>{ev2.stopPropagation();const btn=ev2.target.closest('.rounder-opt');if(!btn)return;setRounderOverride(itemId,btn.dataset.val);pop.remove();});document.body.appendChild(pop);const r=anchorEl.getBoundingClientRect();pop.style.top=(r.bottom+window.scrollY+6)+'px';let left=r.left+window.scrollX;const pr=pop.getBoundingClientRect();if(left+pr.width>window.innerWidth-8)left=window.innerWidth-pr.width-8;pop.style.left=Math.max(8,left)+'px';setTimeout(()=>{const h=ev3=>{if(!pop.contains(ev3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=ev3=>{if(ev3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);}
 
 function addItem(){const isMobile=window.matchMedia('(max-width:700px)').matches;if(!people.length){const inp=isMobile?document.getElementById('mPInp'):document.getElementById('dPInp');if(inp)inp.focus();return;}idc++;items.push({id:idc,name:'',amount:'',payer:(_myName&&people.includes(_myName)?_myName:people[0])||'',members:people.slice(),watchers:[],isTreat:false,receiptText:''});selectedId=idc;_justAddedId=idc;renderAll();if(isMobile){openSheet(idc);setTimeout(()=>{const inp=document.getElementById('sfname');if(inp)inp.focus();},320);}else{setTimeout(()=>{const inp=document.getElementById('fname');if(inp)inp.focus();},60);}}
+function startNewExpense(){_checkAutoDelete();dTab='input';selectedId=null;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n==='input'?' on':'');});_syncShellNav('input');if(!people.length){renderAll();setTimeout(()=>document.getElementById('dPInp')?.focus(),0);return;}addItem();}
 
 function removeItem(id){const idx=items.findIndex(it=>it.id===id);if(idx<0)return;const name=items[idx].name||'(이름 없음)';const snap={item:items[idx],idx};items=items.filter(it=>it.id!==id);if(selectedId===id)selectedId=null;closeSheet();renderAll();toast(`'${name}' 삭제됨`,{action:()=>{items.splice(snap.idx,0,snap.item);renderAll();},actionLabel:'되돌리기'});}
 
