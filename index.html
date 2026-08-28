@@ -1150,8 +1150,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.90';
-const BUILD_TIME='2026-08-28 23:08';
+const APP_VERSION='v4.91';
+const BUILD_TIME='2026-08-29 06:42';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3184,25 +3184,30 @@ function truncateCanvasText(ctx,text,maxWidth){
   return best;
 }
 
+function _groupCoupleShareTxns(txns,coupleConfig){
+  if(coupleConfig.length!==2)return{normalTxns:txns,coupleTxnRows:[]};
+  const[ca,cb]=coupleConfig;
+  let aIdx=-1,bIdx=-1;
+  for(let i=0;i<txns.length&&aIdx<0;i++){
+    if(txns[i].from!==ca)continue;
+    const match=txns.findIndex((t,j)=>j!==i&&t.from===cb&&t.to===txns[i].to);
+    if(match>=0){aIdx=i;bIdx=match;}
+  }
+  if(aIdx<0||bIdx<0)return{normalTxns:txns,coupleTxnRows:[]};
+  const aTxn=txns[aIdx],bTxn=txns[bIdx];
+  return{
+    normalTxns:txns.filter((_,i)=>i!==aIdx&&i!==bIdx),
+    coupleTxnRows:[{from:`${ca} · ${cb}`,to:aTxn.to,amt:aTxn.amt+bTxn.amt}]
+  };
+}
+
 async function generateSettleCanvas(){
   const total=items.reduce((s,it)=>s+(+it.amount||0),0);
   const{paid,owes,hasRounding}=computeShares();
   const txns=calcTxns(paid,owes);
   const coupleConfig=_coupleNames||[];
   const hasCouple=coupleConfig.length===2&&coupleConfig.every(n=>people.includes(n));
-  let normalTxns=txns,coupleTxnRows=[];
-  if(hasCouple){
-    const[ca,cb]=coupleConfig;
-    const aTxn=txns.find(t=>t.from===ca);
-    const bTxn=txns.find(t=>t.from===cb);
-    normalTxns=txns.filter(t=>t.from!==ca&&t.from!==cb);
-    if(aTxn&&bTxn&&aTxn.to===bTxn.to){
-      coupleTxnRows=[{from:`${ca} · ${cb}`,to:aTxn.to,amt:aTxn.amt+bTxn.amt}];
-    }else{
-      if(aTxn)normalTxns=[...normalTxns,aTxn];
-      if(bTxn)normalTxns=[...normalTxns,bTxn];
-    }
-  }
+  const{normalTxns,coupleTxnRows}=_groupCoupleShareTxns(txns,hasCouple?coupleConfig:[]);
   const validItems=items.filter(it=>+it.amount!==0);
   const iconMap=new Map();for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#4355E8'));}catch(e){iconMap.set(svg,null);}}}
   const W=1080,PAD=42,TOP_PAD=56,cardX=PAD,cardW=W-PAD*2;
