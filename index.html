@@ -906,6 +906,46 @@ svg{display:block;flex-shrink:0;}
   .pm-month-person-right > .pm-month-status:not(.treat):not(.attend){margin-left:-14.5px;}
   .pm-month-status.treat{width:auto!important;min-width:0!important;margin-right:14.5px;}
 }
+
+/* ── v4.84: 영수증 DB와 연결되는 공통 앱 셸 ── */
+.desktop-shell{align-items:center;padding:24px 32px;}
+.desktop-app{grid-template-columns:72px 318px minmax(0,1fr);height:calc(100vh - 48px);min-height:640px;max-height:820px;max-width:1280px;border-radius:22px;}
+.app-rail{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 10px;background:var(--fill2);border-right:1px solid var(--sep);}
+.app-rail-logo{display:flex;align-items:center;justify-content:center;width:46px;height:46px;margin-bottom:12px;border-radius:15px;background:var(--blue);color:#fff;font-size:20px;font-weight:700;box-shadow:0 9px 24px rgba(67,85,232,.22);}
+.app-rail-btn{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:13px;background:transparent;color:var(--label3);transition:background .15s,color .15s;}
+.app-rail-btn:hover{background:var(--fill);color:var(--label2);}
+.app-rail-btn.on{background:var(--blue-bg);color:var(--blue);}
+.app-rail-btn svg{width:20px;height:20px;}
+.app-rail-menu{margin-top:auto;}
+.left-top{padding:27px 22px 0;}
+.left .tab-row{display:none;}
+.app-label{letter-spacing:1.1px;margin-bottom:8px;}
+.app-title{font-size:25px;margin-bottom:23px;}
+.items-scroll{padding-top:17px;}
+.ilist-label-row,.item-row,.add-row{--pad-x:22px;}
+.left-foot{padding:16px 22px;}
+.right-top{padding:29px 34px 21px;}
+.right-body{padding:26px 34px;}
+
+@media(max-width:700px){
+  .mobile-shell{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px));}
+  .mob-header{padding:max(18px,calc(env(safe-area-inset-top,0px) + 12px)) 20px 0;}
+  .mob-eyebrow-row{display:flex;align-items:baseline;gap:10px;color:var(--label3);font-size:11px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;}
+  .mob-ver-badge{padding:0;border:0;line-height:1.25;letter-spacing:0;text-transform:none;}
+  .mob-title-row{align-items:flex-end;margin:10px 0 20px;}
+  .mob-title{font-size:24px;line-height:1.15;}
+  .mob-total-stack{text-align:right;}
+  .mob-total-stack>span{display:block;}
+  .mob-total-stack .mob-total-caption{margin-bottom:3px;font-size:10px;font-weight:600;color:var(--label3);}
+  .mob-total-stack #mTotal{font-size:17px;font-weight:700;}
+  .mob-tabs{position:fixed;right:0;bottom:0;left:0;z-index:90;display:flex;gap:4px;padding:8px 14px calc(9px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--card) 94%,transparent);border-top:1px solid var(--sep);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}
+  .mob-tab{display:flex;min-height:54px;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:0;border:0;border-radius:14px;font-size:10px;}
+  .mob-tab svg{width:20px;height:20px;}
+  .mob-tab.on{background:var(--blue-bg);border-bottom-color:transparent;color:var(--blue);}
+  .mob-body{padding:16px 16px calc(max(env(safe-area-inset-bottom,0px),0px) + 96px);}
+  .mob-section,.mob-total-bar{border:1px solid var(--sep);box-shadow:0 8px 24px rgba(0,0,0,.035);}
+  .mob-fab{bottom:calc(env(safe-area-inset-bottom,0px) + 84px);}
+}
 </style>
 </head>
 <body>
@@ -913,6 +953,21 @@ svg{display:block;flex-shrink:0;}
 <!-- DESKTOP -->
 <div class="desktop-shell">
 <div class="desktop-app">
+  <nav class="app-rail" aria-label="주요 메뉴">
+    <button class="app-rail-logo" type="button" aria-label="입력 화면" onclick="dSetTab('input')">D</button>
+    <button class="app-rail-btn on" type="button" data-dutch-nav="input" aria-label="입력" onclick="dSetTab('input')">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <button class="app-rail-btn" type="button" data-dutch-nav="result" aria-label="정산" onclick="dSetTab('result')">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+    </button>
+    <button class="app-rail-btn" type="button" data-dutch-nav="settle" aria-label="공유" onclick="dSetTab('settle')">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+    </button>
+    <button class="app-rail-btn app-rail-menu" type="button" aria-label="설정 및 데이터 관리" onclick="showDataMenu(this,event)">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6l-.04.08h-4l-.04-.08a1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1l-.08-.04v-4L4 9.92a1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6l.04-.08h4l.04.08a1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.08.38.3.73.6 1l.08.04v4L20 14c-.3.27-.52.62-.6 1Z" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </nav>
   <div class="left" id="dLeft">
     <div class="left-top">
       <div class="app-label" id="dOwnerLabel" onclick="_ownerAreaClick(this,event)" style="user-select:none;-webkit-tap-highlight-color:transparent;cursor:default">Dutch Pay <span id="appVersionD" style="font-size:10px;font-weight:400;opacity:.9;letter-spacing:0;text-transform:none;margin-left:16px"></span></div>
@@ -975,24 +1030,24 @@ svg{display:block;flex-shrink:0;}
 <!-- MOBILE -->
 <div class="mobile-shell">
   <div class="mob-header">
+    <div class="mob-eyebrow-row">
+      <span>DUTCH PAY</span>
+      <button class="mob-ver-badge" id="appVersionM"></button>
+    </div>
     <div class="mob-title-row">
-      <div style="display:flex;align-items:center;gap:7px;min-width:0;">
-        <span class="mob-title" id="mobTitleEl" style="cursor:pointer">더치페이</span>
-        <button class="mob-ver-badge" id="appVersionM"></button>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-        <span style="font-size:11px;font-weight:600;color:var(--label3);">총 지출</span>
-        <span id="mTotal" style="font-size:18px;font-weight:700;">0원</span>
+      <span class="mob-title" id="mobTitleEl" style="cursor:pointer">더치페이</span>
+      <div class="mob-total-stack">
+        <span class="mob-total-caption">총 지출</span>
+        <span id="mTotal">0원</span>
       </div>
     </div>
-    <div style="margin-bottom:14px"></div>
-    <div class="mob-tabs">
-      <button class="mob-tab on" id="mTInput" onclick="mSetTab('input')">입력</button>
-      <button class="mob-tab" id="mTResult" onclick="mSetTab('result')">정산</button>
-      <button class="mob-tab" id="mTSettle" onclick="mSetTab('settle')">공유</button>
-      <button class="mob-tab" id="mTHistory" onclick="mSetTab('history')" style="display:none">기록</button>
-      <button class="mob-tab" id="mTPayment" onclick="mSetTab('payment')" style="display:none">수금</button>
-    </div>
+    <nav class="mob-tabs" aria-label="주요 메뉴">
+      <button class="mob-tab on" id="mTInput" data-dutch-nav="input" onclick="mSetTab('input')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>입력</span></button>
+      <button class="mob-tab" id="mTResult" data-dutch-nav="result" onclick="mSetTab('result')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>정산</span></button>
+      <button class="mob-tab" id="mTSettle" data-dutch-nav="settle" onclick="mSetTab('settle')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>공유</span></button>
+      <button class="mob-tab" id="mTHistory" data-dutch-nav="history" onclick="mSetTab('history')" style="display:none"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>기록</span></button>
+      <button class="mob-tab" id="mTPayment" data-dutch-nav="payment" onclick="mSetTab('payment')" style="display:none"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 8h12M6 12h12M8 4l-3 4 3 4M16 12l3 4-3 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>수금</span></button>
+    </nav>
   </div>
   <div class="mob-body" id="mBody"></div>
   <div class="mob-owner-tap" id="mobOwnerTap" onclick="_ownerAreaClick(this,event)">DUTCH PAY <span class="app-version" id="appVersionMob"></span></div>
@@ -1043,8 +1098,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.83';
-const BUILD_TIME='2026-08-28 08:00';
+const APP_VERSION='v4.84';
+const BUILD_TIME='2026-08-28 08:35';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1112,7 +1167,7 @@ function _ownerLock(){
   _ownerUnlocked=false;_ownerTapCount=0;localStorage.removeItem('dutchpay_owner_unlocked');
   if(mTab==='payment')mTab='result';
   if(dTab==='payment')dTab='result';
-  renderAll();toast('🔒 잠금됨',{type:'success'});
+  _syncShellNav(window.innerWidth<700?mTab:dTab);renderAll();toast('🔒 잠금됨',{type:'success'});
 }
 function _ownerAreaClick(anchorEl,ev){
   showDataMenu(anchorEl,ev);
@@ -1486,10 +1541,11 @@ function addItem(){const isMobile=window.matchMedia('(max-width:700px)').matches
 
 function removeItem(id){const idx=items.findIndex(it=>it.id===id);if(idx<0)return;const name=items[idx].name||'(이름 없음)';const snap={item:items[idx],idx};items=items.filter(it=>it.id!==id);if(selectedId===id)selectedId=null;closeSheet();renderAll();toast(`'${name}' 삭제됨`,{action:()=>{items.splice(snap.idx,0,snap.item);renderAll();},actionLabel:'되돌리기'});}
 
-function switchToInputTab(){if(window.matchMedia('(max-width:700px)').matches){mTab='input';['input','result','settle','history'].forEach(n=>{const el=document.getElementById('mT'+cap(n));if(el)el.className='mob-tab'+(n==='input'?' on':'');});renderMobileBody();}else{dTab='input';['input','result','settle','history'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n==='input'?' on':'');});renderDesktopRight();}}
+function _syncShellNav(t){document.querySelectorAll('[data-dutch-nav]').forEach(el=>el.classList.toggle('on',el.dataset.dutchNav===t));}
+function switchToInputTab(){if(window.matchMedia('(max-width:700px)').matches){mTab='input';['input','result','settle','history'].forEach(n=>{const el=document.getElementById('mT'+cap(n));if(el)el.className='mob-tab'+(n==='input'?' on':'');});_syncShellNav('input');renderMobileBody();}else{dTab='input';['input','result','settle','history'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n==='input'?' on':'');});_syncShellNav('input');renderDesktopRight();}}
 function _checkAutoDelete(){if(_justAddedId===null)return;const id=_justAddedId;_justAddedId=null;const it=items.find(i=>i.id===id);if(it&&!it.name&&(!it.amount||+it.amount===0)){items=items.filter(i=>i.id!==id);if(selectedId===id)selectedId=null;renderItemLists();refreshMobItems();saveState();}}
-function selectItem(id){_checkAutoDelete();selectedId=id;if(dTab!=='input'){dTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('dT'+cap(n)).className='tab'+(n==='input'?' on':'');});}renderAll();}
-function selectItemMob(id){_checkAutoDelete();selectedId=id;if(mTab!=='input'){mTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n==='input'?' on':'');});renderMobileBody();}openSheet(id);}
+function selectItem(id){_checkAutoDelete();selectedId=id;if(dTab!=='input'){dTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('dT'+cap(n)).className='tab'+(n==='input'?' on':'');});_syncShellNav('input');}renderAll();}
+function selectItemMob(id){_checkAutoDelete();selectedId=id;if(mTab!=='input'){mTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n==='input'?' on':'');});_syncShellNav('input');renderMobileBody();}openSheet(id);}
 
 let _ufTimer=null;
 function _flushUpdateField(){clearTimeout(_ufTimer);_ufTimer=null;saveState();}
@@ -1506,8 +1562,8 @@ function openSheet(id){const sheet=document.getElementById('mSheet');const overl
 function closeSheet(){if(_ufTimer)_flushUpdateField();_checkAutoDelete();renderItemLists();refreshMobItems();document.getElementById('mSheet').classList.remove('open');document.getElementById('mOverlay').classList.remove('open');_updateMobFab();}
 function renderSheetBody(id){const it=items.find(i=>i.id===id);if(!it)return;const opts=people.map(p=>`<option value="${e(p)}"${it.payer===p?' selected':''}>${e(p)}</option>`).join('');const memOpts=(it.members.length?it.members:people);const rounderOpts='<option value="">자동 (결제자 우선)</option>'+memOpts.map(p=>`<option value="${ea(p)}"${it.rounderOverride===p?' selected':''}>${e(p)}</option>`).join('');document.getElementById('mSheetBody').innerHTML=`<div class="field-g"><label class="field-lbl" for="sfname">지출 이름</label><input class="field-inp" id="sfname" placeholder="예: 저녁식사" value="${ea(it.name)}" oninput="updateField(${id},'name',this.value)"/></div><div class="field-g"><label class="field-lbl" for="sfamt_${id}">금액</label><div class="amt-wrap"><button type="button" class="amt-sign-btn${(+it.amount<0)?' on':''}" aria-label="금액 부호 변경" onclick="toggleAmtSign(${id})">−</button><input class="field-inp" id="sfamt_${id}" type="text" inputmode="numeric" placeholder="0" value="${fmtAmt(it.amount)}" onkeydown="handleAmtKeydown(event)" oninput="handleAmtInput(${id},this)"/><span class="amt-unit">원</span></div></div><div class="field-g"><label class="field-lbl" for="sfpayer_${id}">결제자</label><select id="sfpayer_${id}" class="field-sel" onchange="updateField(${id},'payer',this.value)">${opts}</select></div><div class="field-g"><div class="field-lbl">참여자 <span style="font-size:10px;font-weight:400;text-transform:none;color:var(--label3)">· 포함 → 깍두기 → 제외</span></div><div class="chips">${people.map(p=>{const isIn=it.members.includes(p);const isW=(it.watchers||[]).includes(p);return `<button class="chip${isIn?' on':''}${isW?' watch':''}" onclick="toggleMember(${id},${ja(p)},this)">${e(p)}${isW?'<span class="chip-watch-lbl"> 깍두기</span>':''}</button>`;}).join('')}</div></div><div class="field-g"><label class="field-lbl" for="sfrounder_${id}">차액 부담자</label><select id="sfrounder_${id}" class="field-sel" onchange="updateField(${id},'rounderOverride',this.value||null)">${rounderOpts}</select></div><button class="treat-toggle${it.isTreat?' on':''}" aria-pressed="${it.isTreat}" style="margin-top:8px" onclick="toggleTreat(${id})">${it.isTreat?'🎉 한턱 설정됨 — 더치페이 계산 제외':'🎉 한턱 설정하기'}</button><div class="field-g" style="margin-top:8px"><label class="field-lbl">영수증 상세 <span style="font-size:10px;font-weight:400;color:var(--label3)">품목명 | 수량 | 단가 | 금액</span></label><textarea class="field-inp" style="height:88px;resize:vertical;font-size:12px;line-height:1.6;font-family:inherit" placeholder="곱창구이(250g) | 2 | 24,000 | 48,000" oninput="updateField(${id},'receiptText',this.value)">${e(it.receiptText||'')}</textarea></div><button class="confirm-btn" onclick="closeSheet()">확인</button><button class="del-btn" onclick="removeItem(${id})">${svgTrash} 지출 삭제</button><div style="height:20px"></div>`;}
 
-function dSetTab(t){_checkAutoDelete();dTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n===t?' on':'');});renderDesktopRight();}
-function mSetTab(t){_checkAutoDelete();mTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('mT'+cap(n));if(el)el.className='mob-tab'+(n===t?' on':'');});renderMobileBody();_updateMobFab();}
+function dSetTab(t){_checkAutoDelete();dTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n===t?' on':'');});_syncShellNav(t);renderDesktopRight();}
+function mSetTab(t){_checkAutoDelete();mTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('mT'+cap(n));if(el)el.className='mob-tab'+(n===t?' on':'');});_syncShellNav(t);renderMobileBody();_updateMobFab();}
 function goToHistory(){openHistDrawer();}
 function openHistDrawer(){
   _histDrawerOpen=true;
@@ -2816,8 +2872,8 @@ function loadHistoryAsGroup(id){
   groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);
   if(r.coupleNames?.length){_coupleNames=r.coupleNames.slice();localStorage.setItem('dutchpay_couple',JSON.stringify(_coupleNames));}
   saveState();
-  if(window.innerWidth<700){mTab='input';renderMobileBody();window.scrollTo(0,0);}
-  else{dTab='input';renderAll();}
+  if(window.innerWidth<700){mTab='input';_syncShellNav('input');renderMobileBody();window.scrollTo(0,0);}
+  else{dTab='input';_syncShellNav('input');renderAll();}
   toast(`'${newGroup.name}' 그룹으로 불러왔어요`,{type:'success'});
 }
 function loadHistoryForEdit(id){
@@ -2836,8 +2892,8 @@ function loadHistoryForEdit(id){
   groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);_loadedHistId=id;
   if(r.coupleNames?.length){_coupleNames=r.coupleNames.slice();localStorage.setItem('dutchpay_couple',JSON.stringify(_coupleNames));}
   saveState();
-  if(window.innerWidth<700){mTab='input';renderMobileBody();window.scrollTo(0,0);}
-  else{dTab='input';renderAll();}
+  if(window.innerWidth<700){mTab='input';_syncShellNav('input');renderMobileBody();window.scrollTo(0,0);}
+  else{dTab='input';_syncShellNav('input');renderAll();}
   toast(`수정 중: '${displayName}' — 변경 후 ⋯ → 기록 보관함에 저장`,{type:'info',duration:5000});
 }
 function renderHistoryView(eyeId,titleId,subId,bodyId){
