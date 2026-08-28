@@ -906,6 +906,35 @@ svg{display:block;flex-shrink:0;}
   .pm-month-person-right > .pm-month-status:not(.treat):not(.attend){margin-left:-14.5px;}
   .pm-month-status.treat{width:auto!important;min-width:0!important;margin-right:14.5px;}
 }
+
+/* RECEIPT_LAYOUT_V1 */
+:root{--nav-bg:#F1F2F6;--receipt-shell-shadow:0 24px 70px rgba(25,28,38,.12),0 3px 14px rgba(25,28,38,.06)}
+:root[data-theme="dark"]{--nav-bg:#0D0E11;--receipt-shell-shadow:0 28px 72px rgba(0,0,0,.38),0 4px 18px rgba(0,0,0,.22)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--nav-bg:#0D0E11}}
+@media(min-width:701px){
+  .desktop-shell{display:block;max-width:1540px;margin:0 auto;min-height:100vh;padding:30px 28px 84px;}
+  .desktop-app{display:grid;grid-template-columns:76px 360px minmax(0,1fr);width:100%;max-width:none;min-height:780px;background:var(--card);border-radius:22px;border:1px solid var(--sep);overflow:clip;box-shadow:var(--receipt-shell-shadow);}
+  .receipt-icon-nav{background:var(--nav-bg);border-right:1px solid var(--sep);display:flex;flex-direction:column;align-items:center;padding:20px 10px;gap:10px;position:sticky;top:0;height:calc(100vh - 30px);max-height:100vh;align-self:start;z-index:20;}
+  .receipt-nav-brand{width:48px;height:48px;border:none;border-radius:15px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;letter-spacing:-.5px;margin-bottom:12px;box-shadow:0 8px 24px rgba(67,85,232,.22);transition:transform .15s,filter .15s;}
+  .receipt-nav-brand:hover{filter:brightness(1.06);transform:translateY(-1px)}
+  .receipt-nav-brand:active,.receipt-nav-btn:active{transform:scale(.94)}
+  .receipt-nav-btn{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--label3);cursor:pointer;transition:background .15s,color .15s,transform .15s;border:1px solid transparent;background:transparent;flex-shrink:0;position:relative;}
+  .receipt-nav-btn:hover{background:var(--fill2);color:var(--label2)}
+  .receipt-nav-btn.on{background:var(--blue-bg);color:var(--blue-txt)}
+  .receipt-nav-btn svg{width:22px;height:22px}
+  .receipt-nav-spacer{flex:1;min-height:28px}
+  .receipt-nav-btn[data-tip]::after{content:attr(data-tip);position:absolute;left:58px;top:50%;transform:translateY(-50%) translateX(-4px);opacity:0;pointer-events:none;background:var(--label);color:var(--bg);font-size:11px;font-weight:650;padding:6px 8px;border-radius:7px;white-space:nowrap;transition:.14s;box-shadow:0 4px 14px rgba(0,0,0,.15);z-index:80}
+  .receipt-nav-btn[data-tip]:hover::after{opacity:1;transform:translateY(-50%) translateX(0)}
+  .left{min-height:700px;position:sticky;top:0;max-height:100vh;overflow:hidden;background:var(--left-bg);border-right:1px solid var(--sep)}
+  .left-top{padding:26px 28px 0}
+  .app-title{font-size:22px;letter-spacing:-.4px;margin-bottom:14px}
+  .tab-row{display:none!important}
+  .items-scroll{flex:1;overflow-y:auto}
+  .right{min-width:0;background:var(--card);min-height:700px}
+  .right-top{padding:24px 32px 18px;border-bottom:1px solid var(--sep);background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);position:sticky;top:0;z-index:10}
+  .right-body{padding:24px 32px 32px}
+}
+
 </style>
 </head>
 <body>
@@ -913,6 +942,23 @@ svg{display:block;flex-shrink:0;}
 <!-- DESKTOP -->
 <div class="desktop-shell">
 <div class="desktop-app">
+
+  <nav class="receipt-icon-nav" aria-label="더치페이 주요 메뉴">
+    <button class="receipt-nav-brand" type="button" title="더치페이" onclick="dSetTab('input');document.querySelectorAll('.receipt-nav-btn').forEach(b=>b.classList.remove('on'));document.getElementById('receiptNavInput').classList.add('on')">DP</button>
+    <button class="receipt-nav-btn on" id="receiptNavInput" type="button" data-tip="입력" aria-label="입력" onclick="dSetTab('input');document.querySelectorAll('.receipt-nav-btn').forEach(b=>b.classList.remove('on'));this.classList.add('on')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v13H4z"/><path d="M8 9h8M8 13h5"/><path d="M8 17h3"/></svg>
+    </button>
+    <button class="receipt-nav-btn" id="receiptNavResult" type="button" data-tip="정산" aria-label="정산" onclick="dSetTab('result');document.querySelectorAll('.receipt-nav-btn').forEach(b=>b.classList.remove('on'));this.classList.add('on')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8.5 12h7M12 8.5v7"/></svg>
+    </button>
+    <button class="receipt-nav-btn" id="receiptNavShare" type="button" data-tip="공유" aria-label="공유" onclick="dSetTab('settle');document.querySelectorAll('.receipt-nav-btn').forEach(b=>b.classList.remove('on'));this.classList.add('on')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.2 10.9l7.6-4.7M8.2 13.1l7.6 4.7"/></svg>
+    </button>
+    <div class="receipt-nav-spacer"></div>
+    <button class="receipt-nav-btn" type="button" data-tip="화면 모드" aria-label="화면 모드 변경" onclick="_toggleDarkMode()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8 8 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2z"/></svg>
+    </button>
+  </nav>
   <div class="left" id="dLeft">
     <div class="left-top">
       <div class="app-label" id="dOwnerLabel" onclick="_ownerAreaClick(this,event)" style="user-select:none;-webkit-tap-highlight-color:transparent;cursor:default">Dutch Pay <span id="appVersionD" style="font-size:10px;font-weight:400;opacity:.9;letter-spacing:0;text-transform:none;margin-left:16px"></span></div>
@@ -1043,8 +1089,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.82';
-const BUILD_TIME='2026-08-26 18:00';
+const APP_VERSION='v4.83';
+const BUILD_TIME='2026-08-28 14:14';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
