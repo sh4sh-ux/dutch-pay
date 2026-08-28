@@ -1,0 +1,131 @@
+name: Apply Receipt DB fixed layout v4.84
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-receipt-layout-v484.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply fixed Receipt DB shell
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          css = r'''
+/* RECEIPT_LAYOUT_V2 */
+:root{--nav-bg:#F1F2F6;--receipt-shell-shadow:0 24px 70px rgba(25,28,38,.12),0 3px 14px rgba(25,28,38,.06)}
+:root[data-theme="dark"]{--nav-bg:#0D0E11;--receipt-shell-shadow:0 28px 72px rgba(0,0,0,.38),0 4px 18px rgba(0,0,0,.22)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--nav-bg:#0D0E11}}
+.receipt-icon-nav{display:none}
+@media(min-width:701px){
+  html,body{height:100%;overflow:hidden}
+  .desktop-shell{position:fixed;inset:0;display:flex;align-items:stretch;justify-content:center;max-width:none;margin:0;padding:30px 28px;background:var(--bg);overflow:hidden}
+  .desktop-app{display:grid;grid-template-columns:76px 360px minmax(0,1fr);width:min(1540px,100%);height:calc(100vh - 60px);min-height:0;max-width:1540px;margin:0 auto;background:var(--card);border-radius:22px;border:1px solid var(--sep);overflow:hidden;box-shadow:var(--receipt-shell-shadow)}
+  .receipt-icon-nav{background:var(--nav-bg);border-right:1px solid var(--sep);display:flex;flex-direction:column;align-items:center;padding:20px 10px;gap:10px;height:100%;min-height:0;position:relative;overflow:hidden;z-index:30}
+  .receipt-nav-brand{width:48px;height:48px;border:none;border-radius:15px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;letter-spacing:-.6px;margin-bottom:12px;box-shadow:0 8px 24px rgba(67,85,232,.22);transition:transform .15s,filter .15s;flex-shrink:0}
+  .receipt-nav-brand:hover{filter:brightness(1.06);transform:translateY(-1px)}
+  .receipt-nav-brand:active,.receipt-nav-btn:active{transform:scale(.94)}
+  .receipt-nav-btn{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--label3);cursor:pointer;transition:background .15s,color .15s,transform .15s;border:1px solid transparent;background:transparent;flex-shrink:0;position:relative}
+  .receipt-nav-btn:hover{background:var(--fill2);color:var(--label2)}
+  .receipt-nav-btn.on{background:var(--card);color:var(--label);border-color:#BFC8FF;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  :root[data-theme="dark"] .receipt-nav-btn.on{background:var(--fill2);border-color:var(--blue)}
+  .receipt-nav-btn svg{width:23px;height:23px}
+  .receipt-nav-plus{font-size:31px;font-weight:300;line-height:1;color:var(--label2)}
+  .receipt-nav-spacer{flex:1;min-height:28px}
+  .receipt-nav-btn[data-tip]::after{content:attr(data-tip);position:absolute;left:58px;top:50%;transform:translateY(-50%) translateX(-4px);opacity:0;pointer-events:none;background:var(--label);color:var(--bg);font-size:11px;font-weight:650;padding:6px 8px;border-radius:7px;white-space:nowrap;transition:.14s;box-shadow:0 4px 14px rgba(0,0,0,.15);z-index:100}
+  .receipt-nav-btn[data-tip]:hover::after{opacity:1;transform:translateY(-50%) translateX(0)}
+
+  .left{height:100%;min-height:0;max-height:none;position:relative;top:auto;display:flex;flex-direction:column;overflow:hidden;background:var(--left-bg);border-right:1px solid var(--sep)}
+  .left-top{padding:26px 28px 0;flex:0 0 auto}
+  .app-title{font-size:22px;letter-spacing:-.4px;margin-bottom:14px}
+  .tab-row{display:none!important}
+  .items-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  .left-foot{flex:0 0 auto;background:var(--left-bg)}
+
+  .right{height:100%;min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:var(--card)}
+  .right-top{flex:0 0 auto;padding:24px 32px 18px;border-bottom:1px solid var(--sep);background:var(--card);position:relative;top:auto;z-index:10}
+  .right-body{flex:1 1 auto;min-height:0;padding:24px 32px 32px;overflow-y:auto;overscroll-behavior:contain}
+}
+'''
+
+          # Replace previous custom layout block only, keep all original app CSS untouched.
+          s = re.sub(r'/\* RECEIPT_LAYOUT_V1 \*/.*?(?=\n</style>)', '', s, count=1, flags=re.S)
+          s = re.sub(r'/\* RECEIPT_LAYOUT_V2 \*/.*?(?=\n</style>)', '', s, count=1, flags=re.S)
+          s = s.replace('</style>', css + '\n</style>', 1)
+
+          nav = r'''
+  <nav class="receipt-icon-nav" aria-label="더치페이 주요 메뉴">
+    <button class="receipt-nav-brand" type="button" title="더치페이" onclick="dSetTab('input');_receiptNavOn('input')">DP</button>
+    <button class="receipt-nav-btn" id="receiptNavGroups" type="button" data-tip="정산 그룹" aria-label="정산 그룹" onclick="showGroupManager(this,event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1.2"/><rect x="14" y="4" width="6" height="6" rx="1.2"/><rect x="4" y="14" width="6" height="6" rx="1.2"/><rect x="14" y="14" width="6" height="6" rx="1.2"/></svg>
+    </button>
+    <button class="receipt-nav-btn on" id="receiptNavInput" type="button" data-tip="지출 입력" aria-label="지출 입력" onclick="dSetTab('input');_receiptNavOn('input')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.8h12v16.4l-2.2-1.5-1.9 1.5-1.9-1.5-1.9 1.5-1.9-1.5L6 20.2z"/><path d="M9 8h6M9 11.5h6M9 15h4"/></svg>
+    </button>
+    <button class="receipt-nav-btn" id="receiptNavResult" type="button" data-tip="정산 결과" aria-label="정산 결과" onclick="dSetTab('result');_receiptNavOn('result')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8v8"/></svg>
+    </button>
+    <button class="receipt-nav-btn receipt-nav-plus" type="button" data-tip="지출 추가" aria-label="지출 추가" onclick="dSetTab('input');_receiptNavOn('input');addItem()">+</button>
+    <button class="receipt-nav-btn" id="receiptNavShare" type="button" data-tip="공유" aria-label="공유" onclick="dSetTab('settle');_receiptNavOn('settle')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.2"/><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="19" r="2.2"/><path d="M8 11l8-5M8 13l8 5"/></svg>
+    </button>
+    <div class="receipt-nav-spacer"></div>
+    <button class="receipt-nav-btn" type="button" data-tip="화면 설정" aria-label="화면 설정" onclick="_toggleDarkMode()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9A1.7 1.7 0 0 0 21 10h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/></svg>
+    </button>
+  </nav>
+'''
+          s = re.sub(r'\n\s*<nav class="receipt-icon-nav".*?</nav>\n', '\n' + nav + '\n', s, count=1, flags=re.S)
+
+          # Add a tiny nav-state helper without touching calculation/storage logic.
+          helper = """
+function _receiptNavOn(tab){
+  document.querySelectorAll('.receipt-nav-btn').forEach(b=>b.classList.remove('on'));
+  const map={input:'receiptNavInput',result:'receiptNavResult',settle:'receiptNavShare'};
+  const el=document.getElementById(map[tab]||'receiptNavInput');
+  if(el)el.classList.add('on');
+}
+"""
+          if 'function _receiptNavOn(tab)' not in s:
+              s = s.replace("let people=[],items=[],idc=0,selectedId=null;", helper + "\nlet people=[],items=[],idc=0,selectedId=null;", 1)
+
+          s = re.sub(r"const APP_VERSION='v[^']+';", "const APP_VERSION='v4.84';", s, count=1)
+          s = re.sub(r"const BUILD_TIME='[^']+';", "const BUILD_TIME='2026-08-28 14:20';", s, count=1)
+          p.write_text(s, encoding='utf-8')
+
+          sw = Path('sw.js')
+          w = sw.read_text(encoding='utf-8')
+          w = re.sub(r'const CACHE_NAME = "dutch-pay-v[^"]+";', 'const CACHE_NAME = "dutch-pay-v4.84";', w, count=1)
+          sw.write_text(w, encoding='utf-8')
+          PY
+
+      - name: Validate layout
+        run: |
+          grep -q 'RECEIPT_LAYOUT_V2' index.html
+          grep -q 'position:fixed;inset:0' index.html
+          grep -q 'receiptNavGroups' index.html
+          grep -q "APP_VERSION='v4.84'" index.html
+          grep -q 'dutch-pay-v4.84' sw.js
+
+      - name: Commit fixed layout
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js
+          git commit -m "v4.84: match Receipt DB fixed desktop shell" || exit 0
+          git push origin main
