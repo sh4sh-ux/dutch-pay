@@ -1017,6 +1017,24 @@ svg{display:block;flex-shrink:0;}
   .mob-header{position:sticky;top:0;z-index:60;
     background:color-mix(in srgb,var(--card) 92%,transparent);
     backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}
+
+  /* 당겨서 새로고침 — 홈 화면에 추가한 PWA에는 브라우저의 기본 당겨서 새로고침이
+     없어서 직접 구현한다. overscroll-behavior로 브라우저 기본 동작을 끄고
+     우리 인디케이터만 쓰게 해 두 개가 겹치지 않게 한다. */
+  html{overscroll-behavior-y:contain;}
+  .ptr-ind{position:fixed;left:50%;top:0;z-index:95;width:36px;height:36px;
+    margin-left:-18px;border-radius:50%;background:var(--card);
+    box-shadow:0 2px 10px rgba(20,25,40,.16);display:flex;align-items:center;
+    justify-content:center;pointer-events:none;opacity:0;
+    transform:translateY(-48px);will-change:transform,opacity;}
+  .ptr-ind svg{width:19px;height:19px;color:var(--blue);display:block;}
+  .ptr-ind.settle{transition:transform .24s cubic-bezier(.25,.8,.25,1),opacity .24s ease;}
+  .ptr-ind.spin svg{animation:ptrSpin .7s linear infinite;}
+  @keyframes ptrSpin{to{transform:rotate(360deg);}}
+  @media(prefers-reduced-motion:reduce){
+    .ptr-ind.settle{transition:none;}
+    .ptr-ind.spin svg{animation:none;}
+  }
   .mob-eyebrow-row{display:flex;align-items:baseline;gap:10px;color:var(--label3);font-size:11px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;}
   .mob-ver-badge{padding:0;border:0;line-height:1.25;letter-spacing:0;text-transform:none;}
   .mob-title-row{align-items:flex-end;margin:10px 0 20px;}
@@ -1190,8 +1208,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.09';
-const BUILD_TIME='2026-08-30 01:00';
+const APP_VERSION='v5.10';
+const BUILD_TIME='2026-08-30 02:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3716,6 +3734,60 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
   });
 });
 (()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;const _hdb=document.getElementById('histDrBody');if(_hdb)_hdb.addEventListener('scroll',()=>{const si=document.getElementById('histDrSinp');if(si&&si===document.activeElement)si.blur();},{passive:true});})();
+// 모바일 당겨서 새로고침.
+// 홈 화면에 추가한 PWA에는 브라우저 기본 당겨서 새로고침이 없어 직접 구현한다.
+// 새로고침은 location.reload() — 부팅 시 Dropbox 동기화(syncFromDropbox)와
+// 서비스워커의 최신 HTML 확인이 함께 일어나므로 이것만으로 충분하다.
+(()=>{
+  if(!('ontouchstart' in window))return;
+  const shell=document.querySelector('.mobile-shell');if(!shell)return;
+  // 시트·드로어·모달·팝오버가 떠 있으면 당겨서 새로고침을 막는다.
+  const BLOCK='.mob-sheet.open,.hist-page.open,#histDr.open,.pm-payer-modal-bg,'
+             +'.sc-overlay,.couple-ov,.share-fallback,.data-pop,.icon-pop,.group-pop,.rounder-pop';
+  const TH=70,MAX=104;                    // 발동 임계값 / 최대 당김
+  let y0=0,pulling=false,dist=0,busy=false;
+
+  const ind=document.createElement('div');
+  ind.className='ptr-ind';
+  ind.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"'
+    +' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    +'<path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"/><path d="M20.5 2.5v5h-5"/></svg>';
+  document.body.appendChild(ind);
+  const icon=ind.firstElementChild;
+
+  const ready=()=>!busy&&matchMedia('(max-width:700px)').matches
+    &&(window.scrollY||0)<=0&&!document.querySelector(BLOCK);
+  const place=(d,rot)=>{ind.style.transform='translateY('+(d-48)+'px)';
+    icon.style.transform='rotate('+rot+'deg)';ind.style.opacity=String(Math.min(1,d/TH*1.2));};
+  const reset=()=>{dist=0;ind.classList.add('settle');ind.classList.remove('spin');
+    ind.style.transform='translateY(-48px)';ind.style.opacity='0';icon.style.transform='';};
+
+  addEventListener('touchstart',e=>{
+    if(e.touches.length!==1||!ready())return;
+    y0=e.touches[0].clientY;pulling=true;dist=0;ind.classList.remove('settle');
+  },{passive:true});
+
+  addEventListener('touchmove',e=>{
+    if(!pulling)return;
+    const dy=e.touches[0].clientY-y0;
+    if(dy<=0||(window.scrollY||0)>0){pulling=false;if(dist)reset();return;}
+    e.preventDefault();                   // 기본 바운스·새로고침 억제
+    dist=Math.min(MAX,dy*0.5);            // 감쇠해서 손가락보다 덜 움직이게
+    place(dist,Math.min(1,dist/TH)*270);
+  },{passive:false});
+
+  const end=()=>{
+    if(!pulling)return;
+    pulling=false;ind.classList.add('settle');
+    if(dist<TH){reset();return;}
+    busy=true;
+    ind.style.transform='translateY(22px)';ind.style.opacity='1';
+    icon.style.transform='';ind.classList.add('spin');
+    setTimeout(()=>location.reload(),340); // 스피너를 잠깐 보여준 뒤 새로고침
+  };
+  addEventListener('touchend',end,{passive:true});
+  addEventListener('touchcancel',()=>{if(pulling){pulling=false;reset();}},{passive:true});
+})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
 hDbxHandleCallback().then(()=>{if(hDbxGetToken())hSyncDropbox();});
