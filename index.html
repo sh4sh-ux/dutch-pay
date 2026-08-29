@@ -957,8 +957,11 @@ svg{display:block;flex-shrink:0;}
 .app-rail-btn:focus-visible{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg);}
 .app-rail-btn svg{width:22px;height:22px;}
 .app-rail-menu{margin-top:auto;}
+/* 레일 아이콘 라벨 — 반투명 배경으로 뒤 내용이 비치게 하고,
+   말풍선 오른쪽 끝이 좌측 패널 콘텐츠 시작선(레일 끝 + 28px 여백)을 넘지 않도록
+   여백 2px·패딩 5px 8px·11.5px로 좁혀 일자 입력칸과 겹치지 않게 한다. */
 .app-rail [data-nav-label]{position:relative;}
-.app-rail [data-nav-label]::after{content:attr(data-nav-label);position:absolute;z-index:80;left:calc(100% + 11px);top:50%;transform:translateY(-50%) translateX(-3px);padding:6px 9px;border-radius:7px;background:#242426;color:#fff;font-size:12px;font-weight:600;line-height:1;letter-spacing:-.1px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.2);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s,transform .12s,visibility .12s;}
+.app-rail [data-nav-label]::after{content:attr(data-nav-label);position:absolute;z-index:80;left:calc(100% + 2px);top:50%;transform:translateY(-50%) translateX(-3px);padding:5px 8px;border-radius:7px;background:rgba(36,36,38,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;font-size:11.5px;font-weight:600;line-height:1;letter-spacing:-.1px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.16);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s,transform .12s,visibility .12s;}
 .app-rail [data-nav-label]:hover::after,.app-rail [data-nav-label]:focus-visible::after,.app-rail [data-nav-label].show-nav-tip::after{opacity:1;visibility:visible;transform:translateY(-50%) translateX(0);}
 .left,.right{min-height:0;overflow:hidden;}
 .left-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:30px 28px 20px;border-bottom:1px solid var(--sep);}
@@ -1032,7 +1035,7 @@ svg{display:block;flex-shrink:0;}
 <div class="desktop-shell">
 <div class="desktop-app">
   <nav class="app-rail" aria-label="주요 메뉴">
-    <button class="app-rail-logo" type="button" data-nav-label="더치페이" aria-label="입력 화면" onclick="dSetTab('input')">D</button>
+    <button class="app-rail-logo" type="button" aria-label="더치페이 홈" onclick="dSetTab('input')">D</button>
     <button class="app-rail-btn on" type="button" data-dutch-nav="input" data-nav-label="입력" aria-label="지출 추가" onclick="startNewExpense()">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>
@@ -1181,8 +1184,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.02';
-const BUILD_TIME='2026-08-29 18:00';
+const APP_VERSION='v5.03';
+const BUILD_TIME='2026-08-29 19:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
