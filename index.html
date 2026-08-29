@@ -1184,8 +1184,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.04';
-const BUILD_TIME='2026-08-29 20:00';
+const APP_VERSION='v5.05';
+const BUILD_TIME='2026-08-29 21:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2758,9 +2758,12 @@ function calcTxns(paid,owes){
       mems.forEach(m=>{if(m!==it.payer&&people.includes(m))dm[m][it.payer]=(dm[m][it.payer]||0)+s;});
     }
   });
+  // 두 사람 사이의 채무를 부호 있는 순액으로 상계한다.
+  // 환불(음수 지출)이 섞이면 채무가 음수가 될 수 있는데, 이는 방향이 뒤집힌 것이므로
+  // 음수면 반대 방향에 절댓값으로 넣는다. (이전에는 음수를 그냥 버려 송금이 누락됐다)
   people.forEach((a,i)=>people.slice(i+1).forEach(b=>{
-    const ab=dm[a][b]||0,ba=dm[b][a]||0;
-    if(ab>0&&ba>0){if(ab>=ba){dm[a][b]=ab-ba;dm[b][a]=0;}else{dm[a][b]=0;dm[b][a]=ba-ab;}}
+    const net=(dm[a][b]||0)-(dm[b][a]||0);
+    if(net>=0){dm[a][b]=net;dm[b][a]=0;}else{dm[a][b]=0;dm[b][a]=-net;}
   }));
   const txns=[];
   people.forEach(debtor=>people.forEach(creditor=>{
