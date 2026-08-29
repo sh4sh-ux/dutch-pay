@@ -1011,6 +1011,24 @@ svg{display:block;flex-shrink:0;}
 @media(max-width:700px){
   .mobile-shell{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px));}
   .mob-header{padding:max(18px,calc(env(safe-area-inset-top,0px) + 12px)) 20px 0;}
+  /* 헤더 고정 — 지출 목록을 훑는 동안 총 지출이 계속 보이게 한다.
+     스크롤을 시작하면 눈썹줄과 큰 제목을 접어 103px → 64px로 압축한다.
+     .mob-tabs는 position:fixed라 backdrop-filter가 만드는 기준 박스에 갇히면
+     하단이 아니라 헤더 안에 붙는다. 그래서 마크업에서 헤더 밖으로 빼두었다. */
+  .mob-header{position:sticky;top:0;z-index:60;
+    background:color-mix(in srgb,var(--card) 92%,transparent);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    transition:padding .18s ease;}
+  .mob-header .mob-title,.mob-header #mTotal{transition:font-size .18s ease;}
+  .mob-header.compact{padding-top:max(8px,calc(env(safe-area-inset-top,0px) + 6px));padding-bottom:6px;}
+  .mob-header.compact .mob-eyebrow-row{display:none;}
+  .mob-header.compact .mob-title-row{align-items:baseline;margin-bottom:0;}
+  .mob-header.compact .mob-title{font-size:15px;letter-spacing:-.2px;}
+  .mob-header.compact .mob-total-caption{display:none;}
+  .mob-header.compact #mTotal{font-size:15px;}
+  @media(prefers-reduced-motion:reduce){
+    .mob-header,.mob-header .mob-title,.mob-header #mTotal{transition:none;}
+  }
   .mob-eyebrow-row{display:flex;align-items:baseline;gap:10px;color:var(--label3);font-size:11px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;}
   .mob-ver-badge{padding:0;border:0;line-height:1.25;letter-spacing:0;text-transform:none;}
   .mob-title-row{align-items:flex-end;margin:10px 0 20px;}
@@ -1127,14 +1145,14 @@ svg{display:block;flex-shrink:0;}
         <span id="mTotal">0원</span>
       </div>
     </div>
-    <nav class="mob-tabs" aria-label="주요 메뉴">
-      <button class="mob-tab on" id="mTInput" data-dutch-nav="input" onclick="mSetTab('input')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>입력</span></button>
-      <button class="mob-tab" id="mTResult" data-dutch-nav="result" onclick="mSetTab('result')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>정산</span></button>
-      <button class="mob-tab" id="mTSettle" data-dutch-nav="settle" onclick="mSetTab('settle')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>공유</span></button>
-      <button class="mob-tab" id="mTHistory" data-dutch-nav="history" onclick="mSetTab('history')" style="display:none"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>기록</span></button>
-      <button class="mob-tab" id="mTPayment" data-dutch-nav="payment" onclick="mSetTab('payment')" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="9" cy="5.5" rx="5.5" ry="2.25"/><path d="M3.5 5.5v4c0 1.25 2.45 2.25 5.5 2.25 1.1 0 2.1-.13 2.95-.37M3.5 9.5v4c0 1.25 2.45 2.25 5.5 2.25.72 0 1.4-.06 2.02-.17"/><circle cx="16.5" cy="15.5" r="5"/><path d="m13.85 13.25 1.2 4.5 1.45-3.25 1.45 3.25 1.2-4.5M13.7 14.75h5.6M14 16.1h5"/></svg><span>수금</span></button>
-    </nav>
   </div>
+  <nav class="mob-tabs" aria-label="주요 메뉴">
+    <button class="mob-tab on" id="mTInput" data-dutch-nav="input" onclick="mSetTab('input')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>입력</span></button>
+    <button class="mob-tab" id="mTResult" data-dutch-nav="result" onclick="mSetTab('result')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>정산</span></button>
+    <button class="mob-tab" id="mTSettle" data-dutch-nav="settle" onclick="mSetTab('settle')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>공유</span></button>
+    <button class="mob-tab" id="mTHistory" data-dutch-nav="history" onclick="mSetTab('history')" style="display:none"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>기록</span></button>
+    <button class="mob-tab" id="mTPayment" data-dutch-nav="payment" onclick="mSetTab('payment')" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="9" cy="5.5" rx="5.5" ry="2.25"/><path d="M3.5 5.5v4c0 1.25 2.45 2.25 5.5 2.25 1.1 0 2.1-.13 2.95-.37M3.5 9.5v4c0 1.25 2.45 2.25 5.5 2.25.72 0 1.4-.06 2.02-.17"/><circle cx="16.5" cy="15.5" r="5"/><path d="m13.85 13.25 1.2 4.5 1.45-3.25 1.45 3.25 1.2-4.5M13.7 14.75h5.6M14 16.1h5"/></svg><span>수금</span></button>
+  </nav>
   <div class="mob-body" id="mBody"></div>
   <div class="mob-owner-tap" id="mobOwnerTap" onclick="_ownerAreaClick(this,event)">DUTCH PAY <span class="app-version" id="appVersionMob"></span></div>
   <button class="mob-fab" id="mobFab" onclick="_mobFabClick()"></button>
@@ -1184,8 +1202,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.07';
-const BUILD_TIME='2026-08-29 23:00';
+const APP_VERSION='v5.08';
+const BUILD_TIME='2026-08-30 00:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3710,6 +3728,15 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
   });
 });
 (()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;const _hdb=document.getElementById('histDrBody');if(_hdb)_hdb.addEventListener('scroll',()=>{const si=document.getElementById('histDrSinp');if(si&&si===document.activeElement)si.blur();},{passive:true});})();
+// 모바일 헤더 압축 — 스크롤을 조금이라도 내리면 눈썹줄·큰 제목을 접는다.
+// 32px 아래로 내리면 접고 24px 위로 올리면 푼다(히스테리시스) — 경계에서 떨리지 않게.
+(()=>{const h=document.querySelector('.mob-header');if(!h)return;
+  let on=false,tick=false;
+  const upd=()=>{tick=false;const y=window.scrollY||0;
+    if(!on&&y>32){on=true;h.classList.add('compact');}
+    else if(on&&y<24){on=false;h.classList.remove('compact');}};
+  addEventListener('scroll',()=>{if(!tick){tick=true;requestAnimationFrame(upd);}},{passive:true});
+  upd();})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
 hDbxHandleCallback().then(()=>{if(hDbxGetToken())hSyncDropbox();});
