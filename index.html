@@ -382,15 +382,19 @@ svg{display:block;flex-shrink:0;}
 .rc-receipt-wrap.open{display:block;}
 .rc-receipt-wrap.open::before{content:'';position:absolute;top:0;left:16px;right:16px;height:1px;background:var(--sep);}
 .rc-item-row:has(+.rc-receipt-wrap.open){border-bottom:none;}
-.rc-receipt-tbl{width:100%;border-collapse:collapse;font-size:12.5px;}
-.rc-receipt-tbl thead th{padding:5px 4px;font-size:11px;font-weight:600;color:var(--label3);text-align:right;border-bottom:1px solid var(--sep2);}
+.rc-receipt-tbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
+.rc-receipt-tbl thead th{padding:7px 8px;font-size:11px;font-weight:600;color:var(--label3);text-align:right;border-bottom:1px solid var(--sep2);}
 .rc-receipt-tbl thead th:first-child{text-align:left;}
-.rc-receipt-tbl tbody td{padding:7px 4px;text-align:right;color:var(--label);font-variant-numeric:tabular-nums;border-bottom:1px solid var(--sep);}
+.rc-receipt-tbl thead th:nth-child(2){width:52px;}
+.rc-receipt-tbl thead th:nth-child(3){width:108px;}
+.rc-receipt-tbl thead th:nth-child(4){width:108px;}
+.rc-receipt-tbl tbody td{padding:8px 8px;text-align:right;color:var(--label);font-variant-numeric:tabular-nums;border-bottom:1px solid var(--sep);}
 .rc-receipt-tbl tbody td:first-child{text-align:left;font-weight:500;}
 .rc-receipt-tbl tbody tr:last-child td{border-bottom:none;}
-.rc-receipt-tbl tfoot td{padding:7px 4px 2px;font-weight:700;text-align:right;border-top:2px solid var(--sep2);font-variant-numeric:tabular-nums;}
+.rc-receipt-tbl tfoot td{padding:9px 8px;font-weight:700;text-align:right;border-top:2px solid var(--sep2);font-variant-numeric:tabular-nums;}
 .rc-receipt-tbl tfoot td:first-child{text-align:left;color:var(--label3);font-weight:500;font-size:12px;}
 .rc-receipt-tbl td.rc-qty,.rc-receipt-tbl td.rc-unit{color:var(--label3);}
+@media(max-width:700px){.rc-receipt-tbl thead th:nth-child(2){width:34px;}.rc-receipt-tbl thead th:nth-child(3){width:76px;}.rc-receipt-tbl thead th:nth-child(4){width:80px;}.rc-receipt-tbl thead th,.rc-receipt-tbl tbody td,.rc-receipt-tbl tfoot td{padding-left:4px;padding-right:4px;}}
 .rc-gift-badge{font-size:11px;font-weight:600;color:var(--green);background:rgba(52,199,89,.12);border-radius:6px;padding:1px 6px;}
 .pm-allrec-card{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--card);border-radius:12px;margin-bottom:8px;box-shadow:0 2px 8px rgba(20,25,40,.07);}
 .pm-allrec-left{flex:1;min-width:0;}
@@ -1150,8 +1154,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v4.93';
-const BUILD_TIME='2026-08-29 07:00';
+const APP_VERSION='v4.94';
+const BUILD_TIME='2026-08-29 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
