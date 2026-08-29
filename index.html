@@ -957,6 +957,9 @@ svg{display:block;flex-shrink:0;}
 .app-rail-btn:focus-visible{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg);}
 .app-rail-btn svg{width:22px;height:22px;}
 .app-rail-menu{margin-top:auto;}
+.app-rail [data-nav-label]{position:relative;}
+.app-rail [data-nav-label]::after{content:attr(data-nav-label);position:absolute;z-index:80;left:calc(100% + 11px);top:50%;transform:translateY(-50%) translateX(-3px);padding:6px 9px;border-radius:7px;background:#242426;color:#fff;font-size:12px;font-weight:600;line-height:1;letter-spacing:-.1px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.2);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s,transform .12s,visibility .12s;}
+.app-rail [data-nav-label]:hover::after,.app-rail [data-nav-label]:focus-visible::after,.app-rail [data-nav-label].show-nav-tip::after{opacity:1;visibility:visible;transform:translateY(-50%) translateX(0);}
 .left,.right{min-height:0;overflow:hidden;}
 .left-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:30px 28px 20px;border-bottom:1px solid var(--sep);}
 .left-controls{flex:0 0 auto;max-height:268px;overflow-y:auto;overscroll-behavior:contain;padding:18px 28px 0;}
@@ -1029,20 +1032,20 @@ svg{display:block;flex-shrink:0;}
 <div class="desktop-shell">
 <div class="desktop-app">
   <nav class="app-rail" aria-label="주요 메뉴">
-    <button class="app-rail-logo" type="button" aria-label="입력 화면" onclick="dSetTab('input')">D</button>
-    <button class="app-rail-btn on" type="button" data-dutch-nav="input" aria-label="지출 추가" onclick="startNewExpense()">
+    <button class="app-rail-logo" type="button" data-nav-label="더치페이" aria-label="입력 화면" onclick="dSetTab('input')">D</button>
+    <button class="app-rail-btn on" type="button" data-dutch-nav="input" data-nav-label="입력" aria-label="지출 추가" onclick="startNewExpense()">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>
-    <button class="app-rail-btn" type="button" data-dutch-nav="result" aria-label="정산" onclick="dSetTab('result')">
+    <button class="app-rail-btn" type="button" data-dutch-nav="result" data-nav-label="정산" aria-label="정산" onclick="dSetTab('result')">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
     </button>
-    <button class="app-rail-btn" type="button" data-dutch-nav="settle" aria-label="공유" onclick="dSetTab('settle')">
+    <button class="app-rail-btn" type="button" data-dutch-nav="settle" data-nav-label="공유" aria-label="공유" onclick="dSetTab('settle')">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
     </button>
-    <button class="app-rail-btn" id="dRailPayment" type="button" data-dutch-nav="payment" aria-label="수금" onclick="dSetTab('payment')" style="display:none">
+    <button class="app-rail-btn" id="dRailPayment" type="button" data-dutch-nav="payment" data-nav-label="수금" aria-label="수금" onclick="dSetTab('payment')" style="display:none">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="9" cy="5.5" rx="5.5" ry="2.25"/><path d="M3.5 5.5v4c0 1.25 2.45 2.25 5.5 2.25 1.1 0 2.1-.13 2.95-.37M3.5 9.5v4c0 1.25 2.45 2.25 5.5 2.25.72 0 1.4-.06 2.02-.17"/><circle cx="16.5" cy="15.5" r="5"/><path d="m13.85 13.25 1.2 4.5 1.45-3.25 1.45 3.25 1.2-4.5M13.7 14.75h5.6M14 16.1h5"/></svg>
     </button>
-    <button class="app-rail-btn app-rail-menu" type="button" aria-label="설정 및 데이터 관리" onclick="showDataMenu(this,event)">
+    <button class="app-rail-btn app-rail-menu" type="button" data-nav-label="설정" aria-label="설정 및 데이터 관리" onclick="showDataMenu(this,event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
   </nav>
@@ -1178,8 +1181,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.01';
-const BUILD_TIME='2026-08-29 17:00';
+const APP_VERSION='v5.02';
+const BUILD_TIME='2026-08-29 18:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3682,6 +3685,24 @@ if(_receiptDbImportResult){
   const detail=_receiptDbImportResult.updated?` · 업데이트 ${_receiptDbImportResult.updated}건`:'';
   toast(`영수증 ${_receiptDbImportResult.count}건을 모두 가져왔어요${detail}`,{type:'success',duration:4200});
 }
+// 영수증 DB 전송 파라미터(?from=receipt-db&batch=…)는 가져오기가 끝나면 역할이 없다.
+// 주소창에 남겨두면 북마크·공유 시 의미 없는 batch id가 따라가므로 정리한다.
+(()=>{try{
+  const params=new URLSearchParams(location.search);
+  if(!params.has('from')&&!params.has('batch'))return;
+  params.delete('from');params.delete('batch');
+  const qs=params.toString();
+  history.replaceState({},'',location.pathname+(qs?'?'+qs:'')+location.hash);
+}catch(e){}})();
+// 데스크탑에서는 마우스·키보드뿐 아니라 클릭했을 때도 메뉴 이름을 잠시 보여준다.
+document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.app-rail .show-nav-tip').forEach(el=>el.classList.remove('show-nav-tip'));
+    btn.classList.add('show-nav-tip');
+    clearTimeout(btn._navTipTimer);
+    btn._navTipTimer=setTimeout(()=>btn.classList.remove('show-nav-tip'),1200);
+  });
+});
 (()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;const _hdb=document.getElementById('histDrBody');if(_hdb)_hdb.addEventListener('scroll',()=>{const si=document.getElementById('histDrSinp');if(si&&si===document.activeElement)si.blur();},{passive:true});})();
 _updateSyncBadge();
 if(dbxGetToken())syncFromDropbox();
