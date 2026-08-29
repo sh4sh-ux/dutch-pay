@@ -6,7 +6,9 @@
 <style>
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:800px;margin:0 auto;padding:24px;background:#f5f5f7;color:#1d1d1f;}
 h1{font-size:20px;font-weight:700;margin-bottom:4px;}
-.subtitle{color:#6e6e73;font-size:13px;margin-bottom:24px;}
+.subtitle{color:#6e6e73;font-size:13px;margin-bottom:14px;}
+.note{background:#fff;border-left:3px solid #4355E8;border-radius:8px;padding:11px 14px;margin-bottom:18px;font-size:12.5px;line-height:1.55;color:#3a3a3c;}
+.note b{color:#1d1d1f;}
 .suite{background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
 .suite-title{font-size:15px;font-weight:600;margin-bottom:12px;}
 .test{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f2f2f2;}
@@ -17,74 +19,41 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px;}
 .skip{background:#8e8e93;}
 .test-name{flex:1;font-size:13px;}
 .test-detail{font-size:12px;color:#8e8e93;margin-top:2px;}
-.error{color:#ff3b30;font-size:12px;margin-top:2px;}
+.error{color:#ff3b30;font-size:12px;margin-top:2px;font-family:ui-monospace,Menlo,monospace;}
 .summary{background:#fff;border-radius:12px;padding:16px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;gap:20px;}
 .sum-item{text-align:center;}
 .sum-num{font-size:28px;font-weight:700;}
 .sum-label{font-size:12px;color:#6e6e73;}
 .pass-num{color:#34c759;}
 .fail-num{color:#ff3b30;}
+#appFrame{position:absolute;left:-9999px;top:0;width:1200px;height:800px;border:0;}
 </style>
 </head>
 <body>
 <h1>더치페이 계산 로직 테스트</h1>
-<p class="subtitle">computeShares · calcTxns 단위 테스트</p>
+<p class="subtitle">computeShares · calcTxns · _receiptTableHtml</p>
+<div class="note">
+  이 테스트는 <b>index.html을 iframe으로 불러 그 안의 실제 함수를 직접 호출</b>합니다.
+  로직 복사본을 두지 않으므로 앱과 테스트가 갈라지지 않습니다.<br>
+  실행 중 앱의 저장 함수(<code>saveState</code>·<code>syncCurrentToGroup</code>·<code>saveHistory</code>·<code>syncToDropbox</code>)를
+  무력화하고, 끝나면 localStorage를 원래대로 되돌립니다. <b>실제 정산 데이터는 건드리지 않습니다.</b>
+</div>
 <div id="summary"></div>
 <div id="results"></div>
+<iframe id="appFrame" src="index.html" title="테스트 대상 앱"></iframe>
 
 <script>
-// ── 테스트 대상 함수 (index.html에서 복사) ──────────────────────────────────
-
-let people = [];
-let items = [];
-
-function computeShares(){
-  const paid={},owes={},details={},owesFloat={};
-  people.forEach(p=>{paid[p]=0;owes[p]=0;details[p]=[];owesFloat[p]=0;});
-  const payerSet={};
-  items.forEach(it=>{
-    if(!it.amount||+it.amount===0)return;
-    const amt=+it.amount,mems=it.members&&it.members.length?it.members:[...people],n=mems.length;
-    paid[it.payer]=(paid[it.payer]||0)+amt;
-    if(it.payer)payerSet[it.payer]=true;
-    const override=it.rounderOverride;
-    if(override&&mems.includes(override)){
-      const base=Math.floor(amt/n),rem=amt-base*n;
-      mems.forEach(p=>{const share=p===override?base+rem:base;owesFloat[p]=(owesFloat[p]||0)+share;details[p].push({name:it.name||'(이름 없음)',payer:it.payer,share,extra:p===override&&rem>0});});
-    }else{
-      const exact=amt/n;
-      mems.forEach(p=>{owesFloat[p]=(owesFloat[p]||0)+exact;details[p].push({name:it.name||'(이름 없음)',payer:it.payer,share:exact,extra:false});});
-    }
-  });
-  const totalAmt=items.reduce((s,it)=>s+(+it.amount||0),0);
-  let totalFloor=0;const fracParts=[];
-  people.forEach(p=>{const f=owesFloat[p]||0;const fl=Math.floor(f);owes[p]=fl;totalFloor+=fl;fracParts.push({p,frac:f-fl});});
-  let diff=Math.round(totalAmt-totalFloor);
-  if(diff!==0){fracParts.sort((a,b)=>{const ap=payerSet[a.p]?1:0,bp=payerSet[b.p]?1:0;if(ap!==bp)return bp-ap;return b.frac-a.frac;});if(fracParts.length)owes[fracParts[0].p]+=diff;}
-  return{paid,owes,details,hasRounding:diff!==0};
-}
-
-// calcTxns: 최소 송금 수로 정산 (그리디, 채권·채무 반복 상계)
-function calcTxns(paid,owes){
-  const bal={};people.forEach(p=>{bal[p]=(paid[p]||0)-(owes[p]||0);});
-  const creds=[],debts=[];
-  Object.entries(bal).forEach(([p,b])=>{if(b>0.5)creds.push({p,b});else if(b<-0.5)debts.push({p,b:-b});});
-  creds.sort((a,z)=>z.b-a.b);debts.sort((a,z)=>z.b-a.b);
-  const txns=[],cs=creds.map(c=>({...c})),ds=debts.map(d=>({...d}));
-  let ci=0,di=0;
-  while(ci<cs.length&&di<ds.length){const c=cs[ci],d=ds[di],amt=Math.min(c.b,d.b);if(amt>0.5)txns.push({from:d.p,to:c.p,amt:Math.round(amt)});c.b-=amt;d.b-=amt;if(c.b<0.5)ci++;if(d.b<0.5)di++;}
-  return txns;
-}
-
 // ── 테스트 프레임워크 ──────────────────────────────────────────────────────
 
 const suites = [];
 let currentSuite = null;
+let APP = null;   // index.html의 window
 
 function suite(name, fn) {
   currentSuite = { name, tests: [] };
   suites.push(currentSuite);
-  fn();
+  try { fn(); }
+  catch(e) { currentSuite.tests.push({ name:'스위트 실행 실패', status:'fail', detail:'', error:e.message }); }
 }
 
 function test(name, fn) {
@@ -109,222 +78,388 @@ function expect(val) {
       const a = JSON.stringify(val), b = JSON.stringify(expected);
       if (a !== b) throw new Error(`expected ${b}, got ${a}`);
     },
-    toBeGreaterThan(n) {
-      if (!(val > n)) throw new Error(`expected ${val} > ${n}`);
-    },
-    toBeLessThan(n) {
-      if (!(val < n)) throw new Error(`expected ${val} < ${n}`);
-    },
+    toBeGreaterThan(n) { if (!(val > n)) throw new Error(`expected ${val} > ${n}`); },
+    toBeLessThan(n)    { if (!(val < n)) throw new Error(`expected ${val} < ${n}`); },
   };
 }
 
+// ── 앱 함수 호출 도우미 ────────────────────────────────────────────────────
+// 앱의 computeShares/calcTxns는 전역 people·items를 읽는다.
+// 다만 이 둘은 index.html에서 let으로 선언돼 window 속성이 아니라 렉시컬 바인딩이므로
+// 부모 창에서 APP.people = ... 로는 앱 함수에 전달되지 않는다.
+// 그래서 iframe 안에 헬퍼 스크립트를 주입해 그 스코프에서 대입한다. (__test.set)
+// calcTxns(paid,owes)는 인자를 받지만 본문에서 쓰지 않으므로 인자 없이 부른다.
+
+let CUR_PEOPLE = [];
+
 function setup(p, it) {
-  people = p;
-  items = it;
+  CUR_PEOPLE = p.slice();
+  const norm = it.map((x, i) => ({ id: i+1, name: x.name || 't'+i, members: [], watchers: [], isTreat: false, ...x }));
+  APP.__test.set(p.slice(), norm);
 }
+const shares = () => APP.computeShares();
+const txns   = () => APP.calcTxns();
+
+// 각자의 순포지션(낸 돈 − 자기 몫)이 실제 송금 순액과 맞는지 —
+// 최소 송금 여부와 무관하게 항상 성립해야 하는 불변식.
+function assertBalanced(tol) {
+  tol = tol === undefined ? 1 : tol;
+  const { paid, owes } = shares();
+  const t = txns();
+  const move = {};
+  CUR_PEOPLE.forEach(p => move[p] = 0);
+  t.forEach(x => { move[x.from] -= x.amt; move[x.to] += x.amt; });
+  const bad = CUR_PEOPLE
+    .map(p => ({ p, need: (paid[p]||0) - (owes[p]||0), got: move[p] }))
+    .filter(x => Math.abs(x.need - x.got) > tol);
+  if (bad.length) throw new Error('수지 불일치: ' + JSON.stringify(bad));
+}
+
+const txnStr = t => t.map(x => `${x.from}→${x.to} ${x.amt.toLocaleString()}`).join(', ') || '(없음)';
 
 // ── 테스트 케이스 ──────────────────────────────────────────────────────────
 
-// TC1: 균등 분배 — 나누어 떨어지는 경우
+function defineTests() {
+
 suite('TC1: 균등 분배 (나누어 떨어짐)', () => {
-  setup(['A','B','C'], [
-    { name: '저녁', amount: 30000, payer: 'A', members: [] }
-  ]);
-  const { paid, owes } = computeShares();
-  const txns = calcTxns(paid, owes);
+  setup(['A','B','C'], [{ name:'저녁', amount:30000, payer:'A' }]);
+  const { paid, owes } = shares();
+  const t = txns();
 
   test('각 인당 분담액 = 10,000원', () => {
     expect(owes['A']).toBe(10000);
     expect(owes['B']).toBe(10000);
     expect(owes['C']).toBe(10000);
   });
-  test('A의 결제액 = 30,000원', () => {
-    expect(paid['A']).toBe(30000);
-  });
-  test('송금: B→A 10,000 and C→A 10,000', () => {
-    expect(txns.length).toBe(2);
+  test('A의 결제액 = 30,000원', () => expect(paid['A']).toBe(30000));
+  test('송금 2건: B→A, C→A', () => {
+    expect(t.length).toBe(2);
+    return txnStr(t);
   });
   test('B는 A에게 10,000 송금', () => {
-    const t = txns.find(t => t.from === 'B' && t.to === 'A');
-    if (!t) throw new Error('B→A 송금 없음');
-    expect(t.amt).toBe(10000);
+    const x = t.find(v => v.from === 'B' && v.to === 'A');
+    if (!x) throw new Error('B→A 송금 없음');
+    expect(x.amt).toBe(10000);
   });
+  test('수지 균형', () => assertBalanced());
 });
 
-// TC2: 1원 나머지 발생 — 결제자가 나머지 흡수
 suite('TC2: 1원 나머지 — 결제자 흡수', () => {
-  setup(['A','B','C'], [
-    { name: '커피', amount: 10000, payer: 'A', members: [] }
-  ]);
-  const { paid, owes } = computeShares();
-  const txns = calcTxns(paid, owes);
+  setup(['A','B','C'], [{ name:'커피', amount:10000, payer:'A' }]);
+  const { owes, hasRounding } = shares();
 
   test('총 분담액 합 = 총액', () => {
-    const total = Object.values(owes).reduce((s,v)=>s+v,0);
-    expect(total).toBe(10000);
+    expect(Object.values(owes).reduce((s,v)=>s+v,0)).toBe(10000);
   });
   test('hasRounding = true', () => {
-    const { hasRounding } = computeShares();
     if (!hasRounding) throw new Error('나머지 발생 감지 실패');
   });
-  test('결제자(A)가 나머지 1원 흡수 → A 분담 > 다른 멤버', () => {
-    // 10000/3 = 3333.33... → floor 3333, diff=1
-    // A가 결제자이므로 A에게 +1
+  test('결제자(A)가 나머지 1원 흡수 → owes[A] = 3,334', () => {
     expect(owes['A']).toBe(3334);
   });
+  test('수지 균형', () => assertBalanced());
 });
 
-// TC3: 특정 멤버만 참여
 suite('TC3: 특정 멤버만 참여하는 지출', () => {
-  setup(['A','B','C'], [
-    { name: '택시', amount: 20000, payer: 'A', members: ['A','B'] }
-  ]);
-  const { paid, owes } = computeShares();
-  const txns = calcTxns(paid, owes);
+  setup(['A','B','C'], [{ name:'택시', amount:20000, payer:'A', members:['A','B'] }]);
+  const { owes } = shares();
+  const t = txns();
 
-  test('C의 분담액 = 0 (불참)', () => {
-    expect(owes['C']).toBe(0);
-  });
+  test('C의 분담액 = 0 (불참)', () => expect(owes['C']).toBe(0));
   test('A, B 각 10,000원 분담', () => {
     expect(owes['A']).toBe(10000);
     expect(owes['B']).toBe(10000);
   });
   test('B→A 10,000 송금 1건만 발생', () => {
-    expect(txns.length).toBe(1);
-    expect(txns[0].from).toBe('B');
-    expect(txns[0].to).toBe('A');
-    expect(txns[0].amt).toBe(10000);
+    expect(t.length).toBe(1);
+    expect(t[0].from).toBe('B');
+    expect(t[0].to).toBe('A');
+    expect(t[0].amt).toBe(10000);
   });
+  test('수지 균형', () => assertBalanced());
 });
 
-// TC4: 여러 지출 — 최소 송금 수
-suite('TC4: 여러 지출, 최소 송금 수 검증', () => {
+suite('TC4: 여러 지출 — 결제자별 직접 정산', () => {
   setup(['A','B','C'], [
-    { name: '저녁', amount: 30000, payer: 'A', members: [] },
-    { name: '교통', amount: 15000, payer: 'B', members: [] },
-    { name: '카페', amount: 9000,  payer: 'C', members: [] },
+    { name:'저녁', amount:30000, payer:'A' },
+    { name:'교통', amount:15000, payer:'B' },
+    { name:'카페', amount:9000,  payer:'C' },
   ]);
-  const { paid, owes } = computeShares();
-  const txns = calcTxns(paid, owes);
+  const { paid, owes } = shares();
+  const t = txns();
 
-  test('송금 수 ≤ 참여자 수 - 1', () => {
-    if (txns.length > people.length - 1)
-      throw new Error(`송금 수 ${txns.length} > ${people.length - 1}`);
-  });
   test('총 분담액 합 = 총 지출', () => {
-    const totalPaid = Object.values(paid).reduce((s,v)=>s+v,0);
-    const totalOwes = Object.values(owes).reduce((s,v)=>s+v,0);
-    expect(totalPaid).toBe(totalOwes);
+    expect(Object.values(paid).reduce((s,v)=>s+v,0))
+      .toBe(Object.values(owes).reduce((s,v)=>s+v,0));
   });
   test('모든 송금액이 양수', () => {
-    if (txns.some(t => t.amt <= 0)) throw new Error('0원 이하 송금 발생');
+    if (t.some(x => x.amt <= 0)) throw new Error('0원 이하 송금 발생');
   });
+  // 앱의 calcTxns는 최소 송금이 목표가 아니라 결제자별 채무를 직접 정산한다.
+  // 따라서 건수는 N-1을 넘을 수 있고, 대신 아래 수지 불변식이 성립해야 한다.
+  test('쌍별 상계 후 한 방향만 남음 (A↔B 역방향 동시 발생 없음)', () => {
+    const seen = new Set();
+    t.forEach(x => {
+      const rev = x.to + '|' + x.from;
+      if (seen.has(rev)) throw new Error(`${x.from}↔${x.to} 양방향 송금 발생`);
+      seen.add(x.from + '|' + x.to);
+    });
+    return txnStr(t);
+  });
+  test('수지 균형', () => assertBalanced());
 });
 
-// TC5: 1인 정산 (혼자)
 suite('TC5: 1인 정산', () => {
-  setup(['혼자'], [
-    { name: '밥', amount: 15000, payer: '혼자', members: [] }
-  ]);
-  const { paid, owes } = computeShares();
-  const txns = calcTxns(paid, owes);
+  setup(['혼자'], [{ name:'밥', amount:15000, payer:'혼자' }]);
+  const { owes } = shares();
+  const t = txns();
 
-  test('분담액 = 전체 금액', () => {
-    expect(owes['혼자']).toBe(15000);
-  });
-  test('송금 없음', () => {
-    expect(txns.length).toBe(0);
-  });
+  test('분담액 = 전체 금액', () => expect(owes['혼자']).toBe(15000));
+  test('송금 없음', () => expect(t.length).toBe(0));
 });
 
-// TC6: 결제자가 없는 항목 (payer='')
 suite('TC6: 결제자 미지정 항목', () => {
-  setup(['A','B'], [
-    { name: '식사', amount: 20000, payer: '', members: [] }
-  ]);
-  const { paid, owes } = computeShares();
+  setup(['A','B'], [{ name:'식사', amount:20000, payer:'' }]);
+  const { paid, owes } = shares();
 
   test('결제자 없으면 paid 합계 = 0', () => {
-    const totalPaid = Object.values(paid).reduce((s,v)=>s+v,0);
-    expect(totalPaid).toBe(0);
+    expect(Object.values(paid).reduce((s,v)=>s+v,0)).toBe(0);
   });
   test('분담액 합 = 총액 (나머지 포함)', () => {
-    const totalOwes = Object.values(owes).reduce((s,v)=>s+v,0);
-    expect(totalOwes).toBe(20000);
+    expect(Object.values(owes).reduce((s,v)=>s+v,0)).toBe(20000);
   });
+  test('송금 없음 (받을 사람이 없으므로)', () => expect(txns().length).toBe(0));
 });
 
-// TC7: rounderOverride — 지정된 사람이 나머지 흡수
 suite('TC7: rounderOverride 나머지 지정', () => {
-  setup(['A','B','C'], [
-    { name: '택시', amount: 10000, payer: 'A', members: [], rounderOverride: 'B' }
-  ]);
-  const { paid, owes } = computeShares();
+  setup(['A','B','C'], [{ name:'택시', amount:10000, payer:'A', rounderOverride:'B' }]);
+  const { owes } = shares();
 
-  test('B가 나머지 흡수 → owes[B] > owes[C]', () => {
-    // 10000/3 = 3333.33 → floor 3333, rem 1 → B gets 3334
+  test('B가 나머지 흡수 → owes[B] = 3,334', () => {
     expect(owes['B']).toBe(3334);
     expect(owes['A']).toBe(3333);
     expect(owes['C']).toBe(3333);
   });
   test('총 분담액 합 = 10,000', () => {
-    const total = Object.values(owes).reduce((s,v)=>s+v,0);
-    expect(total).toBe(10000);
+    expect(Object.values(owes).reduce((s,v)=>s+v,0)).toBe(10000);
   });
+  test('수지 균형', () => assertBalanced());
 });
 
-// TC8: 4명, 큰 금액, 여러 지출
 suite('TC8: 4인 복합 정산', () => {
   setup(['A','B','C','D'], [
-    { name: '숙박', amount: 200000, payer: 'A', members: [] },
-    { name: '저녁1', amount: 80000, payer: 'B', members: [] },
-    { name: '저녁2', amount: 60000, payer: 'C', members: [] },
-    { name: '교통', amount: 40000, payer: 'D', members: [] },
+    { name:'숙박',  amount:200000, payer:'A' },
+    { name:'저녁1', amount:80000,  payer:'B' },
+    { name:'저녁2', amount:60000,  payer:'C' },
+    { name:'교통',  amount:40000,  payer:'D' },
   ]);
-  const { paid, owes } = computeShares();
-  const txns = calcTxns(paid, owes);
+  const { paid, owes } = shares();
 
   test('총 지출 = 380,000', () => {
-    const total = Object.values(paid).reduce((s,v)=>s+v,0);
-    expect(total).toBe(380000);
+    expect(Object.values(paid).reduce((s,v)=>s+v,0)).toBe(380000);
   });
   test('인당 분담 합 = 총 지출', () => {
-    const totalOwes = Object.values(owes).reduce((s,v)=>s+v,0);
-    const totalPaid = Object.values(paid).reduce((s,v)=>s+v,0);
-    expect(totalOwes).toBe(totalPaid);
+    expect(Object.values(owes).reduce((s,v)=>s+v,0))
+      .toBe(Object.values(paid).reduce((s,v)=>s+v,0));
   });
   test('모든 순액(paid-owes) 합 ≈ 0', () => {
     const net = Object.keys(paid).reduce((s,p)=>s+(paid[p]-owes[p]),0);
     if (Math.abs(net) > 1) throw new Error(`순액 합 ${net} ≠ 0`);
   });
-  test('송금 수 ≤ N-1 = 3건', () => {
-    if (txns.length > 3) throw new Error(`송금 ${txns.length}건 > 3`);
+  test('수지 균형', () => assertBalanced());
+});
+
+// v5.05 회귀 — 환불(음수 지출) 시 반대 방향 송금
+suite('TC9: 환불(음수 지출) 정산 [v5.05 회귀]', () => {
+  test('A가 -20,000 환불 → A→B 10,000', () => {
+    setup(['A','B'], [{ name:'환불', amount:-20000, payer:'A' }]);
+    const t = txns();
+    expect(t.length).toBe(1);
+    expect(t[0].from).toBe('A');
+    expect(t[0].to).toBe('B');
+    expect(t[0].amt).toBe(10000);
+    return txnStr(t);
+  });
+  test('지출 후 환불 상계 — 30,000 후 -10,000 → B→A 10,000', () => {
+    setup(['A','B'], [
+      { name:'식사', amount:30000,  payer:'A' },
+      { name:'환불', amount:-10000, payer:'A' },
+    ]);
+    const t = txns();
+    expect(t.length).toBe(1);
+    expect(t[0].from).toBe('B');
+    expect(t[0].to).toBe('A');
+    expect(t[0].amt).toBe(10000);
+    return txnStr(t);
+  });
+  test('환불이 더 큼 — 10,000 후 -30,000 → A→B 10,000', () => {
+    setup(['A','B'], [
+      { name:'식사', amount:10000,  payer:'A' },
+      { name:'환불', amount:-30000, payer:'A' },
+    ]);
+    const t = txns();
+    expect(t.length).toBe(1);
+    expect(t[0].from).toBe('A');
+    expect(t[0].to).toBe('B');
+    expect(t[0].amt).toBe(10000);
+    return txnStr(t);
+  });
+  test('3인 환불 — 수지 균형', () => {
+    setup(['A','B','C'], [
+      { name:'저녁', amount:30000, payer:'A' },
+      { name:'환불', amount:-9000, payer:'B' },
+    ]);
+    assertBalanced();
+    return txnStr(txns());
   });
 });
 
+// 한턱(isTreat)은 정산에서 제외된다
+suite('TC10: 한턱(isTreat) 제외', () => {
+  setup(['A','B'], [
+    { name:'식사', amount:20000, payer:'A' },
+    { name:'한턱', amount:50000, payer:'A', isTreat:true },
+  ]);
+  const { paid, owes } = shares();
+  const t = txns();
+
+  test('한턱 금액은 paid에 포함되지 않음', () => expect(paid['A']).toBe(20000));
+  test('한턱 금액은 분담에 포함되지 않음', () => {
+    expect(owes['A']).toBe(10000);
+    expect(owes['B']).toBe(10000);
+  });
+  test('송금은 식사분만 — B→A 10,000', () => {
+    expect(t.length).toBe(1);
+    expect(t[0].amt).toBe(10000);
+    return txnStr(t);
+  });
+});
+
+// v5.06 회귀 — 영수증 상세표 합계 행
+suite('TC11: 영수증 상세표 합계 표시 [v5.06 회귀]', () => {
+  const foot = (rt) => {
+    const d = document.createElement('div');
+    d.innerHTML = APP._receiptTableHtml({ receiptText: rt }, 'test');
+    const tf = d.querySelector('tfoot');
+    if (!tf) return null;
+    const tds = tf.querySelectorAll('td');
+    const last = tds[tds.length - 1];
+    return { val: last.textContent.trim(), neg: last.classList.contains('rc-neg') };
+  };
+
+  test('음수 합계도 표시되고 빨강 처리', () => {
+    const f = foot('상품 환불 | 1 | -20000 | -20000');
+    if (!f) throw new Error('합계 행 없음');
+    expect(f.val).toBe('-20,000');
+    if (!f.neg) throw new Error('rc-neg 클래스 없음');
+  });
+  test('합계 0(상계)도 표시', () => {
+    const f = foot('상품 | 1 | 20000 | 20000\n환불 | 1 | -20000 | -20000');
+    if (!f) throw new Error('합계 행 없음');
+    expect(f.val).toBe('0');
+  });
+  test('양수 합계 (회귀)', () => {
+    const f = foot('상품 | 1 | 20000 | 20000');
+    if (!f) throw new Error('합계 행 없음');
+    expect(f.val).toBe('20,000');
+    if (f.neg) throw new Error('양수인데 rc-neg 적용됨');
+  });
+  test('증정품은 합계에서 제외', () => {
+    const f = foot('상품 | 1 | 10000 | 10000\n사은품 | 1 | 0 | 증정');
+    if (!f) throw new Error('합계 행 없음');
+    expect(f.val).toBe('10,000');
+  });
+});
+
+}
+
 // ── 렌더링 ────────────────────────────────────────────────────────────────
 
-let pass = 0, fail = 0, total = 0;
-const html = suites.map(s => {
-  const rows = s.tests.map(t => {
-    total++;
-    if (t.status === 'pass') pass++;
-    else if (t.status === 'fail') fail++;
-    const badge = `<div class="badge ${t.status}"></div>`;
-    const err = t.error ? `<div class="error">✗ ${t.error}</div>` : '';
-    const detail = t.detail ? `<div class="test-detail">${t.detail}</div>` : '';
-    return `<div class="test">${badge}<div class="test-name">${t.name}${detail}${err}</div></div>`;
+function render() {
+  let pass = 0, fail = 0, total = 0;
+  const html = suites.map(s => {
+    const rows = s.tests.map(t => {
+      total++;
+      if (t.status === 'pass') pass++;
+      else if (t.status === 'fail') fail++;
+      const badge = `<div class="badge ${t.status}"></div>`;
+      const err = t.error ? `<div class="error">✗ ${t.error}</div>` : '';
+      const detail = t.detail ? `<div class="test-detail">${t.detail}</div>` : '';
+      return `<div class="test">${badge}<div class="test-name">${t.name}${detail}${err}</div></div>`;
+    }).join('');
+    return `<div class="suite"><div class="suite-title">${s.name}</div>${rows}</div>`;
   }).join('');
-  return `<div class="suite"><div class="suite-title">${s.name}</div>${rows}</div>`;
-}).join('');
 
-document.getElementById('results').innerHTML = html;
-document.getElementById('summary').innerHTML = `
+  document.getElementById('results').innerHTML = html;
+  document.getElementById('summary').innerHTML = `
 <div class="summary">
   <div class="sum-item"><div class="sum-num pass-num">${pass}</div><div class="sum-label">통과</div></div>
   <div class="sum-item"><div class="sum-num fail-num">${fail}</div><div class="sum-label">실패</div></div>
   <div class="sum-item"><div class="sum-num">${total}</div><div class="sum-label">전체</div></div>
 </div>`;
+}
+
+// ── 부팅 ──────────────────────────────────────────────────────────────────
+// 앱을 iframe으로 띄우고, 저장 경로를 막은 뒤 실제 함수로 테스트한다.
+// test.html과 index.html은 같은 오리진이라 localStorage를 공유하므로
+// 실행 전후로 스냅샷·복원해 실제 정산 데이터를 보호한다.
+
+(function boot() {
+  const snapshot = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      snapshot[k] = localStorage.getItem(k);
+    }
+  } catch(e) {}
+
+  const frame = document.getElementById('appFrame');
+  frame.addEventListener('load', () => {
+    try {
+      APP = frame.contentWindow;
+
+      // people·items는 let 선언이라 바깥에서 대입할 수 없다.
+      // iframe의 전역 스코프에서 실행되는 스크립트를 주입해 그 안에서 대입·무력화한다.
+      const doc = APP.document;
+      const helper = doc.createElement('script');
+      helper.textContent = `
+        window.__test = {
+          set: function(p, i){ people = p; items = i; },
+          stub: function(){
+            try{ saveState = function(){}; }catch(e){}
+            try{ syncCurrentToGroup = function(){}; }catch(e){}
+            try{ saveHistory = function(){}; }catch(e){}
+            try{ syncToDropbox = function(){ return Promise.resolve(); }; }catch(e){}
+            try{ renderAll = function(){}; }catch(e){}
+          }
+        };`;
+      doc.body.appendChild(helper);
+
+      if (!APP.__test) {
+        throw new Error('헬퍼 주입 실패 — index.html과 같은 오리진에서 열어주세요 (file:// 불가, http(s)로 접속)');
+      }
+      APP.__test.stub();   // 저장·동기화 무력화 (실제 데이터 보호)
+
+      if (typeof APP.computeShares !== 'function' || typeof APP.calcTxns !== 'function') {
+        throw new Error('앱 함수를 찾을 수 없습니다 (computeShares / calcTxns)');
+      }
+
+      defineTests();
+    } catch(e) {
+      const hint = /cross-origin|Blocked a frame/i.test(e.message)
+        ? ' — file://로 열면 오리진이 달라 접근이 막힙니다. 로컬에서는 간단한 http 서버로 띄워주세요.'
+        : '';
+      suites.push({ name: '부팅 실패', tests: [{ name: e.message + hint, status: 'fail', detail: '', error: e.stack || '' }] });
+    } finally {
+      // localStorage 원복
+      try {
+        localStorage.clear();
+        Object.keys(snapshot).forEach(k => localStorage.setItem(k, snapshot[k]));
+      } catch(e) {}
+      render();
+    }
+  });
+})();
 </script>
 </body>
 </html>
