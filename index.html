@@ -1208,8 +1208,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.13';
-const BUILD_TIME='2026-08-30 08:30';
+const APP_VERSION='v5.14';
+const BUILD_TIME='2026-08-30 09:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1309,7 +1309,7 @@ function showDataMenu(anchorEl,ev){
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
   if(_ownerUnlocked){
-    pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><button class="data-pop-btn" data-action="setCouples">💑 공유 이미지 커플 설정</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
+    pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxImportOld">📥 옛 위치에서 가져오기</button><button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><button class="data-pop-btn" data-action="setCouples">💑 공유 이미지 커플 설정</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
   } else {
     pop.innerHTML=`<button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-version" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
   }
@@ -1317,7 +1317,8 @@ function showDataMenu(anchorEl,ev){
       if(dbxGetToken()){dbxResolveRoot().then(()=>{syncFromDropbox();hSyncDropbox();});toast('Dropbox 동기화 중...');}
       else{_hDbxConnectDirect();}
       pop.remove();
-    }else if(action==='dbxRename'){pop.remove();_dbxRenameExistingFiles();}
+    }else if(action==='dbxImportOld'){pop.remove();importFromOldLocation();}
+    else if(action==='dbxRename'){pop.remove();_dbxRenameExistingFiles();}
     else if(action==='dbxDisconnect'){hDbxDisconnect();pop.remove();}
     else if(action==='openHistory'){goToHistory();pop.remove();}
     else if(action==='saveHistory'){saveToHistory();pop.remove();}
@@ -1425,6 +1426,84 @@ function _showAutoBackupList(){
   const anchor=document.querySelector('.owner-area-btn')||document.body;
   _positionPopover(pop,anchor,true);
   setTimeout(()=>{const h=(ev)=>{if(!pop.contains(ev.target)){pop.remove();document.removeEventListener('click',h);}};document.addEventListener('click',h);},0);
+}
+
+/* ── 옛 위치에서 가져오기 ──────────────────────────────────────────
+   부팅 때 도는 자동 이전(dbxResolveRoot)이 어떤 이유로든 건너뛰어져
+   새 폴더가 비어 있을 때 사용자가 직접 복구할 수 있는 길을 둔다.
+   옛 위치(/01_Personal/Dutch-Pay)와 앱 폴더(앱/<앱이름>/) 양쪽을 훑는다.
+   원본은 지우지 않는다 — 복사만 한다. */
+const APPS_ROOTS=['/앱','/Apps'];
+async function _dbxJsonAt(token,path){
+  const arg=JSON.stringify({path}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
+  const res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',
+    headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
+  if(!res.ok)return null;
+  try{ return JSON.parse(await res.text()); }catch(e){ return null; }
+}
+// 데이터 파일이 실제로 있는 폴더를 찾는다 (앱 폴더 이름을 몰라도 되게 훑는다)
+async function findLegacyDutchPayDir(token){
+  const cand=[DBX_OLD_ROOT];
+  for(const root of APPS_ROOTS){
+    const r=await _dbxRpc(token,'files/list_folder',{path:root});
+    if(!r.ok)continue;
+    for(const sub of ((await r.json()).entries||[]).filter(e=>e['.tag']==='folder')){
+      cand.push(`${root}/${sub.name}${DBX_ROOT}`,`${root}/${sub.name}${DBX_OLD_ROOT}`);
+    }
+  }
+  for(const dir of cand){
+    const d=await _dbxJsonAt(token,dir+'/dutch-pay_data.json');
+    if(d&&Array.isArray(d.groups))return {dir,data:d};
+  }
+  return null;
+}
+async function importFromOldLocation(){
+  const token=dbxGetToken();
+  if(!token){toast('먼저 Dropbox에 연결해주세요',{type:'error'});return;}
+  toast('옛 위치를 찾는 중…');
+  let hit=null;
+  try{ hit=await findLegacyDutchPayDir(token); }catch(e){ toast('찾기 실패',{type:'error'}); return; }
+  if(!hit){
+    alert('Dropbox에서 예전 더치페이 데이터를 찾지 못했습니다.\n\n'
+        +'· 이미 새 위치로 옮겨졌다면 이 작업은 필요 없습니다.\n'
+        +'· ⋯ 메뉴의 Dropbox 동기화를 한 번 눌러 확인해보세요.');
+    return;
+  }
+  const n=hit.data.groups.length;
+  if(!confirm(`찾았습니다:\n${hit.dir}\n\n정산 그룹 ${n}개\n\n`
+             +'이 내용을 지금 데이터와 합칩니다(같은 그룹은 최신 것 우선).\n'
+             +'옛 위치의 원본은 그대로 둡니다.\n\n계속할까요?'))return;
+  // 새 위치에 이미 있는 내용과 합쳐서 올린다. 옛 데이터를 그냥 덮어쓰면
+  // 새 위치에만 있던 정산이 사라지므로, 같은 id는 updatedAt 최신 것을 남긴다.
+  const cur=await _dbxJsonAt(token,dbxMainFile());
+  const byId=new Map();
+  for(const g of (cur&&Array.isArray(cur.groups)?cur.groups:[]))byId.set(g.id,g);
+  for(const g of hit.data.groups){
+    const prev=byId.get(g.id);
+    const newer=!prev||new Date(g.updatedAt||g.createdAt||0)>new Date(prev.updatedAt||prev.createdAt||0);
+    if(newer)byId.set(g.id,g);
+  }
+  const merged={...(cur||hit.data),
+    groups:[...byId.values()],
+    // deletedGroups는 배열이 아니라 id를 키로 갖는 객체다 — 합치되 현재 것을 우선한다
+    deletedGroups:{...(hit.data.deletedGroups||{}),...(cur?.deletedGroups||{})},
+    coupleNames:(cur?.coupleNames?.length?cur.coupleNames:hit.data.coupleNames)||[],
+    currentGroupId:cur?.currentGroupId||hit.data.currentGroupId,
+    syncedAt:new Date().toISOString()};
+  const ok=await _dbxUpload(token,dbxMainFile(),JSON.stringify(merged));
+  if(!ok){toast('가져오기 실패',{type:'error'});return;}
+  // 기록 보관함도 같은 방식으로 합친다 (id 기준, 새 위치 것을 지우지 않는다)
+  const oldHist=await _dbxJsonAt(token,hit.dir+'/dutch-pay_history.json');
+  if(Array.isArray(oldHist)){
+    const curHist=await _dbxJsonAt(token,dbxHistFile());
+    const hm=new Map();
+    for(const r of (Array.isArray(curHist)?curHist:[]))hm.set(r.id,r);
+    for(const r of oldHist)if(!hm.has(r.id))hm.set(r.id,r);
+    await _dbxUpload(token,dbxHistFile(),JSON.stringify([...hm.values()],null,2));
+  }
+  await syncFromDropbox();
+  if(hDbxGetToken())await hSyncDropbox();
+  toast(`가져왔습니다 — 정산 ${n}건`,{type:'success',duration:4000});
 }
 
 // ── Dropbox 자동 동기화 ──
