@@ -1208,8 +1208,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.10';
-const BUILD_TIME='2026-08-30 02:00';
+const APP_VERSION='v5.11';
+const BUILD_TIME='2026-08-30 07:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1314,7 +1314,7 @@ function showDataMenu(anchorEl,ev){
     pop.innerHTML=`<button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-version" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
   }
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
-      if(dbxGetToken()){syncFromDropbox();hSyncDropbox();toast('Dropbox 동기화 중...');}
+      if(dbxGetToken()){dbxResolveRoot().then(()=>{syncFromDropbox();hSyncDropbox();});toast('Dropbox 동기화 중...');}
       else{_hDbxConnectDirect();}
       pop.remove();
     }else if(action==='dbxRename'){pop.remove();_dbxRenameExistingFiles();}
@@ -1428,7 +1428,49 @@ function _showAutoBackupList(){
 }
 
 // ── Dropbox 자동 동기화 ──
-const DBX_MAIN_FILE='/01_Personal/Dutch-Pay/dutch-pay_data.json';
+/* ── Dropbox 저장 위치 (v5.11) ──────────────────────────────────
+   모든 앱 데이터를 Dropbox `/07_Apps/` 아래로 모았다.
+   · 새 위치: /07_Apps/더치페이(Dutch-Pay)/   (data·history JSON + 정산 이미지 PNG)
+   · 옛 위치: /01_Personal/Dutch-Pay/
+   폴더명에 한글이 들어가므로 Dropbox-API-Arg 헤더는 반드시 ASCII 이스케이프한다
+   (HTTP 헤더는 ASCII만 허용 — 안 하면 fetch가 통째로 실패한다).
+   이전은 copy만 하고 옛 폴더는 지우지 않는다. 복사가 실패하면 옛 위치로 계속
+   동작하다 다음 실행에 재시도하므로 어떤 경우에도 데이터가 사라지지 않는다. */
+const DBX_ROOT='/07_Apps/더치페이(Dutch-Pay)';
+const DBX_OLD_ROOT='/01_Personal/Dutch-Pay';
+const DBX_MIGRATED='dutchpay_dbx_migrated';
+let   DBX_DIR=localStorage.getItem(DBX_MIGRATED)==='1'?DBX_ROOT:DBX_OLD_ROOT;
+const dbxDir=()=>DBX_DIR;
+const dbxMainFile=()=>DBX_DIR+'/dutch-pay_data.json';
+const dbxHistFile=()=>DBX_DIR+'/dutch-pay_history.json';
+
+/* 저장 위치 확인·이전 — 부팅 때 한 번. 원본은 그대로 두고 복사만 한다. */
+async function _dbxRpc(token,ep,body){
+  return fetch('https://api.dropboxapi.com/2/'+ep,{method:'POST',
+    headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+    body:JSON.stringify(body)});   // 본문은 UTF-8 — 한글 그대로 보내도 된다 (헤더만 ASCII 제약)
+}
+async function _dbxExists(token,path){ try{ return (await _dbxRpc(token,'files/get_metadata',{path})).ok; }catch(e){ return false; } }
+let _dbxRootPromise=null;
+function dbxResolveRoot(){ return _dbxRootPromise||(_dbxRootPromise=_dbxResolveRoot()); }
+async function _dbxResolveRoot(){
+  if(localStorage.getItem(DBX_MIGRATED)==='1'){ DBX_DIR=DBX_ROOT; return; }
+  const token=dbxGetToken(); if(!token)return;
+  try{
+    if(await _dbxExists(token,DBX_ROOT)){                        // 이미 옮겨져 있음
+      DBX_DIR=DBX_ROOT; localStorage.setItem(DBX_MIGRATED,'1'); return;
+    }
+    await _dbxRpc(token,'files/create_folder_v2',{path:'/07_Apps'});   // 있으면 conflict — 무시
+    if(await _dbxExists(token,DBX_OLD_ROOT)){                    // 옛 폴더를 통째로 복사
+      const cp=await _dbxRpc(token,'files/copy_v2',{from_path:DBX_OLD_ROOT,to_path:DBX_ROOT,autorename:false});
+      if(!cp.ok){ DBX_DIR=DBX_OLD_ROOT; return; }                // 실패 — 옛 위치로 계속, 다음에 재시도
+      toast('Dropbox 데이터를 07_Apps로 옮겼어요 (옛 폴더는 그대로 보관)',{type:'success'});
+    }else{
+      await _dbxRpc(token,'files/create_folder_v2',{path:DBX_ROOT});
+    }
+    DBX_DIR=DBX_ROOT; localStorage.setItem(DBX_MIGRATED,'1');
+  }catch(e){ DBX_DIR=DBX_OLD_ROOT; }
+}
 const DBX_LASTSYNC_MAIN='dutchpay_dbx_lastsync_main';
 // history.html과 동일한 localStorage 키 공유 (같은 도메인 = 같은 계정)
 function dbxGetToken(){return localStorage.getItem('dutchpay_dbx_token');}
@@ -1445,7 +1487,8 @@ async function _dbxUpload(token,path,content){
   return res.ok;
 }
 async function _dbxDownload(token,path){
-  const res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':JSON.stringify({path})}});
+  const arg=JSON.stringify({path}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
+  const res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
   if(res.status===409)return null;if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownload(t,path);return null;}if(!res.ok)return null;
   try{return JSON.parse(await res.text());}catch(e){return null;}
 }
@@ -1460,7 +1503,7 @@ async function syncToDropbox(){
   _syncing=true;
   try{
     syncCurrentToGroup();
-    const ok=await _dbxUpload(dbxGetToken(),DBX_MAIN_FILE,JSON.stringify({version:2,groups,currentGroupId,deletedGroups,coupleNames:_coupleNames||[],syncedAt:new Date().toISOString()}));
+    const ok=await _dbxUpload(dbxGetToken(),dbxMainFile(),JSON.stringify({version:2,groups,currentGroupId,deletedGroups,coupleNames:_coupleNames||[],syncedAt:new Date().toISOString()}));
     if(ok){
       localStorage.setItem(DBX_LASTSYNC_MAIN,new Date().toISOString());
       const hashes={};groups.forEach(g=>{hashes[g.id]=_groupHash(g);});
@@ -1473,7 +1516,7 @@ async function syncFromDropbox(){
   const token=dbxGetToken();if(!token)return;
   if(_syncFromRunning)return;_syncFromRunning=true;
   try{
-    const remote=await _dbxDownload(token,DBX_MAIN_FILE);
+    const remote=await _dbxDownload(token,dbxMainFile());
     if(!remote||!Array.isArray(remote.groups)||!remote.groups.length){await syncToDropbox();return;}
     if(remote.coupleNames?.length&&!localStorage.getItem('dutchpay_couple')){_coupleNames=remote.coupleNames;localStorage.setItem('dutchpay_couple',JSON.stringify(_coupleNames));}
 
@@ -1990,7 +2033,7 @@ async function _checkAllPaidAutoSave(){
   try{
     const canvas=await generateHistoryCanvas(rec);
     const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob)return;
-    const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${_buildSettleFilename(rec.dateStart,rec.total,rec.people)}.png`,blob);
+    const ok=await _dbxUpload(hDbxGetToken(),`${dbxDir()}/${_buildSettleFilename(rec.dateStart,rec.total,rec.people)}.png`,blob);
     if(ok){_dbxAutoSavedFp=fp;toast('모든 입금 완료 🎉 Dropbox에 정산 이미지가 저장됐어요',{type:'success'});}
   }catch(e){}
 }
@@ -2001,7 +2044,7 @@ async function saveSettleToDropbox(){
     const canvas=await generateHistoryCanvas(rec);
     const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob)return;
     const filename=_buildSettleFilename(rec.dateStart,rec.total,rec.people);
-    const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${filename}.png`,blob);
+    const ok=await _dbxUpload(hDbxGetToken(),`${dbxDir()}/${filename}.png`,blob);
     if(ok){_dbxAutoSavedFp=_settleAutoSaveFp();toast('Dropbox에 저장됐어요 ✓',{type:'success'});}
     else toast('저장에 실패했어요. 다시 시도해주세요.',{type:'error'});
   }catch(e){console.error('[DBX save]',e);toast('저장 중 오류가 발생했어요.',{type:'error'});}
@@ -2014,7 +2057,7 @@ async function saveHistRecToDropbox(recId){
     const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob)return;
     const total=rec.total||(rec.items||[]).reduce((s,it)=>s+(+it.amount||0),0);
     const filename=_buildSettleFilename(rec.dateStart,total,rec.people||[]);
-    const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${filename}.png`,blob);
+    const ok=await _dbxUpload(hDbxGetToken(),`${dbxDir()}/${filename}.png`,blob);
     if(ok)toast('Dropbox에 저장됐어요 ✓',{type:'success'});
     else toast('저장에 실패했어요. 다시 시도해주세요.',{type:'error'});
   }catch(e){console.error('[DBX save]',e);toast('저장 중 오류가 발생했어요.',{type:'error'});}
@@ -2029,7 +2072,7 @@ async function _checkAllPaidAutoSaveForRec(rec){
     const canvas=await generateHistoryCanvas(rec);
     const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob)return;
     const total=(rec.items||[]).reduce((s,it)=>s+(+it.amount||0),0);
-    const ok=await _dbxUpload(hDbxGetToken(),`/01_Personal/Dutch-Pay/${_buildSettleFilename(rec.dateStart,total,rec.people||[])}.png`,blob);
+    const ok=await _dbxUpload(hDbxGetToken(),`${dbxDir()}/${_buildSettleFilename(rec.dateStart,total,rec.people||[])}.png`,blob);
     if(ok)toast('모든 입금 완료 🎉 Dropbox에 정산 이미지가 저장됐어요',{type:'success'});
   }catch(e){}
 }
@@ -2041,7 +2084,7 @@ async function _dbxRenameExistingFiles(){
   try{
     // 폴더 내 파일 목록 수집 (페이지네이션 포함)
     let entries=[];
-    let res=await fetch('https://api.dropboxapi.com/2/files/list_folder',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({path:'/01_Personal/Dutch-Pay',recursive:false,include_non_downloadable_files:false})});
+    let res=await fetch('https://api.dropboxapi.com/2/files/list_folder',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({path:dbxDir(),recursive:false,include_non_downloadable_files:false})});
     if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxRenameExistingFiles();}
     if(!res.ok){toast('폴더 목록을 가져오지 못했어요',{type:'error'});return;}
     let data=await res.json();
@@ -2058,7 +2101,7 @@ async function _dbxRenameExistingFiles(){
       if(entry['.tag']!=='file')continue;
       const name=entry.name;
       const newName=name.replace(/더치페이|dutch\s*pay/gi,'정산내역');
-      if(newName!==name)toRename.push({fromPath:entry.path_lower,toPath:`/01_Personal/Dutch-Pay/${newName}`});
+      if(newName!==name)toRename.push({fromPath:entry.path_lower,toPath:`${dbxDir()}/${newName}`});
     }
     if(!toRename.length){toast('변경할 파일이 없어요 (이미 최신 이름)',{type:'success'});return;}
     const preview=toRename[0].toPath.split('/').pop();
@@ -2917,7 +2960,7 @@ function saveToHistory(){
 
 // ── 기록 보관함 (SPA) ──
 const DBX_H_LASTSYNC='dutchpay_dbx_lastsync';
-const DBX_H_FILE='/01_Personal/Dutch-Pay/dutch-pay_history.json';
+// 기록 보관함 파일 — 경로는 dbxHistFile()이 DBX_DIR 기준으로 만든다
 const svgArrowH='<svg width="13" height="13" viewBox="0 0 24 24"><line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M13 6 L22 12 L13 18 Z" fill="currentColor"/></svg>';
 
 function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JSON.parse(r):[];}catch(e){return [];}}
@@ -3199,7 +3242,7 @@ function _renderHDbxPanel(){
   let acHtml='';
   if(token){
     try{const ac=JSON.parse(localStorage.getItem('dutchpay_dbx_account')||'{}');if(ac.name){acHtml=`<div class="dbx-account"><div class="dbx-account-info"><div class="dbx-account-name">${e(ac.name)}</div><div class="dbx-account-email">${e(ac.email)}</div></div><button class="dbx-disconnect" onclick="hDbxDisconnect()">연결 해제</button></div>`;}}catch(e2){}
-    panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body">${acHtml}<div class="dbx-btn-row"><button class="dbx-btn secondary" onclick="hSyncDropbox()">지금 동기화</button></div><div style="font-size:11px;color:var(--label3);margin-top:10px;text-align:center">파일: 01_Personal/Dutch-Pay/dutch-pay_history.json</div></div></div>`;
+    panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body">${acHtml}<div class="dbx-btn-row"><button class="dbx-btn secondary" onclick="hSyncDropbox()">지금 동기화</button></div><div style="font-size:11px;color:var(--label3);margin-top:10px;text-align:center">파일: ${e(dbxHistFile())}</div></div></div>`;
   }else{
     const redirectUri=location.origin+location.pathname;
     panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body"><div class="dbx-field"><div class="dbx-label">Dropbox App Key</div><input class="dbx-inp" id="hDbxAppKey" placeholder="앱 키 입력" value="${e(appKey)}"/><div class="dbx-guide">1. Dropbox 개발자 콘솔에서 앱 생성<br>2. Permission: files.content.write, files.content.read<br>3. Redirect URI: <code>${redirectUri}</code><br>4. App Key 복사 후 위에 입력</div></div><button class="dbx-btn" onclick="hDbxConnect()">Dropbox 연결하기</button></div></div>`;
@@ -3268,7 +3311,7 @@ async function hSyncDropbox(uploadOnly=false){
   try{
     const local=loadHistory();
     if(!uploadOnly){
-      const raw=await _dbxDownload(token,DBX_H_FILE);
+      const raw=await _dbxDownload(token,dbxHistFile());
       if(raw){
         const remoteRecs=Array.isArray(raw)?raw:(raw.records||[]);
         const delIds=_mergeDelIds(Array.isArray(raw)?[]:(raw.deletedIds||[]));
@@ -3279,7 +3322,7 @@ async function hSyncDropbox(uploadOnly=false){
       }
     }
     const toUpload={records:loadHistory(),deletedIds:[..._loadDelIds()]};
-    await _dbxUpload(dbxGetToken(),DBX_H_FILE,JSON.stringify(toUpload,null,2));
+    await _dbxUpload(dbxGetToken(),dbxHistFile(),JSON.stringify(toUpload,null,2));
     localStorage.setItem(DBX_H_LASTSYNC,new Date().toISOString());
     if(_histDrawerOpen){_refreshHistDrawer();}
     else{if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}}
@@ -3789,8 +3832,8 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
   addEventListener('touchcancel',()=>{if(pulling){pulling=false;reset();}},{passive:true});
 })();
 _updateSyncBadge();
-if(dbxGetToken())syncFromDropbox();
-hDbxHandleCallback().then(()=>{if(hDbxGetToken())hSyncDropbox();});
+if(dbxGetToken())dbxResolveRoot().then(()=>syncFromDropbox());
+hDbxHandleCallback().then(async()=>{if(hDbxGetToken()){await dbxResolveRoot();hSyncDropbox();}});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{try{navigator.serviceWorker.register('sw.js').then(reg=>{reg.update();reg.addEventListener('updatefound',()=>{const nw=reg.installing;if(!nw)return;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#4355E8;color:#fff;padding:12px 18px;border-radius:24px;font:600 13px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 4px 16px rgba(67,85,232,.35);z-index:99999;cursor:pointer;';t.textContent='새 버전이 있어요 · 탭해서 새로고침';t.onclick=()=>location.reload();document.body.appendChild(t);}});});}).catch(()=>{});}catch(e){}});}
 </script>
 </body>
