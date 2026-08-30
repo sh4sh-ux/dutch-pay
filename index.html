@@ -1208,7 +1208,7 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.12';
+const APP_VERSION='v5.13';
 const BUILD_TIME='2026-08-30 08:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -3261,7 +3261,12 @@ async function hDbxConnect(){
   if(!appKey){toast('App Key를 입력해주세요',{type:'error'});return;}
   // App key가 바뀌면(App folder 앱 → Full Dropbox 앱) 저장 위치를 다시 판단해야 한다.
   // 새 앱은 옛 앱의 폴더 안을 볼 수 없으므로 이전 완료 표시를 지우고 처음부터 확인한다.
-  if(localStorage.getItem('dutchpay_dbx_appkey')!==appKey)localStorage.removeItem(DBX_MIGRATED),localStorage.setItem(DBX_KEYCHANGED,'1');
+  if(localStorage.getItem('dutchpay_dbx_appkey')!==appKey){
+    // 옛 키로 받은 refresh token은 새 키(client_id)로는 갱신되지 않는다.
+    // 남겨두면 '연결됨'으로 오인해 요청만 401로 실패하므로 함께 버린다.
+    localStorage.removeItem(DBX_MIGRATED); localStorage.setItem(DBX_KEYCHANGED,'1');
+    ['dutchpay_dbx_token','dutchpay_dbx_refresh'].forEach(k=>localStorage.removeItem(k));
+  }
   localStorage.setItem('dutchpay_dbx_appkey',appKey);
   const verifier=_hRandomStr(64);
   const challenge=await _hSha256b64url(verifier);
@@ -3274,7 +3279,12 @@ async function hDbxConnect(){
 async function _hDbxConnectDirect(){
   let appKey=(localStorage.getItem('dutchpay_dbx_appkey')||'').trim();
   if(!appKey){appKey=(prompt('Dropbox App Key를 입력하세요\n(개발자 콘솔 → 앱 키 복사)')||'').trim();if(!appKey)return;}
-  if(localStorage.getItem('dutchpay_dbx_appkey')!==appKey)localStorage.removeItem(DBX_MIGRATED),localStorage.setItem(DBX_KEYCHANGED,'1');
+  if(localStorage.getItem('dutchpay_dbx_appkey')!==appKey){
+    // 옛 키로 받은 refresh token은 새 키(client_id)로는 갱신되지 않는다.
+    // 남겨두면 '연결됨'으로 오인해 요청만 401로 실패하므로 함께 버린다.
+    localStorage.removeItem(DBX_MIGRATED); localStorage.setItem(DBX_KEYCHANGED,'1');
+    ['dutchpay_dbx_token','dutchpay_dbx_refresh'].forEach(k=>localStorage.removeItem(k));
+  }
   localStorage.setItem('dutchpay_dbx_appkey',appKey);
   const verifier=_hRandomStr(64);const challenge=await _hSha256b64url(verifier);
   localStorage.setItem('h_dbx_verifier',verifier);
