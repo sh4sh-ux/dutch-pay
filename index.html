@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" href="favicon.png"/>
 <link rel="apple-touch-icon" href="favicon.png"/>
 <link rel="manifest" href="manifest.webmanifest"/>
-<meta name="theme-color" content="#000000"/>
+<meta name="theme-color" content="#F7F7F8"/>
 <meta name="apple-mobile-web-app-title" content="더치페이"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -1220,8 +1220,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.18';
-const BUILD_TIME='2026-08-31 19:00';
+const APP_VERSION='v5.19';
+const BUILD_TIME='2026-08-31 20:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1301,7 +1301,16 @@ function _openGroupMorePop(anchorBtn,id,parentPop){document.querySelectorAll('.g
 
 function _getEffectiveDark(){const stored=localStorage.getItem('dutchpay_dark_mode');if(stored==='dark')return true;if(stored==='light')return false;return window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;}
 function _getDarkModeLabel(){const stored=localStorage.getItem('dutchpay_dark_mode');if(stored==='dark')return '☀️ 라이트 모드로 전환';if(stored==='light')return '🌙 다크 모드로 전환';return _getEffectiveDark()?'☀️ 라이트 모드로 전환':'🌙 다크 모드로 전환';}
-function _applyDarkMode(){const dark=_getEffectiveDark();document.documentElement.setAttribute('data-theme',dark?'dark':'light');}
+// 안드로이드 PWA는 theme-color로 상태표시줄을 칠하고, 그 밝기로 시계·와이파이·배터리
+// 아이콘 색(검정/흰색)을 자동으로 고른다. 값이 앱 배경과 어긋나면 배경과 아이콘이
+// 같은 계열이 되어 상태표시줄 정보가 안 보인다.
+// 고정값 대신 실제 배경 토큰(--bg)을 그대로 넣어 항상 일치시킨다.
+function _syncThemeColor(){
+  const m=document.querySelector('meta[name="theme-color"]');if(!m)return;
+  const bg=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  if(bg)m.setAttribute('content',bg);
+}
+function _applyDarkMode(){const dark=_getEffectiveDark();document.documentElement.setAttribute('data-theme',dark?'dark':'light');_syncThemeColor();}
 function _toggleDarkMode(){const dark=_getEffectiveDark();const next=dark?'light':'dark';localStorage.setItem('dutchpay_dark_mode',next);_applyDarkMode();toast(next==='dark'?'다크 모드 켜짐':'라이트 모드 켜짐',{type:'success'});}
 
 function _ownerLock(){
