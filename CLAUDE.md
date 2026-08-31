@@ -22,11 +22,15 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v5.11** (2026-08-30) — 작업 브랜치
+**v5.15** (2026-08-30) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v5.15 | 공유 탭 이미지 공유 버튼을 하단 고정 — 데스크탑은 우측 패널 하단 opaque sticky footer, 모바일은 탭바 위 fixed footer + 본문 하단 여백 확보 |
+| v5.14 | ⋯ 메뉴에 '옛 위치에서 가져오기' 추가 — 자동 이전이 건너뛰어져도 앱 안에서 복구. 덮어쓰지 않고 병합(같은 id는 updatedAt 최신 우선), 옛 원본은 보존 |
+| v5.13 | App key를 바꾸면 옛 access·refresh token도 함께 폐기 — refresh token은 발급한 client_id에만 유효해, 남겨두면 '연결됨'으로 오인하고 401만 반복 |
+| v5.12 | App key 변경 직후에는 옛 폴더를 복사하지 않음 — 키가 바뀌면 저장 공간 자체가 달라져 동명 폴더가 이 앱 데이터가 아닐 수 있음(화석 폴더를 끌어오는 문제 방지) |
 | v5.11 | Dropbox 저장 위치를 `/07_Apps/더치페이(Dutch-Pay)/`로 이동 — 앱 전체 폴더 통합. 옛 폴더는 복사만 하고 지우지 않으며, 복사 실패 시 옛 위치로 계속 동작(유실 없음). 한글 폴더명 때문에 다운로드 헤더도 ASCII 이스케이프 |
 | v5.10 | 모바일 당겨서 새로고침 추가 — 임계값 70px, 시트·드로어·모달 열림 시 비활성, PWA에 없는 브라우저 기본 동작 대체 |
 | v5.09 | 모바일 헤더를 압축 없이 103px 그대로 고정 (v5.08의 compact 방식 철회) |
@@ -130,20 +134,22 @@ favicon.png / icons/  — 아이콘
 
 ## ⋯ 메뉴 항목 순서 (소유자 잠금 해제 시)
 1. Dropbox 연결/동기화
-2. (연결됨) 이미지 파일명 일괄 변경 / Dropbox 연결 해제
-3. 기록 보관함 열기
-4. 기록 보관함에 저장
-5. 💑 공유 이미지 커플 설정
-6. (구분선)
-7. CSV 저장
-8. 전체 JSON 백업
-9. (구분선)
-10. 내 이름 설정
-11. 다크 모드 토글
-12. (구분선)
-13. 이번 정산 초기화
-14. 전체 초기화
-15. 버전 표시 (탭 5번 → 잠금 해제 / 🔒 잠금)
+2. (연결됨) 📥 옛 위치에서 가져오기 — v5.14
+3. (연결됨) 🗂 이미지 파일명 일괄 변경
+4. (연결됨) ☁ Dropbox 연결 해제
+5. 📋 기록 보관함
+6. 📌 기록 보관함에 저장
+7. 💑 공유 이미지 커플 설정
+8. (구분선)
+9. CSV 저장
+10. 전체 JSON 백업
+11. (구분선)
+12. 내 이름 설정
+13. 다크 모드 토글
+14. (구분선)
+15. ↺ 이번 정산 초기화
+16. 전체 초기화
+17. 버전 표시 (탭 5번 → 잠금 해제 / 🔒 잠금)
 
 ## 핵심 설계 원칙
 - 친구들에게 보이는 UI는 단순하게: 입력·정산·공유만
@@ -180,13 +186,40 @@ favicon.png / icons/  — 아이콘
 ## localStorage 키 목록
 | 키 | 내용 |
 |----|------|
-| `dutchpay_v1` | 메인 데이터 `{version:3, groups, currentGroupId, deletedGroups}` |
-| `dutchpay_history` | 기록 보관함 배열 |
+| `dutchpay_v1` | 메인 데이터 `{version:3, groups, currentGroupId, deletedGroups}` (`STORAGE_KEY`) |
+| `dutchpay_history` | 기록 보관함 배열 (`HISTORY_KEY`) |
+| `dutchpay_hist_deleted` | 삭제된 기록 id — 동기화 시 되살아나지 않게 (`HISTORY_DEL_KEY`) |
+| `dutchpay_autobackups` | 자동 백업 슬롯 (`AUTO_BACKUP_KEY`) |
+| `dutchpay_sync_hashes` | 그룹별 동기화 해시 (`SYNC_HASHES_KEY`) |
 | `dutchpay_my_name` | 소유자 이름 (조상현) — 수금 필터 기준 |
 | `dutchpay_couple` | 커플 이름 배열 `["김영석","이종현"]` — 공유 이미지 합산 |
-| `dutchpay_dbx_token` | Dropbox access token |
 | `dutchpay_owner_unlocked` | ⋯ 메뉴 잠금 해제 여부 |
 | `dutchpay_dark_mode` | 다크 모드 설정 |
+| `dutchpay_dbx_token` | Dropbox access token |
+| `dutchpay_dbx_refresh` | Dropbox refresh token — App key 바뀌면 함께 폐기 (v5.13) |
+| `dutchpay_dbx_appkey` | Dropbox App key |
+| `dutchpay_dbx_account` | Dropbox 계정 표시용 |
+| `dutchpay_dbx_lastsync` / `_main` | 마지막 동기화 시각 |
+| `dutchpay_dbx_migrated` | `'1'`이면 새 폴더로 이전 완료 (`DBX_MIGRATED`) |
+| `dutchpay_dbx_appkey_changed` | App key가 바뀜 — 옛 폴더 복사 건너뜀 (`DBX_KEYCHANGED`, v5.12) |
+| `receipt_db_dutchpay_transfer_v1` | 영수증 DB 전송 봉투 (일회성, 가져온 뒤 삭제) |
+| `h_dbx_verifier` | Dropbox OAuth PKCE verifier (콜백 후 삭제) |
+
+## Dropbox 저장 위치 (v5.11~)
+```js
+const DBX_ROOT     = '/07_Apps/더치페이(Dutch-Pay)';   // 현재
+const DBX_OLD_ROOT = '/01_Personal/Dutch-Pay';         // 옛 위치
+let   DBX_DIR = localStorage.getItem(DBX_MIGRATED)==='1' ? DBX_ROOT : DBX_OLD_ROOT;
+dbxMainFile() → DBX_DIR + '/dutch-pay_data.json'
+dbxHistFile() → DBX_DIR + '/dutch-pay_history.json'
+```
+- `dbxResolveRoot()`가 부팅 때 한 번 옛 폴더를 `copy_v2`로 통째 복사. **원본은 지우지 않고**,
+  복사 실패 시 옛 위치로 계속 동작하다 다음 실행에 재시도 → 어떤 경우에도 데이터 유실 없음
+- App key가 바뀌면 저장 공간 자체가 달라지므로 옛 폴더 복사를 건너뛴다 (v5.12).
+  동명의 화석 폴더를 끌어와 옛 데이터가 현재 데이터를 덮는 사고 방지
+- 폴더명에 한글이 있어 `_dbxDownload`의 `Dropbox-API-Arg` 헤더도 ASCII 이스케이프 필요
+- 자동 이전이 건너뛰어진 경우 ⋯ 메뉴 **📥 옛 위치에서 가져오기**로 수동 복구 (v5.14).
+  덮어쓰지 않고 병합 — 같은 id는 `updatedAt` 최신 우선, 옛 원본은 보존
 
 ## 그룹 데이터 구조
 ```js
