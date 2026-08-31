@@ -13,6 +13,7 @@
 <link rel="icon" type="image/png" href="favicon.png"/>
 <link rel="apple-touch-icon" href="favicon.png"/>
 <link rel="manifest" href="manifest.webmanifest"/>
+<meta name="color-scheme" content="light dark"/>
 <meta name="theme-color" content="#FFFFFF"/>
 <!-- 상태표시줄 색은 브라우저가 문서를 파싱하면서 정한다. 스크립트 끝에서 고치면
      이미 밝은 값(#F7F7F8) 기준으로 아이콘 색이 검정으로 정해진 뒤라, 다크 모드에서
@@ -23,6 +24,7 @@
   var s=localStorage.getItem("dutchpay_dark_mode");
   var dark=s==="dark"||(s!=="light"&&window.matchMedia&&matchMedia("(prefers-color-scheme:dark)").matches);
   document.documentElement.setAttribute("data-theme",dark?"dark":"light");
+  document.documentElement.style.colorScheme=dark?"dark":"light";
   var m=document.querySelector('meta[name="theme-color"]');
   if(m)m.setAttribute("content",dark?"#2C2C2E":"#FFFFFF");   // --card (헤더 바탕)
   window.__themeInit={beforeBody:document.body===null,dark:dark};
@@ -1238,8 +1240,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.22';
-const BUILD_TIME='2026-08-31 23:00';
+const APP_VERSION='v5.23';
+const BUILD_TIME='2026-08-31 22:22';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1330,7 +1332,7 @@ function _syncThemeColor(){
   const c=getComputedStyle(document.documentElement).getPropertyValue('--card').trim();
   if(c)m.setAttribute('content',c);
 }
-function _applyDarkMode(){const dark=_getEffectiveDark();document.documentElement.setAttribute('data-theme',dark?'dark':'light');_syncThemeColor();}
+function _applyDarkMode(){const dark=_getEffectiveDark();document.documentElement.setAttribute('data-theme',dark?'dark':'light');document.documentElement.style.colorScheme=dark?'dark':'light';_syncThemeColor();}
 function _toggleDarkMode(){const dark=_getEffectiveDark();const next=dark?'light':'dark';localStorage.setItem('dutchpay_dark_mode',next);_applyDarkMode();toast(next==='dark'?'다크 모드 켜짐':'라이트 모드 켜짐',{type:'success'});}
 
 function _ownerLock(){
