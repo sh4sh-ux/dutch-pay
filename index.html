@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" href="favicon.png"/>
 <link rel="apple-touch-icon" href="favicon.png"/>
 <link rel="manifest" href="manifest.webmanifest"/>
-<meta name="theme-color" content="#F7F7F8"/>
+<meta name="theme-color" content="#FFFFFF"/>
 <!-- 상태표시줄 색은 브라우저가 문서를 파싱하면서 정한다. 스크립트 끝에서 고치면
      이미 밝은 값(#F7F7F8) 기준으로 아이콘 색이 검정으로 정해진 뒤라, 다크 모드에서
      어두운 배경에 검정 아이콘이 남아 시계·와이파이·배터리가 안 보인다.
@@ -19,7 +19,7 @@
   var dark=s==="dark"||(s!=="light"&&window.matchMedia&&matchMedia("(prefers-color-scheme:dark)").matches);
   document.documentElement.setAttribute("data-theme",dark?"dark":"light");
   var m=document.querySelector('meta[name="theme-color"]');
-  if(m)m.setAttribute("content",dark?"#111113":"#F7F7F8");
+  if(m)m.setAttribute("content",dark?"#2C2C2E":"#FFFFFF");   // --card (헤더 바탕)
   window.__themeInit={beforeBody:document.body===null,dark:dark};
 }catch(e){}})();</script>
 <meta name="apple-mobile-web-app-title" content="더치페이"/>
@@ -1233,8 +1233,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.20';
-const BUILD_TIME='2026-08-31 21:00';
+const APP_VERSION='v5.21';
+const BUILD_TIME='2026-08-31 22:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1320,8 +1320,10 @@ function _getDarkModeLabel(){const stored=localStorage.getItem('dutchpay_dark_mo
 // 고정값 대신 실제 배경 토큰(--bg)을 그대로 넣어 항상 일치시킨다.
 function _syncThemeColor(){
   const m=document.querySelector('meta[name="theme-color"]');if(!m)return;
-  const bg=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
-  if(bg)m.setAttribute('content',bg);
+  // 앱 맨 위에 실제로 칠해지는 건 본문 배경(--bg)이 아니라 헤더다.
+  // --bg로 맞추면 상태표시줄 띠만 다른 색이 되어 경계가 드러난다.
+  const c=getComputedStyle(document.documentElement).getPropertyValue('--card').trim();
+  if(c)m.setAttribute('content',c);
 }
 function _applyDarkMode(){const dark=_getEffectiveDark();document.documentElement.setAttribute('data-theme',dark?'dark':'light');_syncThemeColor();}
 function _toggleDarkMode(){const dark=_getEffectiveDark();const next=dark?'light':'dark';localStorage.setItem('dutchpay_dark_mode',next);_applyDarkMode();toast(next==='dark'?'다크 모드 켜짐':'라이트 모드 켜짐',{type:'success'});}
