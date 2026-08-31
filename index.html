@@ -9,6 +9,19 @@
 <link rel="apple-touch-icon" href="favicon.png"/>
 <link rel="manifest" href="manifest.webmanifest"/>
 <meta name="theme-color" content="#F7F7F8"/>
+<!-- 상태표시줄 색은 브라우저가 문서를 파싱하면서 정한다. 스크립트 끝에서 고치면
+     이미 밝은 값(#F7F7F8) 기준으로 아이콘 색이 검정으로 정해진 뒤라, 다크 모드에서
+     어두운 배경에 검정 아이콘이 남아 시계·와이파이·배터리가 안 보인다.
+     그래서 첫 페인트 전인 여기서 data-theme과 theme-color를 함께 확정한다.
+     값은 --bg 토큰과 같으며, 이후 _syncThemeColor()가 실제 토큰으로 다시 맞춘다. -->
+<script>(function(){try{
+  var s=localStorage.getItem("dutchpay_dark_mode");
+  var dark=s==="dark"||(s!=="light"&&window.matchMedia&&matchMedia("(prefers-color-scheme:dark)").matches);
+  document.documentElement.setAttribute("data-theme",dark?"dark":"light");
+  var m=document.querySelector('meta[name="theme-color"]');
+  if(m)m.setAttribute("content",dark?"#111113":"#F7F7F8");
+  window.__themeInit={beforeBody:document.body===null,dark:dark};
+}catch(e){}})();</script>
 <meta name="apple-mobile-web-app-title" content="더치페이"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -1220,8 +1233,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.19';
-const BUILD_TIME='2026-08-31 20:00';
+const APP_VERSION='v5.20';
+const BUILD_TIME='2026-08-31 21:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
