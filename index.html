@@ -987,6 +987,13 @@ svg{display:block;flex-shrink:0;}
 .item-meta{margin-top:3px;line-height:1.35;}
 .item-amt{font-size:13.5px;letter-spacing:-.1px;}
 .left-foot{flex:0 0 auto;padding:16px 28px;}
+/* 공유 버튼 푸터 — 스크롤 영역(.right-body) 밖에 두어 프레임 바닥에 붙인다.
+   안에 sticky로 두면 컨테이닝 블록(=.right-body 콘텐츠 박스) 바닥까지만 내려가
+   패딩 26px만큼 떠서 그 틈으로 지출 내역이 비쳐 보였다.
+   구분선 위치를 좌측 .left-foot과 맞추려고 세로 패딩·테두리를 동일하게 준다. */
+.right-foot{flex:0 0 auto;padding:16px 34px;background:var(--panel-bg);border-top:1px solid var(--sep);display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;}
+.right-foot:empty{display:none;border-top:none;padding:0;}
+.right-foot .share-actions{position:static;margin:0;padding:0;background:none;border-top:none;box-shadow:none;}
 .right-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:28px 34px 21px;}
 .right-body{min-height:0;padding:26px 34px;--share-inline-pad:34px;--share-bottom-pad:26px;}
 .r-title{font-size:24px;letter-spacing:-.6px;line-height:1.2;}
@@ -1137,6 +1144,7 @@ svg{display:block;flex-shrink:0;}
     <div class="right-body" id="dRBody">
       <div class="empty"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="11" y2="16"/></svg></div><p>지출을 선택하거나 추가하면<br>여기서 편집할 수 있어요</p></div>
     </div>
+    <div class="right-foot" id="dRFoot"></div>
   </div>
 </div>
 </div>
@@ -1212,8 +1220,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.15';
-const BUILD_TIME='2026-08-31 16:05';
+const APP_VERSION='v5.16';
+const BUILD_TIME='2026-08-31 17:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2791,7 +2799,23 @@ function renderItemLists(){const el=document.getElementById('dItemRows');const l
 
 function updateTotals(){const t=items.reduce((s,it)=>s+(+it.amount||0),0);const neg=t<0;const dEl=document.getElementById('dTotal');dEl.textContent=fmt(t)+'원';dEl.classList.toggle('amt-neg',neg);const mEl=document.getElementById('mTotal');if(mEl){mEl.textContent=fmt(t)+'원';mEl.classList.toggle('amt-neg',neg);}}
 
-function renderDesktopRight(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='history'){renderHistoryView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='payment'){renderPaymentView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');return;}document.getElementById('dREye').textContent='시작하기';if(!people.length){document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{renderResultView('dREye','dRTitle','dRSub','dRBody');document.getElementById('dRSub').textContent='지출을 선택하면 편집 모드로 전환돼요.';}}
+// 공유 버튼은 렌더 후 스크롤 영역 밖(.right-foot)으로 옮긴다.
+// .right-body 안에 두면 sticky여도 그 콘텐츠 박스 바닥까지만 내려가 패딩만큼 뜬다.
+function _syncShareFoot(){
+  const foot=document.getElementById('dRFoot');if(!foot)return;
+  const body=document.getElementById('dRBody');
+  const sa=body?body.querySelector('.share-actions'):null;
+  foot.textContent='';
+  foot.style.minHeight='';
+  if(!sa)return;
+  foot.appendChild(sa);
+  // 구분선을 좌측 합계 푸터와 같은 높이에 두려면 두 푸터의 높이가 같아야 한다.
+  // 좌측은 내용(합계·초기화·동기화 줄)에 따라 높이가 변하므로 고정값 대신 따라 맞춘다.
+  const lf=document.querySelector('.desktop-shell .left-foot');
+  if(lf&&lf.offsetHeight)foot.style.minHeight=lf.offsetHeight+'px';
+}
+function renderDesktopRight(){_renderDesktopRightInner();_syncShareFoot();}
+function _renderDesktopRightInner(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='history'){renderHistoryView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='payment'){renderPaymentView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');return;}document.getElementById('dREye').textContent='시작하기';if(!people.length){document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{renderResultView('dREye','dRTitle','dRSub','dRBody');document.getElementById('dRSub').textContent='지출을 선택하면 편집 모드로 전환돼요.';}}
 
 function renderEditor(id,eyeId,titleId,subId,bodyId){
   const it=items.find(i=>i.id===id);if(!it)return;
