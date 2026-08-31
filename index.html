@@ -1220,8 +1220,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.16';
-const BUILD_TIME='2026-08-31 17:00';
+const APP_VERSION='v5.17';
+const BUILD_TIME='2026-08-31 18:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2801,18 +2801,24 @@ function updateTotals(){const t=items.reduce((s,it)=>s+(+it.amount||0),0);const 
 
 // 공유 버튼은 렌더 후 스크롤 영역 밖(.right-foot)으로 옮긴다.
 // .right-body 안에 두면 sticky여도 그 콘텐츠 박스 바닥까지만 내려가 패딩만큼 뜬다.
+let _footRO=null;
 function _syncShareFoot(){
   const foot=document.getElementById('dRFoot');if(!foot)return;
   const body=document.getElementById('dRBody');
   const sa=body?body.querySelector('.share-actions'):null;
   foot.textContent='';
   foot.style.minHeight='';
-  if(!sa)return;
+  if(!sa){if(_footRO){_footRO.disconnect();_footRO=null;}return;}
   foot.appendChild(sa);
   // 구분선을 좌측 합계 푸터와 같은 높이에 두려면 두 푸터의 높이가 같아야 한다.
-  // 좌측은 내용(합계·초기화·동기화 줄)에 따라 높이가 변하므로 고정값 대신 따라 맞춘다.
+  // 좌측은 Dropbox 동기화 줄이 나중에 붙는 등 렌더 뒤에도 높이가 바뀌므로,
+  // 한 번 재고 끝내면 그때부터 구분선이 어긋난다. 계속 따라가게 관찰한다.
   const lf=document.querySelector('.desktop-shell .left-foot');
-  if(lf&&lf.offsetHeight)foot.style.minHeight=lf.offsetHeight+'px';
+  if(!lf)return;
+  const apply=()=>{foot.style.minHeight=lf.offsetHeight?lf.offsetHeight+'px':'';};
+  apply();
+  if(_footRO){_footRO.disconnect();_footRO=null;}
+  if(typeof ResizeObserver==='function'){_footRO=new ResizeObserver(apply);_footRO.observe(lf);}
 }
 function renderDesktopRight(){_renderDesktopRightInner();_syncShareFoot();}
 function _renderDesktopRightInner(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='history'){renderHistoryView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='payment'){renderPaymentView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');return;}document.getElementById('dREye').textContent='시작하기';if(!people.length){document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{renderResultView('dREye','dRTitle','dRSub','dRBody');document.getElementById('dRSub').textContent='지출을 선택하면 편집 모드로 전환돼요.';}}
