@@ -3,7 +3,12 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+<!-- viewport-fit=cover를 쓰면 앱이 상태표시줄 아래까지 직접 그린다. 그러면 그 자리에
+     보이는 배경은 앱이, 글자·아이콘 색은 브라우저가 각각 정하게 되어 둘이 어긋나고,
+     밝기가 비슷해지면 시계·와이파이·배터리가 배경에 묻힌다.
+     상태표시줄을 브라우저에 넘기면 배경과 아이콘 색을 한 쌍으로 정해 항상 읽힌다.
+     env(safe-area-inset-*)은 모두 대체값(0px)이나 max() 최솟값이 있어 영향 없다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
 <title>더치페이</title>
 <link rel="icon" type="image/png" href="favicon.png"/>
 <link rel="apple-touch-icon" href="favicon.png"/>
@@ -24,7 +29,7 @@
 }catch(e){}})();</script>
 <meta name="apple-mobile-web-app-title" content="더치페이"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -1233,8 +1238,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.21';
-const BUILD_TIME='2026-08-31 22:00';
+const APP_VERSION='v5.22';
+const BUILD_TIME='2026-08-31 23:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
