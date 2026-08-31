@@ -991,7 +991,7 @@ svg{display:block;flex-shrink:0;}
    안에 sticky로 두면 컨테이닝 블록(=.right-body 콘텐츠 박스) 바닥까지만 내려가
    패딩 26px만큼 떠서 그 틈으로 지출 내역이 비쳐 보였다.
    구분선 위치를 좌측 .left-foot과 맞추려고 세로 패딩·테두리를 동일하게 준다. */
-.right-foot{flex:0 0 auto;padding:16px 34px;background:var(--panel-bg);border-top:1px solid var(--sep);display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;}
+.right-foot{flex:0 0 auto;padding:0 34px;background:var(--panel-bg);border-top:1px solid var(--sep);display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;}
 .right-foot:empty{display:none;border-top:none;padding:0;}
 .right-foot .share-actions{position:static;margin:0;padding:0;background:none;border-top:none;box-shadow:none;}
 .right-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:28px 34px 21px;}
@@ -1220,8 +1220,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.17';
-const BUILD_TIME='2026-08-31 18:00';
+const APP_VERSION='v5.18';
+const BUILD_TIME='2026-08-31 19:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2807,7 +2807,7 @@ function _syncShareFoot(){
   const body=document.getElementById('dRBody');
   const sa=body?body.querySelector('.share-actions'):null;
   foot.textContent='';
-  foot.style.minHeight='';
+  foot.style.height='';
   if(!sa){if(_footRO){_footRO.disconnect();_footRO=null;}return;}
   foot.appendChild(sa);
   // 구분선을 좌측 합계 푸터와 같은 높이에 두려면 두 푸터의 높이가 같아야 한다.
@@ -2815,7 +2815,10 @@ function _syncShareFoot(){
   // 한 번 재고 끝내면 그때부터 구분선이 어긋난다. 계속 따라가게 관찰한다.
   const lf=document.querySelector('.desktop-shell .left-foot');
   if(!lf)return;
-  const apply=()=>{foot.style.minHeight=lf.offsetHeight?lf.offsetHeight+'px':'';};
+  // min-height로는 배지('기록보관함 저장됨')가 붙어 내용이 커졌을 때 줄이지 못해
+  // 우측이 좌측보다 높아진다. height로 정확히 고정하고 세로 패딩은 0으로 두어
+  // 내용이 그 안에서 중앙 정렬되게 한다.
+  const apply=()=>{foot.style.height=lf.offsetHeight?lf.offsetHeight+'px':'';};
   apply();
   if(_footRO){_footRO.disconnect();_footRO=null;}
   if(typeof ResizeObserver==='function'){_footRO=new ResizeObserver(apply);_footRO.observe(lf);}
