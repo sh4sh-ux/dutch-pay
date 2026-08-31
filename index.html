@@ -439,7 +439,6 @@ svg{display:block;flex-shrink:0;}
   .share-date-row > .share-date-dp:nth-child(3){transform:translateY(-8px);}
   .share-date-row > .share-date-rm:nth-child(4){transform:translateY(-17px);}
 }
-.share-actions{background:linear-gradient(to bottom,transparent,var(--bg) 30%);bottom:calc(env(safe-area-inset-bottom,0px) + 72px);}
 .rc-txn-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;flex-wrap:wrap;}
 .pm-allrec-card{cursor:pointer;user-select:none;}
 .pm-allrec-card.open{border-radius:12px 12px 0 0;margin-bottom:0;}
@@ -638,7 +637,12 @@ svg{display:block;flex-shrink:0;}
   .share-date-row > .share-date-dp:nth-child(3){transform:translateY(-8px);}
   .share-date-row > .share-date-rm:nth-child(4){transform:translateY(-17px);}
 }
-.share-actions{margin-top:20px;position:sticky;bottom:0;padding:12px 0 4px;background:linear-gradient(to bottom,transparent,var(--panel-bg) 30%);z-index:5;}
+.share-actions{margin-top:20px;position:sticky;bottom:0;padding:14px 0 4px;background:var(--panel-bg);z-index:20;}
+.right-body.settle-mode .share-actions{margin-right:calc(var(--share-inline-pad,34px) * -1);margin-bottom:calc(var(--share-bottom-pad,26px) * -1);margin-left:calc(var(--share-inline-pad,34px) * -1);padding:14px var(--share-inline-pad,34px) 16px;border-top:1px solid var(--sep);box-shadow:0 -12px 28px rgba(20,25,40,.08);}
+@media(max-width:700px){
+  .mob-body.settle-mode{padding-bottom:calc(max(env(safe-area-inset-bottom,0px),0px) + 190px);}
+  .mob-body .share-actions{position:fixed;right:0;bottom:calc(72px + env(safe-area-inset-bottom,0px));left:0;margin:0;padding:12px 16px;background:var(--bg);border-top:1px solid var(--sep);box-shadow:0 -12px 28px rgba(20,25,40,.08);z-index:80;}
+}
 .saved-badge{margin-top:10px;text-align:center;font-size:13px;color:var(--green);font-weight:600;}
 .share-save-btn{width:100%;border:none;border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;background:var(--label);color:var(--bg);cursor:pointer;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .share-save-btn:hover{opacity:.88;}
@@ -984,7 +988,7 @@ svg{display:block;flex-shrink:0;}
 .item-amt{font-size:13.5px;letter-spacing:-.1px;}
 .left-foot{flex:0 0 auto;padding:16px 28px;}
 .right-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:28px 34px 21px;}
-.right-body{min-height:0;padding:26px 34px;}
+.right-body{min-height:0;padding:26px 34px;--share-inline-pad:34px;--share-bottom-pad:26px;}
 .r-title{font-size:24px;letter-spacing:-.6px;line-height:1.2;}
 .expense-editor-card{max-width:920px;padding:20px;background:var(--fill2);border:1px solid var(--sep);border-radius:14px;}
 .expense-editor-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px 14px;}
@@ -1003,7 +1007,7 @@ svg{display:block;flex-shrink:0;}
   .app-rail-logo{width:44px;height:44px;border-radius:13px;font-size:20px;}
   .app-rail-btn{width:44px;height:44px;}
   .right-top{padding-left:28px;padding-right:28px;}
-  .right-body{padding-left:28px;padding-right:28px;}
+  .right-body{padding-left:28px;padding-right:28px;--share-inline-pad:28px;}
   .expense-editor-grid{grid-template-columns:1fr;}
   .expense-editor-grid .editor-span-2{grid-column:auto;}
 }
@@ -1208,8 +1212,8 @@ svg{display:block;flex-shrink:0;}
 </div>
 
 <script>
-const APP_VERSION='v5.14';
-const BUILD_TIME='2026-08-30 09:40';
+const APP_VERSION='v5.15';
+const BUILD_TIME='2026-08-31 16:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2835,6 +2839,7 @@ function renderEditor(id,eyeId,titleId,subId,bodyId){
 
 function renderMobileBody(){
   const el=document.getElementById('mBody');if(!el)return;
+  el.classList.toggle('settle-mode',mTab==='settle');
   if(mTab==='history'){renderHistoryBody(el);return;}
   if(mTab==='payment'){renderPaymentBody(el);return;}
   if(mTab==='result'){
