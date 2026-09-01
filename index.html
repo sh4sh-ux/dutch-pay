@@ -1239,9 +1239,10 @@ svg{display:block;flex-shrink:0;}
   </div>
 </div>
 
+<script src="category-icons.js"></script>
 <script>
-const APP_VERSION='v5.23';
-const BUILD_TIME='2026-08-31 22:22';
+const APP_VERSION='v5.25';
+const BUILD_TIME='2026-09-02 07:58';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1855,22 +1856,11 @@ const svgShare='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stro
 const svgBookmark='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
 const svgCopy='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 const svgPencil='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
-const svgReceipt='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>';
-const svgFood='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><line x1="7" y1="2" x2="7" y2="22"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>';
-const svgCafe='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>';
-const svgBeer='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.57.5 2.5.5C9.44 3.5 10 3 11 3s1.44.5 3 .5 2.5-1 4-1 1.5 2.5 0 5-2.5.5-4 .5z"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg>';
-const svgMic='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>';
-const svgCar='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="17" rx="3"/><path d="M8 2.5h8M9 5.5h6"/><rect x="7" y="7" width="10" height="6" rx="1"/><path d="M5 8.5H3v4M19 8.5h2v4"/><circle cx="8" cy="16" r="1.25"/><circle cx="16" cy="16" r="1.25"/><path d="M7.5 19.5V22M16.5 19.5V22"/></svg>';
-const svgShop='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
-const svgMovie='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>';
-const svgBed='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M2 18h20"/></svg>';
-const svgCake='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><line x1="7" y1="4" x2="7" y2="5"/><line x1="12" y1="4" x2="12" y2="5"/><line x1="17" y1="4" x2="17" y2="5"/></svg>';
-const svgGolf='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M12 2l8 4-8 4z"/><ellipse cx="7" cy="22" rx="4" ry="1.5"/></svg>';
-const svgSpa='<svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><text x="12" y="13" text-anchor="middle" dominant-baseline="middle" font-size="28" fill="currentColor">♨</text></svg>';
-const svgDumbbell='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="12" x2="16" y2="12"/><rect x="3" y="9" width="5" height="6" rx="1"/><rect x="16" y="9" width="5" height="6" rx="1"/></svg>';
-const svgPlane='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>';
+// 카테고리 SVG는 category-icons.js에서 불러옵니다.
 
 const ICON_RULES=[
+  [svgEvent,/경조|축의|부의|조의|결혼식|장례식|돌잔치|봉투/i],
+  [svgMedical,/병원|의원|약국|의료|치과|한의원|검진|진료|수술|치료|약값/i],
   [svgCake,/생일|생신|케이크|케익|cake|birthday|돌잔치|기념일|축하/i],
   [svgMic,/노래방|노래연습|코노|가라오케/],
   [svgCafe,/카페|커피|아메리카노|라떼|에스프레소|에이드|스무디|음료|프라푸치노|마키아토|cafe|coffee|스타벅스|스벅|starbucks|커피빈|메가커피|이디야|투썸|할리스|빽다방|컴포즈|폴바셋|탐앤탐스|엔제리너스|카페베네|더벤티|매머드|드롭탑|셀렉토|더리터|커피베이|블루보틀|테라로사/i],
@@ -1878,14 +1868,14 @@ const ICON_RULES=[
   [svgFood,/식사|밥|식당|저녁|점심|아침|회\b|고기|갈비|치킨|돈까스|국밥|오징어|회집|횟집|어시장|수산시장|음식|곱창|국수|라면|분식|한식|중식|일식|양식|뷔페|레스토랑|삼겹살|돼지|소고기|한우|불고기|족발|보쌈|찌개|전골|냉면|파스타|스파게티|초밥|스시|샐러드|버거|피자|짜장|짬뽕|마라탕|쌀국수|돈가스|덮밥|순대|떡볶이|어묵|튀김|수산|해산|조개|새우|랍스터|장어|복어|문어|낙지|꽃게|대게|킹크랩|추어탕|매운탕|해장국|설렁탕|곰탕|육개장|감자탕|닭볶음|닭갈비|본죽|한솥|김밥천국|김가네|이삭토스트|써브웨이|subway|교촌|굽네|bhc|BBQ|페리카나|맥도날드|버거킹|롯데리아|맘스터치|KFC|쉑쉑|도미노|피자헛|미스터피자|파파존스/i],
   [svgCar,/택시|버스|지하철|기차|KTX|교통|주차|주유|주유소|렌트|렌터카|톨게이트|하이패스|휘발유|경유/i],
   [svgShop,/마트|편의점|시장|쇼핑|백화점|store/i],
-  [svgMovie,/영화|시네마|CGV|메가박스|롯데시네마/i],
+  [svgMovie,/영화|문화|공연|전시|뮤지컬|연극|콘서트|시네마|CGV|메가박스|롯데시네마/i],
   [svgBed,/호텔|모텔|펜션|풀빌라|숙소|에어비앤비|민박|리조트|hotel/i],
   [svgGolf,/골프|라운드|그린피|캐디|카트비/i],
   [svgSpa,/찜질방|찜질|사우나|스파|마사지|온천|목욕탕|목욕/i],
   [svgDumbbell,/헬스|헬스장|볼링|당구|수영|테니스|배드민턴|탁구|클라이밍|풋살|축구|농구|야구|스크린골프|스포츠|운동|체육관/i],
   [svgPlane,/비행기|항공|공항|여행|출장/i],
 ];
-const ICON_BY_KEY={food:svgFood,cafe:svgCafe,beer:svgBeer,mic:svgMic,car:svgCar,shop:svgShop,movie:svgMovie,bed:svgBed,cake:svgCake,golf:svgGolf,spa:svgSpa,dumbbell:svgDumbbell,plane:svgPlane,receipt:svgReceipt};
+const ICON_BY_KEY={food:svgFood,cafe:svgCafe,beer:svgBeer,mic:svgMic,car:svgCar,shop:svgShop,movie:svgMovie,bed:svgBed,cake:svgCake,golf:svgGolf,spa:svgSpa,dumbbell:svgDumbbell,plane:svgPlane,event:svgEvent,medical:svgMedical,receipt:svgReceipt};
 function getIconSvg(itemOrName){let name,override;if(typeof itemOrName==='string'){name=itemOrName;}else if(itemOrName){name=itemOrName.name;override=itemOrName.iconOverride;}if(override&&ICON_BY_KEY[override])return ICON_BY_KEY[override];if(!name||!name.trim())return svgReceipt;for(const[svg,pat]of ICON_RULES){if(pat.test(name))return svg;}return svgFood;}
 
 const dInp=document.getElementById('dPInp');
@@ -1911,7 +1901,7 @@ function clearAllItems(){if(!items.length)return;if(!confirm('지출을 전체 �
 function setRounderOverride(itemId,value){const it=items.find(i=>i.id===itemId);if(!it)return;it.rounderOverride=value||null;saveState();renderAll();}
 function setIconOverride(itemId,key){const it=items.find(i=>i.id===itemId);if(!it)return;it.iconOverride=key||null;saveState();renderAll();}
 
-function showIconPicker(itemId,anchorEl,ev){if(ev){ev.stopPropagation();ev.preventDefault();}document.querySelectorAll('.icon-pop,.rounder-pop').forEach(el=>el.remove());const it=items.find(i=>i.id===itemId);if(!it)return;const cur=it.iconOverride||'';const choices=[{k:'',lbl:'자동',tip:'상호명으로 자동 결정'},{k:'food',svg:svgFood,lbl:'외식',tip:'식당·한식·일식·중식'},{k:'cafe',svg:svgCafe,lbl:'카페',tip:'카페·커피·음료'},{k:'beer',svg:svgBeer,lbl:'술집',tip:'맥주·소주·이자카야·바'},{k:'cake',svg:svgCake,lbl:'기념일',tip:'케이크·생일·기념일'},{k:'mic',svg:svgMic,lbl:'노래방',tip:'노래방·코노·가라오케'},{k:'car',svg:svgCar,lbl:'교통',tip:'택시·버스·주유·주차'},{k:'shop',svg:svgShop,lbl:'쇼핑',tip:'마트·편의점·백화점'},{k:'movie',svg:svgMovie,lbl:'영화',tip:'영화·CGV·메가박스'},{k:'bed',svg:svgBed,lbl:'숙박',tip:'호텔·펜션·풀빌라·숙소'},{k:'golf',svg:svgGolf,lbl:'골프',tip:'골프·라운드·그린피'},{k:'spa',svg:svgSpa,lbl:'스파',tip:'찜질방·사우나·마사지'},{k:'dumbbell',svg:svgDumbbell,lbl:'운동',tip:'헬스·볼링·수영·스포츠'},{k:'plane',svg:svgPlane,lbl:'여행',tip:'비행기·여행·항공·출장'},{k:'receipt',svg:svgReceipt,lbl:'기타',tip:'기타·분류 없음'}];const svgAutoIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>';const pop=document.createElement('div');pop.className='icon-pop';pop.innerHTML=`<div class="icon-pop-hd">아이콘 선택</div><div class="icon-grid">`+choices.map(o=>`<button class="icon-opt${cur===o.k?' on':''}" data-key="${o.k}" data-tip="${o.tip||''}">${o.k===''?svgAutoIcon:o.svg}<span class="icon-lbl">${o.lbl}</span></button>`).join('')+`</div>`;pop.addEventListener('click',ev2=>{ev2.stopPropagation();const btn=ev2.target.closest('.icon-opt');if(!btn)return;setIconOverride(itemId,btn.dataset.key);pop.remove();});document.body.appendChild(pop);const r=anchorEl.getBoundingClientRect();pop.style.top=(r.bottom+window.scrollY+6)+'px';let left=r.left+window.scrollX;const pr=pop.getBoundingClientRect();if(left+pr.width>window.innerWidth-8)left=window.innerWidth-pr.width-8;pop.style.left=Math.max(8,left)+'px';setTimeout(()=>{const h=ev3=>{if(!pop.contains(ev3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=ev3=>{if(ev3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);}
+function showIconPicker(itemId,anchorEl,ev){if(ev){ev.stopPropagation();ev.preventDefault();}document.querySelectorAll('.icon-pop,.rounder-pop').forEach(el=>el.remove());const it=items.find(i=>i.id===itemId);if(!it)return;const cur=it.iconOverride||'';const choices=[{k:'',lbl:'자동',tip:'상호명으로 자동 결정'},{k:'food',svg:svgFood,lbl:'외식',tip:'식당·한식·일식·중식'},{k:'cafe',svg:svgCafe,lbl:'카페',tip:'카페·커피·음료'},{k:'beer',svg:svgBeer,lbl:'술집',tip:'맥주·소주·이자카야·바'},{k:'cake',svg:svgCake,lbl:'기념일',tip:'케이크·생일·기념일'},{k:'event',svg:svgEvent,lbl:'경조',tip:'축의·부의·경조사'},{k:'mic',svg:svgMic,lbl:'노래방',tip:'노래방·코노·가라오케'},{k:'car',svg:svgCar,lbl:'교통',tip:'택시·버스·주유·주차'},{k:'shop',svg:svgShop,lbl:'쇼핑',tip:'마트·편의점·백화점'},{k:'movie',svg:svgMovie,lbl:'문화',tip:'영화·공연·전시·문화'},{k:'bed',svg:svgBed,lbl:'숙박',tip:'호텔·펜션·풀빌라·숙소'},{k:'golf',svg:svgGolf,lbl:'골프',tip:'골프·라운드·그린피'},{k:'spa',svg:svgSpa,lbl:'스파',tip:'찜질방·사우나·마사지'},{k:'dumbbell',svg:svgDumbbell,lbl:'운동',tip:'헬스·볼링·수영·스포츠'},{k:'plane',svg:svgPlane,lbl:'여행',tip:'비행기·여행·항공·출장'},{k:'medical',svg:svgMedical,lbl:'의료',tip:'병원·약국·진료·검진'},{k:'receipt',svg:svgReceipt,lbl:'기타',tip:'기타·분류 없음'}];const svgAutoIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>';const pop=document.createElement('div');pop.className='icon-pop';pop.innerHTML=`<div class="icon-pop-hd">아이콘 선택</div><div class="icon-grid">`+choices.map(o=>`<button class="icon-opt${cur===o.k?' on':''}" data-key="${o.k}" data-tip="${o.tip||''}">${o.k===''?svgAutoIcon:o.svg}<span class="icon-lbl">${o.lbl}</span></button>`).join('')+`</div>`;pop.addEventListener('click',ev2=>{ev2.stopPropagation();const btn=ev2.target.closest('.icon-opt');if(!btn)return;setIconOverride(itemId,btn.dataset.key);pop.remove();});document.body.appendChild(pop);const r=anchorEl.getBoundingClientRect();pop.style.top=(r.bottom+window.scrollY+6)+'px';let left=r.left+window.scrollX;const pr=pop.getBoundingClientRect();if(left+pr.width>window.innerWidth-8)left=window.innerWidth-pr.width-8;pop.style.left=Math.max(8,left)+'px';setTimeout(()=>{const h=ev3=>{if(!pop.contains(ev3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=ev3=>{if(ev3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);}
 
 function showRounderPicker(itemId,anchorEl,ev){if(ev){ev.stopPropagation();ev.preventDefault();}document.querySelectorAll('.rounder-pop').forEach(el=>el.remove());const it=items.find(i=>i.id===itemId);if(!it)return;const memOpts=it.members.length?it.members:people;const cur=it.rounderOverride||'';const pop=document.createElement('div');pop.className='rounder-pop';pop.innerHTML=`<div class="rounder-pop-hd">차액 부담자</div>`+[{v:'',label:'자동 (결제자 우선)'}].concat(memOpts.map(p=>({v:p,label:e(p)+' 부담'}))).map(o=>`<button class="rounder-opt${cur===o.v?' on':''}" data-val="${ea(o.v)}">${o.label}</button>`).join('');pop.addEventListener('click',ev2=>{ev2.stopPropagation();const btn=ev2.target.closest('.rounder-opt');if(!btn)return;setRounderOverride(itemId,btn.dataset.val);pop.remove();});document.body.appendChild(pop);const r=anchorEl.getBoundingClientRect();pop.style.top=(r.bottom+window.scrollY+6)+'px';let left=r.left+window.scrollX;const pr=pop.getBoundingClientRect();if(left+pr.width>window.innerWidth-8)left=window.innerWidth-pr.width-8;pop.style.left=Math.max(8,left)+'px';setTimeout(()=>{const h=ev3=>{if(!pop.contains(ev3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=ev3=>{if(ev3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);}
 
@@ -2321,14 +2311,22 @@ function _patchSummary(){
   });
 }
 
+function _groupTxnsByRecipient(txns,ownerName){
+  const groups=new Map();
+  txns.forEach(t=>{if(!groups.has(t.to))groups.set(t.to,[]);groups.get(t.to).push(t);});
+  const recipients=[...groups.keys()];
+  if(ownerName){
+    const ownerIdx=recipients.indexOf(ownerName);
+    if(ownerIdx>0)recipients.unshift(recipients.splice(ownerIdx,1)[0]);
+  }
+  return recipients.map(to=>({to,txns:groups.get(to),isOwner:!!ownerName&&to===ownerName}));
+}
+
 function _txnRowsHtml(txns){
   if(!txns.length)return'';
-  const seen=[],gmap={};
-  txns.forEach(t=>{if(!gmap[t.to]){gmap[t.to]=[];seen.push(t.to);}gmap[t.to].push(t);});
-  if(seen.length<=1)return txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('');
-  return seen.map(to=>{
-    const cls=(_myName&&to===_myName)?'txn-div-owner':'txn-div-other';
-    const rows=gmap[to].map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('');
+  return _groupTxnsByRecipient(txns,_myName).map(group=>{
+    const cls=group.isOwner?'txn-div-owner':'txn-div-other';
+    const rows=group.txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('');
     return`<div class="txn-group-div ${cls}"></div>${rows}`;
   }).join('');
 }
@@ -3559,17 +3557,15 @@ async function generateSettleCanvas(){
   const coupleConfig=_coupleNames||[];
   const hasCouple=coupleConfig.length===2&&coupleConfig.every(n=>people.includes(n));
   const{normalTxns,coupleTxnRows}=_groupCoupleShareTxns(txns,hasCouple?coupleConfig:[]);
+  const shareTxns=normalTxns.concat(coupleTxnRows);
   const validItems=items.filter(it=>+it.amount!==0);
   const iconMap=new Map();for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#4355E8'));}catch(e){iconMap.set(svg,null);}}}
   const W=1080,PAD=42,TOP_PAD=56,cardX=PAD,cardW=W-PAD*2;
   const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=245,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78;
-  const txnSeen=[],txnGmap={};normalTxns.forEach(t=>{if(!txnGmap[t.to]){txnGmap[t.to]=[];txnSeen.push(t.to);}txnGmap[t.to].push(t);});
-  const addGrpDivs=txnSeen.length>1,DIV_H=3;
-  const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+(addGrpDivs?txnSeen.length*DIV_H:0)):EMPTY_CARD_H;
-  const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*TXN_ROW_H:0;
+  const txnGroups=_groupTxnsByRecipient(shareTxns,_myName),DIV_H=3;
+  const txnCardH=shareTxns.length?(shareTxns.length*TXN_ROW_H+txnGroups.length*DIV_H):EMPTY_CARD_H;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
-  const coupleSection=coupleCardH?(SECTION_GAP+coupleCardH):0;
-  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+coupleSection+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;
+  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;
   const canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;const ctx=canvas.getContext('2d');ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,W*2,H*2);ctx.scale(2,2);
   const FF="'system-ui','-apple-system','BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif";
   const setFont=(s,w)=>{ctx.font=`${w||'normal'} ${s}px ${FF}`;};
@@ -3627,28 +3623,22 @@ async function generateSettleCanvas(){
   };
   y=drawSectionLabel('송금',y);
   drawCard(cardX,y,cardW,txnCardH);
-  if(!normalTxns.length){
+  if(!shareTxns.length){
     drawEmpty('송금할 내역이 없어요',y,txnCardH);
   }else{
     let curY=y;
-    if(addGrpDivs){ctx.save();roundRectPath(ctx,cardX,y,cardW,txnCardH,28);ctx.clip();}
-    txnSeen.forEach(to=>{
-      if(addGrpDivs){ctx.fillStyle=(_myName&&to===_myName)?C.blue:C.amber;ctx.fillRect(cardX,curY,cardW,DIV_H);curY+=DIV_H;}
-      txnGmap[to].forEach((t,ri)=>{
+    ctx.save();roundRectPath(ctx,cardX,y,cardW,txnCardH,28);ctx.clip();
+    txnGroups.forEach(group=>{
+      ctx.fillStyle=group.isOwner?C.blue:C.amber;ctx.fillRect(cardX,curY,cardW,DIV_H);curY+=DIV_H;
+      group.txns.forEach((t,ri)=>{
         drawTxnRow(t,curY,TXN_ROW_H);
         curY+=TXN_ROW_H;
-        if(ri<txnGmap[to].length-1)drawDivider(curY);
+        if(ri<group.txns.length-1)drawDivider(curY);
       });
     });
-    if(addGrpDivs)ctx.restore();
+    ctx.restore();
   }
   y+=txnCardH;
-  if(coupleCardH){
-    y+=SECTION_GAP;
-    drawCard(cardX,y,cardW,coupleCardH);
-    drawTxnRow(coupleTxnRows[0],y,coupleCardH);
-    y+=coupleCardH;
-  }
   y+=SECTION_GAP;
 
   y=drawSectionLabel('지출 내역',y);

@@ -371,6 +371,55 @@ suite('TC11: 영수증 상세표 합계 표시 [v5.06 회귀]', () => {
   });
 });
 
+suite('TC12: 정산 공유 수취인 순서 [v5.24 회귀]', () => {
+  const rows=[
+    {from:'김영석',to:'이종현',amt:18000},
+    {from:'이정환',to:'조상현',amt:271860},
+    {from:'지유정',to:'이종현',amt:18000},
+    {from:'박정호',to:'조상현',amt:271860}
+  ];
+
+  test('내가 받을 송금은 원본 순서와 무관하게 첫 그룹', () => {
+    const groups=APP._groupTxnsByRecipient(rows,'조상현');
+    expect(groups.map(g=>g.to)).toEqual(['조상현','이종현']);
+    expect(groups[0].isOwner).toBe(true);
+  });
+
+  test('각 수취인 그룹 안의 송금 순서는 보존', () => {
+    const groups=APP._groupTxnsByRecipient(rows,'조상현');
+    expect(groups[0].txns.map(t=>t.from)).toEqual(['이정환','박정호']);
+    expect(groups[1].txns.map(t=>t.from)).toEqual(['김영석','지유정']);
+  });
+
+  test('내 수취 내역이 없어도 다른 수취인 순서는 보존', () => {
+    const groups=APP._groupTxnsByRecipient(rows,'신유철');
+    expect(groups.map(g=>g.to)).toEqual(['이종현','조상현']);
+    expect(groups.every(g=>!g.isOwner)).toBe(true);
+  });
+});
+
+suite('TC13: 사용자 카테고리 SVG [v5.25 회귀]', () => {
+  const keys=['food','cafe','beer','cake','mic','car','shop','movie','bed','golf','spa','dumbbell','plane','event','medical','receipt'];
+
+  test('16개 카테고리 아이콘을 모두 불러옴', () => {
+    const icons=keys.map(iconOverride=>APP.getIconSvg({name:'',iconOverride}));
+    expect(icons.length).toBe(16);
+    expect(new Set(icons).size).toBe(16);
+    if(icons.some(svg=>!svg.startsWith('<svg')||!svg.includes('currentColor')))throw new Error('SVG 또는 테마 색상 연결 누락');
+  });
+
+  test('경조·의료·문화 자동분류가 새 SVG를 사용', () => {
+    expect(APP.getIconSvg('결혼식 축의금')).toBe(APP.getIconSvg({name:'',iconOverride:'event'}));
+    expect(APP.getIconSvg('병원 진료비')).toBe(APP.getIconSvg({name:'',iconOverride:'medical'}));
+    expect(APP.getIconSvg('문화 공연')).toBe(APP.getIconSvg({name:'',iconOverride:'movie'}));
+  });
+
+  test('아이콘 선택 목록에 경조·의료·문화가 노출', () => {
+    const source=APP.showIconPicker.toString();
+    if(!source.includes("k:'event'")||!source.includes("k:'medical'")||!source.includes("lbl:'문화'"))throw new Error('선택 목록 카테고리 누락');
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────
