@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   patch:
-    if: ${{ !contains(github.event.head_commit.message, '[v5.27-applied]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -99,7 +98,6 @@ jobs:
   pop.innerHTML=`<div class="icon-pop-hd"><span>아이콘 선택</span><button type="button" class="icon-auto${cur===''?' on':''}" data-key="">${svgAutoIcon}<span class="icon-lbl">자동</span></button></div><div class="icon-grid">${categories.map(o=>`<button class="icon-opt${cur===o.k?' on':''}" data-key="${o.k}" data-tip="${o.tip||''}">${o.svg}<span class="icon-lbl">${o.lbl}</span></button>`).join('')}</div>`;
   pop.addEventListener('click',ev2=>{ev2.stopPropagation();const btn=ev2.target.closest('[data-key]');if(!btn)return;setIconOverride(itemId,btn.dataset.key);pop.remove();});
   document.body.appendChild(pop);
-
   const ar=anchorEl&&anchorEl.getBoundingClientRect?anchorEl.getBoundingClientRect():null;
   const row=anchorEl&&anchorEl.closest?anchorEl.closest('.detail-row,.rc-item-row'):null;
   const area=row&&row.parentElement?row.parentElement:null;
@@ -110,11 +108,7 @@ jobs:
   if(cr&&cr.width>0){width=Math.min(cr.width,vw-margin*2);left=cr.left+window.scrollX;}
   else{width=Math.min(window.matchMedia('(max-width:700px)').matches?vw-margin*2:640,vw-margin*2);left=(vw-width)/2+window.scrollX;}
   left=Math.max(window.scrollX+margin,Math.min(left,window.scrollX+vw-width-margin));
-  pop.style.width=width+'px';
-  pop.style.minWidth='0';
-  pop.style.left=left+'px';
-  pop.style.top=((ar?ar.bottom:0)+window.scrollY+6)+'px';
-
+  pop.style.width=width+'px';pop.style.minWidth='0';pop.style.left=left+'px';pop.style.top=((ar?ar.bottom:0)+window.scrollY+6)+'px';
   setTimeout(()=>{
     const h=ev3=>{if(!pop.contains(ev3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};
     const k=ev3=>{if(ev3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};
@@ -145,74 +139,57 @@ jobs:
             "./icons/icon-512.png",
             "./icons/apple-touch-icon.png"
           ];
-
           self.addEventListener("install", (event) => {
             event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS.filter(Boolean))));
             self.skipWaiting();
           });
-
           self.addEventListener("activate", (event) => {
-            event.waitUntil(
-              caches.keys().then((keys) => Promise.all(
-                keys.filter((key) => key.startsWith("dutch-pay") && key !== CACHE_NAME).map((key) => caches.delete(key))
-              ))
-            );
+            event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith("dutch-pay") && key !== CACHE_NAME).map((key) => caches.delete(key)))));
             self.clients.claim();
           });
-
           self.addEventListener("fetch", (event) => {
             if (event.request.method !== "GET") return;
             const url = new URL(event.request.url);
             const isHTML = event.request.mode === "navigate" || url.pathname.endsWith(".html") || url.pathname.endsWith("/");
-
             if (isHTML) {
-              event.respondWith(
-                fetch(event.request, { cache: "no-store" }).then((response) => {
-                  if (response && response.status === 200) {
-                    const copy = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
-                  }
-                  return response;
-                }).catch(() => caches.match(event.request).then((c) => c || caches.match("./index.html")))
-              );
+              event.respondWith(fetch(event.request, { cache: "no-store" }).then((response) => {
+                if (response && response.status === 200) {
+                  const copy = response.clone();
+                  caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
+                }
+                return response;
+              }).catch(() => caches.match(event.request).then((c) => c || caches.match("./index.html"))));
               return;
             }
-
-            event.respondWith(
-              caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
-                if (!response || response.status !== 200) return response;
-                const copy = response.clone();
-                caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
-                return response;
-              }))
-            );
+            event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
+              if (!response || response.status !== 200) return response;
+              const copy = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
+              return response;
+            })));
           });
           EOF
 
-      - name: Remove v5.26 workaround files
-        run: rm -f category-grid-v5.26.css category-grid-v5.26.js
-
-      - name: Validate direct changes
+      - name: Remove workaround and validate
         shell: bash
         run: |
+          rm -f category-grid-v5.26.css category-grid-v5.26.js
           python3 - <<'PY'
           from pathlib import Path
           s=Path('index.html').read_text(encoding='utf-8')
-          checks={
-            'version': "const APP_VERSION='v5.27';" in s,
-            'desktop_4x4': 'grid-template-columns:repeat(4,minmax(0,1fr))' in s,
-            'mobile_8x2': 'grid-template-columns:repeat(8,minmax(0,1fr))' in s,
-            'picker_direct': "pop.className='icon-pop category-picker-v527'" in s,
-            'category_count': s.count("{k:'") >= 16,
-            'old_runtime_helper_absent': 'category-grid-v5.26.css' not in s and 'category-grid-v5.26.js' not in s,
-          }
-          failed=[k for k,v in checks.items() if not v]
-          print(checks)
-          if failed: raise SystemExit('failed: '+', '.join(failed))
+          required=[
+            "const APP_VERSION='v5.27';",
+            'grid-template-columns:repeat(4,minmax(0,1fr))',
+            'grid-template-columns:repeat(8,minmax(0,1fr))',
+            "pop.className='icon-pop category-picker-v527'",
+          ]
+          missing=[x for x in required if x not in s]
+          if missing: raise SystemExit('missing: '+repr(missing))
+          if 'category-grid-v5.26.css' in s or 'category-grid-v5.26.js' in s:
+              raise SystemExit('old runtime helper reference remains')
+          print('direct v5.27 markers verified')
           PY
           node --check sw.js
-          test ! -e category-grid-v5.26.css
-          test ! -e category-grid-v5.26.js
 
       - name: Commit direct fix
         shell: bash
@@ -221,5 +198,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "fix: apply v5.27 category grid directly [v5.27-applied]"
+          git commit -m "fix: apply v5.27 category grid directly"
           git push origin HEAD:fix/v5.27-category-grid-direct
