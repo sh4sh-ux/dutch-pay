@@ -1,6 +1,6 @@
 (function () {
-  if (window.__categoryGridV526Installed || typeof window.showIconPicker !== 'function') return;
-  window.__categoryGridV526Installed = true;
+  if (window.__categoryGridV527Installed || typeof window.showIconPicker !== 'function') return;
+  window.__categoryGridV527Installed = true;
 
   const CATEGORY_ORDER = [
     'food', 'cafe', 'beer', 'mic',
@@ -18,7 +18,7 @@
     const pop = pops[pops.length - 1];
     if (!pop) return;
 
-    pop.classList.add('category-grid-v526');
+    pop.classList.add('category-grid-v527');
 
     const grid = pop.querySelector('.icon-grid');
     const header = pop.querySelector('.icon-pop-hd');
@@ -41,24 +41,27 @@
 
     const anchorRect = anchorEl && anchorEl.getBoundingClientRect ? anchorEl.getBoundingClientRect() : null;
     const row = anchorEl && anchorEl.closest ? anchorEl.closest('.detail-row,.rc-item-row') : null;
-    const card = row && row.parentElement ? row.parentElement : null;
-    const cardRect = card && card.getBoundingClientRect ? card.getBoundingClientRect() : null;
+    const area = row && row.parentElement ? row.parentElement : null;
+    const areaRect = area && area.getBoundingClientRect ? area.getBoundingClientRect() : null;
     const margin = 8;
     const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
 
     let left;
     let width;
-    if (cardRect && cardRect.width > 0) {
-      left = cardRect.left + window.scrollX;
-      width = cardRect.width;
+    if (areaRect && areaRect.width > 0) {
+      left = areaRect.left + window.scrollX;
+      width = areaRect.width;
     } else {
-      width = Math.min(520, viewportWidth - margin * 2);
+      width = Math.min(640, viewportWidth - margin * 2);
       left = Math.max(margin, ((viewportWidth - width) / 2) + window.scrollX);
     }
 
     const maxWidth = Math.max(0, viewportWidth - margin * 2);
     width = Math.min(width, maxWidth);
-    left = Math.min(Math.max(window.scrollX + margin, left), window.scrollX + viewportWidth - width - margin);
+    left = Math.min(
+      Math.max(window.scrollX + margin, left),
+      window.scrollX + viewportWidth - width - margin
+    );
 
     pop.style.width = width + 'px';
     pop.style.minWidth = '0';

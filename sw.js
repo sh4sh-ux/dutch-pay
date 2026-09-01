@@ -1,8 +1,8 @@
-const CACHE_NAME = "dutch-pay-v5.26";
+const CACHE_NAME = "dutch-pay-v5.27";
 const STATIC_ASSETS = [
   "./category-icons.js",
-  "./category-grid-v5.26.css",
-  "./category-grid-v5.26.js",
+  "./category-grid-v5.27.css",
+  "./category-grid-v5.27.js",
   "./manifest.webmanifest",
   "./favicon.png",
   "./icons/icon-192.png",
@@ -16,28 +16,27 @@ async function enhanceHtmlResponse(response) {
   if (!type.includes("text/html")) return response;
 
   let html = await response.text();
-
-  // v5.25 소스에만 적용한다. 이후 index.html 버전이 올라가면 강제로 덮어쓰지 않는다.
   html = html
-    .replace("const APP_VERSION='v5.25';", "const APP_VERSION='v5.26';")
-    .replace("const BUILD_TIME='2026-09-02 07:58';", "const BUILD_TIME='2026-09-02 08:36';");
+    .replace("const APP_VERSION='v5.25';", "const APP_VERSION='v5.27';")
+    .replace("const BUILD_TIME='2026-09-02 07:58';", "const BUILD_TIME='2026-09-02 08:46';");
 
-  if (!html.includes("category-grid-v5.26.css")) {
+  if (!html.includes("category-grid-v5.27.css")) {
     html = html.replace(
       "</head>",
-      '<link rel="stylesheet" href="./category-grid-v5.26.css"/>\n</head>'
+      '<link rel="stylesheet" href="./category-grid-v5.27.css"/>\n</head>'
     );
   }
 
-  if (!html.includes("category-grid-v5.26.js")) {
+  if (!html.includes("category-grid-v5.27.js")) {
     html = html.replace(
       "</body>",
-      '<script src="./category-grid-v5.26.js"></script>\n</body>'
+      '<script src="./category-grid-v5.27.js"></script>\n</body>'
     );
   }
 
   const headers = new Headers(response.headers);
   headers.delete("content-length");
+  headers.set("cache-control", "no-cache");
   return new Response(html, {
     status: response.status,
     statusText: response.statusText,
@@ -62,12 +61,22 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key.startsWith("dutch-pay") && key !== CACHE_NAME).map((key) => caches.delete(key)))
-    )
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys
+        .filter((key) => key.startsWith("dutch-pay") && key !== CACHE_NAME)
+        .map((key) => caches.delete(key))
+    );
+    await self.clients.claim();
+
+    // 새 서비스워커가 활성화되는 즉시 열린 더치페이 화면을 한 번 다시 불러온다.
+    // 첫 새로고침부터 v5.27 HTML 변환과 카테고리 그리드가 적용되게 한다.
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    await Promise.all(windows.map((client) => {
+      try { return client.navigate(client.url); } catch (_) { return null; }
+    }));
+  })());
 });
 
 self.addEventListener("fetch", (event) => {
@@ -79,10 +88,9 @@ self.addEventListener("fetch", (event) => {
     || url.pathname.endsWith("/");
 
   if (isHTML) {
-    // HTML: 네트워크 우선 + v5.26 카테고리 레이아웃/버전 적용, 실패 시 캐시 폴백
     event.respondWith((async () => {
       try {
-        const response = await fetch(event.request);
+        const response = await fetch(event.request, { cache: "no-store" });
         const enhanced = await enhanceHtmlResponse(response);
         if (enhanced && enhanced.status === 200) {
           const copy = enhanced.clone();
@@ -96,7 +104,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 정적 파일: 캐시 우선, 없으면 네트워크
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
