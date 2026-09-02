@@ -92,16 +92,16 @@
     pop.style.left = left + 'px';
     if (anchorRect) pop.style.top = (anchorRect.bottom + window.scrollY + 6) + 'px';
 
-    // On mobile, align the title's left edge exactly with the first label (외식).
+    // On mobile, align the title's left edge with the left edge of the food icon itself.
     if (window.matchMedia('(max-width:700px)').matches && header && grid) {
       requestAnimationFrame(() => {
         if (!pop.isConnected) return;
-        const firstLabel = grid.querySelector('.icon-opt[data-key="food"] .icon-lbl');
-        if (!firstLabel) return;
+        const firstIcon = grid.querySelector('.icon-opt[data-key="food"] svg');
+        if (!firstIcon) return;
         const popRect = pop.getBoundingClientRect();
-        const labelRect = firstLabel.getBoundingClientRect();
+        const iconRect = firstIcon.getBoundingClientRect();
         const rightPad = 10;
-        const leftPad = Math.max(10, Math.round(labelRect.left - popRect.left));
+        const leftPad = Math.max(10, Math.round(iconRect.left - popRect.left));
         header.style.paddingLeft = leftPad + 'px';
         header.style.paddingRight = rightPad + 'px';
       });
