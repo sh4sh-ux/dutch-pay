@@ -1,6 +1,9 @@
-const CACHE_NAME = "dutch-pay-v5.27";
+const CACHE_NAME = "dutch-pay-v5.28";
 const STATIC_ASSETS = [
-  "./category-icons.js",
+  "./category-icons-v5.28-1.js",
+  "./category-icons-v5.28-2.js",
+  "./category-icons-v5.28-3.js",
+  "./category-icons-v5.28-4.js",
   "./category-grid-v5.27.css",
   "./category-grid-v5.27.js",
   "./manifest.webmanifest",
@@ -17,8 +20,19 @@ async function enhanceHtmlResponse(response) {
 
   let html = await response.text();
   html = html
-    .replace("const APP_VERSION='v5.25';", "const APP_VERSION='v5.27';")
-    .replace("const BUILD_TIME='2026-09-02 07:58';", "const BUILD_TIME='2026-09-02 08:46';");
+    .replace("const APP_VERSION='v5.25';", "const APP_VERSION='v5.28';")
+    .replace("const BUILD_TIME='2026-09-02 07:58';", "const BUILD_TIME='2026-09-02 09:05';");
+
+  const revisedIconScripts = [
+    '<script src="./category-icons-v5.28-1.js"></script>',
+    '<script src="./category-icons-v5.28-2.js"></script>',
+    '<script src="./category-icons-v5.28-3.js"></script>',
+    '<script src="./category-icons-v5.28-4.js"></script>'
+  ].join('\n');
+
+  if (html.includes('<script src="category-icons.js"></script>')) {
+    html = html.replace('<script src="category-icons.js"></script>', revisedIconScripts);
+  }
 
   if (!html.includes("category-grid-v5.27.css")) {
     html = html.replace(
@@ -70,8 +84,6 @@ self.addEventListener("activate", (event) => {
     );
     await self.clients.claim();
 
-    // 새 서비스워커가 활성화되는 즉시 열린 더치페이 화면을 한 번 다시 불러온다.
-    // 첫 새로고침부터 v5.27 HTML 변환과 카테고리 그리드가 적용되게 한다.
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     await Promise.all(windows.map((client) => {
       try { return client.navigate(client.url); } catch (_) { return null; }
