@@ -1245,7 +1245,7 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-v5.28-3.js"></script>
 <script src="./category-icons-v5.28-4.js"></script>
 <script>
-const APP_VERSION='v5.37';
+const APP_VERSION='v5.38';
 const BUILD_TIME='2026-09-02 09:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -3561,15 +3561,16 @@ async function generateSettleCanvas(){
   const coupleConfig=_coupleNames||[];
   const hasCouple=coupleConfig.length===2&&coupleConfig.every(n=>people.includes(n));
   const{normalTxns,coupleTxnRows}=_groupCoupleShareTxns(txns,hasCouple?coupleConfig:[]);
-  const shareTxns=normalTxns.concat(coupleTxnRows);
   const validItems=items.filter(it=>+it.amount!==0);
   const iconMap=new Map();for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#4355E8'));}catch(e){iconMap.set(svg,null);}}}
   const W=1080,PAD=42,TOP_PAD=56,cardX=PAD,cardW=W-PAD*2;
   const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=245,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78;
-  const txnGroups=_groupTxnsByRecipient(shareTxns,_myName),DIV_H=3;
-  const txnCardH=shareTxns.length?(shareTxns.length*TXN_ROW_H+txnGroups.length*DIV_H):EMPTY_CARD_H;
+  const txnGroups=_groupTxnsByRecipient(normalTxns,_myName),DIV_H=3;
+  const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+txnGroups.length*DIV_H):EMPTY_CARD_H;
+  const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*TXN_ROW_H:0;
+  const coupleSection=coupleCardH?(SECTION_GAP+coupleCardH):0;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
-  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;
+  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+coupleSection+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;
   const canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;const ctx=canvas.getContext('2d');ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,W*2,H*2);ctx.scale(2,2);
   const FF="'system-ui','-apple-system','BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif";
   const setFont=(s,w)=>{ctx.font=`${w||'normal'} ${s}px ${FF}`;};
@@ -3627,7 +3628,7 @@ async function generateSettleCanvas(){
   };
   y=drawSectionLabel('송금',y);
   drawCard(cardX,y,cardW,txnCardH);
-  if(!shareTxns.length){
+  if(!normalTxns.length){
     drawEmpty('송금할 내역이 없어요',y,txnCardH);
   }else{
     let curY=y;
@@ -3643,6 +3644,15 @@ async function generateSettleCanvas(){
     ctx.restore();
   }
   y+=txnCardH;
+  if(coupleCardH){
+    y+=SECTION_GAP;
+    drawCard(cardX,y,cardW,coupleCardH);
+    coupleTxnRows.forEach((t,ri)=>{
+      drawTxnRow(t,y+ri*TXN_ROW_H,TXN_ROW_H);
+      if(ri<coupleTxnRows.length-1)drawDivider(y+(ri+1)*TXN_ROW_H);
+    });
+    y+=coupleCardH;
+  }
   y+=SECTION_GAP;
 
   y=drawSectionLabel('지출 내역',y);
