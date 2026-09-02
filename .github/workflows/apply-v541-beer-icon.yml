@@ -1,0 +1,52 @@
+name: Apply v5.41 beer icon
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-v541-beer-icon.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace beer icon and bump version
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('category-icons-v5.28-1.js')
+          s=p.read_text(encoding='utf-8')
+          new_svg='''<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0.38" stroke-linejoin="round" paint-order="stroke fill" xmlns="http://www.w3.org/2000/svg"><path d="M12.991,18.511c.172-.009.326-.148.326-.325l.002-6.942c0-.197-.138-.353-.332-.365-.178-.011-.366.128-.366.326l-.002,6.962c0,.2.17.354.372.344Z"/> <path d="M8.455,18.481c.131-.057.201-.184.201-.323v-6.914c0-.202-.141-.36-.342-.366-.185-.005-.356.145-.356.346v6.951c0,.12.082.226.162.278.104.068.224.076.336.027Z"/> <path d="M10.634,18.512c.175.003.351-.133.351-.33l.003-6.946c0-.2-.151-.356-.346-.357-.186-.001-.35.148-.35.347v6.952c0,.19.167.331.342.335Z"/> <path d="M19.003,10.284c-.356-.38-.851-.586-1.37-.587h-1.554c-.01,0-.019,0-.024-.002-.004-.002-.005-.009-.005-.019v-1.001c0-.032.011-.035.035-.05.457-.283.729-.785.722-1.325-.006-.448-.204-.869-.547-1.155-.268-.224-.596-.349-.946-.352l-.465-.003c-.058-.316-.193-.6-.396-.845-.44-.526-1.054-.737-1.731-.653-.174-.355-.412-.669-.715-.918-.301-.247-.64-.429-1.016-.53-.505-.136-1.036-.124-1.536.03-.347.106-.657.284-.935.515-.297.247-.528.558-.696.902-.3-.036-.597-.015-.885.074-.307.104-.58.28-.796.521-.236.265-.396.581-.451.934-.639.13-1.121.657-1.207,1.302-.082.614.207,1.212.742,1.524l.003,10.749c0,1.045.857,1.856,1.891,1.855l7.116-.005c.288,0,.567-.079.818-.213.599-.318.991-.938.991-1.622v-.473s1.59-.002,1.59-.002c1.01-.001,1.889-.896,1.889-1.893v-5.465c.001-.481-.201-.948-.524-1.293ZM15.344,19.37c.015.352-.134.686-.404.907-.21.183-.472.274-.76.27h-7.09c-.277,0-.533-.087-.743-.263-.249-.209-.401-.517-.417-.847v-7.345l-.002-3.229h9.415s0,10.507,0,10.507ZM15.306,8.159l-9.34.004c-.468-.031-.819-.417-.793-.883.02-.441.374-.79.82-.793.186-.001.344-.134.355-.327.014-.248.078-.488.225-.692.318-.444.837-.593,1.36-.444.18.051.361-.037.428-.211.058-.151.124-.292.209-.426.464-.735,1.34-1.09,2.185-.884.659.161,1.19.648,1.418,1.289.065.184.245.285.436.231.255-.072.525-.081.778.005.481.163.792.613.806,1.115.006.214.179.352.386.35l.728-.006c.425.01.764.343.801.768.039.456-.317.904-.802.904ZM18.829,17.022c0,.651-.54,1.197-1.187,1.214l-1.593.006v-1.561s0-4.72,0-4.72v-.701s0-.869,0-.869h1.573c.285-.003.551.094.766.275.293.246.446.605.446.987l-.006,5.368Z"/></svg>'''
+          repl="const svgBeer='"+new_svg+"';"
+          s2,n=re.subn(r"const svgBeer='.*?';", repl, s, count=1, flags=re.S)
+          if n != 1: raise SystemExit('svgBeer replacement failed')
+          p.write_text(s2,encoding='utf-8')
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s,n=re.subn(r"const APP_VERSION='v5\.40';", "const APP_VERSION='v5.41';", s, count=1)
+          if n != 1: raise SystemExit('APP_VERSION v5.40 not found')
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('sw.js')
+          s=p.read_text(encoding='utf-8')
+          s,n=s.replace('dutch-pay-v5.40','dutch-pay-v5.41',1),s.count('dutch-pay-v5.40')
+          if n < 1: raise SystemExit('SW v5.40 cache not found')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -Fq 'M8.455,18.481c.131-.057' category-icons-v5.28-1.js
+          grep -Fq 'v-1.561' category-icons-v5.28-1.js
+          grep -Fq "const APP_VERSION='v5.41';" index.html
+          grep -Fq 'dutch-pay-v5.41' sw.js
+      - name: Commit and remove temporary workflow
+        run: |
+          rm .github/workflows/apply-v541-beer-icon.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add category-icons-v5.28-1.js index.html sw.js .github/workflows/apply-v541-beer-icon.yml
+          git commit -m 'v5.41 술집 아이콘 교체'
+          git push
