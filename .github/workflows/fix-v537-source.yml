@@ -45,3 +45,4 @@ jobs:
           git add index.html sw.js
           git commit -m 'fix: store v5.37 in source and unify clients'
           git push
+# trigger 2026-09-02
