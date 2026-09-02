@@ -1,119 +1,30 @@
 name: Fix v5.38 couple cards
+
 on:
   push:
-    paths:
-      - '.github/workflows/fix-v538-couple-cards.yml'
+    branches: [main]
+
 permissions:
   contents: write
+
 jobs:
   fix:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Restore separate couple transfer card
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          start=s.index('async function generateSettleCanvas(){')
-          m=re.search(r'\nasync function [A-Za-z0-9_]+\(', s[start+1:])
-          if not m:
-              raise SystemExit('next async function not found')
-          end=start+1+m.start()
-          f=s[start:end]
-
-          required=[
-              'const shareTxns=normalTxns.concat(coupleTxnRows);',
-              'const txnGroups=_groupTxnsByRecipient(shareTxns,_myName),DIV_H=3;',
-              'const txnCardH=shareTxns.length?(shareTxns.length*TXN_ROW_H+txnGroups.length*DIV_H):EMPTY_CARD_H;',
-              "y=drawSectionLabel('송금',y);",
-              "y=drawSectionLabel('지출 내역',y);",
-          ]
-          for needle in required:
-              if needle not in f:
-                  raise SystemExit('missing expected marker: '+needle)
-
-          f=f.replace('  const shareTxns=normalTxns.concat(coupleTxnRows);\n','',1)
-          f=f.replace(
-              '  const txnGroups=_groupTxnsByRecipient(shareTxns,_myName),DIV_H=3;\n'
-              '  const txnCardH=shareTxns.length?(shareTxns.length*TXN_ROW_H+txnGroups.length*DIV_H):EMPTY_CARD_H;\n'
-              '  const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;\n'
-              '  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;\n',
-              '  const txnGroups=_groupTxnsByRecipient(normalTxns,_myName),DIV_H=3;\n'
-              '  const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+txnGroups.length*DIV_H):EMPTY_CARD_H;\n'
-              '  const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*TXN_ROW_H:0;\n'
-              '  const coupleSection=coupleCardH?(SECTION_GAP+coupleCardH):0;\n'
-              '  const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;\n'
-              '  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+coupleSection+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;\n',
-              1
-          )
-
-          tx_start=f.index("  y=drawSectionLabel('송금',y);")
-          tx_end=f.index("  y=drawSectionLabel('지출 내역',y);", tx_start)
-          replacement="""  y=drawSectionLabel('송금',y);
-  drawCard(cardX,y,cardW,txnCardH);
-  if(!normalTxns.length){
-    drawEmpty('송금할 내역이 없어요',y,txnCardH);
-  }else{
-    let curY=y;
-    ctx.save();roundRectPath(ctx,cardX,y,cardW,txnCardH,28);ctx.clip();
-    txnGroups.forEach(group=>{
-      ctx.fillStyle=group.isOwner?C.blue:C.amber;ctx.fillRect(cardX,curY,cardW,DIV_H);curY+=DIV_H;
-      group.txns.forEach((t,ri)=>{
-        drawTxnRow(t,curY,TXN_ROW_H);
-        curY+=TXN_ROW_H;
-        if(ri<group.txns.length-1)drawDivider(curY);
-      });
-    });
-    ctx.restore();
-  }
-  y+=txnCardH;
-  if(coupleCardH){
-    y+=SECTION_GAP;
-    drawCard(cardX,y,cardW,coupleCardH);
-    coupleTxnRows.forEach((t,ri)=>{
-      drawTxnRow(t,y+ri*TXN_ROW_H,TXN_ROW_H);
-      if(ri<coupleTxnRows.length-1)drawDivider(y+(ri+1)*TXN_ROW_H);
-    });
-    y+=coupleCardH;
-  }
-  y+=SECTION_GAP;
-
-"""
-          f=f[:tx_start]+replacement+f[tx_end:]
-
-          if 'shareTxns' in f:
-              raise SystemExit('shareTxns still present in generateSettleCanvas')
-          if 'coupleCardH' not in f or 'drawCard(cardX,y,cardW,coupleCardH);' not in f:
-              raise SystemExit('separate couple card not installed')
-
-          s=s[:start]+f+s[end:]
-          s=s.replace("const APP_VERSION='v5.37';","const APP_VERSION='v5.38';",1)
-          p.write_text(s,encoding='utf-8')
-
-          p=Path('sw.js')
-          sw=p.read_text(encoding='utf-8')
-          sw=sw.replace('const CACHE_NAME = "dutch-pay-v5.37d";','const CACHE_NAME = "dutch-pay-v5.38";',1)
-          p.write_text(sw,encoding='utf-8')
-          PY
+      - name: Apply patch
+        run: python3 scripts/fix_v538.py
       - name: Verify
-        shell: bash
         run: |
           grep -Fq "const APP_VERSION='v5.38';" index.html
-          grep -Fq 'const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*TXN_ROW_H:0;' index.html
           grep -Fq 'drawCard(cardX,y,cardW,coupleCardH);' index.html
           ! grep -Fq 'const shareTxns=normalTxns.concat(coupleTxnRows);' index.html
           grep -Fq 'dutch-pay-v5.38' sw.js
-      - name: Commit and remove temporary workflow
-        shell: bash
+      - name: Commit patch
         run: |
-          rm .github/workflows/fix-v538-couple-cards.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html sw.js .github/workflows/fix-v538-couple-cards.yml
+          git add index.html sw.js
           git commit -m 'v5.38 공유 이미지 커플 카드 분리 복원'
           git push
