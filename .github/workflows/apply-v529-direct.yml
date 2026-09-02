@@ -22,22 +22,27 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           idx = Path('index.html')
           s = idx.read_text(encoding='utf-8')
-          old = "const APP_VERSION='v5.25';"
-          if old not in s:
-              raise SystemExit('APP_VERSION v5.25 marker not found')
-          s = s.replace(old, "const APP_VERSION='v5.29';", 1)
-          s = s.replace("const BUILD_TIME='2026-09-02 07:58';", "const BUILD_TIME='2026-09-02 09:15';", 1)
+          s, n1 = re.subn(r"const APP_VERSION='v5\.25';", "const APP_VERSION='v5.29';", s, count=1)
+          s, n2 = re.subn(r"const BUILD_TIME='[^']+';", "const BUILD_TIME='2026-09-02 09:15';", s, count=1)
+          if n1 != 1 or n2 != 1:
+              raise SystemExit(f'index patch failed: version={n1}, build={n2}')
           idx.write_text(s, encoding='utf-8')
 
           sw = Path('sw.js')
           w = sw.read_text(encoding='utf-8')
           w = w.replace('dutch-pay-v5.28', 'dutch-pay-v5.29')
-          # 실제 index.html이 v5.29이므로 HTML 응답에서 버전을 가짜로 치환하지 않는다.
-          w = w.replace('  html = html\n    .replace("const APP_VERSION=\'v5.25\';", "const APP_VERSION=\'v5.28\';")\n    .replace("const BUILD_TIME=\'2026-09-02 07:58\';", "const BUILD_TIME=\'2026-09-02 09:12\';");', '  // v5.29부터 버전은 index.html 원본에서 직접 관리한다.\n  // 서비스워커는 버전 문자열을 변경하지 않는다.')
-          w = w.replace('  html = html\n    .replace("const APP_VERSION=\'v5.25\';", "const APP_VERSION=\'v5.28\';")\n    .replace("const BUILD_TIME=\'2026-09-02 07:58\';", "const BUILD_TIME=\'2026-09-02 08:46\';");', '  // v5.29부터 버전은 index.html 원본에서 직접 관리한다.\n  // 서비스워커는 버전 문자열을 변경하지 않는다.')
+          w, n3 = re.subn(
+              r'  html = html\n    \.replace\("const APP_VERSION=\'v5\.25\';", "const APP_VERSION=\'v5\.28\';"\)\n    \.replace\("const BUILD_TIME=\'[^\']+\';", "const BUILD_TIME=\'[^\']+\';"\);',
+              '  // v5.29부터 버전은 index.html 원본에서 직접 관리한다.\n  // 서비스워커는 버전 문자열을 변경하지 않는다.',
+              w,
+              count=1,
+          )
+          if n3 != 1:
+              raise SystemExit(f'service worker version rewrite removal failed: {n3}')
           sw.write_text(w, encoding='utf-8')
           PY
 
@@ -45,11 +50,9 @@ jobs:
         shell: bash
         run: |
           grep -q "const APP_VERSION='v5.29';" index.html
+          grep -q "const BUILD_TIME='2026-09-02 09:15';" index.html
           grep -q 'dutch-pay-v5.29' sw.js
-          if grep -q 'replace("const APP_VERSION' sw.js; then
-            echo 'version rewrite still exists in sw.js'
-            exit 1
-          fi
+          ! grep -q 'replace("const APP_VERSION' sw.js
 
       - name: Commit permanent fix and remove temporary workflow
         shell: bash
