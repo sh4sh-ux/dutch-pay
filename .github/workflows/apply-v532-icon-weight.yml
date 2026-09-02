@@ -1,0 +1,55 @@
+name: Apply v5.32 icon weight tuning
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-v532-icon-weight.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply icon weight tuning
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          files=[Path(f'category-icons-v5.28-{i}.js') for i in range(1,5)]
+          for p in files:
+              s=p.read_text()
+              # Filled Illustrator artwork: add a very small same-color outline.
+              # This preserves geometry/size while making the visible silhouette ~12-15% heavier.
+              s=re.sub(r'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns=',
+                       '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0.30" stroke-linejoin="round" paint-order="stroke fill" xmlns=',s)
+              p.write_text(s)
+          idx=Path('index.html')
+          s=idx.read_text()
+          s=re.sub(r"const APP_VERSION='v[0-9.]+';","const APP_VERSION='v5.32';",s,1)
+          s=re.sub(r"const BUILD_TIME='[^']+';","const BUILD_TIME='2026-09-02 09:40';",s,1)
+          idx.write_text(s)
+          sw=Path('sw.js')
+          s=sw.read_text().replace('const CACHE_NAME = "dutch-pay-v5.30";','const CACHE_NAME = "dutch-pay-v5.32";')
+          sw.write_text(s)
+      - name: Validate
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          idx=Path('index.html').read_text()
+          assert "const APP_VERSION='v5.32';" in idx
+          assert 'dutch-pay-v5.32' in Path('sw.js').read_text()
+          for i in range(1,5):
+              s=Path(f'category-icons-v5.28-{i}.js').read_text()
+              n=s.count('stroke-width="0.30"')
+              roots=s.count('<svg width="14" height="14"')
+              assert roots>0 and n==roots,(i,n,roots)
+          print('v5.32 validation OK')
+      - name: Commit fix and remove temporary workflow
+        run: |
+          rm .github/workflows/apply-v532-icon-weight.yml
+          git config user.name "sh4sh-ux"
+          git config user.email "onlysh4sh@gmail.com"
+          git add index.html sw.js category-icons-v5.28-1.js category-icons-v5.28-2.js category-icons-v5.28-3.js category-icons-v5.28-4.js .github/workflows/apply-v532-icon-weight.yml
+          git commit -m "v5.32 카테고리 아이콘 굵기 보정"
+          git push
