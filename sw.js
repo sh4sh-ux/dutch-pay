@@ -21,6 +21,7 @@ async function enhanceHtmlResponse(response) {
   let html = await response.text();
   // v5.29부터 버전은 index.html 원본에서 직접 관리한다.
   // 서비스워커는 버전 문자열을 변경하지 않는다.
+  // deploy trigger: v5.29 permanent version fix
 
   const revisedIconScripts = [
     '<script src="./category-icons-v5.28-1.js"></script>',
