@@ -1,0 +1,64 @@
+name: Apply v5.31 share icon size fix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ !contains(github.event.head_commit.message, '[v5.31-applied]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Patch shared image icon size
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          idx = Path('index.html')
+          s = idx.read_text(encoding='utf-8')
+
+          old_draw = 'ctx.drawImage(iconImg,iconX-15,ry-15,30,30)'
+          count = s.count(old_draw)
+          if count < 2:
+              raise SystemExit(f'expected at least 2 share/history icon draw calls, found {count}')
+          s = s.replace(old_draw, 'ctx.drawImage(iconImg,iconX-20,ry-20,40,40)')
+
+          if "const APP_VERSION='v5.30';" not in s:
+              raise SystemExit('APP_VERSION v5.30 marker not found')
+          s = s.replace("const APP_VERSION='v5.30';", "const APP_VERSION='v5.31';", 1)
+          s = re.sub(r"const BUILD_TIME='[^']+';", "const BUILD_TIME='2026-09-02 09:31';", s, count=1)
+          idx.write_text(s, encoding='utf-8')
+
+          sw = Path('sw.js')
+          if sw.exists():
+              w = sw.read_text(encoding='utf-8')
+              w = re.sub(r'dutch-pay-v5\\.\\d+', 'dutch-pay-v5.31', w, count=1)
+              sw.write_text(w, encoding='utf-8')
+          PY
+
+      - name: Validate
+        shell: bash
+        run: |
+          grep -q "const APP_VERSION='v5.31';" index.html
+          test "$(grep -o 'ctx.drawImage(iconImg,iconX-20,ry-20,40,40)' index.html | wc -l | tr -d ' ')" -ge 2
+          ! grep -q 'ctx.drawImage(iconImg,iconX-15,ry-15,30,30)' index.html
+
+      - name: Commit fix and remove temporary workflow
+        shell: bash
+        run: |
+          rm -f .github/workflows/apply-v531-share-icon-size.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: match shared image icon size to UI [v5.31-applied]"
+          git push origin HEAD:main
