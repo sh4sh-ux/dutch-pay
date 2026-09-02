@@ -15,6 +15,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 11px 14px 10px;
+  color: var(--label2);
 }
 
 .icon-pop.category-grid-v527 .icon-auto {
