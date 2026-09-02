@@ -1245,8 +1245,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-v5.28-3.js"></script>
 <script src="./category-icons-v5.28-4.js"></script>
 <script>
-const APP_VERSION='v5.30';
-const BUILD_TIME='2026-09-02 09:25';
+const APP_VERSION='v5.31';
+const BUILD_TIME='2026-09-02 09:31';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3655,7 +3655,7 @@ async function generateSettleCanvas(){
       const iconX=cardX+68;
       ctx.fillStyle=C.blueBg;ctx.beginPath();ctx.arc(iconX,ry,30,0,Math.PI*2);ctx.fill();
       const iconImg=iconMap.get(getIconSvg(it));
-      if(iconImg){ctx.drawImage(iconImg,iconX-15,ry-15,30,30);}
+      if(iconImg){ctx.drawImage(iconImg,iconX-20,ry-20,40,40);}
       else{ctx.fillStyle=C.blue;ctx.beginPath();ctx.arc(iconX,ry,6,0,Math.PI*2);ctx.fill();}
 
       const amountText=fmt(+it.amount)+'원';
@@ -3810,7 +3810,7 @@ async function generateHistoryCanvas(rec){
       const iconX=cardX+68;
       ctx.fillStyle=C.blueBg;ctx.beginPath();ctx.arc(iconX,ry,30,0,Math.PI*2);ctx.fill();
       const iconImg=iconMap.get(getIconSvg(it));
-      if(iconImg){ctx.drawImage(iconImg,iconX-15,ry-15,30,30);}else{ctx.fillStyle=C.blue;ctx.beginPath();ctx.arc(iconX,ry,6,0,Math.PI*2);ctx.fill();}
+      if(iconImg){ctx.drawImage(iconImg,iconX-20,ry-20,40,40);}else{ctx.fillStyle=C.blue;ctx.beginPath();ctx.arc(iconX,ry,6,0,Math.PI*2);ctx.fill();}
       const amtTxt=fmt(+it.amount)+'원';
       ctx.fillStyle=(+it.amount<0)?C.red:C.text;setFont(34,700);ctx.textAlign='right';ctx.textBaseline='middle';
       const amtX=cardX+cardW-38,amtW=ctx.measureText(amtTxt).width;
