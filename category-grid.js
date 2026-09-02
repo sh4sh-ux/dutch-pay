@@ -142,6 +142,34 @@
       }
 
       pop.style.top = Math.round(top) + 'px';
+
+      alignHeader();
+    };
+
+    // '카테고리 선택'을 1행 첫 아이콘 왼쪽에, '자동'을 1행 끝 아이콘 오른쪽에 맞춘다.
+    // 선택창 폭이 지출 영역 폭에 따라 달라지므로(데스크탑은 패널 전체 폭) 고정 padding으로는
+    // 맞지 않는다 — 매번 실제 아이콘 위치를 재서 헤더 좌우 padding을 계산한다.
+    const alignHeader = () => {
+      if (!header || !grid || !pop.isConnected) return;
+      const icons = Array.from(grid.querySelectorAll('.icon-opt svg'));
+      if (!icons.length) return;
+      const cs = getComputedStyle(pop);
+      const popRect = pop.getBoundingClientRect();
+      const contentL = popRect.left + (parseFloat(cs.borderLeftWidth) || 0);
+      const contentR = popRect.right - (parseFloat(cs.borderRightWidth) || 0);
+      const firstRect = icons[0].getBoundingClientRect();
+      // 1행 마지막 아이콘 = 첫 아이콘과 같은 세로 위치를 공유하는 마지막 것 (열 수와 무관)
+      let lastRect = firstRect;
+      for (const ic of icons) {
+        const r = ic.getBoundingClientRect();
+        if (Math.abs(r.top - firstRect.top) < 4) lastRect = r; else break;
+      }
+      header.style.paddingLeft = Math.max(0, Math.round(firstRect.left - contentL)) + 'px';
+      const auto = header.querySelector('.icon-auto');
+      if (auto) {
+        const autoPadR = parseFloat(getComputedStyle(auto).paddingRight) || 0;
+        header.style.paddingRight = Math.max(0, Math.round(contentR - lastRect.right - autoPadR)) + 'px';
+      }
     };
 
     let raf = 0;
@@ -176,18 +204,8 @@
 
     requestAnimationFrame(() => {
       positionPopup();
-
-      if (window.matchMedia('(max-width:700px)').matches && header && grid) {
-        const firstIcon = grid.querySelector('.icon-opt[data-key="food"] svg');
-        if (firstIcon && pop.isConnected) {
-          const popRect = pop.getBoundingClientRect();
-          const iconRect = firstIcon.getBoundingClientRect();
-          const leftPad = Math.max(10, Math.round(iconRect.left - popRect.left));
-          header.style.paddingLeft = leftPad + 'px';
-          header.style.paddingRight = '10px';
-          positionPopup();
-        }
-      }
+      // 첫 프레임엔 폭이 덜 확정될 수 있어 레이아웃이 잡힌 뒤 한 번 더 정렬
+      requestAnimationFrame(() => { if (pop.isConnected) alignHeader(); });
     });
 
     setTimeout(() => {
