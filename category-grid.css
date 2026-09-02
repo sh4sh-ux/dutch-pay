@@ -14,7 +14,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 11px 14px 10px;
+  /* '카테고리 선택' 왼쪽 = 1행 첫 아이콘 왼쪽, '자동' 글자 오른쪽 = 1행 끝 아이콘 오른쪽 (실측 정렬) */
+  padding: 11px 8px 10px 16px;
   color: var(--label2);
 }
 
@@ -70,8 +71,8 @@
 }
 
 .icon-pop.category-grid-v527 .icon-grid .icon-opt svg {
-  width: 24px;
-  height: 24px;
+  width: 27px;
+  height: 27px;
 }
 
 .icon-pop.category-grid-v527 .icon-grid .icon-lbl {
@@ -82,7 +83,7 @@
 
 @media (max-width: 700px) {
   .icon-pop.category-grid-v527 .icon-pop-hd {
-    padding: 10px 10px 9px;
+    padding: 10px 0 9px 7px;
   }
 
   .icon-pop.category-grid-v527 .icon-grid {
@@ -97,8 +98,8 @@
   }
 
   .icon-pop.category-grid-v527 .icon-grid .icon-opt svg {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
   }
 
   .icon-pop.category-grid-v527 .icon-grid .icon-lbl {
