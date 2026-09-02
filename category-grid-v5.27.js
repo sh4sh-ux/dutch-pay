@@ -63,34 +63,60 @@
       });
     }
 
-    const anchorRect = anchorEl && anchorEl.getBoundingClientRect ? anchorEl.getBoundingClientRect() : null;
     const row = anchorEl && anchorEl.closest ? anchorEl.closest('.detail-row,.rc-item-row') : null;
     const area = row && row.parentElement ? row.parentElement : null;
-    const areaRect = area && area.getBoundingClientRect ? area.getBoundingClientRect() : null;
     const margin = 8;
-    const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
 
-    let left;
-    let width;
-    if (areaRect && areaRect.width > 0) {
-      left = areaRect.left + window.scrollX;
-      width = areaRect.width;
-    } else {
-      width = Math.min(640, viewportWidth - margin * 2);
-      left = Math.max(margin, ((viewportWidth - width) / 2) + window.scrollX);
-    }
+    // Keep the popup attached to the clicked category row while the page scrolls.
+    // The popup itself is fixed to the viewport, so its position is recalculated
+    // from the anchor's live getBoundingClientRect() on scroll/resize.
+    pop.style.position = 'fixed';
+    pop.style.margin = '0';
 
-    const maxWidth = Math.max(0, viewportWidth - margin * 2);
-    width = Math.min(width, maxWidth);
-    left = Math.min(
-      Math.max(window.scrollX + margin, left),
-      window.scrollX + viewportWidth - width - margin
-    );
+    const positionPopup = () => {
+      if (!pop.isConnected) return;
 
-    pop.style.width = width + 'px';
-    pop.style.minWidth = '0';
-    pop.style.left = left + 'px';
-    if (anchorRect) pop.style.top = (anchorRect.bottom + window.scrollY + 6) + 'px';
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+      const anchorRect = anchorEl && anchorEl.getBoundingClientRect ? anchorEl.getBoundingClientRect() : null;
+      const areaRect = area && area.getBoundingClientRect ? area.getBoundingClientRect() : null;
+
+      let left;
+      let width;
+      if (areaRect && areaRect.width > 0) {
+        left = areaRect.left;
+        width = areaRect.width;
+      } else {
+        width = Math.min(640, viewportWidth - margin * 2);
+        left = Math.max(margin, (viewportWidth - width) / 2);
+      }
+
+      const maxWidth = Math.max(0, viewportWidth - margin * 2);
+      width = Math.min(width, maxWidth);
+      left = Math.min(
+        Math.max(margin, left),
+        viewportWidth - width - margin
+      );
+
+      pop.style.width = width + 'px';
+      pop.style.minWidth = '0';
+      pop.style.left = left + 'px';
+      if (anchorRect) pop.style.top = (anchorRect.bottom + 6) + 'px';
+    };
+
+    positionPopup();
+
+    let raf = 0;
+    const followAnchor = () => {
+      if (!pop.isConnected) {
+        window.removeEventListener('scroll', followAnchor, true);
+        window.removeEventListener('resize', followAnchor);
+        return;
+      }
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(positionPopup);
+    };
+    window.addEventListener('scroll', followAnchor, true);
+    window.addEventListener('resize', followAnchor);
 
     // On mobile, align the title's left edge with the left edge of the food icon itself.
     if (window.matchMedia('(max-width:700px)').matches && header && grid) {
@@ -113,12 +139,16 @@
       const closeOutside = (e) => {
         if (!pop.isConnected) {
           document.removeEventListener('pointerdown', closeOutside, true);
+          window.removeEventListener('scroll', followAnchor, true);
+          window.removeEventListener('resize', followAnchor);
           return;
         }
         const onAnchor = anchorEl && (e.target === anchorEl || anchorEl.contains(e.target));
         if (!pop.contains(e.target) && !onAnchor) {
           pop.remove();
           document.removeEventListener('pointerdown', closeOutside, true);
+          window.removeEventListener('scroll', followAnchor, true);
+          window.removeEventListener('resize', followAnchor);
         }
       };
       document.addEventListener('pointerdown', closeOutside, true);
