@@ -1083,6 +1083,7 @@ svg{display:block;flex-shrink:0;}
   .mob-fab{bottom:calc(env(safe-area-inset-bottom,0px) + 84px);}
 }
 </style>
+<link rel="stylesheet" href="./category-grid-v5.27.css"/>
 </head>
 <body>
 
@@ -1239,10 +1240,13 @@ svg{display:block;flex-shrink:0;}
   </div>
 </div>
 
-<script src="category-icons.js"></script>
+<script src="./category-icons-v5.28-1.js"></script>
+<script src="./category-icons-v5.28-2.js"></script>
+<script src="./category-icons-v5.28-3.js"></script>
+<script src="./category-icons-v5.28-4.js"></script>
 <script>
-const APP_VERSION='v5.29';
-const BUILD_TIME='2026-09-02 09:15';
+const APP_VERSION='v5.30';
+const BUILD_TIME='2026-09-02 09:25';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3995,5 +3999,6 @@ if(dbxGetToken())dbxResolveRoot().then(()=>syncFromDropbox());
 hDbxHandleCallback().then(async()=>{if(hDbxGetToken()){await dbxResolveRoot();hSyncDropbox();}});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{try{navigator.serviceWorker.register('sw.js').then(reg=>{reg.update();reg.addEventListener('updatefound',()=>{const nw=reg.installing;if(!nw)return;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#4355E8;color:#fff;padding:12px 18px;border-radius:24px;font:600 13px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 4px 16px rgba(67,85,232,.35);z-index:99999;cursor:pointer;';t.textContent='새 버전이 있어요 · 탭해서 새로고침';t.onclick=()=>location.reload();document.body.appendChild(t);}});});}).catch(()=>{});}catch(e){}});}
 </script>
+<script src="./category-grid-v5.27.js"></script>
 </body>
 </html>
