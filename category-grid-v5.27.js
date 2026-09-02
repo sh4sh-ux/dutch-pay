@@ -37,6 +37,15 @@
 
     const grid = pop.querySelector('.icon-grid');
     const header = pop.querySelector('.icon-pop-hd');
+
+    if (header) {
+      // Replace only the header text while preserving the Auto button.
+      const titleNode = Array.from(header.childNodes).find(
+        (node) => node.nodeType === 3 && node.textContent.trim()
+      );
+      if (titleNode) titleNode.textContent = '카테고리 선택';
+    }
+
     if (grid && header) {
       const auto = grid.querySelector('.icon-opt[data-key=""]');
       if (auto) {
@@ -82,6 +91,21 @@
     pop.style.minWidth = '0';
     pop.style.left = left + 'px';
     if (anchorRect) pop.style.top = (anchorRect.bottom + window.scrollY + 6) + 'px';
+
+    // On mobile, align the title's left edge exactly with the first label (외식).
+    if (window.matchMedia('(max-width:700px)').matches && header && grid) {
+      requestAnimationFrame(() => {
+        if (!pop.isConnected) return;
+        const firstLabel = grid.querySelector('.icon-opt[data-key="food"] .icon-lbl');
+        if (!firstLabel) return;
+        const popRect = pop.getBoundingClientRect();
+        const labelRect = firstLabel.getBoundingClientRect();
+        const rightPad = 10;
+        const leftPad = Math.max(10, Math.round(labelRect.left - popRect.left));
+        header.style.paddingLeft = leftPad + 'px';
+        header.style.paddingRight = rightPad + 'px';
+      });
+    }
 
     // Mobile-safe outside dismiss. The opening anchor is ignored here so a
     // second tap reaches showIconPicker above and can toggle the picker closed.
