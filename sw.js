@@ -1,4 +1,4 @@
-const CACHE_NAME = "dutch-pay-v5.46";
+const CACHE_NAME = "dutch-pay-v5.47";
 const STATIC_ASSETS = [
   "./category-icons-v5.28-1.js",
   "./category-icons-v5.28-2.js",
@@ -13,60 +13,15 @@ const STATIC_ASSETS = [
   "./icons/apple-touch-icon.png"
 ];
 
-async function enhanceHtmlResponse(response) {
-  if (!response) return response;
-  const type = response.headers.get("content-type") || "";
-  if (!type.includes("text/html")) return response;
-
-  let html = await response.text();
-
-  // App version is stored directly in index.html.
-
-  const revisedIconScripts = [
-    '<script src="./category-icons-v5.28-1.js"></script>',
-    '<script src="./category-icons-v5.28-2.js"></script>',
-    '<script src="./category-icons-v5.28-3.js"></script>',
-    '<script src="./category-icons-v5.28-4.js"></script>'
-  ].join('\n');
-
-  if (html.includes('<script src="category-icons.js"></script>')) {
-    html = html.replace('<script src="category-icons.js"></script>', revisedIconScripts);
-  }
-
-  if (!html.includes("category-grid-v5.27.css")) {
-    html = html.replace(
-      "</head>",
-      '<link rel="stylesheet" href="./category-grid-v5.27.css"/>\n</head>'
-    );
-  }
-
-  if (!html.includes("category-grid-v5.27.js")) {
-    html = html.replace(
-      "</body>",
-      '<script src="./category-grid-v5.27.js"></script>\n</body>'
-    );
-  }
-
-  const headers = new Headers(response.headers);
-  headers.delete("content-length");
-  headers.set("cache-control", "no-cache, no-store, must-revalidate");
-  return new Response(html, {
-    status: response.status,
-    statusText: response.statusText,
-    headers
-  });
-}
-
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
     await cache.addAll(STATIC_ASSETS.filter(Boolean));
     try {
       const response = await fetch("./index.html", { cache: "no-store" });
-      const enhanced = await enhanceHtmlResponse(response);
-      if (enhanced && enhanced.status === 200) {
-        await cache.put("./index.html", enhanced.clone());
-        await cache.put("./", enhanced.clone());
+      if (response && response.status === 200) {
+        await cache.put("./index.html", response.clone());
+        await cache.put("./", response.clone());
       }
     } catch (_) {}
   })());
@@ -103,12 +58,11 @@ self.addEventListener("fetch", (event) => {
     event.respondWith((async () => {
       try {
         const response = await fetch(event.request, { cache: "no-store" });
-        const enhanced = await enhanceHtmlResponse(response);
-        if (enhanced && enhanced.status === 200) {
-          const copy = enhanced.clone();
+        if (response && response.status === 200) {
+          const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
         }
-        return enhanced;
+        return response;
       } catch (_) {
         return caches.match(event.request).then((c) => c || caches.match("./index.html"));
       }

@@ -1246,7 +1246,7 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-v5.28-4.js"></script>
 <script>
 const APP_VERSION='v5.45';
-const BUILD_TIME='2026-09-02 11:00';
+const BUILD_TIME='2026-09-02 12:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1860,7 +1860,7 @@ const svgShare='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stro
 const svgBookmark='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
 const svgCopy='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 const svgPencil='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
-// 카테고리 SVG는 category-icons.js에서 불러옵니다.
+// 카테고리 SVG는 category-icons-v5.28-1~4.js에서 불러옵니다.
 
 const ICON_RULES=[
   [svgEvent,/경조|축의|부의|조의|결혼식|장례식|돌잔치|봉투/i],
