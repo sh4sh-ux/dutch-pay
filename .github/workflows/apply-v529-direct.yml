@@ -1,0 +1,62 @@
+name: Apply v5.29 direct version fix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ !contains(github.event.head_commit.message, '[v5.29-applied]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Patch index and service worker directly
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          idx = Path('index.html')
+          s = idx.read_text(encoding='utf-8')
+          old = "const APP_VERSION='v5.25';"
+          if old not in s:
+              raise SystemExit('APP_VERSION v5.25 marker not found')
+          s = s.replace(old, "const APP_VERSION='v5.29';", 1)
+          s = s.replace("const BUILD_TIME='2026-09-02 07:58';", "const BUILD_TIME='2026-09-02 09:15';", 1)
+          idx.write_text(s, encoding='utf-8')
+
+          sw = Path('sw.js')
+          w = sw.read_text(encoding='utf-8')
+          w = w.replace('dutch-pay-v5.28', 'dutch-pay-v5.29')
+          # 실제 index.html이 v5.29이므로 HTML 응답에서 버전을 가짜로 치환하지 않는다.
+          w = w.replace('  html = html\n    .replace("const APP_VERSION=\'v5.25\';", "const APP_VERSION=\'v5.28\';")\n    .replace("const BUILD_TIME=\'2026-09-02 07:58\';", "const BUILD_TIME=\'2026-09-02 09:12\';");', '  // v5.29부터 버전은 index.html 원본에서 직접 관리한다.\n  // 서비스워커는 버전 문자열을 변경하지 않는다.')
+          w = w.replace('  html = html\n    .replace("const APP_VERSION=\'v5.25\';", "const APP_VERSION=\'v5.28\';")\n    .replace("const BUILD_TIME=\'2026-09-02 07:58\';", "const BUILD_TIME=\'2026-09-02 08:46\';");', '  // v5.29부터 버전은 index.html 원본에서 직접 관리한다.\n  // 서비스워커는 버전 문자열을 변경하지 않는다.')
+          sw.write_text(w, encoding='utf-8')
+          PY
+
+      - name: Validate
+        shell: bash
+        run: |
+          grep -q "const APP_VERSION='v5.29';" index.html
+          grep -q 'dutch-pay-v5.29' sw.js
+          if grep -q 'replace("const APP_VERSION' sw.js; then
+            echo 'version rewrite still exists in sw.js'
+            exit 1
+          fi
+
+      - name: Commit permanent fix and remove temporary workflow
+        shell: bash
+        run: |
+          rm -f .github/workflows/apply-v529-direct.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: persist v5.29 in index.html [v5.29-applied]"
+          git push origin HEAD:main
