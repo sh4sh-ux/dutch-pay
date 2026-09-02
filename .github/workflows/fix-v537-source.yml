@@ -1,0 +1,47 @@
+name: Fix v5.37 source
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-v537-source.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update source version and remove SW version rewrite
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old = "const APP_VERSION='v5.36';"
+          new = "const APP_VERSION='v5.37';"
+          if old not in s and new not in s:
+              raise SystemExit('APP_VERSION marker not found')
+          s = s.replace(old, new)
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('sw.js')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('const CACHE_NAME = "dutch-pay-v5.37c";', 'const CACHE_NAME = "dutch-pay-v5.37d";')
+          s = s.replace("\n  // v5.37: source index is still v5.36, so force the visible app version here.\n  html = html.replace(\"const APP_VERSION='v5.36';\", \"const APP_VERSION='v5.37';\");\n", "\n  // v5.37 source version is now stored directly in index.html.\n")
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Verify
+        shell: bash
+        run: |
+          grep -Fq "const APP_VERSION='v5.37';" index.html
+          ! grep -Fq "APP_VERSION='v5.36'" index.html
+          grep -Fq 'dutch-pay-v5.37d' sw.js
+          ! grep -Fq "html = html.replace(\"const APP_VERSION='v5.36';\"" sw.js
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'fix: store v5.37 in source and unify clients'
+          git push
