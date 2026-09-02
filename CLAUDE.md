@@ -12,7 +12,8 @@ Dropbox 연동으로 데이터 백업. 소유자(조상현)가 혼자 사용하�
 ## 파일 구조
 ```
 index.html            — 메인 앱 (전체 로직 포함)
-category-icons-v5.28-1~4.js — 카테고리 SVG 16종 (index.html이 직접 로드)
+category-icons-1~4.js — 카테고리 SVG 16종 (index.html이 직접 로드)
+category-grid.css/.js — 카테고리 선택 그리드
 test.html             — 계산 로직 테스트 (index.html을 iframe으로 불러 실제 함수 검사, http로 열 것)
 history.html          — Dropbox OAuth 콜백 리다이렉터
 CLAUDE.md             — 이 파일 (세션 컨텍스트용)
@@ -23,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v5.47** (2026-09-02) — 작업 브랜치
+**v5.48** (2026-09-02) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v5.48 | 오탐 테스트를 실제 렌더 기준으로 교체(46건 전부 통과), 잔여 배포 트리거 파일 3개 삭제, 보조 파일명에서 버전 접미사 제거 — 대신 sw.js install이 cache:"reload"로 항상 새로 받아 캐시 무효화를 보장 |
 | v5.47 | 미사용 category-icons.js 삭제(실제 소스는 category-icons-v5.28-1~4.js, 16개 아이콘이 전부 갈라져 있었음), sw.js의 죽은 enhanceHtmlResponse 제거 — 129줄 → 84줄 |
 | v5.46 | 서비스워커 activate의 client.navigate 제거 — waitUntil 안에서 창을 재이동시키면 그 HTML 요청을 아직 활성화 못 끝낸 SW가 처리해야 해 교착. 버전 올릴 때마다 첫 로드가 멈추던 원인 |
 | v5.25 | 사용자 제공 SVG 16종으로 카테고리 아이콘 교체, 경조·의료 선택 및 자동분류 추가. 도형은 원본을 유지하고 앱 테마 색상만 적용 |

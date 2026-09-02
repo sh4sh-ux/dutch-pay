@@ -1,11 +1,11 @@
-const CACHE_NAME = "dutch-pay-v5.47";
+const CACHE_NAME = "dutch-pay-v5.48";
 const STATIC_ASSETS = [
-  "./category-icons-v5.28-1.js",
-  "./category-icons-v5.28-2.js",
-  "./category-icons-v5.28-3.js",
-  "./category-icons-v5.28-4.js",
-  "./category-grid-v5.27.css",
-  "./category-grid-v5.27.js",
+  "./category-icons-1.js",
+  "./category-icons-2.js",
+  "./category-icons-3.js",
+  "./category-icons-4.js",
+  "./category-grid.css",
+  "./category-grid.js",
   "./manifest.webmanifest",
   "./favicon.png",
   "./icons/icon-192.png",
@@ -16,7 +16,12 @@ const STATIC_ASSETS = [
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(STATIC_ASSETS.filter(Boolean));
+    // addAll은 브라우저 HTTP 캐시를 거치므로 파일 내용이 바뀌어도 옛 사본을 담을 수 있다.
+    // 파일명에 버전을 붙이는 대신 여기서 cache:"reload"로 항상 새로 받는다.
+    await Promise.all(STATIC_ASSETS.filter(Boolean).map(async (url) => {
+      const res = await fetch(url, { cache: "reload" });
+      if (res && res.status === 200) await cache.put(url, res);
+    }));
     try {
       const response = await fetch("./index.html", { cache: "no-store" });
       if (response && response.status === 200) {
