@@ -414,9 +414,24 @@ suite('TC13: 사용자 카테고리 SVG [v5.25 회귀]', () => {
     expect(APP.getIconSvg('문화 공연')).toBe(APP.getIconSvg({name:'',iconOverride:'movie'}));
   });
 
-  test('아이콘 선택 목록에 경조·의료·문화가 노출', () => {
-    const source=APP.showIconPicker.toString();
-    if(!source.includes("k:'event'")||!source.includes("k:'medical'")||!source.includes("lbl:'문화'"))throw new Error('선택 목록 카테고리 누락');
+  // 함수 원문(toString)을 검사하면 category-grid.js가 showIconPicker를 감쌌을 때
+  // 원문을 볼 수 없어 실제로는 정상인데도 실패한다. 실제로 그려진 목록을 검사한다.
+  test('아이콘 선택 목록에 16개 카테고리가 모두 노출', () => {
+    const doc=APP.document;
+    doc.querySelectorAll('.icon-pop').forEach(e=>e.remove());
+    APP.__test.set(['A','B'],[{id:1,name:'t',amount:1000,payer:'A',members:[],watchers:[],isTreat:false}]);
+    APP.showIconPicker(1, doc.body, null);
+    const pop=doc.querySelector('.icon-pop');
+    if(!pop) throw new Error('선택창이 열리지 않음');
+    const labels=[...pop.querySelectorAll('.icon-opt')]
+      .map(e=>((e.querySelector('.icon-opt-lbl')||e).textContent||'').trim());
+    doc.querySelectorAll('.icon-pop').forEach(e=>e.remove());
+    const expected=['자동','외식','카페','술집','노래방','쇼핑','문화','교통','여행',
+                    '숙박','골프','스파','운동','기념일','경조','의료','기타'];
+    const missing=expected.filter(x=>!labels.includes(x));
+    if(missing.length) throw new Error('누락: '+missing.join(', ')+' / 실제: '+labels.join(','));
+    expect(labels.length).toBe(17);   // 자동 + 카테고리 16
+    return labels.join(' · ');
   });
 });
 

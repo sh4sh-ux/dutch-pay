@@ -1,1 +1,0 @@
-Deploy trigger for v5.35 mobile image-only share and category picker dismiss.
