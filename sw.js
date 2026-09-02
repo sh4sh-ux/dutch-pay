@@ -1,4 +1,4 @@
-const CACHE_NAME = "dutch-pay-v5.28";
+const CACHE_NAME = "dutch-pay-v5.29";
 const STATIC_ASSETS = [
   "./category-icons-v5.28-1.js",
   "./category-icons-v5.28-2.js",
@@ -19,9 +19,8 @@ async function enhanceHtmlResponse(response) {
   if (!type.includes("text/html")) return response;
 
   let html = await response.text();
-  html = html
-    .replace("const APP_VERSION='v5.25';", "const APP_VERSION='v5.28';")
-    .replace("const BUILD_TIME='2026-09-02 07:58';", "const BUILD_TIME='2026-09-02 09:05';");
+  // v5.29부터 버전은 index.html 원본에서 직접 관리한다.
+  // 서비스워커는 버전 문자열을 변경하지 않는다.
 
   const revisedIconScripts = [
     '<script src="./category-icons-v5.28-1.js"></script>',
