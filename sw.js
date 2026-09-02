@@ -1,4 +1,4 @@
-const CACHE_NAME = "dutch-pay-v5.45";
+const CACHE_NAME = "dutch-pay-v5.46";
 const STATIC_ASSETS = [
   "./category-icons-v5.28-1.js",
   "./category-icons-v5.28-2.js",
@@ -83,10 +83,11 @@ self.addEventListener("activate", (event) => {
     );
     await self.clients.claim();
 
-    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    await Promise.all(windows.map((client) => {
-      try { return client.navigate(client.url); } catch (_) { return null; }
-    }));
+    // 여기서 client.navigate()로 열린 창을 다시 불러오면 안 된다.
+    // 그 이동의 HTML 요청은 아직 activate를 끝내지 못한 이 서비스워커가 처리해야 해서
+    // 서로를 기다리다 멈춘다(첫 로드 실패, 이후 새로고침도 ERR_ABORTED).
+    // 새 버전 안내는 index.html의 updatefound 핸들러가 맡는다 —
+    // '새 버전이 있어요 · 탭해서 새로고침' 토스트를 띄우고 사용자가 누르면 페이지가 스스로 reload 한다.
   })());
 });
 
