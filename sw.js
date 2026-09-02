@@ -1,4 +1,4 @@
-const CACHE_NAME = "dutch-pay-v5.42";
+const CACHE_NAME = "dutch-pay-v5.43";
 const STATIC_ASSETS = [
   "./category-icons-v5.28-1.js",
   "./category-icons-v5.28-2.js",
@@ -20,7 +20,7 @@ async function enhanceHtmlResponse(response) {
 
   let html = await response.text();
 
-  // v5.37 source version is now stored directly in index.html.
+  // App version is stored directly in index.html.
 
   const revisedIconScripts = [
     '<script src="./category-icons-v5.28-1.js"></script>',
