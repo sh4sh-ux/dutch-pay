@@ -1,4 +1,4 @@
-const CACHE_NAME = "dutch-pay-v5.37";
+const CACHE_NAME = "dutch-pay-v5.37b";
 const STATIC_ASSETS = [
   "./category-icons-v5.28-1.js",
   "./category-icons-v5.28-2.js",
@@ -19,9 +19,9 @@ async function enhanceHtmlResponse(response) {
   if (!type.includes("text/html")) return response;
 
   let html = await response.text();
-  // v5.29부터 버전은 index.html 원본에서 직접 관리한다.
-  // 서비스워커는 버전 문자열을 변경하지 않는다.
-  // deploy trigger: v5.29 permanent version fix
+
+  // v5.37: source index is still v5.36, so force the visible app version here.
+  html = html.replace("const APP_VERSION='v5.36';", "const APP_VERSION='v5.37';");
 
   const revisedIconScripts = [
     '<script src="./category-icons-v5.28-1.js"></script>',
@@ -50,7 +50,7 @@ async function enhanceHtmlResponse(response) {
 
   const headers = new Headers(response.headers);
   headers.delete("content-length");
-  headers.set("cache-control", "no-cache");
+  headers.set("cache-control", "no-cache, no-store, must-revalidate");
   return new Response(html, {
     status: response.status,
     statusText: response.statusText,
