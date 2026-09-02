@@ -67,5 +67,21 @@
     pop.style.minWidth = '0';
     pop.style.left = left + 'px';
     if (anchorRect) pop.style.top = (anchorRect.bottom + window.scrollY + 6) + 'px';
+
+    // Mobile-safe outside dismiss: pointerdown fires reliably before synthetic click.
+    // Ignore the opening pointer itself; then close whenever the next pointer is outside.
+    setTimeout(() => {
+      const closeOutside = (e) => {
+        if (!pop.isConnected) {
+          document.removeEventListener('pointerdown', closeOutside, true);
+          return;
+        }
+        if (!pop.contains(e.target)) {
+          pop.remove();
+          document.removeEventListener('pointerdown', closeOutside, true);
+        }
+      };
+      document.addEventListener('pointerdown', closeOutside, true);
+    }, 0);
   };
 })();
