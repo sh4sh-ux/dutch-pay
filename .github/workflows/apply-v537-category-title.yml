@@ -1,0 +1,60 @@
+name: Apply v5.37 category title alignment
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-v537-category-title.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch category picker title and alignment
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('category-grid-v5.27.js')
+          s=p.read_text()
+          needle="    if (grid && header) {\n"
+          insert="    if (header) {\n      const title = Array.from(header.childNodes).find((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());\n      if (title) title.textContent = '카테고리 선택';\n      header.classList.add('category-title-aligned');\n    }\n\n"
+          if insert not in s:
+              if needle not in s: raise SystemExit('header hook not found')
+              s=s.replace(needle,insert+needle,1)
+          p.write_text(s)
+
+          p=Path('category-grid-v5.27.css')
+          s=p.read_text()
+          css="""
+/* v5.37: category title wording + align title start with first category label/icon column */
+@media (max-width: 700px) {
+  .icon-pop.category-grid-v527 .icon-pop-hd.category-title-aligned {
+    padding-left: 6px;
+  }
+}
+"""
+          if 'v5.37: category title wording' not in s:
+              s += css
+          p.write_text(s)
+
+          p=Path('index.html')
+          s=p.read_text().replace("const APP_VERSION='v5.36';","const APP_VERSION='v5.37';")
+          p.write_text(s)
+          p=Path('sw.js')
+          s=p.read_text().replace('dutch-pay-v5.36','dutch-pay-v5.37')
+          p.write_text(s)
+          PY
+      - name: Validate
+        run: |
+          grep -q "카테고리 선택" category-grid-v5.27.js
+          grep -q "category-title-aligned" category-grid-v5.27.css
+          grep -q "const APP_VERSION='v5.37'" index.html
+          grep -q "dutch-pay-v5.37" sw.js
+      - name: Remove temporary workflow and commit
+        run: |
+          rm .github/workflows/apply-v537-category-title.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js category-grid-v5.27.js category-grid-v5.27.css .github/workflows/apply-v537-category-title.yml
+          git commit -m 'v5.37 카테고리 선택 제목 정렬'
+          git push
