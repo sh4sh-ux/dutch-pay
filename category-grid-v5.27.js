@@ -12,6 +12,20 @@
   const originalShowIconPicker = window.showIconPicker;
 
   window.showIconPicker = function (itemId, anchorEl, ev) {
+    const existing = Array.from(document.querySelectorAll('.icon-pop')).find(
+      (p) => p.dataset.categoryItemId === String(itemId)
+    );
+
+    // Same category icon tapped again: toggle the picker closed.
+    if (existing) {
+      if (ev) {
+        ev.stopPropagation();
+        ev.preventDefault();
+      }
+      existing.remove();
+      return;
+    }
+
     originalShowIconPicker(itemId, anchorEl, ev);
 
     const pops = document.querySelectorAll('.icon-pop');
@@ -19,6 +33,7 @@
     if (!pop) return;
 
     pop.classList.add('category-grid-v527');
+    pop.dataset.categoryItemId = String(itemId);
 
     const grid = pop.querySelector('.icon-grid');
     const header = pop.querySelector('.icon-pop-hd');
@@ -68,15 +83,16 @@
     pop.style.left = left + 'px';
     if (anchorRect) pop.style.top = (anchorRect.bottom + window.scrollY + 6) + 'px';
 
-    // Mobile-safe outside dismiss: pointerdown fires reliably before synthetic click.
-    // Ignore the opening pointer itself; then close whenever the next pointer is outside.
+    // Mobile-safe outside dismiss. The opening anchor is ignored here so a
+    // second tap reaches showIconPicker above and can toggle the picker closed.
     setTimeout(() => {
       const closeOutside = (e) => {
         if (!pop.isConnected) {
           document.removeEventListener('pointerdown', closeOutside, true);
           return;
         }
-        if (!pop.contains(e.target)) {
+        const onAnchor = anchorEl && (e.target === anchorEl || anchorEl.contains(e.target));
+        if (!pop.contains(e.target) && !onAnchor) {
           pop.remove();
           document.removeEventListener('pointerdown', closeOutside, true);
         }
