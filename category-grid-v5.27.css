@@ -1,7 +1,7 @@
-/* v5.27 category picker layout: desktop 4x4, mobile 8x2 */
+/* v5.28 category picker tuning: revised user SVGs + larger display */
 .pay-ic > svg {
-  width: 18px !important;
-  height: 18px !important;
+  width: 20px !important;
+  height: 20px !important;
 }
 
 .icon-pop.category-grid-v527 {
@@ -69,8 +69,8 @@
 }
 
 .icon-pop.category-grid-v527 .icon-grid .icon-opt svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 
 .icon-pop.category-grid-v527 .icon-grid .icon-lbl {
@@ -96,8 +96,8 @@
   }
 
   .icon-pop.category-grid-v527 .icon-grid .icon-opt svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
   }
 
   .icon-pop.category-grid-v527 .icon-grid .icon-lbl {
