@@ -699,12 +699,6 @@ svg{display:block;flex-shrink:0;}
 }
 .saved-badge{margin-top:10px;text-align:center;font-size:13px;color:var(--green);font-weight:600;}
 .share-save-btn{width:100%;border:none;border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;background:var(--label);color:var(--bg);cursor:pointer;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:8px;}
-.share-btn-row{display:flex;gap:10px;}
-.share-btn-row .share-save-btn{width:auto;flex:1;}
-.share-link-btn{flex:1;border:1px solid var(--sep);border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;background:var(--card);color:var(--label);cursor:pointer;transition:opacity .12s,background .12s;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;}
-.share-link-btn:hover{background:var(--fill2);}
-.share-link-btn:active{transform:scale(.99);}
-.share-link-btn:disabled{cursor:wait;opacity:.55;}
 .share-save-btn:hover{opacity:.88;}
 .share-save-btn:active{transform:scale(.99);}
 .share-save-btn:disabled{cursor:wait;opacity:.55;}
@@ -1285,8 +1279,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.55';
-const BUILD_TIME='2026-09-03 11:00';
+const APP_VERSION='v5.56';
+const BUILD_TIME='2026-09-03 11:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1665,23 +1659,6 @@ async function _dbxDownload(token,path){
   const res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
   if(res.status===409)return null;if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownload(t,path);return null;}if(!res.ok)return null;
   try{return JSON.parse(await res.text());}catch(e){return null;}
-}
-// 업로드한 파일의 공개 직접 링크(이미지로 바로 열리는 dl.dropboxusercontent.com)를 만든다/찾는다. (v5.53 공유)
-async function _dbxSharedLink(token,path){
-  try{
-    let res=await fetch('https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({path})});
-    if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxSharedLink(t,path);return null;}
-    let data=await res.json().catch(()=>null);
-    let url=data&&data.url;
-    if(!url&&data&&data.error&&data.error['.tag']==='shared_link_already_exists'){
-      const r2=await fetch('https://api.dropboxapi.com/2/sharing/list_shared_links',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({path,direct_only:true})});
-      const d2=await r2.json().catch(()=>null);
-      if(d2&&d2.links&&d2.links[0])url=d2.links[0].url;
-    }
-    if(!url)return null;
-    // 이미지로 바로 열리는 직접 링크로 변환
-    return url.replace('www.dropbox.com','dl.dropboxusercontent.com').replace(/([?&])dl=0(&|$)/,'$1dl=1$2').replace(/[?&]st=[^&]+/,'');
-  }catch(e){return null;}
 }
 let _syncTimer=null,_syncing=false,_syncFromRunning=false;
 function _scheduleSyncToDropbox(){
@@ -2994,7 +2971,7 @@ function renderMobileBody(){
     if(validItems.length){const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const uid='mob_'+it.id;const rowClick=_hasReceiptDetail(it)?` onclick="toggleItemReceipt('${uid}',event)"`:'';const chev=_hasReceiptDetail(it)?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row"${rowClick}><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉     👏👏👏</span>':''}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div>${chev}<span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid)}`;}).join('');html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;}
     if(txns.length&&hasRounding)html+='<div class="notice">차액은 결제자에게 우선 부담돼요</div>';
     const savedBadge=_isAlreadySaved()?'<div class="saved-badge" title="기록 보관함에 저장됨 (기기 내 로컬)">기록보관함 저장됨 ✓</div>':'';
-    html+=`<div class="share-actions"><div class="share-btn-row"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지 공유</button><button class="share-link-btn" onclick="shareSettleLink()">🔗 링크 공유</button></div>${savedBadge}</div>`;
+    html+=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button>${savedBadge}</div>`;
     el.innerHTML=html;return;
   }
   // input tab
@@ -3095,7 +3072,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const paySection=validItems.length?`<div class="pay-section-title">지출 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const uid='i'+it.id;const rowClick=_hasReceiptDetail(it)?` onclick="toggleItemReceipt('${uid}',event)"`:'';const chev=_hasReceiptDetail(it)?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row"${rowClick}><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉     👏👏👏</span>':''}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div>${chev}<span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid)}`;}).join('')}</div>`:'';
   const noticeHtml=txns.length&&hasRounding?'<div class="notice">차액은 결제자에게 우선 부담돼요</div>':'';
   const savedBadge=_isAlreadySaved()?'<div class="saved-badge" title="기록 보관함에 저장됨 (기기 내 로컬)">기록보관함 저장됨 ✓</div>':'';
-  const shareBtn=`<div class="share-actions"><div class="share-btn-row"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지 공유</button><button class="share-link-btn" onclick="shareSettleLink()">🔗 링크 공유</button></div>${savedBadge}</div>`;
+  const shareBtn=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button>${savedBadge}</div>`;
   body.innerHTML=dateRow+hero+txnSection+paySection+noticeHtml+shareBtn;
 }
 
@@ -3889,58 +3866,7 @@ function _afterShare(){
   toast('공유 완료 — 기록 보관함에도 저장할까요?',{type:'success',action:()=>saveToHistory(),actionLabel:'저장'});
 }
 let _shareBusy=false;
-function _setShareBusy(busy){_shareBusy=busy;document.querySelectorAll('.share-save-btn,.share-link-btn').forEach(btn=>{btn.disabled=busy;btn.setAttribute('aria-busy',busy?'true':'false');});}
-// ── 링크로 공유 (v5.53) — 정산을 공유 링크로, 영수증은 Dropbox 공개링크로 담아 친구도 열람 ──
-function _dataUrlToBlob(d){try{const c=String(d).indexOf(',');const head=String(d).slice(0,c);const body=String(d).slice(c+1);const mime=(head.match(/data:([^;]+)/)||[])[1]||'image/jpeg';const bin=atob(body);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});}catch(e){return null;}}
-function _membersPlain(it){const mems=it.members.length?it.members:people;const ws=(it.watchers||[]).filter(w=>!mems.includes(w));if(it.isTreat)return[...mems,...ws].join(', ');return[...mems,...ws.map(w=>`${w}(깍두기)`)].join(', ');}
-function _shareDateLabel(){const f=x=>x?String(x).replace(/-/g,'.'):'';return settleDateEnd?`${f(settleDateStart)} ~ ${f(settleDateEnd)}`:f(settleDateStart);}
-function _orderedTxnsForShare(txns){const out=[];_groupTxnsByRecipient(txns,_myName).forEach(g=>g.txns.forEach(t=>out.push(t)));return out;}
-function _showLinkFallback(url){document.querySelector('.link-fallback')?.remove();const ov=document.createElement('div');ov.className='link-fallback';ov.style.cssText='position:fixed;inset:0;z-index:1300;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.5)';ov.innerHTML=`<div style="background:var(--card);border-radius:14px;padding:20px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)"><div style="font-weight:700;margin-bottom:10px;color:var(--label)">공유 링크</div><input readonly value="${ea(url)}" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--sep);border-radius:8px;font-size:12px;background:var(--fill);color:var(--label)"><div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end"><button class="lf-copy" style="padding:8px 14px;border:none;border-radius:8px;background:var(--blue);color:#fff;font-weight:600;cursor:pointer">복사</button><button class="lf-close" style="padding:8px 14px;border:1px solid var(--sep);border-radius:8px;background:var(--card);color:var(--label);cursor:pointer">닫기</button></div></div>`;const inp=ov.querySelector('input');ov.querySelector('.lf-copy').onclick=()=>{inp.select();try{document.execCommand('copy');toast('복사됐어요',{type:'success'});}catch(e){}};ov.querySelector('.lf-close').onclick=()=>ov.remove();ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});document.body.appendChild(ov);inp.focus();inp.select();}
-function _withTimeout(promise,ms){return Promise.race([Promise.resolve(promise),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);}
-async function shareSettleLink(){
-  if(_shareBusy)return;
-  const token=dbxGetToken();
-  if(!token){toast('링크 공유는 Dropbox 연결이 필요해요 — ⋯ 메뉴에서 연결해주세요',{type:'error',duration:4500});return;}
-  const total=items.reduce((s,it)=>s+(+it.amount||0),0);if(!total){toast('공유할 정산 내역이 없어요',{type:'error'});return;}
-  _setShareBusy(true);
-  const t0=toast('공유 링크 만드는 중…',{duration:60000});
-  try{
-    syncCurrentToGroup();
-    const g=getCurrentGroup();
-    const{paid,owes}=computeShares();
-    const ordered=_orderedTxnsForShare(calcTxns(paid,owes));
-    const validItems=items.filter(it=>+it.amount!==0);
-    // 영수증: 첨부 사진(data URI)은 번들에 그대로 담고(너무 크면 제외), 외부 링크는 직링크로
-    const bundleItems=validItems.map(it=>{
-      let r='';const ru=(it.receiptUrl||'').trim();
-      if(ru){ if(_isDataUrl(ru)){ r=ru.length<2000000?ru:''; } else { r=normalizeReceiptUrl(ru); } }
-      return {n:it.name||'',a:+it.amount||0,p:it.payer||'',m:_membersPlain(it),r};
-    });
-    const bundle={t:(g&&g.name)||'정산 내역',d:_shareDateLabel(),tot:total,pc:people.length,me:_myName||'',txns:ordered.map(x=>[x.from,x.to,x.amt]),items:bundleItems};
-    // 데이터를 Dropbox에 올리고 짧은 공개 링크만 공유 (URL이 짧아 카톡에서도 안 잘림)
-    const shareId=`s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`;
-    const path=`${dbxDir()}/shares/${shareId}.json`;
-    let link=null;
-    try{
-      const up=await _withTimeout(_dbxUpload(token,path,JSON.stringify(bundle)),30000);
-      if(up)link=await _withTimeout(_dbxSharedLink(token,path),20000);
-    }catch(e){link=null;}
-    t0&&t0.dismiss&&t0.dismiss();
-    let url;
-    if(link){
-      url='https://sh4sh-ux.github.io/dutch-pay/share.html?s='+encodeURIComponent(link);
-    }else{
-      // Dropbox 업로드 실패 폴백: 영수증 없이 요약만 인라인(길이 최소화)으로라도 공유
-      const light=Object.assign({},bundle,{items:bundle.items.map(x=>Object.assign({},x,{r:/^https?:/.test(x.r)?x.r:''}))});
-      url='https://sh4sh-ux.github.io/dutch-pay/share.html?d='+encodeURIComponent(JSON.stringify(light));
-      toast('Dropbox 업로드에 실패해 영수증은 링크에서 제외됐어요',{type:'error',duration:4200});
-    }
-    if(navigator.share){try{await navigator.share({title:bundle.t,text:`${bundle.t} — 더치페이 정산`,url});return;}catch(e){if(e&&e.name==='AbortError')return;}}
-    try{await navigator.clipboard.writeText(url);toast('공유 링크를 복사했어요 — 붙여넣기 하세요',{type:'success',duration:4000});}
-    catch(e){_showLinkFallback(url);}
-  }catch(err){t0&&t0.dismiss&&t0.dismiss();console.error('shareSettleLink failed',err);toast('공유 링크 생성 중 오류가 발생했어요',{type:'error'});}
-  finally{_setShareBusy(false);}
-}
+function _setShareBusy(busy){_shareBusy=busy;document.querySelectorAll('.share-save-btn').forEach(btn=>{btn.disabled=busy;btn.setAttribute('aria-busy',busy?'true':'false');});}
 function _canShareFiles(shareData){if(!navigator.share)return false;if(!navigator.canShare)return true;try{return navigator.canShare(shareData);}catch(err){return false;}}
 function _downloadShareBlob(blob,filename){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.download=filename;a.href=url;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);}
 function _openShareFallback(blob,file,filename){document.querySelector('.share-fallback')?.remove();const url=URL.createObjectURL(blob);const ov=document.createElement('div');ov.className='share-fallback';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.innerHTML=`<div class="share-fallback-card"><div class="share-fallback-title">정산 이미지가 준비됐어요</div><div class="share-fallback-sub">공유가 바로 열리지 않으면 아래 버튼으로 다시 시도하거나 이미지를 길게 눌러 저장하세요.</div><img class="share-fallback-img" alt="더치페이 정산 이미지 미리보기"><div class="share-fallback-actions"><button class="share-fallback-btn primary" type="button">다시 공유</button><a class="share-fallback-btn" download="${ea(filename)}">이미지 저장</a></div><button class="share-fallback-close" type="button">닫기</button></div>`;ov.querySelector('img').src=url;const close=()=>{URL.revokeObjectURL(url);ov.remove();};ov.querySelector('.share-fallback-close').onclick=close;ov.addEventListener('click',ev=>{if(ev.target===ov)close();});const save=ov.querySelector('a');save.href=url;save.onclick=()=>setTimeout(()=>toast('이미지를 저장했어요',{type:'success'}),0);const retry=ov.querySelector('.share-fallback-btn.primary');const shareData={files:[file]};const canShare=_canShareFiles(shareData);if(!canShare){retry.style.display='none';ov.querySelector('.share-fallback-actions').style.gridTemplateColumns='1fr';}else retry.onclick=async()=>{try{await navigator.share(shareData);close();_afterShare();}catch(err){if(err?.name!=='AbortError')toast('공유를 열지 못했어요. 이미지를 길게 눌러 저장해주세요.',{type:'error'});}};document.body.appendChild(ov);}
