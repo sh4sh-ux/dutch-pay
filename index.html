@@ -1280,8 +1280,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.61';
-const BUILD_TIME='2026-09-03 23:30';
+const APP_VERSION='v5.62';
+const BUILD_TIME='2026-09-04 00:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3133,7 +3133,8 @@ function normalizeReceiptUrl(url){
 }
 function getReceiptSrc(it){return it?normalizeReceiptUrl(it.receiptUrl||''):'';}
 function _hasReceiptDetail(it){return !!(it&&(it.receiptText||getReceiptSrc(it)));}
-function _looksLikeImage(u){return /^data:image\//i.test(u)||/\.(jpe?g|png|webp|gif|heic|bmp)(\?|#|$)/i.test(u)||/dropbox\.com/i.test(u);}
+// data: URI는 (MIME이 octet-stream이어도) 항상 <img>로 렌더 — window.open이면 큰 data URL이 다운로드로 떨어짐 (v5.62). 이미지가 아니면 img.onerror가 폴백 처리
+function _looksLikeImage(u){return /^data:/i.test(u)||/\.(jpe?g|png|webp|gif|heic|bmp)(\?|#|$)/i.test(u)||/dropbox\.com/i.test(u);}
 // ── 영수증 사진 저장: localStorage가 아니라 IndexedDB(대용량)에 두고 항목엔 'idb:<키>' 참조만 (v5.60) ──
 function _rcptIdb(){return new Promise((res,rej)=>{try{const q=indexedDB.open('dutchpay_receipts',1);q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains('imgs'))q.result.createObjectStore('imgs');};q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);}catch(e){rej(e);}});}
 async function _rcptIdbPut(k,v){const db=await _rcptIdb();return new Promise((res,rej)=>{const t=db.transaction('imgs','readwrite');t.objectStore('imgs').put(v,k);t.oncomplete=()=>res(true);t.onerror=()=>rej(t.error);});}
@@ -3158,7 +3159,7 @@ async function _resolveReceiptSrc(it){
     const key=u.slice(4);
     const local=await _rcptIdbGet(key);if(local){_backfillReceiptToDbx(key,local);return local;}
     const tok=dbxGetToken();
-    if(tok){const blob=await _dbxDownloadBlob(tok,`${dbxDir()}/receipts/${key}.jpg`).catch(()=>null);if(blob){const d=await _blobToDataUrl(blob);if(d){_rcptIdbPut(key,d).catch(()=>{});return d;}}}
+    if(tok){let blob=await _dbxDownloadBlob(tok,`${dbxDir()}/receipts/${key}.jpg`).catch(()=>null);if(blob){if(!/^image\//i.test(blob.type||'')){try{blob=new Blob([blob],{type:'image/jpeg'});}catch(e){}}const d=await _blobToDataUrl(blob);if(d){_rcptIdbPut(key,d).catch(()=>{});return d;}}}
     return'';
   }
   return normalizeReceiptUrl(u);
