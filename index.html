@@ -1321,8 +1321,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.72';
-const BUILD_TIME='2026-09-04 05:45';
+const APP_VERSION='v5.73';
+const BUILD_TIME='2026-09-04 06:15';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2448,10 +2448,12 @@ function _groupTxnsByRecipient(txns,ownerName){
 
 function _txnRowsHtml(txns){
   if(!txns.length)return'';
-  return _groupTxnsByRecipient(txns,_myName).map(group=>{
+  const groups=_groupTxnsByRecipient(txns,_myName);
+  const multi=groups.length>1; // 수취인 그룹이 2개 이상일 때만 색상 구분선 표시 (구분할 대상이 있을 때만) (v5.73)
+  return groups.map(group=>{
     const cls=group.isOwner?'txn-div-owner':'txn-div-other';
     const rows=group.txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('');
-    return`<div class="txn-group-div ${cls}"></div>${rows}`;
+    return`${multi?`<div class="txn-group-div ${cls}"></div>`:''}${rows}`;
   }).join('');
 }
 
@@ -3834,7 +3836,8 @@ async function generateSettleCanvas(){
   const W=1080,PAD=42,TOP_PAD=56,cardX=PAD,cardW=W-PAD*2;
   const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=245,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78;
   const txnGroups=_groupTxnsByRecipient(normalTxns,_myName),DIV_H=3;
-  const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+txnGroups.length*DIV_H):EMPTY_CARD_H;
+  const _multiG=txnGroups.length>1; // 수취인 그룹 2개 이상일 때만 색상 구분선 (v5.73)
+  const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+(_multiG?txnGroups.length*DIV_H:0)):EMPTY_CARD_H;
   const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*TXN_ROW_H:0;
   const coupleSection=coupleCardH?(SECTION_GAP+coupleCardH):0;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
@@ -3902,7 +3905,7 @@ async function generateSettleCanvas(){
     let curY=y;
     ctx.save();roundRectPath(ctx,cardX,y,cardW,txnCardH,28);ctx.clip();
     txnGroups.forEach(group=>{
-      ctx.fillStyle=group.isOwner?C.blue:C.amber;roundRectPath(ctx,cardX+34,curY,cardW-68,DIV_H,DIV_H/2);ctx.fill();curY+=DIV_H;
+      if(_multiG){ctx.fillStyle=group.isOwner?C.blue:C.amber;roundRectPath(ctx,cardX+34,curY,cardW-68,DIV_H,DIV_H/2);ctx.fill();curY+=DIV_H;}
       group.txns.forEach((t,ri)=>{
         drawTxnRow(t,curY,TXN_ROW_H);
         curY+=TXN_ROW_H;
@@ -4021,7 +4024,7 @@ function _openShareFallback(blob,file,filename){document.querySelector('.share-f
 // 정산 탭 공유 버튼 — 첨부 영수증이 있으면 '정산'/'영수증' 2버튼, 없으면 단일 (v5.72)
 function _shareBtnsHtml(savedBadge){
   const rc=items.filter(it=>+it.amount!==0&&getReceiptSrc(it)).length;
-  if(!rc)return `${_shareBtnsHtml(savedBadge)}`;
+  if(!rc)return `<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button>${savedBadge}</div>`;
   return `<div class="share-actions"><div class="share-btn-row"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 정산 이미지</button><button class="share-save-btn share-save-btn-alt" onclick="shareReceiptsImages()">${svgShare} 영수증 ${rc}장</button></div>${savedBadge}</div>`;
 }
 // 첨부 영수증 사진들을 공유용 File 배열로 수집 (idb/data→blob, http→fetch best-effort)
