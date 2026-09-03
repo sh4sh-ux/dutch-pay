@@ -670,6 +670,7 @@ svg{display:block;flex-shrink:0;}
 .rcpt-viewer-spin{width:38px;height:38px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:rcptspin .8s linear infinite;}
 @keyframes rcptspin{to{transform:rotate(360deg);}}
 .rcpt-viewer-open{color:#fff;text-decoration:underline;font-size:14px;}
+.rcpt-viewer-msg{color:rgba(255,255,255,.85);font-size:14px;text-align:center;}
 @media(max-width:480px){.rcpt-viewer-close{top:-44px;right:0;}}
 .detail-amt{font-size:15px;font-weight:700;flex-shrink:0;min-width:88px;text-align:right;}
 .pay-ic{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -1279,8 +1280,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.59';
-const BUILD_TIME='2026-09-03 13:10';
+const APP_VERSION='v5.60';
+const BUILD_TIME='2026-09-03 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1660,6 +1661,16 @@ async function _dbxDownload(token,path){
   if(res.status===409)return null;if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownload(t,path);return null;}if(!res.ok)return null;
   try{return JSON.parse(await res.text());}catch(e){return null;}
 }
+// 이미지 등 바이너리 파일을 Blob으로 다운로드 (영수증 사진 다른 기기 복원용, v5.60)
+async function _dbxDownloadBlob(token,path){
+  const arg=JSON.stringify({path}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
+  const res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
+  if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownloadBlob(t,path);return null;}
+  if(!res.ok)return null;
+  try{return await res.blob();}catch(e){return null;}
+}
+function _blobToDataUrl(blob){return new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>res('');r.readAsDataURL(blob);});}
+function _dataUrlToBlob(d){try{const c=String(d).indexOf(',');const head=String(d).slice(0,c);const body=String(d).slice(c+1);const mime=(head.match(/data:([^;]+)/)||[])[1]||'image/jpeg';const bin=atob(body);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});}catch(e){return null;}}
 let _syncTimer=null,_syncing=false,_syncFromRunning=false;
 function _scheduleSyncToDropbox(){
   if(!dbxGetToken())return;
@@ -1967,7 +1978,7 @@ function refreshMobItems(){const el=document.getElementById('mItemRows');if(!el)
 
 function openSheet(id){const sheet=document.getElementById('mSheet');const overlay=document.getElementById('mOverlay');const it=items.find(i=>i.id===id);document.getElementById('mSheetTitle').textContent=(it&&it.name)?it.name:'새 지출';renderSheetBody(id);overlay.classList.add('open');requestAnimationFrame(()=>sheet.classList.add('open'));}
 function closeSheet(){if(_ufTimer)_flushUpdateField();_checkAutoDelete();renderItemLists();refreshMobItems();document.getElementById('mSheet').classList.remove('open');document.getElementById('mOverlay').classList.remove('open');_updateMobFab();}
-function renderSheetBody(id){const it=items.find(i=>i.id===id);if(!it)return;const opts=people.map(p=>`<option value="${e(p)}"${it.payer===p?' selected':''}>${e(p)}</option>`).join('');const memOpts=(it.members.length?it.members:people);const rounderOpts='<option value="">자동 (결제자 우선)</option>'+memOpts.map(p=>`<option value="${ea(p)}"${it.rounderOverride===p?' selected':''}>${e(p)}</option>`).join('');document.getElementById('mSheetBody').innerHTML=`<div class="field-g"><label class="field-lbl" for="sfname">지출 이름</label><input class="field-inp" id="sfname" placeholder="예: 저녁식사" value="${ea(it.name)}" oninput="updateField(${id},'name',this.value)"/></div><div class="field-g"><label class="field-lbl" for="sfamt_${id}">금액</label><div class="amt-wrap"><button type="button" class="amt-sign-btn${(+it.amount<0)?' on':''}" aria-label="금액 부호 변경" onclick="toggleAmtSign(${id})">−</button><input class="field-inp" id="sfamt_${id}" type="text" inputmode="numeric" placeholder="0" value="${fmtAmt(it.amount)}" onkeydown="handleAmtKeydown(event)" oninput="handleAmtInput(${id},this)"/><span class="amt-unit">원</span></div></div><div class="field-g"><label class="field-lbl" for="sfpayer_${id}">결제자</label><select id="sfpayer_${id}" class="field-sel" onchange="updateField(${id},'payer',this.value)">${opts}</select></div><div class="field-g"><div class="field-lbl">참여자 <span style="font-size:10px;font-weight:400;text-transform:none;color:var(--label3)">· 포함 → 깍두기 → 제외</span></div><div class="chips">${people.map(p=>{const isIn=it.members.includes(p);const isW=(it.watchers||[]).includes(p);return `<button class="chip${isIn?' on':''}${isW?' watch':''}" onclick="toggleMember(${id},${ja(p)},this)">${e(p)}${isW?'<span class="chip-watch-lbl"> 깍두기</span>':''}</button>`;}).join('')}</div></div><div class="field-g"><label class="field-lbl" for="sfrounder_${id}">차액 부담자</label><select id="sfrounder_${id}" class="field-sel" onchange="updateField(${id},'rounderOverride',this.value||null)">${rounderOpts}</select></div><button class="treat-toggle${it.isTreat?' on':''}" aria-pressed="${it.isTreat}" style="margin-top:8px" onclick="toggleTreat(${id})">${it.isTreat?'🎉 한턱 설정됨 — 더치페이 계산 제외':'🎉 한턱 설정하기'}</button><div class="field-g" style="margin-top:8px"><label class="field-lbl">영수증 상세 <span style="font-size:10px;font-weight:400;color:var(--label3)">품목명 | 수량 | 단가 | 금액</span></label><textarea class="field-inp" style="height:88px;resize:vertical;font-size:12px;line-height:1.6;font-family:inherit" placeholder="곱창구이(250g) | 2 | 24,000 | 48,000" oninput="updateField(${id},'receiptText',this.value)">${e(it.receiptText||'')}</textarea></div><div class="field-g" style="margin-top:8px"><label class="field-lbl">영수증 사진 <span style="font-size:10px;font-weight:400;color:var(--label3)">사진 첨부 또는 링크</span></label><div class="rcpt-attach-row"><input class="field-inp rcpt-url-inp" type="url" inputmode="url" placeholder="https:// 이미지 링크 (선택)" value="${_isDataUrl(it.receiptUrl)?'':ea(it.receiptUrl||'')}" oninput="updateField(${id},'receiptUrl',this.value)"/><button type="button" class="rcpt-attach-btn" onclick="pickReceiptPhoto(${id})">📷 사진</button></div>${it.receiptUrl?`<div class="rcpt-attach-state"><button type="button" class="rcpt-attach-view" onclick="openReceiptViewer(${id},event)">${_isDataUrl(it.receiptUrl)?'📎 사진 첨부됨':'🔗 링크 있음'} · 미리보기</button><button type="button" class="rcpt-attach-del" onclick="removeReceipt(${id})">삭제</button></div>`:''}</div><button class="confirm-btn" onclick="closeSheet()">확인</button><button class="del-btn" onclick="removeItem(${id})">${svgTrash} 지출 삭제</button><div style="height:20px"></div>`;}
+function renderSheetBody(id){const it=items.find(i=>i.id===id);if(!it)return;const opts=people.map(p=>`<option value="${e(p)}"${it.payer===p?' selected':''}>${e(p)}</option>`).join('');const memOpts=(it.members.length?it.members:people);const rounderOpts='<option value="">자동 (결제자 우선)</option>'+memOpts.map(p=>`<option value="${ea(p)}"${it.rounderOverride===p?' selected':''}>${e(p)}</option>`).join('');document.getElementById('mSheetBody').innerHTML=`<div class="field-g"><label class="field-lbl" for="sfname">지출 이름</label><input class="field-inp" id="sfname" placeholder="예: 저녁식사" value="${ea(it.name)}" oninput="updateField(${id},'name',this.value)"/></div><div class="field-g"><label class="field-lbl" for="sfamt_${id}">금액</label><div class="amt-wrap"><button type="button" class="amt-sign-btn${(+it.amount<0)?' on':''}" aria-label="금액 부호 변경" onclick="toggleAmtSign(${id})">−</button><input class="field-inp" id="sfamt_${id}" type="text" inputmode="numeric" placeholder="0" value="${fmtAmt(it.amount)}" onkeydown="handleAmtKeydown(event)" oninput="handleAmtInput(${id},this)"/><span class="amt-unit">원</span></div></div><div class="field-g"><label class="field-lbl" for="sfpayer_${id}">결제자</label><select id="sfpayer_${id}" class="field-sel" onchange="updateField(${id},'payer',this.value)">${opts}</select></div><div class="field-g"><div class="field-lbl">참여자 <span style="font-size:10px;font-weight:400;text-transform:none;color:var(--label3)">· 포함 → 깍두기 → 제외</span></div><div class="chips">${people.map(p=>{const isIn=it.members.includes(p);const isW=(it.watchers||[]).includes(p);return `<button class="chip${isIn?' on':''}${isW?' watch':''}" onclick="toggleMember(${id},${ja(p)},this)">${e(p)}${isW?'<span class="chip-watch-lbl"> 깍두기</span>':''}</button>`;}).join('')}</div></div><div class="field-g"><label class="field-lbl" for="sfrounder_${id}">차액 부담자</label><select id="sfrounder_${id}" class="field-sel" onchange="updateField(${id},'rounderOverride',this.value||null)">${rounderOpts}</select></div><button class="treat-toggle${it.isTreat?' on':''}" aria-pressed="${it.isTreat}" style="margin-top:8px" onclick="toggleTreat(${id})">${it.isTreat?'🎉 한턱 설정됨 — 더치페이 계산 제외':'🎉 한턱 설정하기'}</button><div class="field-g" style="margin-top:8px"><label class="field-lbl">영수증 상세 <span style="font-size:10px;font-weight:400;color:var(--label3)">품목명 | 수량 | 단가 | 금액</span></label><textarea class="field-inp" style="height:88px;resize:vertical;font-size:12px;line-height:1.6;font-family:inherit" placeholder="곱창구이(250g) | 2 | 24,000 | 48,000" oninput="updateField(${id},'receiptText',this.value)">${e(it.receiptText||'')}</textarea></div><div class="field-g" style="margin-top:8px"><label class="field-lbl">영수증 사진 <span style="font-size:10px;font-weight:400;color:var(--label3)">사진 첨부 또는 링크</span></label><div class="rcpt-attach-row"><input class="field-inp rcpt-url-inp" type="url" inputmode="url" placeholder="https:// 이미지 링크 (선택)" value="${(_isDataUrl(it.receiptUrl)||_isIdbRef(it.receiptUrl))?'':ea(it.receiptUrl||'')}" oninput="updateField(${id},'receiptUrl',this.value)"/><button type="button" class="rcpt-attach-btn" onclick="pickReceiptPhoto(${id})">📷 사진</button></div>${it.receiptUrl?`<div class="rcpt-attach-state"><button type="button" class="rcpt-attach-view" onclick="openReceiptViewer(${id},event)">${(_isDataUrl(it.receiptUrl)||_isIdbRef(it.receiptUrl))?'📎 사진 첨부됨':'🔗 링크 있음'} · 미리보기</button><button type="button" class="rcpt-attach-del" onclick="removeReceipt(${id})">삭제</button></div>`:''}</div><button class="confirm-btn" onclick="closeSheet()">확인</button><button class="del-btn" onclick="removeItem(${id})">${svgTrash} 지출 삭제</button><div style="height:20px"></div>`;}
 
 function dSetTab(t){_checkAutoDelete();dTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n===t?' on':'');});_syncShellNav(t);renderDesktopRight();}
 function mSetTab(t){_checkAutoDelete();mTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('mT'+cap(n));if(el)el.className='mob-tab'+(n===t?' on':'');});_syncShellNav(t);renderMobileBody();_updateMobFab();}
@@ -2935,10 +2946,10 @@ function renderEditor(id,eyeId,titleId,subId,bodyId){
         <div class="field-g editor-span-2">
           <label class="field-lbl">영수증 사진 <span style="font-size:11px;font-weight:400;text-transform:none;color:var(--label3)">사진 첨부 또는 이미지 링크</span></label>
           <div class="rcpt-attach-row">
-            <input class="field-inp rcpt-url-inp" type="url" inputmode="url" placeholder="https:// 이미지 링크 (선택)" value="${_isDataUrl(it.receiptUrl)?'':ea(it.receiptUrl||'')}" oninput="updateField(${id},'receiptUrl',this.value)"/>
+            <input class="field-inp rcpt-url-inp" type="url" inputmode="url" placeholder="https:// 이미지 링크 (선택)" value="${(_isDataUrl(it.receiptUrl)||_isIdbRef(it.receiptUrl))?'':ea(it.receiptUrl||'')}" oninput="updateField(${id},'receiptUrl',this.value)"/>
             <button type="button" class="rcpt-attach-btn" onclick="pickReceiptPhoto(${id})">📷 사진</button>
           </div>
-          ${it.receiptUrl?`<div class="rcpt-attach-state"><button type="button" class="rcpt-attach-view" onclick="openReceiptViewer(${id},event)">${_isDataUrl(it.receiptUrl)?'📎 사진 첨부됨':'🔗 링크 있음'} · 미리보기</button><button type="button" class="rcpt-attach-del" onclick="removeReceipt(${id})">삭제</button></div>`:''}
+          ${it.receiptUrl?`<div class="rcpt-attach-state"><button type="button" class="rcpt-attach-view" onclick="openReceiptViewer(${id},event)">${(_isDataUrl(it.receiptUrl)||_isIdbRef(it.receiptUrl))?'📎 사진 첨부됨':'🔗 링크 있음'} · 미리보기</button><button type="button" class="rcpt-attach-del" onclick="removeReceipt(${id})">삭제</button></div>`:''}
         </div>
       </div>
     </section>
@@ -3102,23 +3113,64 @@ function normalizeReceiptUrl(url){
 function getReceiptSrc(it){return it?normalizeReceiptUrl(it.receiptUrl||''):'';}
 function _hasReceiptDetail(it){return !!(it&&(it.receiptText||getReceiptSrc(it)));}
 function _looksLikeImage(u){return /^data:image\//i.test(u)||/\.(jpe?g|png|webp|gif|heic|bmp)(\?|#|$)/i.test(u)||/dropbox\.com/i.test(u);}
-function openReceiptViewer(itemId,ev){
-  if(ev){ev.stopPropagation();ev.preventDefault();}
-  const it=items.find(i=>i.id===itemId);if(!it)return;
-  const src=getReceiptSrc(it);if(!src)return;
-  if(!_looksLikeImage(src)){window.open(src,'_blank','noopener');return;}
-  _showReceiptViewer(src,it.name||'영수증');
+// ── 영수증 사진 저장: localStorage가 아니라 IndexedDB(대용량)에 두고 항목엔 'idb:<키>' 참조만 (v5.60) ──
+function _rcptIdb(){return new Promise((res,rej)=>{try{const q=indexedDB.open('dutchpay_receipts',1);q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains('imgs'))q.result.createObjectStore('imgs');};q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);}catch(e){rej(e);}});}
+async function _rcptIdbPut(k,v){const db=await _rcptIdb();return new Promise((res,rej)=>{const t=db.transaction('imgs','readwrite');t.objectStore('imgs').put(v,k);t.oncomplete=()=>res(true);t.onerror=()=>rej(t.error);});}
+async function _rcptIdbGet(k){try{const db=await _rcptIdb();return await new Promise(res=>{const t=db.transaction('imgs','readonly');const r=t.objectStore('imgs').get(k);r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);});}catch(e){return null;}}
+async function _rcptIdbDel(k){try{const db=await _rcptIdb();return await new Promise(res=>{const t=db.transaction('imgs','readwrite');t.objectStore('imgs').delete(k);t.oncomplete=()=>res(true);t.onerror=()=>res(false);});}catch(e){return false;}}
+function _isIdbRef(u){return String(u||'').slice(0,4)==='idb:';}
+// data URI 사진을 IndexedDB에 저장(+가능하면 Dropbox 백업)하고 'idb:<키>' 참조 반환
+async function _storeReceiptImage(itemId,dataUrl){
+  const key='r'+itemId+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  try{await _rcptIdbPut(key,dataUrl);}catch(e){return dataUrl;} // IndexedDB 불가 시 최후로 data URI 그대로(작을 때만 권장)
+  const tok=dbxGetToken();
+  if(tok){try{const blob=_dataUrlToBlob(dataUrl);if(blob)_dbxUpload(tok,`${dbxDir()}/receipts/${key}.jpg`,blob);}catch(e){}}
+  return 'idb:'+key;
 }
-function _showReceiptViewer(src,name){
+// 항목의 영수증 실제 이미지 소스 해석: idb→로컬 IndexedDB→(없으면)Dropbox, 그 외는 URL 그대로
+async function _resolveReceiptSrc(it){
+  const u=(it&&it.receiptUrl||'').trim();if(!u)return'';
+  if(_isIdbRef(u)){
+    const key=u.slice(4);
+    const local=await _rcptIdbGet(key);if(local)return local;
+    const tok=dbxGetToken();
+    if(tok){const blob=await _dbxDownloadBlob(tok,`${dbxDir()}/receipts/${key}.jpg`).catch(()=>null);if(blob){const d=await _blobToDataUrl(blob);if(d){_rcptIdbPut(key,d).catch(()=>{});return d;}}}
+    return'';
+  }
+  return normalizeReceiptUrl(u);
+}
+// 기존에 localStorage에 박혀 있던 data URI 사진들을 IndexedDB로 이전 → 저장공간 확보 (부팅 시 1회)
+async function _migrateReceiptsToIdb(){
+  let changed=false;
+  const mig=async arr=>{for(const it of (arr||[])){const u=it.receiptUrl||'';if(_isDataUrl(u)){try{const key='r'+(it.id||'x')+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);await _rcptIdbPut(key,u);const tok=dbxGetToken();if(tok){try{const b=_dataUrlToBlob(u);if(b)_dbxUpload(tok,`${dbxDir()}/receipts/${key}.jpg`,b);}catch(e){}}it.receiptUrl='idb:'+key;changed=true;}catch(e){}}}};
+  await mig(items);
+  for(const g of groups){await mig(g.data&&g.data.items);}
+  // 기록 보관함
+  let hist=null;try{hist=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');}catch(e){hist=null;}
+  if(Array.isArray(hist)){let hc=false;for(const rec of hist){const before=changed;await mig(rec.items);if(changed!==before)hc=true;}if(hc){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(hist));}catch(e){}}}
+  if(changed){try{saveState();}catch(e){}renderAll();}
+}
+async function openReceiptViewer(itemId,ev){
+  if(ev){ev.stopPropagation();ev.preventDefault();}
+  const it=items.find(i=>i.id===itemId);if(!it||!it.receiptUrl)return;
+  const v=_showReceiptViewer(it.name||'영수증');
+  let src='';try{src=await _resolveReceiptSrc(it);}catch(e){src='';}
+  v.setSrc(src);
+}
+function _showReceiptViewer(name){
   document.querySelector('.rcpt-viewer')?.remove();
   const ov=document.createElement('div');ov.className='rcpt-viewer';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-label',(name||'영수증')+' 보기');
   ov.innerHTML=`<div class="rcpt-viewer-inner"><button class="rcpt-viewer-close" type="button" aria-label="닫기">✕</button><div class="rcpt-viewer-spin" aria-hidden="true"></div><img class="rcpt-viewer-img" alt="${ea(name||'영수증')} 영수증"><a class="rcpt-viewer-open" target="_blank" rel="noopener noreferrer" hidden>새 탭에서 열기</a></div>`;
   const img=ov.querySelector('.rcpt-viewer-img'),spin=ov.querySelector('.rcpt-viewer-spin'),openLink=ov.querySelector('.rcpt-viewer-open');
   const onKey=e=>{if(e.key==='Escape')close();};
   function close(){ov.classList.remove('on');document.removeEventListener('keydown',onKey);setTimeout(()=>ov.remove(),180);}
-  img.onload=()=>{spin.style.display='none';img.classList.add('ready');};
-  img.onerror=()=>{spin.style.display='none';img.style.display='none';openLink.href=src;openLink.hidden=false;};
-  img.src=src;
+  function setSrc(src){
+    if(!src){spin.style.display='none';img.style.display='none';openLink.hidden=true;let m=ov.querySelector('.rcpt-viewer-msg');if(!m){m=document.createElement('div');m.className='rcpt-viewer-msg';ov.querySelector('.rcpt-viewer-inner').appendChild(m);}m.textContent='영수증을 불러오지 못했어요';return;}
+    if(!_looksLikeImage(src)){close();window.open(src,'_blank','noopener');return;}
+    img.onload=()=>{spin.style.display='none';img.classList.add('ready');};
+    img.onerror=()=>{spin.style.display='none';img.style.display='none';openLink.href=src;openLink.hidden=false;};
+    img.src=src;
+  }
   ov.querySelector('.rcpt-viewer-close').onclick=close;
   ov.addEventListener('click',e=>{if(e.target===ov)close();});
   // 확대(탭/더블탭·휠·핀치) + 이동(드래그/한손가락 이동)
@@ -3136,6 +3188,7 @@ function _showReceiptViewer(src,name){
   document.addEventListener('keydown',onKey);
   document.body.appendChild(ov);
   requestAnimationFrame(()=>ov.classList.add('on'));
+  return {setSrc,close};
 }
 function _compressImageToDataURL(file,maxDim,quality){
   return new Promise((resolve,reject)=>{
@@ -3157,7 +3210,7 @@ function pickReceiptPhoto(itemId){
     const t=toast('영수증 사진 처리 중…',{duration:8000});
     try{const dataUrl=await _compressImageToDataURL(f,1400,0.72);
       const it=items.find(i=>i.id===itemId);if(!it){t&&t.dismiss&&t.dismiss();return;}
-      it.receiptUrl=dataUrl;saveState();renderAll();
+      const ref=await _storeReceiptImage(it.id,dataUrl);it.receiptUrl=ref;saveState();renderAll();
       const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(itemId);
       t&&t.dismiss&&t.dismiss();toast('영수증 사진이 첨부됐어요',{type:'success'});
     }catch(err){t&&t.dismiss&&t.dismiss();toast('사진을 처리하지 못했어요',{type:'error'});}
@@ -3166,6 +3219,7 @@ function pickReceiptPhoto(itemId){
 }
 function removeReceipt(itemId){
   const it=items.find(i=>i.id===itemId);if(!it)return;
+  if(_isIdbRef(it.receiptUrl))_rcptIdbDel(it.receiptUrl.slice(4));
   it.receiptUrl='';saveState();renderAll();
   const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(itemId);
 }
@@ -4053,6 +4107,8 @@ const _receiptDbImportResult=_consumeReceiptDbTransfer();
 _migrateHistoryGroupNames();
 _deduplicateHistoryOnStartup();
 renderAll();
+// 영수증 사진을 localStorage→IndexedDB로 이전(저장공간 확보). 비동기·1회, 실패해도 앱 동작엔 지장 없음
+try{_migrateReceiptsToIdb();}catch(e){}
 if(_receiptDbImportResult){
   const detail=_receiptDbImportResult.updated?` · 업데이트 ${_receiptDbImportResult.updated}건`:'';
   toast(`영수증 ${_receiptDbImportResult.count}건을 모두 가져왔어요${detail}`,{type:'success',duration:4200});
