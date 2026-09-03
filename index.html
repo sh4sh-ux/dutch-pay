@@ -1317,8 +1317,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.70';
-const BUILD_TIME='2026-09-04 04:40';
+const APP_VERSION='v5.71';
+const BUILD_TIME='2026-09-04 05:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3898,7 +3898,7 @@ async function generateSettleCanvas(){
     let curY=y;
     ctx.save();roundRectPath(ctx,cardX,y,cardW,txnCardH,28);ctx.clip();
     txnGroups.forEach(group=>{
-      ctx.fillStyle=group.isOwner?C.blue:C.amber;ctx.fillRect(cardX,curY,cardW,DIV_H);curY+=DIV_H;
+      ctx.fillStyle=group.isOwner?C.blue:C.amber;roundRectPath(ctx,cardX+34,curY,cardW-68,DIV_H,DIV_H/2);ctx.fill();curY+=DIV_H;
       group.txns.forEach((t,ri)=>{
         drawTxnRow(t,curY,TXN_ROW_H);
         curY+=TXN_ROW_H;
