@@ -16,7 +16,6 @@ category-icons-1~4.js — 카테고리 SVG 16종 (index.html이 직접 로드)
 category-grid.css/.js — 카테고리 선택 그리드
 test.html             — 계산 로직 테스트 (index.html을 iframe으로 불러 실제 함수 검사, http로 열 것)
 history.html          — Dropbox OAuth 콜백 리다이렉터
-share.html            — 정산 '링크로 공유' 읽기 전용 뷰어 (v5.53, 메인 앱과 분리, #d= 번들 렌더 + 영수증 뷰어)
 CLAUDE.md             — 이 파일 (세션 컨텍스트용)
 .gitignore            — .claude/ 제외
 sw.js                 — 서비스워커 (PWA, CACHE_NAME과 APP_VERSION 항상 동기화)
@@ -25,12 +24,13 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v5.55** (2026-09-03) — 작업 브랜치
+**v5.56** (2026-09-03) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
-| v5.55 | 링크 공유를 '짧은 링크'로 개선 — 정산 데이터를 URL에 통째로 넣던 방식(#d=)이 카카오톡에서 URL이 잘려 '불러오지 못했어요'가 뜨던 문제. 이제 번들(JSON, 영수증 data URI 포함)을 Dropbox `shares/<id>.json`에 올리고 공개 직링크로 바꿔 `share.html?s=<링크>`(짧음·쿼리라 카톡 보존)로 공유. share.html은 ?s=면 fetch로 받아오고 ?d=(인라인)도 호환. 업로드에 타임아웃(_withTimeout, 30/20s) 적용해 멈춤(hang) 방지, 실패 시 요약만 폴백. Dropbox 실패 시 영수증 제외 안내 |
+| v5.56 | '링크로 공유' 기능 전체 롤백(사용자 요청) — Dropbox 공개주소가 길어 링크가 짧아지지 않고 카톡 표시도 불안정. 🔗 링크 공유 버튼·shareSettleLink·_dbxSharedLink·관련 CSS 제거, share.html·sw.js 항목 삭제. 공유 탭은 '이미지로 공유하기' 단일 버튼으로 원복. 영수증 사진 기능(v5.52·v5.54)과 영수증앱 자동연결은 유지 |
+| v5.55 | (롤백됨, v5.56) 링크 공유를 '짧은 링크'로 개선 시도 — 정산 데이터를 URL에 통째로 넣던 방식(#d=)이 카카오톡에서 URL이 잘려 '불러오지 못했어요'가 뜨던 문제. 이제 번들(JSON, 영수증 data URI 포함)을 Dropbox `shares/<id>.json`에 올리고 공개 직링크로 바꿔 `share.html?s=<링크>`(짧음·쿼리라 카톡 보존)로 공유. share.html은 ?s=면 fetch로 받아오고 ?d=(인라인)도 호환. 업로드에 타임아웃(_withTimeout, 30/20s) 적용해 멈춤(hang) 방지, 실패 시 요약만 폴백. Dropbox 실패 시 영수증 제외 안내 |
 | v5.54 | 영수증 UI 정리 — 지출 내역 참석자 옆 '🧾 영수증' 링크 제거(데스크탑·모바일), 대신 ▼ 상세내역 펼치면 합계 옆에 '🧾 영수증 ›'(rc-foot-link) 배치. 영수증 사진만 있고 상세표 없는 항목도 ▼로 펼쳐 영수증 링크 노출(_hasReceiptDetail). 링크공유(share.html)는 버튼 대신 행 클릭으로 영수증 인라인 펼침(▼, 이미지 탭 시 확대). 더치페이 import가 영수증앱 전송 이미지(receiptImage) 수신하도록 준비(자동연결) |
 | v5.53 | 정산을 '링크로 공유' 추가 — 공유 탭에 🔗 링크 공유 버튼. shareSettleLink()가 영수증(첨부 사진 data URI)을 Dropbox에 올려 공개 직접 링크(_dbxSharedLink)로 바꾸고, 정산 요약+영수증 링크를 URL 조각(#d=)에 담아 독립 페이지 share.html로 공유. 친구가 링크를 열면 영수증을 미리 로딩해 탭 시 즉시 표시(버퍼링 0). share.html은 메인 앱 로직과 분리된 읽기 전용 뷰어. Dropbox 연결 필요. 영수증 사진은 공개 링크로 외부 공개됨(소유자 동의) |
 | v5.52 | 지출 항목에 영수증 사진 기능 추가 — item.receiptUrl(외부 https 이미지 링크 또는 첨부 사진 data URI, 선택). 편집 폼에 URL 입력·📷 사진 첨부(자동 압축: 긴 변 1400px·JPEG 0.72), 지출 내역 각 행에 "🧾 영수증 ›"(있는 항목만), 앱 내부 뷰어(X·바깥·ESC·이미지 확대). Dropbox 링크는 직링크(dl=1) 변환. 계산 로직 무관·하위호환. 카카오톡 인앱 대응 위해 새 탭 대신 내부 뷰어 |
