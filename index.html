@@ -417,29 +417,29 @@ svg{display:block;flex-shrink:0;}
    더치페이는 평문 텍스트이므로 그 합산값을 td 패딩에 직접 반영해 행 높이를 맞춘다. */
 .rc-receipt-tbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
 .rc-receipt-tbl thead th{padding:7px 14px 7px 10px;font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.3px;text-align:right;border-bottom:1px solid var(--sep2);}
-.rc-receipt-tbl thead th:first-child{text-align:left;padding-left:0;}
+.rc-receipt-tbl thead th:first-child{text-align:left;padding-left:14px;}
 .rc-receipt-tbl thead th:nth-child(2){width:52px;}
 .rc-receipt-tbl thead th:nth-child(3){width:108px;}
 .rc-receipt-tbl thead th:nth-child(4){width:108px;}
 .rc-receipt-tbl tbody td{padding:13px 14px 13px 10px;text-align:right;color:var(--label);font-variant-numeric:tabular-nums;border-bottom:1px solid var(--sep);vertical-align:top;white-space:nowrap;}
-.rc-receipt-tbl tbody td:first-child{text-align:left;padding-left:0;white-space:normal;}
+.rc-receipt-tbl tbody td:first-child{text-align:left;padding-left:14px;white-space:normal;}
 .rc-receipt-tbl tbody td:nth-child(4){font-weight:600;}
 .rc-receipt-tbl tbody tr:last-child td{border-bottom:none;}
 .rc-receipt-tbl tfoot td{padding:15px 14px 15px 10px;font-weight:700;text-align:right;border-top:2px solid var(--sep2);border-bottom:none;font-variant-numeric:tabular-nums;}
-.rc-receipt-tbl tfoot td:first-child{text-align:left;padding-left:0;}
+.rc-receipt-tbl tfoot td:first-child{text-align:left;padding-left:14px;}
 .rc-receipt-tbl tfoot td:last-child{font-size:14px;}
 .rc-receipt-tbl td.rc-neg{color:var(--red);}
 @media(max-width:780px){
 .rc-receipt-tbl{font-size:11px;}
 .rc-receipt-tbl thead th{padding:7px 6px 7px 4px;}
-.rc-receipt-tbl thead th:first-child{padding-left:3px;}
+.rc-receipt-tbl thead th:first-child{padding-left:6px;}
 .rc-receipt-tbl thead th:nth-child(2){width:34px;}
 .rc-receipt-tbl thead th:nth-child(3){width:76px;}
 .rc-receipt-tbl thead th:nth-child(4){width:80px;}
 .rc-receipt-tbl tbody td{padding:11px 6px 11px 4px;}
-.rc-receipt-tbl tbody td:first-child{padding-left:3px;}
+.rc-receipt-tbl tbody td:first-child{padding-left:6px;}
 .rc-receipt-tbl tfoot td{padding:13px 6px 13px 4px;}
-.rc-receipt-tbl tfoot td:first-child{padding-left:3px;}
+.rc-receipt-tbl tfoot td:first-child{padding-left:6px;}
 }
 .rc-gift-badge{font-size:11px;font-weight:600;color:var(--green);background:rgba(52,199,89,.12);border-radius:6px;padding:1px 6px;}
 .pm-allrec-card{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--card);border-radius:12px;margin-bottom:8px;box-shadow:0 2px 8px rgba(20,25,40,.07);}
@@ -1302,8 +1302,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.66';
-const BUILD_TIME='2026-09-04 02:40';
+const APP_VERSION='v5.67';
+const BUILD_TIME='2026-09-04 03:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
