@@ -1280,8 +1280,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.60';
-const BUILD_TIME='2026-09-03 14:00';
+const APP_VERSION='v5.61';
+const BUILD_TIME='2026-09-03 23:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1470,10 +1470,14 @@ const AUTO_BACKUP_MAX=5;
 function _autoBackup(reason){
   try{
     syncCurrentToGroup();
+    const snap=JSON.parse(JSON.stringify(groups));
+    // 자동 백업엔 인라인 이미지(data URI)를 넣지 않는다 — 슬롯마다 통째로 복사돼 저장공간이 폭증하던 원인 (v5.61). 이미지는 IndexedDB/Dropbox에 있음
+    snap.forEach(g=>{((g.data&&g.data.items)||[]).forEach(it=>{if(_isDataUrl(it.receiptUrl))it.receiptUrl='';});});
     const slots=_loadAutoBackups();
-    slots.unshift({reason:reason||'',savedAt:new Date().toISOString(),version:3,groups:JSON.parse(JSON.stringify(groups)),currentGroupId});
+    slots.unshift({reason:reason||'',savedAt:new Date().toISOString(),version:3,groups:snap,currentGroupId});
     if(slots.length>AUTO_BACKUP_MAX)slots.length=AUTO_BACKUP_MAX;
-    localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(slots));
+    try{localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(slots));}
+    catch(e){try{localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(slots.slice(0,1)));}catch(e2){try{localStorage.removeItem(AUTO_BACKUP_KEY);}catch(e3){}}}
   }catch(e){}
 }
 function _loadAutoBackups(){
@@ -1800,7 +1804,24 @@ function _updateSyncBadge(){
   try{const d=new Date(last);el.textContent=`☁ Dropbox ${d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 동기화`;}catch(e){}
 }
 
-function saveState(){try{syncCurrentToGroup();localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:new Date().toISOString(),groups,currentGroupId,deletedGroups}));_scheduleSyncToDropbox();}catch(e){toast('저장 공간이 부족해 데이터를 저장하지 못했어요',{type:'error'});}}
+function _persistMainState(){localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:new Date().toISOString(),groups,currentGroupId,deletedGroups}));}
+// 라이브 그룹에 남은 인라인 이미지(data URI)를 즉시 idb 참조로 바꿔 IndexedDB(+Dropbox 백업)로 넘김 — localStorage엔 참조만 남긴다 (v5.61)
+function _evictInlineReceipts(){
+  let changed=false;const tok=(typeof dbxGetToken==='function')?dbxGetToken():null;
+  const proc=arr=>{(arr||[]).forEach(it=>{const u=(it&&it.receiptUrl)||'';if(_isDataUrl(u)){const key='r'+(it.id||'x')+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);try{_rcptIdbPut(key,u).catch(()=>{});}catch(e){}if(tok){try{const b=_dataUrlToBlob(u);if(b)_dbxUpload(tok,`${dbxDir()}/receipts/${key}.jpg`,b);}catch(e){}}it.receiptUrl='idb:'+key;changed=true;}});};
+  groups.forEach(g=>proc(g.data&&g.data.items));proc(items);
+  return changed;
+}
+// 저장 공간 부족 시 확보: 인라인 이미지를 몰아내고, 이미지 data URI를 그대로 품은 오래된 자동 백업을 비운다
+function _reclaimStorage(){let freed=false;try{if(_evictInlineReceipts())freed=true;}catch(e){}try{if(localStorage.getItem(AUTO_BACKUP_KEY)){localStorage.removeItem(AUTO_BACKUP_KEY);freed=true;}}catch(e){}return freed;}
+function saveState(){
+  try{syncCurrentToGroup();_persistMainState();_scheduleSyncToDropbox();}
+  catch(e){
+    // 저장 공간 부족 — 인라인 이미지·오래된 백업을 정리하고 한 번 재시도 (v5.61)
+    if(_reclaimStorage()){try{syncCurrentToGroup();_persistMainState();_scheduleSyncToDropbox();return;}catch(e2){}}
+    toast('저장 공간이 부족해 데이터를 저장하지 못했어요',{type:'error'});
+  }
+}
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if((d.version===2||d.version===3)&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;deletedGroups=d.deletedGroups||{};currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);groups.forEach(g=>{_syncSnapshots[g.id]=JSON.stringify(g.data);});if(!localStorage.getItem('dutchpay_couple')){for(const grp of groups){const c=(grp.data?.couples||[])[0];if(c?.length){_coupleNames=c;localStorage.setItem('dutchpay_couple',JSON.stringify(c));break;}}}}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
 
 // Receipt DB가 남긴 일회성 전송 묶음을 시작 시 한 번만, 전부 병합한다.
@@ -3119,6 +3140,9 @@ async function _rcptIdbPut(k,v){const db=await _rcptIdb();return new Promise((re
 async function _rcptIdbGet(k){try{const db=await _rcptIdb();return await new Promise(res=>{const t=db.transaction('imgs','readonly');const r=t.objectStore('imgs').get(k);r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);});}catch(e){return null;}}
 async function _rcptIdbDel(k){try{const db=await _rcptIdb();return await new Promise(res=>{const t=db.transaction('imgs','readwrite');t.objectStore('imgs').delete(k);t.oncomplete=()=>res(true);t.onerror=()=>res(false);});}catch(e){return false;}}
 function _isIdbRef(u){return String(u||'').slice(0,4)==='idb:';}
+// 로컬 IndexedDB에만 있고 Dropbox 백업이 실패했을 수 있는 영수증을 다른 기기용으로 재업로드 (best-effort, 세션당 1회) (v5.61)
+const _rcptBackfilled=new Set();
+function _backfillReceiptToDbx(key,dataUrl){if(_rcptBackfilled.has(key))return;_rcptBackfilled.add(key);const tok=dbxGetToken();if(!tok)return;try{const b=_dataUrlToBlob(dataUrl);if(b)_dbxUpload(tok,`${dbxDir()}/receipts/${key}.jpg`,b).catch(()=>{});}catch(e){}}
 // data URI 사진을 IndexedDB에 저장(+가능하면 Dropbox 백업)하고 'idb:<키>' 참조 반환
 async function _storeReceiptImage(itemId,dataUrl){
   const key='r'+itemId+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -3132,7 +3156,7 @@ async function _resolveReceiptSrc(it){
   const u=(it&&it.receiptUrl||'').trim();if(!u)return'';
   if(_isIdbRef(u)){
     const key=u.slice(4);
-    const local=await _rcptIdbGet(key);if(local)return local;
+    const local=await _rcptIdbGet(key);if(local){_backfillReceiptToDbx(key,local);return local;}
     const tok=dbxGetToken();
     if(tok){const blob=await _dbxDownloadBlob(tok,`${dbxDir()}/receipts/${key}.jpg`).catch(()=>null);if(blob){const d=await _blobToDataUrl(blob);if(d){_rcptIdbPut(key,d).catch(()=>{});return d;}}}
     return'';
@@ -3148,6 +3172,8 @@ async function _migrateReceiptsToIdb(){
   // 기록 보관함
   let hist=null;try{hist=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');}catch(e){hist=null;}
   if(Array.isArray(hist)){let hc=false;for(const rec of hist){const before=changed;await mig(rec.items);if(changed!==before)hc=true;}if(hc){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(hist));}catch(e){}}}
+  // 자동 백업 슬롯에 옛 인라인 이미지가 그대로 박혀 저장공간을 크게 잡아먹던 문제 — data URI 제거로 확보 (v5.61)
+  try{const abs=_loadAutoBackups();let ac=false;abs.forEach(s=>{((s.groups)||[]).forEach(g=>{((g.data&&g.data.items)||[]).forEach(it=>{if(_isDataUrl(it.receiptUrl)){it.receiptUrl='';ac=true;}});});});if(ac)localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(abs));}catch(e){}
   if(changed){try{saveState();}catch(e){}renderAll();}
 }
 async function openReceiptViewer(itemId,ev){
