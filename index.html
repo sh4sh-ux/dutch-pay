@@ -825,6 +825,12 @@ svg{display:block;flex-shrink:0;}
 /* ── 기록 보관함 풀스크린 ── */
 .hist-page{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .38s cubic-bezier(.32,.72,0,1);will-change:transform;}
 .hist-page.open{transform:translateY(0);}
+/* 데스크탑: 전체화면 대신 앱 큰창과 같은 크기의 중앙 카드로 표시 (v5.64) */
+@media(min-width:701px){
+  .hist-page{inset:0;margin:auto;width:min(calc(100vw - 64px),1484px);height:calc(100vh - 60px);border-radius:22px;border:1px solid var(--sep);overflow:hidden;opacity:0;pointer-events:none;transform:translateY(24px);box-shadow:0 24px 70px rgba(0,0,0,.35),0 0 0 100vmax rgba(0,0,0,.45);transition:transform .34s cubic-bezier(.32,.72,0,1),opacity .28s ease;}
+  .hist-page.open{transform:translateY(0);opacity:1;pointer-events:auto;}
+  .hist-page-nav{padding-top:18px;}
+}
 .hist-page-nav{background:var(--card);border-bottom:1px solid var(--sep);padding-top:max(env(safe-area-inset-top,0px),44px);flex-shrink:0;}
 .hist-page-nav-row{display:flex;align-items:center;height:44px;padding:0 8px 0 4px;position:relative;}
 .hist-back-btn{display:flex;align-items:center;gap:6px;color:var(--blue);background:none;border:none;font-family:inherit;cursor:pointer;padding:4px 10px;-webkit-tap-highlight-color:transparent;z-index:1;flex-shrink:0;border-radius:8px;}
@@ -1280,8 +1286,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.63';
-const BUILD_TIME='2026-09-04 00:45';
+const APP_VERSION='v5.64';
+const BUILD_TIME='2026-09-04 01:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1297,7 +1303,7 @@ let _historySearch='';
 let _historySort='newest';
 let _histSettleMode=false;
 let _histDrawerOpen=false,_loadedHistId=null;
-let _histMonthYear=new Date().getFullYear(),_histMonthMonth=new Date().getMonth()+1,_histMonthAllMode=false;
+let _histMonthYear=new Date().getFullYear(),_histMonthMonth=new Date().getMonth()+1,_histMonthAllMode=true;
 let dTab='input',mTab='input';
 let itemSort='default',itemSearch='';
 let settleDateStart=new Date().toISOString().slice(0,10),settleDateEnd=null;
@@ -2006,6 +2012,7 @@ function mSetTab(t){_checkAutoDelete();mTab=t;['input','result','settle','histor
 function goToHistory(){openHistDrawer();}
 function openHistDrawer(){
   _histDrawerOpen=true;
+  _histMonthAllMode=true; // 기록 보관함은 열 때 항상 '전체 기록' 기준으로 표시 (v5.64)
   _historySearch='';
   const si=document.getElementById('histDrSinp');if(si){si.value='';_chkClear(si);}
   _refreshHistDrawer();

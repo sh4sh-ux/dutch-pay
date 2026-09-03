@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v5.63** (2026-09-04) — 작업 브랜치
+**v5.64** (2026-09-04) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v5.64 | 기록 보관함 UX 2종 — (1) 열 때 항상 '전체 기록' 기준으로 표시(openHistDrawer에서 `_histMonthAllMode=true`, 초기값도 true). 기존엔 해당 월 기준이라 다른 달 기록이 안 보였음. (2) 데스크탑에서 전체화면 대신 앱 큰창과 같은 크기의 중앙 카드로 표시 — `@media(min-width:701px)`에서 `.hist-page`를 max-width 1484px·height calc(100vh-60px)·둥근 모서리·중앙 정렬(margin auto)·딤 배경(box-shadow 100vmax)로. 모바일(≤700px)은 기존 풀스크린 슬라이드 유지 |
 | v5.63 | 영수증 뷰어 "영수증을 불러오지 못했어요" 근본 복구 — 기기별 부팅 마이그레이션이 같은 사진에 서로 다른 랜덤 키를 생성 → 동기화로 참조(idb:키)는 A기기 키로 덮이는데 이 기기 IndexedDB엔 B기기 키로 저장돼 정확한 키로는 로컬·Dropbox 모두 미스 → 실패. (1) `_resolveReceiptSrc`가 정확한 키 실패 시 같은 항목의 로컬 사본을 키 접두사('r<id>_')로 찾아 표시하고(_rcptIdbFindByItem) 참조 키로 재저장·Dropbox 재업로드, (2) `_backfillReceiptToDbx`를 성공할 때까지 재시도(업로드 성공 시에만 done 표시)로 바꿔 참조가 고아가 되지 않게 함 |
 | v5.62 | 상세내역 영수증 클릭 시 뷰어 대신 다운로드 창이 뜨던 버그 수정 — 다른 기기/Dropbox에서 영수증을 내려받으면 Dropbox가 `application/octet-stream`으로 응답해 데이터가 `data:application/octet-stream;…`이 되고, `_looksLikeImage`가 이미지가 아니라고 판단해 `window.open`으로 넘겨(큰 data URL이 다운로드로 떨어짐). (1) `_looksLikeImage`가 모든 `data:` URI를 이미지로 취급(비이미지면 img.onerror 폴백), (2) `_resolveReceiptSrc`가 Dropbox 다운로드 blob의 MIME이 image/가 아니면 `image/jpeg`로 강제 후 data URL 변환. 로컬 IndexedDB(data:image/jpeg) 경로는 원래 정상 |
 | v5.61 | 영수증 저장 한도초과 근본 수정 — 데스크탑에서 사진 첨부 시 "저장 공간이 부족해 데이터를 저장하지 못했어요"로 저장 실패 → 참조·이미지가 동기화 안 돼 모바일에서 영수증 버튼·사진 모두 안 보이던 문제. 진짜 원인은 자동 백업(dutchpay_autobackups)이 옛 인라인 이미지(data URI)를 슬롯마다 통째로 품어 localStorage 용량을 폭증시킨 것. (1) saveState 실패 시 _reclaimStorage로 라이브 인라인 이미지를 IndexedDB로 몰아내고(_evictInlineReceipts) 오래된 자동 백업을 비운 뒤 1회 재시도, (2) _autoBackup은 이제 data URI를 저장하지 않음(+공간 부족 시 슬롯 축소 재시도), (3) 부팅 마이그레이션이 기존 자동 백업의 data URI도 제거, (4) 영수증 조회 시 로컬에만 있고 Dropbox 백업이 실패했을 수 있는 이미지를 세션당 1회 재업로드(_backfillReceiptToDbx)해 다른 기기 복원 보강 |
