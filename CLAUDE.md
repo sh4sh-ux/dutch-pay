@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v5.70** (2026-09-04) — 작업 브랜치
+**v5.71** (2026-09-04) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v5.71 | 공유 이미지(generateSettleCanvas) 송금 카드 색상 구분선(파랑/주황)이 카드 라운드(28px)에 양끝이 잘리던 문제 — 회색 구분선(drawDivider, 34px 인셋)과 달리 `fillRect(cardX,…,cardW,3)`로 전체 폭이라 클리핑됨. `roundRectPath(cardX+34,…,cardW-68,3,1.5)`로 34px 인셋+둥근 끝으로 통일. 나머지 캔버스 타이포(자간·정렬·여백)는 실측 결과 양호해 유지 |
 | v5.70 | UI 폴리시 3종 — (1) 송금 수취인 구분선(파랑/주황)이 카드 라운드(16px)에 양끝이 잘려 보이던 문제: `.txn-group-div`에 좌우 16px 대칭 인셋+둥근 끝. (2) 키보드 포커스 링: `:focus-visible`로 탭 이동 시에만 파란 outline(마우스엔 `:focus:not(:focus-visible)` outline none). (3) 팝오버 스마트 위치+등장 애니메이션: 아래 공간 부족 시 앵커 위로 열림(`.pop-above`), popIn/popInUp 페이드+상승(reduced-motion 존중). 다크 대비는 측정 결과 이미 AA/AAA(6.1~11.0)라 변경 안 함 |
 | v5.69 | 차액/아이콘 팝오버가 안 닫히던 버그 수정 — 바깥 클릭을 document 버블 리스너로 감지했는데 지출 행 onclick이 stopPropagation을 호출해 이벤트가 document까지 못 올라가 팝오버가 계속 떠 있던 문제(완전 빈 공간을 클릭해야만 닫힘). 투명 백드롭(.pop-backdrop, z-index 199)을 팝오버(200) 뒤에 깔아 stopPropagation과 무관하게 어떤 클릭에도 닫히게(옵션 선택·ESC 포함). showRounderPicker·showIconPicker 공통 _openPopWithBackdrop/_dismissPops로 정리 |
 | v5.68 | 기록 보관함 전월/다음월 화살표를 세련되게 — 얇은 텍스트 글리프(‹ ›)가 라벨 대비 작고 빈약해 보이던 것을, 동일 두께(stroke 2.4) SVG 셰브론을 31px 원형 버튼(1px 테두리·hover 파랑·active 축소)에 담아 교체. `_histMonthNavHtml`이 SVG 출력, `.hmn-arr`를 원형 아이콘 버튼 규격으로 재작성 |
