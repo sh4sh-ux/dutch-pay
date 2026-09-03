@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v5.68** (2026-09-04) — 작업 브랜치
+**v5.69** (2026-09-04) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v5.69 | 차액/아이콘 팝오버가 안 닫히던 버그 수정 — 바깥 클릭을 document 버블 리스너로 감지했는데 지출 행 onclick이 stopPropagation을 호출해 이벤트가 document까지 못 올라가 팝오버가 계속 떠 있던 문제(완전 빈 공간을 클릭해야만 닫힘). 투명 백드롭(.pop-backdrop, z-index 199)을 팝오버(200) 뒤에 깔아 stopPropagation과 무관하게 어떤 클릭에도 닫히게(옵션 선택·ESC 포함). showRounderPicker·showIconPicker 공통 _openPopWithBackdrop/_dismissPops로 정리 |
 | v5.68 | 기록 보관함 전월/다음월 화살표를 세련되게 — 얇은 텍스트 글리프(‹ ›)가 라벨 대비 작고 빈약해 보이던 것을, 동일 두께(stroke 2.4) SVG 셰브론을 31px 원형 버튼(1px 테두리·hover 파랑·active 축소)에 담아 교체. `_histMonthNavHtml`이 SVG 출력, `.hmn-arr`를 원형 아이콘 버튼 규격으로 재작성 |
 | v5.67 | 영수증 상세표 좌우 여백 대칭 — 첫 열(품목명·항목명·합계)만 `padding-left:0`(모바일 3px)이라 구분선 왼쪽 끝에 글자가 붙고 오른쪽 금액은 `padding-right:14px`로 안쪽에 들어가 비대칭이던 문제. 첫 열 왼쪽 여백을 오른쪽과 동일하게(데스크탑 14px, 모바일 6px) 맞춰 구분선 안쪽에 대칭 배치 |
 | v5.66 | 세부 폴리시 3종 — (1) 송금 내역 색상 구분선(수취인 그룹) 바로 위 행의 회색 실선 제거(`.txn-row:has(+.txn-group-div){border-bottom:none}`) — 주황/파랑 선 위에 회색선이 겹쳐 보이던 문제. (2) 기록 보관함 전월/다음월 화살표를 라벨 양옆으로 모아 동선 단축(`.hmn-header` 중앙정렬+`.hmn-all` 오른쪽 절대배치), 화살표 hover 추가. (3) 기록 보관함 빠른 복귀 — 데스크탑 바깥 딤(`.hist-backdrop`) 클릭·ESC로 닫기(딤은 box-shadow 100vmax 링을 실제 요소로 대체해 클릭 가능하게) |
