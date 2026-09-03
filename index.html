@@ -699,7 +699,7 @@ svg{display:block;flex-shrink:0;}
   .mob-body .share-actions{position:fixed;right:0;bottom:calc(72px + env(safe-area-inset-bottom,0px));left:0;margin:0;padding:12px 16px;background:var(--bg);border-top:1px solid var(--sep);box-shadow:0 -12px 28px rgba(20,25,40,.08);z-index:80;}
 }
 .saved-badge{margin-top:10px;text-align:center;font-size:13px;color:var(--green);font-weight:600;}
-.share-save-btn{width:100%;border:none;border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;background:var(--label);color:var(--bg);cursor:pointer;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.share-save-btn{width:100%;border:none;border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;background:var(--blue);color:#fff;cursor:pointer;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .share-save-btn:hover{opacity:.88;}
 .share-save-btn:active{transform:scale(.99);}
 .share-save-btn:disabled{cursor:wait;opacity:.55;}
@@ -1280,8 +1280,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.57';
-const BUILD_TIME='2026-09-03 12:10';
+const APP_VERSION='v5.58';
+const BUILD_TIME='2026-09-03 12:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3084,7 +3084,7 @@ function _histAcctCustom(recId,txnKey,el){const i=document.createElement('input'
 function _rcAcctHtml(recId,txnKey,cur){const ps=['케이뱅크','카카오페이','토스뱅크','우리은행','현금'];if(cur&&!ps.includes(cur))return`<input class="pay-inp" type="text" placeholder="계좌" value="${ea(cur)}" oninput="rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','account',this.value)"/>`;return`<select class="pay-sel" onchange="if(this.value==='__custom__'){_rcAcctCustom('${ea(recId)}','${ea(txnKey)}',this)}else rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','account',this.value)"><option value="">선택</option>${ps.map(p=>`<option value="${ea(p)}"${cur===p?' selected':''}>${p}</option>`).join('')}<option value="__custom__">직접 입력...</option></select>`;}
 function _rcAcctCustom(recId,txnKey,el){const i=document.createElement('input');i.className='pay-inp';i.type='text';i.placeholder='계좌 직접 입력';i.oninput=()=>rcTxnUpdate(recId,txnKey,'account',i.value);el.replaceWith(i);i.focus();}
 function parseReceiptLines(text){if(!text)return[];return text.split('\n').map(l=>l.trim()).filter(l=>l&&!/^품목/.test(l)).map(l=>{const p=l.split('|').map(s=>s.trim());return{name:p[0]||'',qty:p[1]||'',unitPrice:p[2]||'',amount:p[3]||''};}).filter(r=>r.name);}
-function _receiptTableHtml(it,uid){const lines=parseReceiptLines(it.receiptText||'');const src=getReceiptSrc(it);if(!lines.length&&!src)return'';const rcptLink=src?` <button type="button" class="rc-foot-link" onclick="openReceiptViewer(${it.id},event)" aria-label="${ea(it.name||'')} 영수증 보기">🧾 영수증<span class="rc-foot-arrow">›</span></button>`:'';if(!lines.length){return`<div class="rc-receipt-wrap" id="rcpt_${uid}"><div class="rc-photo-only">${rcptLink}</div></div>`;}const rows=lines.map(r=>{const isGift=/증정|gift/i.test(r.amount);const n=+(r.amount||'').replace(/,/g,'');const neg=!isGift&&!isNaN(n)&&n<0;const amt=isGift?'<span class="rc-gift-badge">증정품</span>':e(r.amount);return`<tr><td>${e(r.name)}</td><td class="rc-qty">${e(r.qty)}</td><td class="rc-unit">${e(r.unitPrice)}</td><td${neg?' class="rc-neg"':''}>${amt}</td></tr>`;}).join('');const total=lines.reduce((s,r)=>{if(/증정/i.test(r.amount))return s;const n=+(r.amount||'').replace(/,/g,'');return s+(isNaN(n)?0:n);},0);const foot=`<tfoot><tr><td>합계</td><td colspan="2" class="rc-foot-cell">${rcptLink}</td><td${total<0?' class="rc-neg"':''}>${fmt(total)}</td></tr></tfoot>`;return`<div class="rc-receipt-wrap" id="rcpt_${uid}"><table class="rc-receipt-tbl"><thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th></tr></thead><tbody>${rows}</tbody>${foot}</table></div>`;}
+function _receiptTableHtml(it,uid){const lines=parseReceiptLines(it.receiptText||'');const src=getReceiptSrc(it);if(!lines.length&&!src)return'';const rcptLink=src?` <button type="button" class="rc-foot-link" onclick="openReceiptViewer(${it.id},event)" aria-label="${ea(it.name||'')} 영수증 보기">영수증<span class="rc-foot-arrow">›</span></button>`:'';if(!lines.length){return`<div class="rc-receipt-wrap" id="rcpt_${uid}"><div class="rc-photo-only">${rcptLink}</div></div>`;}const rows=lines.map(r=>{const isGift=/증정|gift/i.test(r.amount);const n=+(r.amount||'').replace(/,/g,'');const neg=!isGift&&!isNaN(n)&&n<0;const amt=isGift?'<span class="rc-gift-badge">증정품</span>':e(r.amount);return`<tr><td>${e(r.name)}</td><td class="rc-qty">${e(r.qty)}</td><td class="rc-unit">${e(r.unitPrice)}</td><td${neg?' class="rc-neg"':''}>${amt}</td></tr>`;}).join('');const total=lines.reduce((s,r)=>{if(/증정/i.test(r.amount))return s;const n=+(r.amount||'').replace(/,/g,'');return s+(isNaN(n)?0:n);},0);const foot=`<tfoot><tr><td>합계</td><td colspan="2" class="rc-foot-cell">${rcptLink}</td><td${total<0?' class="rc-neg"':''}>${fmt(total)}</td></tr></tfoot>`;return`<div class="rc-receipt-wrap" id="rcpt_${uid}"><table class="rc-receipt-tbl"><thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th></tr></thead><tbody>${rows}</tbody>${foot}</table></div>`;}
 function toggleItemReceipt(uid,ev){if(ev){ev.stopPropagation();ev.preventDefault();}const el=document.getElementById('rcpt_'+uid);if(!el)return;const open=el.classList.contains('open');el.classList.toggle('open');const btn=document.querySelector(`[data-rcpt="${uid}"]`);if(btn)btn.textContent=open?'영수증 ▼':'영수증 ▲';const chev=document.querySelector(`[data-rcpt-chev="${uid}"]`);if(chev)chev.textContent=open?'▼':'▲';}
 // ── 영수증 사진/링크 (v5.52) — 표시 전용, 정산 계산과 무관 ──
 // receiptUrl 은 외부 https 이미지 링크 또는 첨부 사진(data URI)을 담는다.
@@ -3103,11 +3103,6 @@ function normalizeReceiptUrl(url){
 function getReceiptSrc(it){return it?normalizeReceiptUrl(it.receiptUrl||''):'';}
 function _hasReceiptDetail(it){return !!(it&&(it.receiptText||getReceiptSrc(it)));}
 function _looksLikeImage(u){return /^data:image\//i.test(u)||/\.(jpe?g|png|webp|gif|heic|bmp)(\?|#|$)/i.test(u)||/dropbox\.com/i.test(u);}
-function _receiptPhotoLinkHtml(it){
-  const src=getReceiptSrc(it);
-  if(!src)return'';
-  return ` <button type="button" class="rcpt-photo-link" aria-label="${ea(it.name||'')} 영수증 보기" onclick="openReceiptViewer(${it.id},event)">🧾 영수증<span class="rcpt-arrow">›</span></button>`;
-}
 function openReceiptViewer(itemId,ev){
   if(ev){ev.stopPropagation();ev.preventDefault();}
   const it=items.find(i=>i.id===itemId);if(!it)return;
