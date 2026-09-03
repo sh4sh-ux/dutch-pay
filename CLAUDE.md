@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v5.60** (2026-09-03) — 작업 브랜치
+**v5.61** (2026-09-03) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v5.61 | 영수증 저장 한도초과 근본 수정 — 데스크탑에서 사진 첨부 시 "저장 공간이 부족해 데이터를 저장하지 못했어요"로 저장 실패 → 참조·이미지가 동기화 안 돼 모바일에서 영수증 버튼·사진 모두 안 보이던 문제. 진짜 원인은 자동 백업(dutchpay_autobackups)이 옛 인라인 이미지(data URI)를 슬롯마다 통째로 품어 localStorage 용량을 폭증시킨 것. (1) saveState 실패 시 _reclaimStorage로 라이브 인라인 이미지를 IndexedDB로 몰아내고(_evictInlineReceipts) 오래된 자동 백업을 비운 뒤 1회 재시도, (2) _autoBackup은 이제 data URI를 저장하지 않음(+공간 부족 시 슬롯 축소 재시도), (3) 부팅 마이그레이션이 기존 자동 백업의 data URI도 제거, (4) 영수증 조회 시 로컬에만 있고 Dropbox 백업이 실패했을 수 있는 이미지를 세션당 1회 재업로드(_backfillReceiptToDbx)해 다른 기기 복원 보강 |
 | v5.60 | 영수증 사진 저장 구조 개편 — data URI를 localStorage(dutchpay_v1)에 통째로 넣어 저장한도 초과·저장실패·버튼 깜빡임·시작부터 50%+ 차지 문제. 이제 사진은 IndexedDB('dutchpay_receipts')에 두고 항목엔 'idb:<키>' 참조만 저장(_storeReceiptImage). 뷰어는 비동기 해석(idb→IndexedDB→없으면 Dropbox receipts/<키>.jpg 다운로드·캐시, _resolveReceiptSrc). 첨부 시 Dropbox 백업(best-effort)으로 다른 기기에서도 복원. 부팅 시 기존 data URI를 IndexedDB로 1회 이전(_migrateReceiptsToIdb, 그룹·기록보관함 모두)해 저장공간 확보. Dropbox 동기화 JSON도 참조만 담겨 가벼워짐 |
 | v5.59 | 차액 팝오버(showRounderPicker) 재탭 시 토글로 닫히도록 수정(같은 항목이면 닫고 return, pop.dataset.itemId), 바깥클릭·ESC 닫힘은 기존 유지. 영수증 뷰어에 확대+이동(pan) 추가 — 탭/더블탭 줌 토글, 드래그 이동, 두 손가락 핀치줌, 휠 줌(pointer 이벤트, scale 1~5, 이동범위 클램프) |
 | v5.58 | 상세내역 영수증 링크에서 🧾 이모지 제거(‘영수증 ›’만), 안 쓰이던 _receiptPhotoLinkHtml 함수 삭제. 공유 탭 ‘이미지로 공유하기’ 버튼 색을 검정(--label)→**파랑(--blue, 참여자 ‘추가’ 버튼과 동일)**으로 변경 |
