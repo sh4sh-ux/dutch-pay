@@ -1285,8 +1285,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.54';
-const BUILD_TIME='2026-09-03 10:00';
+const APP_VERSION='v5.55';
+const BUILD_TIME='2026-09-03 11:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3896,6 +3896,7 @@ function _membersPlain(it){const mems=it.members.length?it.members:people;const 
 function _shareDateLabel(){const f=x=>x?String(x).replace(/-/g,'.'):'';return settleDateEnd?`${f(settleDateStart)} ~ ${f(settleDateEnd)}`:f(settleDateStart);}
 function _orderedTxnsForShare(txns){const out=[];_groupTxnsByRecipient(txns,_myName).forEach(g=>g.txns.forEach(t=>out.push(t)));return out;}
 function _showLinkFallback(url){document.querySelector('.link-fallback')?.remove();const ov=document.createElement('div');ov.className='link-fallback';ov.style.cssText='position:fixed;inset:0;z-index:1300;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.5)';ov.innerHTML=`<div style="background:var(--card);border-radius:14px;padding:20px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)"><div style="font-weight:700;margin-bottom:10px;color:var(--label)">공유 링크</div><input readonly value="${ea(url)}" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--sep);border-radius:8px;font-size:12px;background:var(--fill);color:var(--label)"><div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end"><button class="lf-copy" style="padding:8px 14px;border:none;border-radius:8px;background:var(--blue);color:#fff;font-weight:600;cursor:pointer">복사</button><button class="lf-close" style="padding:8px 14px;border:1px solid var(--sep);border-radius:8px;background:var(--card);color:var(--label);cursor:pointer">닫기</button></div></div>`;const inp=ov.querySelector('input');ov.querySelector('.lf-copy').onclick=()=>{inp.select();try{document.execCommand('copy');toast('복사됐어요',{type:'success'});}catch(e){}};ov.querySelector('.lf-close').onclick=()=>ov.remove();ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});document.body.appendChild(ov);inp.focus();inp.select();}
+function _withTimeout(promise,ms){return Promise.race([Promise.resolve(promise),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);}
 async function shareSettleLink(){
   if(_shareBusy)return;
   const token=dbxGetToken();
@@ -3905,24 +3906,35 @@ async function shareSettleLink(){
   const t0=toast('공유 링크 만드는 중…',{duration:60000});
   try{
     syncCurrentToGroup();
-    const g=getCurrentGroup();const gid=(g&&g.id)||'g';
+    const g=getCurrentGroup();
     const{paid,owes}=computeShares();
     const ordered=_orderedTxnsForShare(calcTxns(paid,owes));
     const validItems=items.filter(it=>+it.amount!==0);
-    const bundleItems=[];
-    for(const it of validItems){
+    // 영수증: 첨부 사진(data URI)은 번들에 그대로 담고(너무 크면 제외), 외부 링크는 직링크로
+    const bundleItems=validItems.map(it=>{
       let r='';const ru=(it.receiptUrl||'').trim();
-      if(ru){
-        if(_isDataUrl(ru)){
-          const blob=_dataUrlToBlob(ru);
-          if(blob){const path=`${dbxDir()}/shared_receipts/${gid}_${it.id}.jpg`;const ok=await _dbxUpload(token,path,blob);if(ok){const link=await _dbxSharedLink(token,path);if(link)r=link;}}
-        }else{r=normalizeReceiptUrl(ru);}
-      }
-      bundleItems.push({n:it.name||'',a:+it.amount||0,p:it.payer||'',m:_membersPlain(it),r});
-    }
+      if(ru){ if(_isDataUrl(ru)){ r=ru.length<2000000?ru:''; } else { r=normalizeReceiptUrl(ru); } }
+      return {n:it.name||'',a:+it.amount||0,p:it.payer||'',m:_membersPlain(it),r};
+    });
     const bundle={t:(g&&g.name)||'정산 내역',d:_shareDateLabel(),tot:total,pc:people.length,me:_myName||'',txns:ordered.map(x=>[x.from,x.to,x.amt]),items:bundleItems};
-    const url='https://sh4sh-ux.github.io/dutch-pay/share.html#d='+encodeURIComponent(JSON.stringify(bundle));
+    // 데이터를 Dropbox에 올리고 짧은 공개 링크만 공유 (URL이 짧아 카톡에서도 안 잘림)
+    const shareId=`s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`;
+    const path=`${dbxDir()}/shares/${shareId}.json`;
+    let link=null;
+    try{
+      const up=await _withTimeout(_dbxUpload(token,path,JSON.stringify(bundle)),30000);
+      if(up)link=await _withTimeout(_dbxSharedLink(token,path),20000);
+    }catch(e){link=null;}
     t0&&t0.dismiss&&t0.dismiss();
+    let url;
+    if(link){
+      url='https://sh4sh-ux.github.io/dutch-pay/share.html?s='+encodeURIComponent(link);
+    }else{
+      // Dropbox 업로드 실패 폴백: 영수증 없이 요약만 인라인(길이 최소화)으로라도 공유
+      const light=Object.assign({},bundle,{items:bundle.items.map(x=>Object.assign({},x,{r:/^https?:/.test(x.r)?x.r:''}))});
+      url='https://sh4sh-ux.github.io/dutch-pay/share.html?d='+encodeURIComponent(JSON.stringify(light));
+      toast('Dropbox 업로드에 실패해 영수증은 링크에서 제외됐어요',{type:'error',duration:4200});
+    }
     if(navigator.share){try{await navigator.share({title:bundle.t,text:`${bundle.t} — 더치페이 정산`,url});return;}catch(e){if(e&&e.name==='AbortError')return;}}
     try{await navigator.clipboard.writeText(url);toast('공유 링크를 복사했어요 — 붙여넣기 하세요',{type:'success',duration:4000});}
     catch(e){_showLinkFallback(url);}
