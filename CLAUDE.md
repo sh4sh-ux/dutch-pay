@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v5.64** (2026-09-04) — 작업 브랜치
+**v5.65** (2026-09-04) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v5.65 | 디자인 폴리시 4종(정체성 유지, 디테일만) — (1) 숫자 고정폭 통일: 누락돼 있던 `.detail-amt`·`.rc-item-amt`·`.group-card-amt`·모바일 `#mTotal`에 tabular-nums 추가해 금액 열 정렬. (2) 정산 요약 카드 위계: 결론 줄 `.rbd-total`을 15px 라벨/18px·800 값+상하 여백으로 강조. (3) 모바일 플로팅 CTA 스크림: `.mob-fab::before`에 하단 그라데이션(버튼 표시 시에만)으로 리스트 글자와 겹침 해소. (4) 빈 상태: 지출 0건일 때 `.ilist-empty-hint`로 데스크탑·모바일 리스트에 '아직 지출이 없어요 · ＋ 지출 추가' 안내 |
 | v5.64 | 기록 보관함 UX 2종 — (1) 열 때 항상 '전체 기록' 기준으로 표시(openHistDrawer에서 `_histMonthAllMode=true`, 초기값도 true). 기존엔 해당 월 기준이라 다른 달 기록이 안 보였음. (2) 데스크탑에서 전체화면 대신 앱 큰창과 같은 크기의 중앙 카드로 표시 — `@media(min-width:701px)`에서 `.hist-page`를 max-width 1484px·height calc(100vh-60px)·둥근 모서리·중앙 정렬(margin auto)·딤 배경(box-shadow 100vmax)로. 모바일(≤700px)은 기존 풀스크린 슬라이드 유지 |
 | v5.63 | 영수증 뷰어 "영수증을 불러오지 못했어요" 근본 복구 — 기기별 부팅 마이그레이션이 같은 사진에 서로 다른 랜덤 키를 생성 → 동기화로 참조(idb:키)는 A기기 키로 덮이는데 이 기기 IndexedDB엔 B기기 키로 저장돼 정확한 키로는 로컬·Dropbox 모두 미스 → 실패. (1) `_resolveReceiptSrc`가 정확한 키 실패 시 같은 항목의 로컬 사본을 키 접두사('r<id>_')로 찾아 표시하고(_rcptIdbFindByItem) 참조 키로 재저장·Dropbox 재업로드, (2) `_backfillReceiptToDbx`를 성공할 때까지 재시도(업로드 성공 시에만 done 표시)로 바꿔 참조가 고아가 되지 않게 함 |
 | v5.62 | 상세내역 영수증 클릭 시 뷰어 대신 다운로드 창이 뜨던 버그 수정 — 다른 기기/Dropbox에서 영수증을 내려받으면 Dropbox가 `application/octet-stream`으로 응답해 데이터가 `data:application/octet-stream;…`이 되고, `_looksLikeImage`가 이미지가 아니라고 판단해 `window.open`으로 넘겨(큰 data URL이 다운로드로 떨어짐). (1) `_looksLikeImage`가 모든 `data:` URI를 이미지로 취급(비이미지면 img.onerror 폴백), (2) `_resolveReceiptSrc`가 Dropbox 다운로드 blob의 MIME이 image/가 아니면 `image/jpeg`로 강제 후 data URL 변환. 로컬 IndexedDB(data:image/jpeg) 경로는 원래 정상 |
