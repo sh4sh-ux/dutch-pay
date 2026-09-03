@@ -721,6 +721,10 @@ svg{display:block;flex-shrink:0;}
 .share-save-btn:hover{opacity:.88;}
 .share-save-btn:active{transform:scale(.99);}
 .share-save-btn:disabled{cursor:wait;opacity:.55;}
+/* 정산/영수증 2버튼 (첨부 영수증이 있을 때) — 나란히, 영수증은 보조 톤 (v5.72) */
+.share-btn-row{display:flex;gap:8px;}
+.share-btn-row .share-save-btn{flex:1;min-width:0;padding-left:8px;padding-right:8px;white-space:nowrap;}
+.share-save-btn.share-save-btn-alt{background:var(--blue-bg);color:var(--blue-txt);}
 .share-fallback{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.58);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
 .share-fallback-card{width:min(420px,100%);max-height:calc(100vh - 40px);overflow-y:auto;padding:18px;border-radius:18px;background:var(--card);box-shadow:0 20px 60px rgba(0,0,0,.28);}
 .share-fallback-title{font-size:17px;font-weight:700;letter-spacing:-.3px;}
@@ -1317,8 +1321,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.71';
-const BUILD_TIME='2026-09-04 05:10';
+const APP_VERSION='v5.72';
+const BUILD_TIME='2026-09-04 05:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3055,7 +3059,7 @@ function renderMobileBody(){
     if(validItems.length){const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const uid='mob_'+it.id;const rowClick=_hasReceiptDetail(it)?` onclick="toggleItemReceipt('${uid}',event)"`:'';const chev=_hasReceiptDetail(it)?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row"${rowClick}><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉     👏👏👏</span>':''}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div>${chev}<span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid)}`;}).join('');html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`;}
     if(txns.length&&hasRounding)html+='<div class="notice">차액은 결제자에게 우선 부담돼요</div>';
     const savedBadge=_isAlreadySaved()?'<div class="saved-badge" title="기록 보관함에 저장됨 (기기 내 로컬)">기록보관함 저장됨 ✓</div>':'';
-    html+=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button>${savedBadge}</div>`;
+    html+=`${_shareBtnsHtml(savedBadge)}`;
     el.innerHTML=html;return;
   }
   // input tab
@@ -3156,7 +3160,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const paySection=validItems.length?`<div class="pay-section-title">지출 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const uid='i'+it.id;const rowClick=_hasReceiptDetail(it)?` onclick="toggleItemReceipt('${uid}',event)"`:'';const chev=_hasReceiptDetail(it)?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row"${rowClick}><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉     👏👏👏</span>':''}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div>${chev}<span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid)}`;}).join('')}</div>`:'';
   const noticeHtml=txns.length&&hasRounding?'<div class="notice">차액은 결제자에게 우선 부담돼요</div>':'';
   const savedBadge=_isAlreadySaved()?'<div class="saved-badge" title="기록 보관함에 저장됨 (기기 내 로컬)">기록보관함 저장됨 ✓</div>':'';
-  const shareBtn=`<div class="share-actions"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 이미지로 공유하기</button>${savedBadge}</div>`;
+  const shareBtn=`${_shareBtnsHtml(savedBadge)}`;
   body.innerHTML=dateRow+hero+txnSection+paySection+noticeHtml+shareBtn;
 }
 
@@ -4014,6 +4018,48 @@ function _setShareBusy(busy){_shareBusy=busy;document.querySelectorAll('.share-s
 function _canShareFiles(shareData){if(!navigator.share)return false;if(!navigator.canShare)return true;try{return navigator.canShare(shareData);}catch(err){return false;}}
 function _downloadShareBlob(blob,filename){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.download=filename;a.href=url;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);}
 function _openShareFallback(blob,file,filename){document.querySelector('.share-fallback')?.remove();const url=URL.createObjectURL(blob);const ov=document.createElement('div');ov.className='share-fallback';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.innerHTML=`<div class="share-fallback-card"><div class="share-fallback-title">정산 이미지가 준비됐어요</div><div class="share-fallback-sub">공유가 바로 열리지 않으면 아래 버튼으로 다시 시도하거나 이미지를 길게 눌러 저장하세요.</div><img class="share-fallback-img" alt="더치페이 정산 이미지 미리보기"><div class="share-fallback-actions"><button class="share-fallback-btn primary" type="button">다시 공유</button><a class="share-fallback-btn" download="${ea(filename)}">이미지 저장</a></div><button class="share-fallback-close" type="button">닫기</button></div>`;ov.querySelector('img').src=url;const close=()=>{URL.revokeObjectURL(url);ov.remove();};ov.querySelector('.share-fallback-close').onclick=close;ov.addEventListener('click',ev=>{if(ev.target===ov)close();});const save=ov.querySelector('a');save.href=url;save.onclick=()=>setTimeout(()=>toast('이미지를 저장했어요',{type:'success'}),0);const retry=ov.querySelector('.share-fallback-btn.primary');const shareData={files:[file]};const canShare=_canShareFiles(shareData);if(!canShare){retry.style.display='none';ov.querySelector('.share-fallback-actions').style.gridTemplateColumns='1fr';}else retry.onclick=async()=>{try{await navigator.share(shareData);close();_afterShare();}catch(err){if(err?.name!=='AbortError')toast('공유를 열지 못했어요. 이미지를 길게 눌러 저장해주세요.',{type:'error'});}};document.body.appendChild(ov);}
+// 정산 탭 공유 버튼 — 첨부 영수증이 있으면 '정산'/'영수증' 2버튼, 없으면 단일 (v5.72)
+function _shareBtnsHtml(savedBadge){
+  const rc=items.filter(it=>+it.amount!==0&&getReceiptSrc(it)).length;
+  if(!rc)return `${_shareBtnsHtml(savedBadge)}`;
+  return `<div class="share-actions"><div class="share-btn-row"><button class="share-save-btn" onclick="shareSettleImage()">${svgShare} 정산 이미지</button><button class="share-save-btn share-save-btn-alt" onclick="shareReceiptsImages()">${svgShare} 영수증 ${rc}장</button></div>${savedBadge}</div>`;
+}
+// 첨부 영수증 사진들을 공유용 File 배열로 수집 (idb/data→blob, http→fetch best-effort)
+async function _gatherReceiptFiles(){
+  const out=[];
+  const valid=items.filter(it=>+it.amount!==0&&getReceiptSrc(it));
+  for(const it of valid){
+    let src='';try{src=await _resolveReceiptSrc(it);}catch(e){src='';}
+    if(!src)continue;
+    let blob=null;
+    if(/^data:/i.test(src)){blob=_dataUrlToBlob(src);}
+    else if(/^https?:/i.test(src)){try{const r=await fetch(src);if(r.ok)blob=await r.blob();}catch(e){}}
+    if(!blob)continue;
+    const ext=(blob.type&&/png/i.test(blob.type))?'png':'jpg';
+    const safe=String(it.name||'영수증').replace(/[\\\/:*?"<>|]/g,'_').slice(0,40)||'영수증';
+    try{out.push(new File([blob],`영수증_${safe}.${ext}`,{type:blob.type||'image/jpeg'}));}catch(e){}
+  }
+  return out;
+}
+// 영수증 사진들만 한 번의 공유로 전송 (정산 이미지와 별개 버튼)
+async function shareReceiptsImages(){
+  if(_shareBusy)return;
+  const inApp=detectInAppBrowser();if(inApp){const ok=confirm(`${inApp.name} 내부 브라우저는 이미지 공유가 제한돼요.\n외부 브라우저에서 열어주세요.\n\n지금 외부 브라우저로 열까요?`);if(ok){openInExternalBrowser();return;}}
+  _setShareBusy(true);
+  try{
+    const t=toast('영수증 사진 준비 중…',{duration:8000});
+    let files=[];try{files=await _gatherReceiptFiles();}catch(e){files=[];}
+    t&&t.dismiss&&t.dismiss();
+    if(!files.length){toast('보낼 영수증 사진이 없어요',{type:'info'});return;}
+    const shareData={files};
+    const canNativeShare=!inApp&&_canShareFiles(shareData);
+    if(canNativeShare){try{await navigator.share(shareData);toast(files.length>1?`영수증 ${files.length}장 공유 완료`:'영수증 공유 완료',{type:'success'});return;}catch(err){if(err?.name==='AbortError')return;console.warn('Native receipt share failed',err);}}
+    // 폴백(데스크탑 등): 각 영수증 저장
+    files.forEach(f=>_downloadShareBlob(f,f.name));
+    toast(files.length>1?`이미지 공유가 지원되지 않아 영수증 ${files.length}장을 저장했어요`:'이미지 공유가 지원되지 않아 영수증을 저장했어요',{type:'info'});
+  }catch(err){console.error('shareReceiptsImages failed',err);toast('영수증 공유 중 오류가 발생했어요',{type:'error'});}
+  finally{_setShareBusy(false);}
+}
 async function shareSettleImage(){
   if(_shareBusy)return;
   const total=items.reduce((s,it)=>s+(+it.amount||0),0);if(!total){toast('공유할 정산 내역이 없어요',{type:'error'});return;}
