@@ -56,9 +56,12 @@
   .row-sub{display:flex;align-items:center;gap:6px;margin-top:4px;}
   .row-mem{font-size:12px;color:var(--label3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
   .row-amt{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;}
-  .rcpt-link{flex-shrink:0;display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--blue);background:none;border:none;cursor:pointer;padding:6px 4px;margin:-6px 0;font-family:inherit;line-height:1;-webkit-tap-highlight-color:transparent;white-space:nowrap;}
-  .rcpt-link:active{opacity:.55;}
-  .rcpt-link .arw{font-size:13px;}
+  .row.has-rcpt{cursor:pointer;}
+  .rc-chev{font-size:10px;color:var(--blue);flex-shrink:0;transition:transform .2s ease;align-self:center;}
+  .row.exp .rc-chev{transform:rotate(180deg);}
+  .rc-inline{max-height:0;overflow:hidden;transition:max-height .28s ease;background:var(--fill);border-bottom:1px solid var(--sep);}
+  .rc-inline.open{max-height:1600px;}
+  .rc-inline-img{display:block;width:100%;max-width:320px;margin:14px auto;border-radius:10px;cursor:zoom-in;box-shadow:0 4px 16px rgba(0,0,0,.14);background:#fff;}
   .foot{text-align:center;font-size:11.5px;color:var(--label3);margin-top:6px;line-height:1.6;}
   .foot a{color:var(--blue);text-decoration:none;font-weight:600;}
   .empty{text-align:center;color:var(--label3);padding:48px 16px;font-size:14px;line-height:1.6;}
@@ -139,24 +142,27 @@
       html+='</div>';
     }
 
-    // 지출 내역
+    // 지출 내역 — 영수증 있는 항목은 행 클릭 시 펼쳐서 영수증 표시
     html+='<div class="sec">지출 내역</div><div class="card">';
     b.items.forEach(function(it,i){
       var src=normalize(it.r||'');
       if(src)receipts[i]=src;
-      var link=src?' <button type="button" class="rcpt-link" data-idx="'+i+'" aria-label="'+esc(it.n||'')+' 영수증 보기">🧾 영수증<span class="arw">›</span></button>':'';
-      html+='<div class="row"><div class="row-info"><div class="row-main"><span class="row-name">'+esc(it.n||'(이름 없음)')+'</span>'+(it.p?'<span class="row-payer">'+esc(it.p)+' 결제</span>':'')+'</div>'+
-            '<div class="row-sub"><span class="row-mem">'+esc(it.m||'')+'</span>'+link+'</div></div>'+
-            '<span class="row-amt">'+fmt(it.a)+'원</span></div>';
+      var chev=src?'<span class="rc-chev">▼</span>':'';
+      html+='<div class="row'+(src?' has-rcpt':'')+'"'+(src?(' data-exp="'+i+'"'):'')+'><div class="row-info"><div class="row-main"><span class="row-name">'+esc(it.n||'(이름 없음)')+'</span>'+(it.p?'<span class="row-payer">'+esc(it.p)+' 결제</span>':'')+'</div>'+
+            '<div class="row-sub"><span class="row-mem">'+esc(it.m||'')+'</span></div></div>'+
+            chev+'<span class="row-amt">'+fmt(it.a)+'원</span></div>'+
+            (src?('<div class="rc-inline" id="rcin'+i+'"><img class="rc-inline-img" data-idx="'+i+'" alt="'+esc(it.n||'')+' 영수증" src="'+esc(src)+'"></div>'):'');
     });
     html+='</div>';
     html+='<div class="foot">더치페이로 정산했어요 · <a href="'+APP_URL+'" target="_blank" rel="noopener">나도 쓰기</a></div>';
     wrap.innerHTML=html;
 
-    // 링크 클릭 → 뷰어
+    // 행 클릭 → 영수증 펼침 / 펼친 이미지 클릭 → 크게 보기
     wrap.addEventListener('click',function(e){
-      var btn=e.target.closest('.rcpt-link');if(!btn)return;
-      openViewer(receipts[btn.getAttribute('data-idx')]);
+      var img=e.target.closest('.rc-inline-img');
+      if(img){openViewer(receipts[img.getAttribute('data-idx')]);return;}
+      var row=e.target.closest('.row[data-exp]');
+      if(row){var i=row.getAttribute('data-exp');var panel=document.getElementById('rcin'+i);if(panel){var open=panel.classList.toggle('open');row.classList.toggle('exp',open);}}
     });
 
     // 버퍼링 0: 모든 영수증 이미지를 미리 로딩(캐시)
