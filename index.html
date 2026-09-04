@@ -1093,7 +1093,9 @@ svg{display:block;flex-shrink:0;}
 .pm-mrow-status.pos,.pm-mrow-status.done{color:var(--green);}
 .pm-mrow-status.neg{color:var(--red);}
 /* 참석/한턱 등 청구 없는 행: 배지를 차액~상태 3열 폭에 걸쳐 우측 정렬 */
-.pm-mrow-badge{grid-column:2 / -1;justify-self:end;text-align:right;font-size:11px;font-weight:700;white-space:nowrap;}
+/* 한턱/참석 배지: 오른쪽 끝을 상태 글자(가운데정렬 2글자) 오른쪽 끝에 맞춤.
+   상태 셀(36px) 가운데정렬이라 글자 오른쪽 끝이 셀 오른쪽보다 7px 안쪽 → margin-right로 동일하게 당김 */
+.pm-mrow-badge{grid-column:2 / -1;justify-self:end;text-align:right;font-size:11px;font-weight:700;white-space:nowrap;margin-right:7px;}
 .pm-mrow-badge.treat{color:var(--txn-amber);}
 .pm-mrow-badge.attend{color:var(--label3);}
 /* 화면 폭에 따라 열 간격만 조절: PC는 넓게, 모바일은 좁게 */
@@ -1391,8 +1393,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.89';
-const BUILD_TIME='2026-09-04 18:30';
+const APP_VERSION='v5.90';
+const BUILD_TIME='2026-09-04 18:50';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
