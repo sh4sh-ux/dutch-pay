@@ -1046,8 +1046,8 @@ svg{display:block;flex-shrink:0;}
   .pm-month-status.treat{width:auto!important;min-width:0!important;margin-right:14.5px;}
 }
 
-/* v5.78 수금 월별 통계 — 통계 블록(결제·지출·쏜 + 청구·수령·미수)을 카드 맨 위로 모으고,
-   그 아래 이름 목록을 일자(직선) 구분선으로 나열. 오른쪽 금액은 인라인 1줄, 내 행은 '나' 배지+강조 */
+/* v5.79 수금 월별 통계 — 통계 블록(결제·지출·쏜 + 청구·수령·미수)을 카드 맨 위로,
+   그 아래 이름 목록을 완전 평평한 일자 구분선으로. 내 행 그라데이션·'나' 배지 제거 */
 .pm-month-billed{font-variant-numeric:tabular-nums;}
 /* 내 지출 통계 블록(결제·지출·쏜)을 청구·수령·미수 카드와 동일 규격으로, 맨 위에 붙여 배치 */
 .pm-my-stats-row{margin-bottom:8px!important;}
@@ -1055,11 +1055,13 @@ svg{display:block;flex-shrink:0;}
 .pm-mstat-val.amber{color:var(--txn-amber);}
 .pm-mstat-tap{cursor:pointer;}
 .pm-mstat-tap:active{background:var(--fill);}
-/* 이름 목록 일자 구분선: 마지막 행 구분선 제거로 깔끔하게 */
-.pm-month-people .pm-month-person-row:last-child{border-bottom:none;}
-/* 내 행 강조: '나' 배지 + 은은한 파란 하이라이트 */
-.pm-month-person-row.me{position:relative;background:linear-gradient(90deg,var(--blue-bg),transparent 82%)!important;box-shadow:inset 3px 0 0 var(--blue);}
-.pm-month-me-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:800;color:#fff;background:var(--blue);padding:1px 7px;border-radius:100px;letter-spacing:.02em;}
+/* 이름 목록: 컨테이너 라운드/클리핑 제거로 구분선을 좌우 끝까지 완전 평평하게.
+   각 행에 라운드가 없어 선 양끝이 올라가 보이던 현상 해소, 마지막 행 선 제거 */
+.pm-month-people{border:none!important;border-radius:0!important;overflow:visible!important;background:transparent!important;}
+.pm-month-person-row{border-radius:0!important;border-bottom:1px solid var(--sep)!important;background:transparent!important;box-shadow:none!important;}
+.pm-month-people .pm-month-person-row:last-child{border-bottom:none!important;}
+/* 상태 텍스트 음수 마진 정렬 핵 제거(내용 어긋남 방지) */
+.pm-month-person-right>.pm-month-status{margin-left:0!important;margin-right:0!important;}
 
 /* ==========================================
    DESKTOP APP SHELL
@@ -1346,8 +1348,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.78';
-const BUILD_TIME='2026-09-04 10:20';
+const APP_VERSION='v5.79';
+const BUILD_TIME='2026-09-04 11:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2814,7 +2816,7 @@ function _pmMonthlyHtml(allRecs){
     const myStatus=myNet>0?`<span class="pm-month-status pos">초과</span>`:myNet<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
     const myActual=mySpend-myBilled;
     const myTopStats=(_myName&&mySpend>0)?`<div class="pm-month-stats-row pm-my-stats-row"><div class="pm-mstat pm-mstat-tap" onclick="event.stopPropagation();_pmShowPayerItems('${ea(_myName)}','${ym}')"><div class="pm-mstat-lbl">결제</div><div class="pm-mstat-val">${fmt(mySpend)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">지출</div><div class="pm-mstat-val blue">${fmt(myActual)}원</div></div><div class="pm-mstat${myTreat>0?' pm-mstat-tap':''}"${myTreat>0?` onclick="event.stopPropagation();_pmShowTreatItems('${ea(_myName)}','${ym}')"`:''}><div class="pm-mstat-lbl">쏜 금액</div><div class="pm-mstat-val amber">${fmt(myTreat)}원</div></div></div>`:'';
-    const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row me pm-name-tap" onclick="_pmFilterByName('${ea(_myName)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-me-tag">나</span></div><div class="pm-month-person-right">${myDelta}<span class="pm-month-billed">청구 ${fmt(myBilled)}원</span>${myStatus}</div></div>`:'';
+    const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(_myName)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span></div><div class="pm-month-person-right">${myDelta}<span class="pm-month-billed">청구 ${fmt(myBilled)}원</span>${myStatus}</div></div>`:'';
     const _pplSort=(a,b)=>_pmMonthPeopleSort==='cnt'?(personCount[b[0]]||0)-(personCount[a[0]]||0):_pmMonthPeopleSort==='name'?a[0].localeCompare(b[0],'ko'):b[1].billed-a[1].billed;
     const peopleRows=Object.entries(personStats).sort(_pplSort).map(([nm,s])=>{
       const pnet=s.received-s.billed;
@@ -4303,6 +4305,43 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
   });
 });
 (()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;const _hdb=document.getElementById('histDrBody');if(_hdb)_hdb.addEventListener('scroll',()=>{const si=document.getElementById('histDrSinp');if(si&&si===document.activeElement)si.blur();},{passive:true});})();
+// ── 앱 내 뒤로가기 (브라우저·안드로이드 back) ─────────────────────────────
+// SPA라 back 버튼이 열린 오버레이/탭을 닫지 않고 페이지 자체(앱)를 벗어나 버린다.
+// 열린 오버레이(영수증 뷰어·기록 보관함·시트·모달·팝오버)가 있으면 그걸 닫고,
+// 홈(입력) 아닌 탭이면 입력 탭으로 돌아가고, 더 돌아갈 게 없을 때만 정상적으로 앱을 나간다.
+(()=>{
+  let _trap=false;
+  const OVL='.rcpt-viewer,.mob-sheet.open,.hist-page.open,#histDr.open,.pm-payer-modal-bg,'
+          +'.sc-overlay,.couple-ov,.share-fallback,.data-pop,.group-pop,.icon-pop,.rounder-pop,.pop-backdrop';
+  const anyOverlay=()=>!!document.querySelector(OVL);
+  const isMob=()=>matchMedia('(max-width:700px)').matches;
+  const curTab=()=>isMob()?(typeof mTab!=='undefined'?mTab:'input'):(typeof dTab!=='undefined'?dTab:'input');
+  const arm=()=>{if(!_trap){try{history.pushState({dpNav:1},'');}catch(e){}_trap=true;}};
+  function closeTop(){
+    const rv=document.querySelector('.rcpt-viewer');
+    if(rv){const c=rv.querySelector('.rcpt-viewer-close');c?c.click():rv.remove();return true;}
+    if(document.querySelector('.mob-sheet.open')){if(typeof closeSheet==='function')closeSheet();return true;}
+    if(document.querySelector('.hist-page.open,#histDr.open')){if(typeof closeHistDrawer==='function')closeHistDrawer();return true;}
+    const modal=document.querySelector('.pm-payer-modal-bg,.sc-overlay,.couple-ov,.share-fallback');
+    if(modal){modal.remove();return true;}
+    if(document.querySelector('.data-pop,.group-pop,.icon-pop,.rounder-pop,.pop-backdrop')){
+      if(typeof _dismissPops==='function')_dismissPops();
+      document.querySelectorAll('.data-pop,.group-pop,.pop-backdrop').forEach(el=>el.remove());
+      return true;
+    }
+    return false;
+  }
+  function goHome(){const t='input';if(isMob()){if(typeof mSetTab==='function')mSetTab(t);}else{if(typeof dSetTab==='function')dSetTab(t);}}
+  addEventListener('popstate',()=>{
+    _trap=false;
+    if(!closeTop()&&curTab()!=='input')goHome();
+    // 닫을 게 남아 있으면 다시 무장(back을 계속 가로챈다). 없으면 다음 back은 정상 이탈.
+    if(anyOverlay()||curTab()!=='input')arm();
+  });
+  // 오버레이가 열리거나 홈 아닌 탭이 되면(클릭 직후) trap을 무장한다.
+  // 각 열기 함수를 일일이 건드리지 않고 클릭 캡처로 일괄 감지 — 홈 상태에선 무장 안 해 곧바로 이탈 가능.
+  addEventListener('click',()=>{setTimeout(()=>{if(anyOverlay()||curTab()!=='input')arm();},0);},true);
+})();
 // 모바일 당겨서 새로고침.
 // 홈 화면에 추가한 PWA에는 브라우저 기본 당겨서 새로고침이 없어 직접 구현한다.
 // 새로고침은 location.reload() — 부팅 시 Dropbox 동기화(syncFromDropbox)와
