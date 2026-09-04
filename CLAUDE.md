@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v5.73** (2026-09-04) — 작업 브랜치
+**v5.74** (2026-09-04) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v5.74 | 정산 탭 하단에 '기록 보관함 저장' 버튼 추가 — 영수증을 붙인 뒤 저장하려면 수금 탭/⋯ 메뉴까지 가야 했던 동선 개선. 상태 반영(_histSaveBtnHtml): 미저장 '📌 기록 보관함에 저장'(파랑), 저장됨 '✓ 저장됨'(초록)+'다시 눌러 업데이트' 안내. _histFingerprint가 영수증을 해시에 포함하지 않으므로 항상 클릭 가능하게 해 saveToHistory로 재저장(fingerprint/soft-fingerprint 매칭 시 업데이트)해 영수증 반영. 데스크탑 renderResultView·모바일 result 뷰 양쪽에 삽입, _saveHistFromResult가 저장 후 renderAll |
 | v5.73 | 송금 색상 구분선(파랑/주황)을 수취인 그룹이 2개 이상일 때만 표시 — 원래 '내 수취(파랑) ↔ 다른 사람 수취(주황)'를 구분하려는 장치라, 그룹이 하나뿐(예: 모두가 나에게 송금)이면 구분 대상이 없어 불필요했음. `_txnRowsHtml`은 `groups.length>1`일 때만 `.txn-group-div` 출력, `generateSettleCanvas`도 `_multiG`로 구분선·높이(txnCardH) 반영 |
 | v5.72 | 공유 탭에 '영수증' 공유 버튼 추가(투명성) — 카톡엔 이미지로 보내므로 정산+영수증을 함께 보내고 싶었으나, 링크 방식(v5.53~55)은 URL 길고 버퍼링/오류로 롤백됨. `navigator.share`는 사용자 제스처가 필요해 1초 뒤 자동 2차 공유가 불가 → 첨부 영수증이 있을 때 버튼 2개('정산 이미지'/'영수증 N장')로 분리. 각자 탭으로 실행돼 정산 먼저·영수증 다음으로 안정 전송. `_gatherReceiptFiles`(idb/data→blob, http→fetch)로 영수증을 File 배열로 모아 `shareReceiptsImages`가 한 번의 다중 파일 공유로 전송, 폴백은 각 저장. `_shareBtnsHtml` 헬퍼로 렌더 |
 | v5.71 | 공유 이미지(generateSettleCanvas) 송금 카드 색상 구분선(파랑/주황)이 카드 라운드(28px)에 양끝이 잘리던 문제 — 회색 구분선(drawDivider, 34px 인셋)과 달리 `fillRect(cardX,…,cardW,3)`로 전체 폭이라 클리핑됨. `roundRectPath(cardX+34,…,cardW-68,3,1.5)`로 34px 인셋+둥근 끝으로 통일. 나머지 캔버스 타이포(자간·정렬·여백)는 실측 결과 양호해 유지 |
