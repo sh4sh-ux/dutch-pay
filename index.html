@@ -1375,8 +1375,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.84';
-const BUILD_TIME='2026-09-04 14:40';
+const APP_VERSION='v5.85';
+const BUILD_TIME='2026-09-04 15:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2962,12 +2962,14 @@ function _resultBreakdownHtml(paid,owes,txns){
   if(!ownerName)return'';
   const ownerPaid=paid[ownerName]||0;
   const ownerBurden=owes[ownerName]||0;
-  const treatTotal=items.filter(it=>it.isTreat).reduce((s,it)=>s+(+it.amount||0),0);
+  // 한턱 혜택: '조상현 쏨'처럼 소유자가 쏜 금액만 합산한다(다른 사람이 쏜 한턱은 제외).
+  // 라벨(누가 쏨)과 금액(그 사람이 쏜 액수)이 반드시 일치해야 한다.
+  const treatTotal=items.filter(it=>it.isTreat&&it.payer===ownerName).reduce((s,it)=>s+(+it.amount||0),0);
   const ownerReceives=txns.filter(t=>t.to===ownerName).reduce((s,t)=>s+t.amt,0);
   const ownerSends=txns.filter(t=>t.from===ownerName).reduce((s,t)=>s+t.amt,0);
   let rows='';
   if(ownerPaid>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">내가 결제한 금액</span><span class="rbd-val">${fmt(ownerPaid)}원</span></div>`;
-  if(treatTotal>0){const tr=items.find(it=>it.isTreat)?.payer||'';const hintHtml=tr?'<span class="rbd-hint">'+e(tr)+' 쏨</span>':'';rows+='<div class="rbd-row"><span class="rbd-lbl">한턱 혜택'+hintHtml+'</span><span class="rbd-val treat">'+fmt(treatTotal)+'원</span></div>';}
+  if(treatTotal>0){const hintHtml='<span class="rbd-hint">'+e(ownerName)+' 쏨</span>';rows+='<div class="rbd-row"><span class="rbd-lbl">한턱 혜택'+hintHtml+'</span><span class="rbd-val treat">'+fmt(treatTotal)+'원</span></div>';}
   if(ownerReceives>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">돌려받을 금액</span><span class="rbd-val rbd-neg">${fmt(ownerReceives)}원</span></div>`;
   if(ownerSends>0)rows+=`<div class="rbd-row"><span class="rbd-lbl">보낼 금액</span><span class="rbd-val">${fmt(ownerSends)}원</span></div>`;
   rows+=`<div class="rbd-sep"></div><div class="rbd-row rbd-total"><span class="rbd-lbl">내 부담</span><span class="rbd-val">${fmt(ownerBurden)}원</span></div>`;
@@ -4330,21 +4332,21 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
 (()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;const _hdb=document.getElementById('histDrBody');if(_hdb)_hdb.addEventListener('scroll',()=>{const si=document.getElementById('histDrSinp');if(si&&si===document.activeElement)si.blur();},{passive:true});})();
 // ── 앱 내 뒤로가기 (브라우저·안드로이드 back) ─────────────────────────────
 // SPA라 back 버튼이 열린 오버레이/탭을 닫지 않고 페이지 자체(앱)를 벗어나 버린다.
-// 열린 오버레이(영수증 뷰어·기록 보관함·시트·모달·팝오버)가 있으면 그걸 닫고,
-// 홈(입력) 아닌 탭이면 입력 탭으로 돌아가고, 더 돌아갈 게 없을 때만 정상적으로 앱을 나간다.
-// 규칙: 한 단계(탭 변경·오버레이 열기·이름 검색)마다 그 시점에 history 항목을 1개 push하고,
-// back(popstate)에서는 스택을 1개 pop해 그 단계만 되돌린다. popstate 안에서는 절대 pushState 하지
-// 않는다 — 안드로이드에서 popstate 도중 pushState 하면 '홈으로 갔다가 이전 화면으로' 이중 전환(깜빡임)이 생긴다.
+// [근본 방식] 클릭을 보고 "추측"하지 않는다. 실제 화면 상태(현재 탭·열린 오버레이 수·검색 여부)를
+// MutationObserver로 관찰해, 상태가 '더 깊어지면'(탭 변경/오버레이 열림/검색 시작) 그 시점에
+// history 항목을 1개 쌓고, back(popstate)에서는 스택을 1개 pop해 그 단계만 되돌린다(1:1).
+// 앱이 스스로 얕아지면(X로 오버레이 닫기 등) 남는 항목을 조용히 1개 정리한다.
+// popstate 안에서는 절대 pushState 하지 않는다(안드로이드 이중 전환 깜빡임 방지).
 (()=>{
-  const stack=[];          // 각 history 항목에 대응하는 되돌리기 지시(1:1)
-  let sOv=false,sSe=false,sTab='input';   // 마지막 관측 상태(오버레이·검색·탭)
   const OVL='.rcpt-viewer,.mob-sheet.open,.hist-page.open,#histDr.open,.pm-payer-modal-bg,'
           +'.sc-overlay,.couple-ov,.share-fallback,.data-pop,.group-pop,.icon-pop,.rounder-pop,.pop-backdrop';
-  const anyOverlay=()=>!!document.querySelector(OVL);
   const isMob=()=>matchMedia('(max-width:700px)').matches;
   const curTab=()=>isMob()?(typeof mTab!=='undefined'?mTab:'input'):(typeof dTab!=='undefined'?dTab:'input');
   const setTab=(t)=>{if(isMob()){if(typeof mSetTab==='function')mSetTab(t);}else{if(typeof dSetTab==='function')dSetTab(t);}};
   const searchActive=()=>{try{return typeof _pmHistSearch!=='undefined'&&!!_pmHistSearch&&_pmHistSearch.trim()!=='';}catch(e){return false;}};
+  const ovCount=()=>document.querySelectorAll(OVL).length;
+  const sig=()=>({tab:curTab(),ov:ovCount(),se:searchActive()?1:0});
+  const eq=(a,b)=>a.tab===b.tab&&a.ov===b.ov&&a.se===b.se;
   function closeTop(){
     const rv=document.querySelector('.rcpt-viewer');
     if(rv){const c=rv.querySelector('.rcpt-viewer-close');c?c.click():rv.remove();return true;}
@@ -4359,26 +4361,31 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
     }
     return false;
   }
-  const sync=()=>{sOv=anyOverlay();sSe=searchActive();sTab=curTab();};
-  function pushEntry(desc){stack.push(desc);if(stack.length>60)stack.shift();try{history.pushState({dp:stack.length},'');}catch(e){}}
-  // 클릭·입력 직후 상태 변화를 감지해 새 단계면 history 항목을 1개 쌓는다(back은 클릭이 아니라 오탐 없음).
-  function detect(){
-    const ov=anyOverlay(),se=searchActive(),tb=curTab();
-    if(tb!==sTab)pushEntry('tab:'+sTab);        // 탭 변경 → 직전 탭 저장
-    else if(se&&!sSe)pushEntry('search');        // 이름 검색 시작
-    else if(ov&&!sOv)pushEntry('overlay');       // 오버레이 열림
-    sOv=ov;sSe=se;sTab=tb;
+  let committed=sig();     // 현재까지 히스토리에 반영된 상태
+  const stack=[];          // 우리가 쌓은 history 항목 1:1 대응(되돌리기 지시)
+  let pendingSync=0;       // 우리가 자체적으로 부른 history.back() 횟수(사용자 back과 구분)
+  const pushEntry=(d)=>{stack.push(d);if(stack.length>60)stack.shift();try{history.pushState({dp:1},'');}catch(e){}};
+  function reconcile(){
+    const n=sig();
+    if(eq(n,committed))return;                                   // 변화 없음
+    if(n.tab!==committed.tab){pushEntry({t:'tab',v:committed.tab});committed=n;return;}  // 탭 변경
+    if(n.se>committed.se){pushEntry({t:'search'});committed=n;return;}                    // 검색 시작
+    if(n.ov>committed.ov){pushEntry({t:'overlay'});committed=n;return;}                   // 오버레이 열림
+    committed=n;                                                 // 얕아짐(스스로 닫음) → 항목 1개 정리
+    if(stack.length){stack.pop();pendingSync++;try{history.back();}catch(e){pendingSync--;}}
   }
+  let scheduled=false;
+  const schedule=()=>{if(scheduled)return;scheduled=true;Promise.resolve().then(()=>{scheduled=false;reconcile();});};
+  try{new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});}catch(e){}
   addEventListener('popstate',()=>{
+    if(pendingSync>0){pendingSync--;committed=sig();return;}     // 우리가 부른 back(동기화) → 무시
     const top=stack.pop();
-    if(top===undefined){sync();return;}          // 우리 항목이 없으면 정상 이탈(이미 뒤로 감)
-    if(top==='overlay')closeTop();
-    else if(top==='search'){if(searchActive()&&typeof _clrPmSearch==='function')_clrPmSearch();}
-    else if(typeof top==='string'&&top.indexOf('tab:')===0)setTab(top.slice(4));
-    sync();                                       // ← popstate 안에서 pushState 절대 안 함
+    if(top===undefined){committed=sig();return;}                 // 우리 항목 소진 → 정상 이탈
+    if(top.t==='tab'){if(curTab()!==top.v)setTab(top.v);}
+    else if(top.t==='search'){if(searchActive()&&typeof _clrPmSearch==='function')_clrPmSearch();}
+    else if(top.t==='overlay')closeTop();
+    committed=sig();                                             // ← popstate 안에서 pushState 절대 안 함
   });
-  addEventListener('click',()=>{setTimeout(detect,0);},true);
-  addEventListener('input',()=>{setTimeout(detect,0);},true);
 })();
 // 모바일 당겨서 새로고침.
 // 홈 화면에 추가한 PWA에는 브라우저 기본 당겨서 새로고침이 없어 직접 구현한다.

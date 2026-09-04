@@ -359,6 +359,35 @@ suite('TC10: 한턱(isTreat) 제외', () => {
   });
 });
 
+// v5.85 회귀 — '한턱 혜택 (X 쏨)'는 소유자(X)가 쏜 금액만 합산해야 한다.
+// 버그: 라벨은 첫 한턱 결제자, 금액은 전원 한턱 합 → 다른 사람이 쏜 한턱까지 더해졌음.
+suite('TC10b: 한턱 혜택 = 소유자가 쏜 금액만 [v5.85 회귀]', () => {
+  setup(['A','B','C'], [
+    { name:'식사',  amount:30000, payer:'A' },               // A가 최다 수취 → 소유자 A
+    { name:'A한턱', amount:10000, payer:'A', isTreat:true },
+    { name:'B한턱', amount:6000,  payer:'B', isTreat:true },
+  ]);
+  const { paid, owes } = shares();
+  const t = txns();
+  const owner = APP._getOwnerName(t);
+  const d = document.createElement('div');
+  d.innerHTML = APP._resultBreakdownHtml(paid, owes, t);
+  const rows = [...d.querySelectorAll('.rbd-row')];
+  const treatRow = rows.find(r => (r.querySelector('.rbd-lbl')?.textContent||'').indexOf('한턱 혜택') === 0);
+  const byOwner = { A:10000, B:6000, C:0 };
+
+  test('소유자 = A', () => expect(owner).toBe('A'));
+  test("'한턱 혜택' 행 라벨이 소유자(A) 쏨", () => {
+    if (!treatRow) throw new Error('한턱 혜택 행 없음');
+    expect((treatRow.querySelector('.rbd-hint')?.textContent||'').trim()).toBe(owner + ' 쏨');
+  });
+  test('금액 = 소유자가 쏜 한턱만 (전원 합 16,000 아님)', () => {
+    if (!treatRow) throw new Error('한턱 혜택 행 없음');
+    const amt = +((treatRow.querySelector('.rbd-val')?.textContent||'').replace(/[^\d]/g,''));
+    expect(amt).toBe(byOwner[owner]);
+  });
+});
+
 // v5.06 회귀 — 영수증 상세표 합계 행
 suite('TC11: 영수증 상세표 합계 표시 [v5.06 회귀]', () => {
   const foot = (rt) => {
