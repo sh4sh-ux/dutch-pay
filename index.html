@@ -1393,8 +1393,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.92';
-const BUILD_TIME='2026-09-04 19:45';
+const APP_VERSION='v5.93';
+const BUILD_TIME='2026-09-04 20:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1789,7 +1789,7 @@ async function _dbxDownloadBlob(token,path){
 }
 function _blobToDataUrl(blob){return new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>res('');r.readAsDataURL(blob);});}
 function _dataUrlToBlob(d){try{const c=String(d).indexOf(',');const head=String(d).slice(0,c);const body=String(d).slice(c+1);const mime=(head.match(/data:([^;]+)/)||[])[1]||'image/jpeg';const bin=atob(body);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});}catch(e){return null;}}
-let _syncTimer=null,_syncing=false,_syncFromRunning=false,_syncPending=false,_lastFgSync=0;
+let _syncTimer=null,_syncing=false,_syncFromRunning=false,_syncPending=false,_lastFgSync=0,_attachInProgress=false;
 function _scheduleSyncToDropbox(){
   if(!dbxGetToken())return;
   _syncPending=true;
@@ -1807,7 +1807,7 @@ function _syncFlushNow(){
 // 뒤로 가면 대기 중 업로드를 즉시 밀어올린다(push). 영수증 대기 업로드도 함께 처리.
 try{
   document.addEventListener('visibilitychange',()=>{
-    if(!dbxGetToken())return;
+    if(!dbxGetToken()||_attachInProgress)return; // 파일 선택기 열려 있는 동안엔 동기화가 끼어들지 않게
     if(document.visibilityState==='visible'){
       const now=Date.now();if(now-_lastFgSync<1500)return;_lastFgSync=now;
       try{syncFromDropbox();}catch(e){}
@@ -1817,7 +1817,7 @@ try{
       try{_flushReceiptUploads();}catch(e){}
     }
   });
-  window.addEventListener('pagehide',()=>{if(dbxGetToken()&&_syncPending)_syncFlushNow();});
+  window.addEventListener('pagehide',()=>{if(dbxGetToken()&&_syncPending&&!_attachInProgress)_syncFlushNow();});
 }catch(e){}
 async function syncToDropbox(){
   if(_syncing||!dbxGetToken())return;
@@ -3452,7 +3452,17 @@ function _stitchReceiptsVertical(dataUrls){
 }
 function pickReceiptPhoto(itemId){
   const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;
-  inp.onchange=async()=>{const fs=inp.files?[...inp.files]:[];if(!fs.length)return;
+  // iOS/PWA: DOM에 붙어있지 않은 file input은 선택 후 change가 안 뜨거나 참조가 GC되어
+  // '열기 했는데 첨부 안 됨'이 간헐 발생 → 화면 밖에 실제로 붙였다가 선택/취소 후 제거한다.
+  inp.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';
+  document.body.appendChild(inp);
+  _attachInProgress=true; // 선택기 열린 동안 포그라운드 동기화가 끼어들지 않게
+  let done=false;
+  const cleanup=()=>{_attachInProgress=false;try{inp.remove();}catch(e){}};
+  inp.onchange=async()=>{
+    done=true;
+    const fs=inp.files?[...inp.files]:[];
+    if(!fs.length){cleanup();return;}
     const multi=fs.length>1;
     const t=toast(multi?`영수증 ${fs.length}장 합치는 중…`:'영수증 사진 처리 중…',{duration:12000});
     try{
@@ -3464,8 +3474,12 @@ function pickReceiptPhoto(itemId){
       const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(itemId);
       _syncFlushNow(); // 3초 대기 없이 참조+이미지를 바로 Dropbox로 (다른 기기에 즉시 반영)
       t&&t.dismiss&&t.dismiss();toast(multi?`영수증 ${fs.length}장을 한 장으로 첨부했어요`:'영수증 사진이 첨부됐어요',{type:'success'});
-    }catch(err){t&&t.dismiss&&t.dismiss();toast('사진을 처리하지 못했어요',{type:'error'});}
+    }catch(err){t&&t.dismiss&&t.dismiss();toast('사진을 처리하지 못했어요(형식 문제일 수 있어요)',{type:'error'});}
+    finally{cleanup();}
   };
+  // 취소(파일 안 고르고 닫음): change가 안 오므로 포커스 복귀 후 잠시 뒤 orphan 정리
+  const onFocusBack=()=>{setTimeout(()=>{if(!done)cleanup();},1200);};
+  window.addEventListener('focus',onFocusBack,{once:true});
   inp.click();
 }
 function removeReceipt(itemId){
