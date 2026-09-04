@@ -1393,8 +1393,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.91';
-const BUILD_TIME='2026-09-04 19:15';
+const APP_VERSION='v5.92';
+const BUILD_TIME='2026-09-04 19:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1789,12 +1789,36 @@ async function _dbxDownloadBlob(token,path){
 }
 function _blobToDataUrl(blob){return new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>res('');r.readAsDataURL(blob);});}
 function _dataUrlToBlob(d){try{const c=String(d).indexOf(',');const head=String(d).slice(0,c);const body=String(d).slice(c+1);const mime=(head.match(/data:([^;]+)/)||[])[1]||'image/jpeg';const bin=atob(body);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});}catch(e){return null;}}
-let _syncTimer=null,_syncing=false,_syncFromRunning=false;
+let _syncTimer=null,_syncing=false,_syncFromRunning=false,_syncPending=false,_lastFgSync=0;
 function _scheduleSyncToDropbox(){
   if(!dbxGetToken())return;
+  _syncPending=true;
   clearTimeout(_syncTimer);
-  _syncTimer=setTimeout(()=>syncFromDropbox(),3000);
+  _syncTimer=setTimeout(()=>{_syncPending=false;syncFromDropbox();},3000);
 }
+// 대기 중인 동기화(3초 디바운스)를 지금 바로 실행 — 앱을 닫거나 뒤로 가기 직전, 또는 사진 첨부처럼
+// 즉시 반영이 필요한 변경 직후. 3초 안에 닫아도 유실되지 않게 한다. syncFromDropbox가 병합 후 올림.
+function _syncFlushNow(){
+  if(!dbxGetToken())return;
+  clearTimeout(_syncTimer);_syncPending=false;
+  try{syncFromDropbox();}catch(e){}
+}
+// A: 이미 열려 있는 다른 기기가 최신을 못 받아오던 문제 — 앱이 다시 앞으로 오면 내려받고(pull),
+// 뒤로 가면 대기 중 업로드를 즉시 밀어올린다(push). 영수증 대기 업로드도 함께 처리.
+try{
+  document.addEventListener('visibilitychange',()=>{
+    if(!dbxGetToken())return;
+    if(document.visibilityState==='visible'){
+      const now=Date.now();if(now-_lastFgSync<1500)return;_lastFgSync=now;
+      try{syncFromDropbox();}catch(e){}
+      try{_flushReceiptUploads();}catch(e){}
+    }else{
+      if(_syncPending)_syncFlushNow();
+      try{_flushReceiptUploads();}catch(e){}
+    }
+  });
+  window.addEventListener('pagehide',()=>{if(dbxGetToken()&&_syncPending)_syncFlushNow();});
+}catch(e){}
 async function syncToDropbox(){
   if(_syncing||!dbxGetToken())return;
   _syncing=true;
@@ -1806,6 +1830,7 @@ async function syncToDropbox(){
       const hashes={};groups.forEach(g=>{hashes[g.id]=_groupHash(g);});
       _saveSyncedHashes(hashes);
       _updateSyncBadge();
+      try{_flushReceiptUploads();}catch(e){} // 대기 중 영수증 이미지도 함께 올림
     }
   }catch(e){}finally{_syncing=false;}
 }
@@ -3301,12 +3326,25 @@ function _isIdbRef(u){return String(u||'').slice(0,4)==='idb:';}
 // 로컬 IndexedDB에만 있고 Dropbox 백업이 실패했을 수 있는 영수증을 다른 기기용으로 재업로드 — 성공할 때까지 재시도(실패 시 done 표시 안 함) (v5.61/5.63)
 const _rcptBackfilled=new Set();
 async function _backfillReceiptToDbx(key,dataUrl){if(!key||_rcptBackfilled.has(key))return;const tok=dbxGetToken();if(!tok)return;try{const b=_dataUrlToBlob(dataUrl);if(b){const ok=await _dbxUpload(tok,`${dbxDir()}/receipts/${key}.jpg`,b);if(ok)_rcptBackfilled.add(key);}}catch(e){}}
-// data URI 사진을 IndexedDB에 저장(+가능하면 Dropbox 백업)하고 'idb:<키>' 참조 반환
+// 아직 Dropbox에 못 올린 영수증 이미지 큐(키→dataUrl). '쏘고 잊기' 대신 성공할 때까지 재시도해
+// 다른 기기에서 이미지가 비는 문제 방지. 포그라운드 복귀·동기화·첨부 시 flush (v5.92)
+const _rcptUploadQ=new Map();
+let _rcptFlushing=false;
+async function _flushReceiptUploads(){
+  const tok=dbxGetToken();if(!tok||_rcptFlushing||!_rcptUploadQ.size)return;
+  _rcptFlushing=true;
+  try{
+    for(const [key,dataUrl] of [..._rcptUploadQ]){
+      try{const b=_dataUrlToBlob(dataUrl);if(b){const ok=await _dbxUpload(tok,`${dbxDir()}/receipts/${key}.jpg`,b);if(ok){_rcptUploadQ.delete(key);_rcptBackfilled.add(key);}}}catch(e){}
+    }
+  }finally{_rcptFlushing=false;}
+}
+// data URI 사진을 IndexedDB에 저장하고(로컬 원본), Dropbox 업로드는 큐에 넣어 성공까지 재시도. 'idb:<키>' 참조 반환
 async function _storeReceiptImage(itemId,dataUrl){
   const key='r'+itemId+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   try{await _rcptIdbPut(key,dataUrl);}catch(e){return dataUrl;} // IndexedDB 불가 시 최후로 data URI 그대로(작을 때만 권장)
-  const tok=dbxGetToken();
-  if(tok){try{const blob=_dataUrlToBlob(dataUrl);if(blob)_dbxUpload(tok,`${dbxDir()}/receipts/${key}.jpg`,blob);}catch(e){}}
+  _rcptUploadQ.set(key,dataUrl);
+  _flushReceiptUploads();
   return 'idb:'+key;
 }
 // 항목의 영수증 실제 이미지 소스 해석: idb→로컬 IndexedDB→(없으면)Dropbox, 그 외는 URL 그대로
@@ -3424,6 +3462,7 @@ function pickReceiptPhoto(itemId){
       const it=items.find(i=>i.id===itemId);if(!it){t&&t.dismiss&&t.dismiss();return;}
       const ref=await _storeReceiptImage(it.id,dataUrl);it.receiptUrl=ref;saveState();renderAll();
       const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(itemId);
+      _syncFlushNow(); // 3초 대기 없이 참조+이미지를 바로 Dropbox로 (다른 기기에 즉시 반영)
       t&&t.dismiss&&t.dismiss();toast(multi?`영수증 ${fs.length}장을 한 장으로 첨부했어요`:'영수증 사진이 첨부됐어요',{type:'success'});
     }catch(err){t&&t.dismiss&&t.dismiss();toast('사진을 처리하지 못했어요',{type:'error'});}
   };
