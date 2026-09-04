@@ -1182,6 +1182,9 @@ svg{display:block;flex-shrink:0;}
     <button class="app-rail-btn" type="button" data-dutch-nav="settle" data-nav-label="공유" aria-label="공유" onclick="dSetTab('settle')">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
     </button>
+    <button class="app-rail-btn" id="dRailHistory" type="button" data-nav-label="기록 보관함" aria-label="기록 보관함" onclick="goToHistory()" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
     <button class="app-rail-btn" id="dRailPayment" type="button" data-dutch-nav="payment" data-nav-label="수금" aria-label="수금" onclick="dSetTab('payment')" style="display:none">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="9" cy="5.5" rx="5.5" ry="2.25"/><path d="M3.5 5.5v4c0 1.25 2.45 2.25 5.5 2.25 1.1 0 2.1-.13 2.95-.37M3.5 9.5v4c0 1.25 2.45 2.25 5.5 2.25.72 0 1.4-.06 2.02-.17"/><circle cx="16.5" cy="15.5" r="5"/><path d="m13.85 13.25 1.2 4.5 1.45-3.25 1.45 3.25 1.2-4.5M13.7 14.75h5.6M14 16.1h5"/></svg>
     </button>
@@ -1270,7 +1273,7 @@ svg{display:block;flex-shrink:0;}
     <button class="mob-tab on" id="mTInput" data-dutch-nav="input" onclick="mSetTab('input')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>입력</span></button>
     <button class="mob-tab" id="mTResult" data-dutch-nav="result" onclick="mSetTab('result')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>정산</span></button>
     <button class="mob-tab" id="mTSettle" data-dutch-nav="settle" onclick="mSetTab('settle')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>공유</span></button>
-    <button class="mob-tab" id="mTHistory" data-dutch-nav="history" onclick="mSetTab('history')" style="display:none"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>기록</span></button>
+    <button class="mob-tab" id="mTHistory" aria-label="기록 보관함" onclick="goToHistory()" style="display:none"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>기록</span></button>
     <button class="mob-tab" id="mTPayment" data-dutch-nav="payment" onclick="mSetTab('payment')" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="9" cy="5.5" rx="5.5" ry="2.25"/><path d="M3.5 5.5v4c0 1.25 2.45 2.25 5.5 2.25 1.1 0 2.1-.13 2.95-.37M3.5 9.5v4c0 1.25 2.45 2.25 5.5 2.25.72 0 1.4-.06 2.02-.17"/><circle cx="16.5" cy="15.5" r="5"/><path d="m13.85 13.25 1.2 4.5 1.45-3.25 1.45 3.25 1.2-4.5M13.7 14.75h5.6M14 16.1h5"/></svg><span>수금</span></button>
   </nav>
   <div class="mob-body" id="mBody"></div>
@@ -1328,8 +1331,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.74';
-const BUILD_TIME='2026-09-04 07:00';
+const APP_VERSION='v5.75';
+const BUILD_TIME='2026-09-04 07:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1338,9 +1341,10 @@ let _justAddedId=null;
 let _pmHistTab='current',_pmHistSearch='',_pmHistSort='newest',_pmHistFilter='all',_pmViewMode='list',_pmHistGroup='all',_pmMonthPeopleSort='amt';
 const _pmMonthsOpen=new Set();
 let _dbxAutoSavedFp='';
+const OWNER_NAME='조상현'; // 내 이름이 소유자명이면 5탭 잠금 해제 없이 자동 해제 (v5.75)
 let _myName=localStorage.getItem('dutchpay_my_name')||'';
 let _coupleNames=(()=>{try{return JSON.parse(localStorage.getItem('dutchpay_couple')||'[]');}catch(e){return[];}})();
-let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked');
+let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_myName===OWNER_NAME;
 let _historySearch='';
 let _historySort='newest';
 let _histSettleMode=false;
@@ -1456,7 +1460,7 @@ function showDataMenu(anchorEl,ev){
     else if(action==='setCouples'){pop.remove();showCoupleSettings();}
     else if(action==='exportCsv'){exportCurrentGroupCsv();pop.remove();}
     else if(action==='export'){exportData();pop.remove();}
-    else if(action==='setMyName'){const n=prompt('더치페이에서 나의 이름을 입력하세요\n(입금 관리에서 나에게 오는 입금만 수정 가능해져요)',_myName);if(n===null)return;_myName=n.trim();localStorage.setItem('dutchpay_my_name',_myName);pop.remove();toast(_myName?`내 이름이 "${_myName}"으로 설정됐어요`:'내 이름 설정이 해제됐어요',{type:'success'});}
+    else if(action==='setMyName'){const n=prompt('더치페이에서 나의 이름을 입력하세요\n(입금 관리에서 나에게 오는 입금만 수정 가능해져요)',_myName);if(n===null)return;_myName=n.trim();localStorage.setItem('dutchpay_my_name',_myName);const _wasUnlocked=_ownerUnlocked;_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_myName===OWNER_NAME;pop.remove();toast(_myName?`내 이름이 "${_myName}"으로 설정됐어요${(!_wasUnlocked&&_ownerUnlocked)?' · 소유자 기능 잠금 해제됨':''}`:'내 이름 설정이 해제됐어요',{type:'success'});renderAll();}
     else if(action==='toggleDark'){_toggleDarkMode();pop.remove();}
     else if(action==='resetCurrent'){resetCurrentSettlement();pop.remove();}
     else if(action==='reset'){resetAllData();pop.remove();}
@@ -2940,6 +2944,8 @@ function _renderAllSafe(){
   const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
   const dTPay=document.getElementById('dTPayment');if(dTPay)dTPay.style.display=_ownerUnlocked?'':'none';
   const dRPay=document.getElementById('dRailPayment');if(dRPay)dRPay.style.display=_ownerUnlocked?'':'none';
+  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
+  const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();
   if(!_skipD)renderDesktopRight();
   if(!_skipM)renderMobileBody();
@@ -2951,6 +2957,8 @@ function renderAll(skipSave=false){
   const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
   const dTPay=document.getElementById('dTPayment');if(dTPay)dTPay.style.display=_ownerUnlocked?'':'none';
   const dRPay=document.getElementById('dRailPayment');if(dRPay)dRPay.style.display=_ownerUnlocked?'':'none';
+  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
+  const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
   const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
   _updateMobFab();if(!skipSave)saveState();
