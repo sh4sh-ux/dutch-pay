@@ -293,7 +293,7 @@ svg{display:block;flex-shrink:0;}
 .txn-row.pm-done{background:linear-gradient(90deg,rgba(52,199,89,.07) 0%,var(--card) 70%);}
 .txn-row.pm-diff{background:linear-gradient(90deg,rgba(255,59,48,.06) 0%,var(--card) 70%);}
 /* 수취인 구분선(파랑/주황) — 카드 라운드(16px)에 양끝이 잘려 보이던 문제. 좌우 대칭 인셋 + 둥근 끝으로 모서리 곡선을 피함 (v5.70) */
-.txn-group-div{height:3px;margin:0 16px;border-radius:2px;}
+.txn-group-div{height:1.5px;margin:0 16px;border-radius:1px;}
 .txn-div-owner{background:var(--blue);}
 .txn-div-other{background:var(--txn-amber);}
 .txn-status-ic{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--sep2);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
@@ -1067,29 +1067,31 @@ svg{display:block;flex-shrink:0;}
    모든 행이 같은 세로선에 정렬. 화면 폭에 따라 gap만 조절(PC 넓게·모바일 좁게). 결제는 이름 아래 서브라인.
    [규칙] 리스트 콘텐츠는 구분선(행 폭 전체) 안쪽으로 좌우 14px 여백을 둔다 */
 .pm-mtable .pm-mhead,
-.pm-mtable .pm-month-person-row{display:grid;grid-template-columns:minmax(0,1fr) 62px 96px 34px;column-gap:10px;align-items:center;}
+.pm-mtable .pm-month-person-row{display:grid;grid-template-columns:minmax(0,1fr) 58px 90px 36px;column-gap:8px;align-items:center;}
 .pm-mtable .pm-mhead{padding:8px 14px 9px;border-bottom:1px solid var(--sep);}
 .pm-mtable .pm-mhead span{font-size:10px;font-weight:700;color:var(--label3);letter-spacing:.02em;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pm-mtable .pm-mhead .h-nm{text-align:left;}
+.pm-mtable .pm-mhead .h-ctr{text-align:center;}
 .pm-mtable .pm-month-person-row{padding:9px 14px!important;min-height:46px;}
 .pm-mrow-name{display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0;}
 .pm-mrow-nameline{display:flex;align-items:center;gap:8px;min-width:0;}
-.pm-mrow-name .pm-month-person-name{overflow:hidden;text-overflow:ellipsis;}
+.pm-mrow-name .pm-month-person-name{overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;}
+.pm-mrow-nameline .pm-month-person-cnt{flex:0 0 auto;}
 .pm-mrow-paid{font-size:10.5px;color:var(--label3);white-space:nowrap;cursor:pointer;}
 .pm-mrow-delta{text-align:right;font-size:12px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;}
 .pm-mrow-delta.pos{color:var(--green);}
 .pm-mrow-delta.neg{color:var(--red);}
 .pm-mrow-billed{text-align:right;font-size:13px;font-weight:600;color:var(--label);white-space:nowrap;font-variant-numeric:tabular-nums;}
 .pm-mrow-billed .won{font-size:.84em;font-weight:600;color:var(--label2);margin-left:1px;}
-.pm-mrow-status{text-align:right;font-size:11px;font-weight:700;white-space:nowrap;}
+.pm-mrow-status{text-align:center;font-size:11px;font-weight:700;white-space:nowrap;}
 .pm-mrow-status.pos,.pm-mrow-status.done{color:var(--green);}
 .pm-mrow-status.neg{color:var(--red);}
-/* 참석/한턱 등 청구 없는 행: 배지를 오른쪽 3열 폭에 걸쳐 우측 정렬 */
+/* 참석/한턱 등 청구 없는 행: 배지를 차액~상태 3열 폭에 걸쳐 우측 정렬 */
 .pm-mrow-badge{grid-column:2 / -1;justify-self:end;text-align:right;font-size:11px;font-weight:700;white-space:nowrap;}
 .pm-mrow-badge.treat{color:var(--txn-amber);}
 .pm-mrow-badge.attend{color:var(--label3);}
 /* 화면 폭에 따라 열 간격만 조절: PC는 넓게, 모바일은 좁게 */
-@media(min-width:701px){.pm-mtable .pm-mhead,.pm-mtable .pm-month-person-row{column-gap:22px;}}
+@media(min-width:701px){.pm-mtable .pm-mhead,.pm-mtable .pm-month-person-row{column-gap:20px;}}
 /* 이름 목록: 컨테이너 라운드/클리핑 제거로 구분선을 좌우 끝까지 완전 평평하게.
    각 행에 라운드가 없어 선 양끝이 올라가 보이던 현상 해소, 마지막 행 선 제거 */
 .pm-month-people{border:none!important;border-radius:0!important;overflow:visible!important;background:transparent!important;}
@@ -1383,8 +1385,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.87';
-const BUILD_TIME='2026-09-04 16:50';
+const APP_VERSION='v5.88';
+const BUILD_TIME='2026-09-04 18:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2867,7 +2869,7 @@ function _pmMonthlyHtml(allRecs){
       const paidSub2=paidAmt2>0?`<span class="pm-mrow-paid" onclick="event.stopPropagation();_pmShowPayerItems('${ea(nm)}','${ym}')">결제 ${fmt(paidAmt2)}원</span>`:'';
       return `<div class="pm-month-person-row pm-mrow-participant pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-mrow-name"><div class="pm-mrow-nameline"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span></div>${paidSub2}</div>${badge}</div>`;
     }).join('');
-    const _pmHead=(myRow||peopleRows||participantRows)?`<div class="pm-mhead"><span class="h-nm">참여자 · 횟수</span><span>차액</span><span>청구금액</span><span>상태</span></div>`:'';
+    const _pmHead=(myRow||peopleRows||participantRows)?`<div class="pm-mhead"><span class="h-nm">참여자 · 횟수</span><span>차액</span><span>청구금액</span><span class="h-ctr">상태</span></div>`:'';
     const peopleSection=(myRow||peopleRows||participantRows)?`<div class="pm-month-people pm-mtable">${_pmHead}${myRow}${peopleRows}${participantRows}</div>`:'';
     return `<div class="pm-month-card" id="pmc_${ymId}"><div class="pm-month-hd" onclick="togglePmMonth('${ymId}')"><div class="pm-month-hd-left"><span class="pm-month-label">${label}</span><span class="pm-month-count">${count}회 · ${fmt(totalSpend)}원</span></div><div class="pm-month-hd-right"><span class="pm-month-chev${isOpen?' open':''}">▼</span></div></div><div class="pm-month-detail" id="pmcd_${ymId}" style="display:${isOpen?'block':'none'}">${myTopStats}${statsHtml}${peopleSection}</div></div>`;
   }).join('');
