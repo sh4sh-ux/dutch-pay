@@ -1393,8 +1393,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.93';
-const BUILD_TIME='2026-09-04 20:10';
+const APP_VERSION='v5.94';
+const BUILD_TIME='2026-09-04 20:35';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3472,8 +3472,11 @@ function pickReceiptPhoto(itemId){
       const it=items.find(i=>i.id===itemId);if(!it){t&&t.dismiss&&t.dismiss();return;}
       const ref=await _storeReceiptImage(it.id,dataUrl);it.receiptUrl=ref;saveState();renderAll();
       const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(itemId);
+      const histUpdated=_updateArchivedReceipts(); // 이미 보관함에 있으면 그 기록도 최신화(사진 포함)
+      renderAll();
       _syncFlushNow(); // 3초 대기 없이 참조+이미지를 바로 Dropbox로 (다른 기기에 즉시 반영)
-      t&&t.dismiss&&t.dismiss();toast(multi?`영수증 ${fs.length}장을 한 장으로 첨부했어요`:'영수증 사진이 첨부됐어요',{type:'success'});
+      const _base=multi?`영수증 ${fs.length}장을 한 장으로 첨부했어요`:'영수증 사진이 첨부됐어요';
+      t&&t.dismiss&&t.dismiss();toast(histUpdated?_base+' · 기록보관함도 갱신됨 ✓':_base,{type:'success'});
     }catch(err){t&&t.dismiss&&t.dismiss();toast('사진을 처리하지 못했어요(형식 문제일 수 있어요)',{type:'error'});}
     finally{cleanup();}
   };
@@ -3485,8 +3488,11 @@ function pickReceiptPhoto(itemId){
 function removeReceipt(itemId){
   const it=items.find(i=>i.id===itemId);if(!it)return;
   if(_isIdbRef(it.receiptUrl))_rcptIdbDel(it.receiptUrl.slice(4));
-  it.receiptUrl='';saveState();renderAll();
+  it.receiptUrl='';saveState();
+  _updateArchivedReceipts(); // 보관함에 있으면 그 기록도 최신화(사진 제거 반영)
+  renderAll();
   const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(itemId);
+  _syncFlushNow();
 }
 function toggleTreat(id){const it=items.find(i=>i.id===id);if(!it)return;it.isTreat=!it.isTreat;saveState();renderAll();const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(id);}
 function _itMembersHtml(it){const mems=it.members.length?it.members:people;const ws=(it.watchers||[]).filter(w=>!mems.includes(w));if(it.isTreat)return[...mems,...ws].map(m=>e(m)).join(', ');return[...mems.map(m=>e(m)),...ws.map(w=>`${e(w)}(깍두기)`)].join(', ');}
@@ -3558,6 +3564,27 @@ function saveToHistory(){
   }catch(err){
     toast('저장에 실패했어요',{type:'error'});
   }
+}
+
+// 이미 기록 보관함에 저장돼 있는 정산이면, 영수증 첨부/삭제 시 그 기록의 items·savedAt를 자동 갱신.
+// 보관함에 없던 정산은 새로 만들지 않음(사용자가 명시적으로 저장한 것만 유지). 정확 지문 일치만 갱신
+// (soft 지문은 다른 정산을 오인 갱신할 수 있어 제외). 반환: 갱신했으면 true.
+function _updateArchivedReceipts(){
+  try{
+    const total=items.reduce((s,it)=>s+(+it.amount||0),0);
+    if(!total)return false;
+    const raw=localStorage.getItem(HISTORY_KEY);const arr=raw?JSON.parse(raw):[];
+    if(!arr.length)return false;
+    const cur={dateStart:settleDateStart,dateEnd:settleDateEnd,people:[...people],items};
+    let idx=-1;
+    if(_loadedHistId)idx=arr.findIndex(r=>r.id===_loadedHistId);
+    if(idx<0)idx=arr.findIndex(r=>_histFingerprint(r)===_histFingerprint(cur));
+    if(idx<0)return false; // 보관함에 없으면 아무것도 안 함
+    arr[idx]={...arr[idx],items:JSON.parse(JSON.stringify(items)),savedAt:new Date().toISOString()};
+    saveHistory(arr);
+    if(hDbxGetToken())try{hSyncDropbox(true);}catch(e){}
+    return true;
+  }catch(e){return false;}
 }
 
 // ── 기록 보관함 (SPA) ──
