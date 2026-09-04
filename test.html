@@ -388,6 +388,51 @@ suite('TC10b: 한턱 혜택 = 소유자가 쏜 금액만 [v5.85 회귀]', () => 
   });
 });
 
+// 깍두기(watchers)는 members에서 빠져 분담에서 제외된다.
+suite('TC10c: 깍두기(watchers) 분담 제외', () => {
+  setup(['A','B','C'], [{ name:'밥', amount:30000, payer:'A', members:['A','B'], watchers:['C'] }]);
+  const { paid, owes } = shares();
+  const t = txns();
+  test('멤버(A,B)만 15,000씩, 깍두기 C는 0', () => {
+    expect(owes['A']).toBe(15000); expect(owes['B']).toBe(15000); expect(owes['C']).toBe(0);
+  });
+  test('A 결제 30,000', () => expect(paid['A']).toBe(30000));
+  test('송금은 B→A 15,000 하나', () => { expect(t.length).toBe(1); expect(t[0].amt).toBe(15000); return txnStr(t); });
+});
+
+// 안전장치(런타임 트립와이어) 자체를 테스트로 묶는다:
+// 어떤 유효한 시나리오에서도 '장부 불일치'가 없어야 한다(_settlementSanity===null).
+// 강한 불변식: 총 결제액 === 총 분담액.
+suite('TC10d: 계산 자기점검 — 장부 항상 일치', () => {
+  const scenarios = [
+    ['균등',        ['A','B','C'], [{name:'a',amount:30000,payer:'A'}]],
+    ['나머지1원',    ['A','B','C'], [{name:'a',amount:10000,payer:'A'}]],
+    ['부분참여',     ['A','B','C'], [{name:'a',amount:9000,payer:'B',members:['B','C']}]],
+    ['다중결제',     ['A','B','C'], [{name:'a',amount:30000,payer:'A'},{name:'b',amount:15000,payer:'B'},{name:'c',amount:7000,payer:'C'}]],
+    ['환불상계',     ['A','B'],     [{name:'a',amount:30000,payer:'A'},{name:'환불',amount:-10000,payer:'A'}]],
+    ['한턱혼합',     ['A','B','C'], [{name:'a',amount:30000,payer:'A'},{name:'쏨',amount:12000,payer:'B',isTreat:true}]],
+    ['깍두기',       ['A','B','C'], [{name:'a',amount:20000,payer:'A',members:['A','B'],watchers:['C']}]],
+    ['차액지정',     ['A','B','C'], [{name:'a',amount:10000,payer:'A',rounderOverride:'C'}]],
+    ['7인복합',      ['A','B','C','D','E','F','G'],
+                     [{name:'a',amount:100000,payer:'A'},{name:'b',amount:33333,payer:'B',members:['B','C','D']},
+                      {name:'c',amount:7777,payer:'C'},{name:'환불',amount:-5000,payer:'D'},{name:'쏨',amount:9000,payer:'E',isTreat:true}]],
+  ];
+  scenarios.forEach(([label,ppl,its]) => {
+    setup(ppl, its);
+    const { paid, owes } = shares();
+    const t = txns();
+    const tp = ppl.reduce((s,p)=>s+(paid[p]||0),0);
+    const to = ppl.reduce((s,p)=>s+(owes[p]||0),0);
+    const warn = APP._settlementSanity(paid, owes, t);
+    test(label+' — 총결제 === 총분담', () => expect(tp).toBe(to));
+    test(label+' — 자기점검 통과(불일치 없음)', () => {
+      if (warn) throw new Error('불일치: '+warn.join(' / '));
+      return `${tp.toLocaleString()}원 · 송금 ${t.length}건`;
+    });
+    test(label+' — 수지 균형(불변식)', () => { assertBalanced(ppl.length); return true; });
+  });
+});
+
 // v5.06 회귀 — 영수증 상세표 합계 행
 suite('TC11: 영수증 상세표 합계 표시 [v5.06 회귀]', () => {
   const foot = (rt) => {

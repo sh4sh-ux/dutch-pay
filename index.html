@@ -1375,8 +1375,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.85';
-const BUILD_TIME='2026-09-04 15:30';
+const APP_VERSION='v5.86';
+const BUILD_TIME='2026-09-04 16:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3186,6 +3186,26 @@ function calcTxns(paid,owes){
   return txns;
 }
 
+// 안전장치(런타임 트립와이어): 정산이 계산될 때마다 '장부가 맞는지' 스스로 점검한다.
+// 강한 불변식: 총 결제액 == 총 분담액(= 한턱 제외 지출 합)은 항상 정확히 같아야 한다.
+// 약한 점검: 각 사람의 실제 송금 순액(보낸 것−받은 것)이 (분담−결제)와 반올림 오차 내에서 맞아야 한다.
+// 어긋나면 콘솔 경고 + 마지막 결과를 window._settleWarn에 남긴다(조용히, UI는 건드리지 않음).
+function _settlementSanity(paid,owes,txns){
+  try{
+    const totalPaid=people.reduce((s,p)=>s+(paid[p]||0),0);
+    const totalOwes=people.reduce((s,p)=>s+(owes[p]||0),0);
+    const move={};people.forEach(p=>{move[p]=0;});
+    (txns||[]).forEach(t=>{if(move[t.from]!=null)move[t.from]-=t.amt;if(move[t.to]!=null)move[t.to]+=t.amt;});
+    const issues=[];
+    if(Math.abs(totalPaid-totalOwes)>0)issues.push('총결제 '+totalPaid+' ≠ 총분담 '+totalOwes);
+    const tol=Math.max(2,people.length);   // 쌍별 반올림 손실 허용치
+    people.forEach(p=>{const need=(paid[p]||0)-(owes[p]||0);const got=move[p]||0;if(Math.abs(need-got)>tol)issues.push(p+': 순액 '+need+' vs 송금 '+got);});
+    window._settleWarn=issues.length?issues:null;
+    if(issues.length)console.warn('[더치페이 계산 점검] 장부 불일치 — 확인 필요:',issues.join(' / '));
+    return issues.length?issues:null;
+  }catch(e){return null;}
+}
+
 function personCardHtml(p,paid,owes,details){const bd=details[p]||[],owed=owes[p]||0,ppaid=paid[p]||0,net=ppaid-owed;const netTxt=net>0?`+${fmt(net)}원 받을 예정`:net<0?`${fmt(-net)}원 낼 예정`:'정산 완료';const netCls=net>0?'pos':net<0?'neg':'zero';const rows=bd.map(b=>`<div class="bd-row"><span class="bd-name"><span class="bd-name-txt">${e(b.name)}</span>${b.extra?'<span class="bd-ex-tag">+1원</span>':''}</span><span class="bd-ptag">${e(b.payer)} 결제</span><span class="bd-share">${fmt(b.share)}원</span></div>`).join('');return `<div class="pcard"><div class="phd"><div class="avatar">${e(p.slice(0,1))}</div><div class="pname-col"><div class="pname">${e(p)}</div><div class="pnet ${netCls}">${netTxt}</div></div><div class="ptotal">${fmt(owed)}원</div></div>${rows}<div class="bd-row" style="background:var(--fill2)"><span class="bd-name" style="color:var(--label3)"><span class="bd-name-txt">실제 결제</span></span><span class="bd-share">${fmt(ppaid)}원</span></div></div>`;}
 
 function renderResultView(eyeId,titleId,subId,bodyId){
@@ -3193,6 +3213,7 @@ function renderResultView(eyeId,titleId,subId,bodyId){
   document.getElementById(eyeId).textContent='정산 결과';
   if(!vc){document.getElementById(titleId).textContent='누가 얼마를 낼까요';document.getElementById(subId).textContent='지출을 입력하면 정산 결과가 여기에 표시돼요.';document.getElementById(bodyId).innerHTML='<div class="empty"><div class="empty-icon">'+svgEmpty+'</div><p>금액이 입력된 지출이 없어요</p><button style="margin-top:16px;padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="switchToInputTab()">지출 추가하기</button></div>';return;}
   const txns=calcTxns(paid,owes);
+  _settlementSanity(paid,owes,txns);
   const subBase=`총 ${fmt(total)}원 · ${people.length}명 · ${vc}건`;
   let title;
   if(txns.length===0){title='정산 완료';}else if(txns.length===1){title=`${txns[0].from} → ${txns[0].to}`;}else{title=`보낼 송금 ${txns.length}건`;}
