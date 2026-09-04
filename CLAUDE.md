@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v5.93** (2026-09-04) — 작업 브랜치
+**v5.94** (2026-09-04) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v5.94 | **영수증 첨부 시 기록보관함 자동 갱신**(사용자 '사진 첨부했는데 보관함 수정일자가 안 바뀜') — 기록보관함은 📌로 찍는 스냅샷이라, 그 뒤 사진을 붙여도 보관함 기록은 자동 갱신 안 됐음(단 화면엔 '저장됨 ✓'이라 사진까지 저장된 줄 오해). `_updateArchivedReceipts()` 추가: 현재 정산이 **정확 지문(`_histFingerprint`)으로 보관함에 이미 있으면** 그 기록의 items·savedAt를 자동 갱신(사진 포함)·hSyncDropbox. **보관함에 없던 정산은 새로 만들지 않음**(명시 저장한 것만). soft 지문은 오인 갱신 위험으로 제외. `pickReceiptPhoto`·`removeReceipt`에서 호출, 갱신 시 토스트 '· 기록보관함도 갱신됨 ✓'. 헤드리스 검증: 첨부 후 보관함 record.savedAt 현재시각·items[0].receiptUrl='idb:' 확인, 계산 80/80 |
 | v5.93 | **사진 첨부 간헐 실패 수정**(사용자 '파일 선택→열기 해도 첨부 안 될 때가 있어') — 원인은 `pickReceiptPhoto`의 file input이 DOM에 안 붙어 있어 iOS/PWA에서 선택 후 `change`가 안 뜨거나 참조가 GC된 것. 화면 밖(`position:fixed;left:-9999px`)에 실제로 붙였다가 선택/취소 후 제거(`cleanup`), 취소 시 `window focus` 후 orphan 정리. 첨부 중 `_attachInProgress` 플래그로 포그라운드 동기화(visibilitychange/pagehide)가 끼어들지 않게 가드(v5.92 동기화와의 레이스 예방). 오류 토스트에 '형식 문제일 수 있어요' 힌트. 헤드리스 end-to-end 검증: input 주입 시 receiptUrl='idb:...' 첨부·플래그 복귀·input 정리·큐 적재 확인, 계산 80/80 |
 | v5.92 | **저장·동기화 신뢰성 강화**(사용자 '간헐적으로 저장 안 되는 느낌') — 원인 3가지 수정. (A) **포그라운드 복귀 동기화 추가**: 지금까지 Dropbox pull이 부팅/로컬편집 때만 일어나 이미 열려 있던 다른 기기는 최신을 못 받았음("데스크탑 첨부→모바일에 없음"). `visibilitychange` visible 시 `syncFromDropbox`(1.5s 스로틀), hidden/`pagehide` 시 대기 중 동기화 즉시 flush(`_syncFlushNow`)로 3초 디바운스 안에 닫아도 유실 방지. (B) **영수증 이미지 업로드 보장형**: '쏘고 잊기'였던 Dropbox 업로드를 큐(`_rcptUploadQ`)+성공까지 재시도(`_flushReceiptUploads`)로 바꿔 다른 기기에서 이미지 비던 문제 해결. 첨부 직후 `_syncFlushNow`로 참조+이미지 즉시 반영, 매 `syncToDropbox` 성공 시에도 대기분 flush. 계산 로직 무관, test.html 80/80 통과. 저장 3층 구조(라이브 자동저장 / 기록보관함 스냅샷 📌 / Dropbox 동기화) 이해 필요 |
 | v5.91 | 영수증 **여러 장 첨부 → 한 장으로 세로 합성**(사용자 요청) — 한 매장에서 테이블이 나뉘어 영수증이 2장이지만 계산은 1건인 드문 경우. 스키마(`item.receiptUrl` 문자열 1개)는 그대로 두고, 📷 첨부에서 여러 장 선택 시 `_stitchReceiptsVertical`로 공통 폭(업스케일 없음)에 세로로 이어붙이고 사이 얇은 구분선 → JPEG 1장으로 저장. 저장/동기화/백업/공유/뷰어(핀치줌·팬) 전부 기존 그대로, 마이그레이션·하위호환 이슈 0. 예외가 늘면 그때 배열(receiptUrls)로 확장(지금 결정 안 잠금). 헤드리스 실측: 1000×1500+800×1200 → 800×2410 유효 JPEG. 편집폼 label에 '여러 장 고르면 한 장으로 합쳐요' 안내 |
