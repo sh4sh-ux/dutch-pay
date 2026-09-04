@@ -1061,6 +1061,30 @@ svg{display:block;flex-shrink:0;}
 .pm-month-stats-row .pm-mstat:not(:last-child)::after{content:'';position:absolute;top:14px;bottom:13px;right:0;width:1px;background:var(--sep2);}
 .pm-month-stats-row .pm-mstat-val{font-size:12.5px;}
 .pm-mstat-val.mut{color:var(--label3);}
+/* v5.82 인원 목록 = 열 머리글 정렬 테이블(B안). 결제는 이름 아래 서브라인 → 줄바꿈 방지.
+   머리글과 모든 행이 동일 고정 열을 써서 보이지 않는 세로선에 우측 정렬 */
+.pm-mtable .pm-mhead,
+.pm-mtable .pm-month-person-row{display:grid;grid-template-columns:minmax(0,1fr) 62px 92px 34px;column-gap:10px;align-items:center;}
+.pm-mtable .pm-mhead{padding:7px 4px 8px;border-bottom:1px solid var(--sep);}
+.pm-mtable .pm-mhead span{font-size:10px;font-weight:700;color:var(--label3);letter-spacing:.02em;text-align:right;white-space:nowrap;}
+.pm-mtable .pm-mhead .h-nm{text-align:left;}
+.pm-mtable .pm-month-person-row{padding:8px 4px;min-height:46px;}
+.pm-mrow-name{display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0;}
+.pm-mrow-nameline{display:flex;align-items:center;gap:8px;min-width:0;}
+.pm-mrow-paid{font-size:10.5px;color:var(--label3);white-space:nowrap;}
+.pm-mrow-delta{font-size:12px;font-weight:700;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.pm-mrow-delta.pos{color:var(--green);}
+.pm-mrow-delta.neg{color:var(--red);}
+.pm-mrow-billed{font-size:12.5px;font-weight:600;color:var(--label);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.pm-mrow-billed .won{font-size:.82em;font-weight:600;color:var(--label2);margin-left:1px;}
+.pm-mrow-status{font-size:11px;font-weight:700;text-align:right;white-space:nowrap;}
+.pm-mrow-status.pos,.pm-mrow-status.done{color:var(--green);}
+.pm-mrow-status.neg{color:var(--red);}
+/* 참석/한턱 등 청구 없는 행: 배지를 오른쪽 폭에 걸쳐 우측 정렬 */
+.pm-mtable .pm-month-person-row.pm-mrow-participant{grid-template-columns:minmax(0,1fr) auto;}
+.pm-mrow-badge{text-align:right;font-size:11px;font-weight:700;white-space:nowrap;}
+.pm-mrow-badge.treat{color:var(--txn-amber);}
+.pm-mrow-badge.attend{color:var(--label3);}
 /* 이름 목록: 컨테이너 라운드/클리핑 제거로 구분선을 좌우 끝까지 완전 평평하게.
    각 행에 라운드가 없어 선 양끝이 올라가 보이던 현상 해소, 마지막 행 선 제거 */
 .pm-month-people{border:none!important;border-radius:0!important;overflow:visible!important;background:transparent!important;}
@@ -1354,8 +1378,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.81';
-const BUILD_TIME='2026-09-04 12:30';
+const APP_VERSION='v5.82';
+const BUILD_TIME='2026-09-04 13:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2818,31 +2842,28 @@ function _pmMonthlyHtml(allRecs){
     const netInline=net!==0?`<span class="pm-month-net-inline ${net>0?'pos':'neg'}">${net>0?'+':'-'}${fmt(Math.abs(net))}원</span>`:'';
     const statsHtml=`<div class="pm-month-stats-row"><div class="pm-mstat"><div class="pm-mstat-lbl">청구</div><div class="pm-mstat-val">${fmt(totalBilled)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">수령${netInline}</div><div class="pm-mstat-val pos">${fmt(totalReceived)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">미수</div><div class="pm-mstat-val${totalUnpaid>0?' neg':' mut'}">${totalUnpaid>0?fmt(totalUnpaid)+'원':'없음'}</div></div></div>`;
     const myNet=myReceived-myBilled;
-    const myDelta=myNet>0?`<span class="pm-month-delta pos">+${fmt(myNet)}원</span>`:myNet<0?`<span class="pm-month-delta neg">-${fmt(-myNet)}원</span>`:'';
-    const myStatus=myNet>0?`<span class="pm-month-status pos">초과</span>`:myNet<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
     const myActual=mySpend-myBilled;
     const myTopStats=(_myName&&mySpend>0)?`<div class="pm-month-stats-row pm-my-stats-row"><div class="pm-mstat pm-mstat-tap" onclick="event.stopPropagation();_pmShowPayerItems('${ea(_myName)}','${ym}')"><div class="pm-mstat-lbl">결제</div><div class="pm-mstat-val">${fmt(mySpend)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">지출</div><div class="pm-mstat-val blue">${fmt(myActual)}원</div></div><div class="pm-mstat${myTreat>0?' pm-mstat-tap':''}"${myTreat>0?` onclick="event.stopPropagation();_pmShowTreatItems('${ea(_myName)}','${ym}')"`:''}><div class="pm-mstat-lbl">쏜 금액</div><div class="pm-mstat-val amber">${fmt(myTreat)}원</div></div></div>`:'';
-    const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(_myName)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span></div><div class="pm-month-person-right">${myDelta}<span class="pm-month-billed">청구 ${fmt(myBilled)}원</span>${myStatus}</div></div>`:'';
+    const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(_myName)}')"><div class="pm-mrow-name"><div class="pm-mrow-nameline"><span class="pm-month-person-name">${e(_myName)}</span></div></div><span class="pm-mrow-delta ${myNet>0?'pos':myNet<0?'neg':''}">${myNet!==0?`${myNet>0?'+':'-'}${fmt(Math.abs(myNet))}원`:''}</span><span class="pm-mrow-billed">${fmt(myBilled)}<span class="won">원</span></span><span class="pm-mrow-status ${myNet>0?'pos':myNet<0?'neg':'done'}">${myNet>0?'초과':myNet<0?'미수':'완납'}</span></div>`:'';
     const _pplSort=(a,b)=>_pmMonthPeopleSort==='cnt'?(personCount[b[0]]||0)-(personCount[a[0]]||0):_pmMonthPeopleSort==='name'?a[0].localeCompare(b[0],'ko'):b[1].billed-a[1].billed;
     const peopleRows=Object.entries(personStats).sort(_pplSort).map(([nm,s])=>{
       const pnet=s.received-s.billed;
-      const deltaHtml=pnet>0?`<span class="pm-month-delta pos">+${fmt(pnet)}원</span>`:pnet<0?`<span class="pm-month-delta neg">-${fmt(-pnet)}원</span>`:'';
-      const statusHtml=pnet>0?`<span class="pm-month-status pos">초과</span>`:pnet<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
       const cnt=personCount[nm]||1;
       const paidAmt=personPaid[nm]||0;
-      const paidBadge=paidAmt>0?`<span class="pm-month-person-paid" onclick="event.stopPropagation();_pmShowPayerItems('${ea(nm)}','${ym}')">결제 ${fmt(paidAmt)}원</span>`:'';
-      return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span>${paidBadge}</div><div class="pm-month-person-right">${deltaHtml}<span class="pm-month-billed">청구 ${fmt(s.billed)}원</span>${statusHtml}</div></div>`;
+      const paidSub=paidAmt>0?`<span class="pm-mrow-paid" onclick="event.stopPropagation();_pmShowPayerItems('${ea(nm)}','${ym}')">결제 ${fmt(paidAmt)}원</span>`:'';
+      return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-mrow-name"><div class="pm-mrow-nameline"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span></div>${paidSub}</div><span class="pm-mrow-delta ${pnet>0?'pos':pnet<0?'neg':''}">${pnet!==0?`${pnet>0?'+':'-'}${fmt(Math.abs(pnet))}원`:''}</span><span class="pm-mrow-billed">${fmt(s.billed)}<span class="won">원</span></span><span class="pm-mrow-status ${pnet>0?'pos':pnet<0?'neg':'done'}">${pnet>0?'초과':pnet<0?'미수':'완납'}</span></div>`;
     }).join('');
     const _ptSort=(a,b)=>_pmMonthPeopleSort==='cnt'?(personCount[b]||0)-(personCount[a]||0):_pmMonthPeopleSort==='name'?a.localeCompare(b,'ko'):(personTreat[b]||0)-(personTreat[a]||0);
     const participantRows=Object.keys(personCount).filter(nm=>!personStats[nm]&&(!_myName||nm!==_myName)).sort(_ptSort).map(nm=>{
       const cnt=personCount[nm];
       const treatAmt=personTreat[nm]||0;
-      const badge=treatAmt>0?`<span class="pm-month-status treat">한턱 ${fmt(treatAmt)}원</span>`:`<span class="pm-month-status attend">참석</span>`;
+      const badge=treatAmt>0?`<span class="pm-mrow-badge treat">한턱 ${fmt(treatAmt)}원</span>`:`<span class="pm-mrow-badge attend">참석</span>`;
       const paidAmt2=personPaid[nm]||0;
-      const paidBadge2=paidAmt2>0?`<span class="pm-month-person-paid" onclick="event.stopPropagation();_pmShowPayerItems('${ea(nm)}','${ym}')">결제 ${fmt(paidAmt2)}원</span>`:'';
-      return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span>${paidBadge2}</div><div class="pm-month-person-right">${badge}</div></div>`;
+      const paidSub2=paidAmt2>0?`<span class="pm-mrow-paid" onclick="event.stopPropagation();_pmShowPayerItems('${ea(nm)}','${ym}')">결제 ${fmt(paidAmt2)}원</span>`:'';
+      return `<div class="pm-month-person-row pm-mrow-participant pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-mrow-name"><div class="pm-mrow-nameline"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span></div>${paidSub2}</div>${badge}</div>`;
     }).join('');
-    const peopleSection=(myRow||peopleRows||participantRows)?`<div class="pm-month-people">${myRow}${peopleRows}${participantRows}</div>`:'';
+    const _pmHead=(myRow||peopleRows)?`<div class="pm-mhead"><span class="h-nm">성명</span><span>차액</span><span>청구</span><span>여부</span></div>`:'';
+    const peopleSection=(myRow||peopleRows||participantRows)?`<div class="pm-month-people pm-mtable">${_pmHead}${myRow}${peopleRows}${participantRows}</div>`:'';
     return `<div class="pm-month-card" id="pmc_${ymId}"><div class="pm-month-hd" onclick="togglePmMonth('${ymId}')"><div class="pm-month-hd-left"><span class="pm-month-label">${label}</span><span class="pm-month-count">${count}회 · ${fmt(totalSpend)}원</span></div><div class="pm-month-hd-right"><span class="pm-month-chev${isOpen?' open':''}">▼</span></div></div><div class="pm-month-detail" id="pmcd_${ymId}" style="display:${isOpen?'block':'none'}">${myTopStats}${statsHtml}${peopleSection}</div></div>`;
   }).join('');
   const monthSortCtrl=`<div class="pm-month-sort-row"><span class="pm-month-sort-lbl">인원 정렬</span><button class="pm-month-sort-btn${_pmMonthPeopleSort==='amt'?' on':''}" onclick="_pmSetMonthPeopleSort('amt')">금액순</button><button class="pm-month-sort-btn${_pmMonthPeopleSort==='cnt'?' on':''}" onclick="_pmSetMonthPeopleSort('cnt')">만남순</button><button class="pm-month-sort-btn${_pmMonthPeopleSort==='name'?' on':''}" onclick="_pmSetMonthPeopleSort('name')">이름순</button></div>`;
