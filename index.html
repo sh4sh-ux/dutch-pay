@@ -1055,6 +1055,12 @@ svg{display:block;flex-shrink:0;}
 .pm-mstat-val.amber{color:var(--txn-amber);}
 .pm-mstat-tap{cursor:pointer;}
 .pm-mstat-tap:active{background:var(--fill);}
+/* v5.81 통계 카드: 세로 구분선을 진하게(--sep2)+글자 높이만큼만(셀 상하 패딩만큼 인셋),
+   금액 글자 2~3pt 축소, 미수 '없음'은 회색 */
+.pm-month-stats-row .pm-mstat{position:relative;border-right:none!important;}
+.pm-month-stats-row .pm-mstat:not(:last-child)::after{content:'';position:absolute;top:14px;bottom:13px;right:0;width:1px;background:var(--sep2);}
+.pm-month-stats-row .pm-mstat-val{font-size:12.5px;}
+.pm-mstat-val.mut{color:var(--label3);}
 /* 이름 목록: 컨테이너 라운드/클리핑 제거로 구분선을 좌우 끝까지 완전 평평하게.
    각 행에 라운드가 없어 선 양끝이 올라가 보이던 현상 해소, 마지막 행 선 제거 */
 .pm-month-people{border:none!important;border-radius:0!important;overflow:visible!important;background:transparent!important;}
@@ -1348,8 +1354,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.80';
-const BUILD_TIME='2026-09-04 11:40';
+const APP_VERSION='v5.81';
+const BUILD_TIME='2026-09-04 12:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2810,7 +2816,7 @@ function _pmMonthlyHtml(allRecs){
     const ymId=ym.replace('-','_');
     const isOpen=_pmMonthsOpen.has(ymId);
     const netInline=net!==0?`<span class="pm-month-net-inline ${net>0?'pos':'neg'}">${net>0?'+':'-'}${fmt(Math.abs(net))}원</span>`:'';
-    const statsHtml=`<div class="pm-month-stats-row"><div class="pm-mstat"><div class="pm-mstat-lbl">청구</div><div class="pm-mstat-val">${fmt(totalBilled)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">수령${netInline}</div><div class="pm-mstat-val pos">${fmt(totalReceived)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">미수</div><div class="pm-mstat-val${totalUnpaid>0?' neg':''}">${totalUnpaid>0?fmt(totalUnpaid)+'원':'없음'}</div></div></div>`;
+    const statsHtml=`<div class="pm-month-stats-row"><div class="pm-mstat"><div class="pm-mstat-lbl">청구</div><div class="pm-mstat-val">${fmt(totalBilled)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">수령${netInline}</div><div class="pm-mstat-val pos">${fmt(totalReceived)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">미수</div><div class="pm-mstat-val${totalUnpaid>0?' neg':' mut'}">${totalUnpaid>0?fmt(totalUnpaid)+'원':'없음'}</div></div></div>`;
     const myNet=myReceived-myBilled;
     const myDelta=myNet>0?`<span class="pm-month-delta pos">+${fmt(myNet)}원</span>`:myNet<0?`<span class="pm-month-delta neg">-${fmt(-myNet)}원</span>`:'';
     const myStatus=myNet>0?`<span class="pm-month-status pos">초과</span>`:myNet<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
