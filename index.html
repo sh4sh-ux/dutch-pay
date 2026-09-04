@@ -1046,16 +1046,20 @@ svg{display:block;flex-shrink:0;}
   .pm-month-status.treat{width:auto!important;min-width:0!important;margin-right:14.5px;}
 }
 
-/* v5.77 수금 월별 통계 — 오른쪽 금액 영역을 이전(인라인 1줄)으로 복원해 답답함 해소.
-   직선 구분선 + 내 행 강조('나' 배지·파란 요약 박스)는 유지 */
+/* v5.78 수금 월별 통계 — 통계 블록(결제·지출·쏜 + 청구·수령·미수)을 카드 맨 위로 모으고,
+   그 아래 이름 목록을 일자(직선) 구분선으로 나열. 오른쪽 금액은 인라인 1줄, 내 행은 '나' 배지+강조 */
 .pm-month-billed{font-variant-numeric:tabular-nums;}
+/* 내 지출 통계 블록(결제·지출·쏜)을 청구·수령·미수 카드와 동일 규격으로, 맨 위에 붙여 배치 */
+.pm-my-stats-row{margin-bottom:8px!important;}
+.pm-mstat-val.blue{color:var(--blue);}
+.pm-mstat-val.amber{color:var(--txn-amber);}
+.pm-mstat-tap{cursor:pointer;}
+.pm-mstat-tap:active{background:var(--fill);}
+/* 이름 목록 일자 구분선: 마지막 행 구분선 제거로 깔끔하게 */
+.pm-month-people .pm-month-person-row:last-child{border-bottom:none;}
+/* 내 행 강조: '나' 배지 + 은은한 파란 하이라이트 */
 .pm-month-person-row.me{position:relative;background:linear-gradient(90deg,var(--blue-bg),transparent 82%)!important;box-shadow:inset 3px 0 0 var(--blue);}
 .pm-month-me-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:800;color:#fff;background:var(--blue);padding:1px 7px;border-radius:100px;letter-spacing:.02em;}
-.pm-month-my-stats.me-box{margin:0 0 6px;border:1px solid var(--blue-bg);background:var(--blue-bg)!important;border-radius:12px;overflow:hidden;}
-.pm-month-my-stats.me-box .pm-month-my-stat-lbl{color:var(--blue-txt);opacity:.82;}
-.pm-month-my-stats.me-box .pm-month-my-stat-val{color:var(--blue-txt);}
-.pm-month-my-stats.me-box .pm-month-my-stat-val.treat{color:var(--txn-amber);}
-.pm-month-my-stats.me-box .pm-month-my-stat:not(:last-child)::after{background:color-mix(in srgb,var(--blue) 22%,transparent);}
 
 /* ==========================================
    DESKTOP APP SHELL
@@ -1342,8 +1346,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.77';
-const BUILD_TIME='2026-09-04 09:45';
+const APP_VERSION='v5.78';
+const BUILD_TIME='2026-09-04 10:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2809,8 +2813,8 @@ function _pmMonthlyHtml(allRecs){
     const myDelta=myNet>0?`<span class="pm-month-delta pos">+${fmt(myNet)}원</span>`:myNet<0?`<span class="pm-month-delta neg">-${fmt(-myNet)}원</span>`:'';
     const myStatus=myNet>0?`<span class="pm-month-status pos">초과</span>`:myNet<0?`<span class="pm-month-status neg">미수</span>`:`<span class="pm-month-status done">완납</span>`;
     const myActual=mySpend-myBilled;
-    const mySubStats=(_myName&&mySpend>0)?`<div class="pm-month-my-stats me-box"><div class="pm-month-my-stat pm-month-my-stat-tap" onclick="event.stopPropagation();_pmShowPayerItems('${ea(_myName)}','${ym}')"><div class="pm-month-my-stat-lbl">결제</div><div class="pm-month-my-stat-val">${fmt(mySpend)}원</div></div><div class="pm-month-my-stat"><div class="pm-month-my-stat-lbl">지출</div><div class="pm-month-my-stat-val">${fmt(myActual)}원</div></div><div class="pm-month-my-stat${myTreat>0?' pm-month-my-stat-tap':''}"${myTreat>0?` onclick="event.stopPropagation();_pmShowTreatItems('${ea(_myName)}','${ym}')"`:''}><div class="pm-month-my-stat-lbl">쏜 금액</div><div class="pm-month-my-stat-val${myTreat>0?' treat':''}">${fmt(myTreat)}원</div></div></div>`:'';
-    const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row me pm-name-tap" style="border-bottom:${mySubStats?'none':'1px solid var(--sep)'}" onclick="_pmFilterByName('${ea(_myName)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-me-tag">나</span></div><div class="pm-month-person-right">${myDelta}<span class="pm-month-billed">청구 ${fmt(myBilled)}원</span>${myStatus}</div></div>${mySubStats}`:'';
+    const myTopStats=(_myName&&mySpend>0)?`<div class="pm-month-stats-row pm-my-stats-row"><div class="pm-mstat pm-mstat-tap" onclick="event.stopPropagation();_pmShowPayerItems('${ea(_myName)}','${ym}')"><div class="pm-mstat-lbl">결제</div><div class="pm-mstat-val">${fmt(mySpend)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">지출</div><div class="pm-mstat-val blue">${fmt(myActual)}원</div></div><div class="pm-mstat${myTreat>0?' pm-mstat-tap':''}"${myTreat>0?` onclick="event.stopPropagation();_pmShowTreatItems('${ea(_myName)}','${ym}')"`:''}><div class="pm-mstat-lbl">쏜 금액</div><div class="pm-mstat-val amber">${fmt(myTreat)}원</div></div></div>`:'';
+    const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row me pm-name-tap" onclick="_pmFilterByName('${ea(_myName)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-me-tag">나</span></div><div class="pm-month-person-right">${myDelta}<span class="pm-month-billed">청구 ${fmt(myBilled)}원</span>${myStatus}</div></div>`:'';
     const _pplSort=(a,b)=>_pmMonthPeopleSort==='cnt'?(personCount[b[0]]||0)-(personCount[a[0]]||0):_pmMonthPeopleSort==='name'?a[0].localeCompare(b[0],'ko'):b[1].billed-a[1].billed;
     const peopleRows=Object.entries(personStats).sort(_pplSort).map(([nm,s])=>{
       const pnet=s.received-s.billed;
@@ -2831,7 +2835,7 @@ function _pmMonthlyHtml(allRecs){
       return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-month-person-left"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span>${paidBadge2}</div><div class="pm-month-person-right">${badge}</div></div>`;
     }).join('');
     const peopleSection=(myRow||peopleRows||participantRows)?`<div class="pm-month-people">${myRow}${peopleRows}${participantRows}</div>`:'';
-    return `<div class="pm-month-card" id="pmc_${ymId}"><div class="pm-month-hd" onclick="togglePmMonth('${ymId}')"><div class="pm-month-hd-left"><span class="pm-month-label">${label}</span><span class="pm-month-count">${count}회 · ${fmt(totalSpend)}원</span></div><div class="pm-month-hd-right"><span class="pm-month-chev${isOpen?' open':''}">▼</span></div></div><div class="pm-month-detail" id="pmcd_${ymId}" style="display:${isOpen?'block':'none'}">${statsHtml}${peopleSection}</div></div>`;
+    return `<div class="pm-month-card" id="pmc_${ymId}"><div class="pm-month-hd" onclick="togglePmMonth('${ymId}')"><div class="pm-month-hd-left"><span class="pm-month-label">${label}</span><span class="pm-month-count">${count}회 · ${fmt(totalSpend)}원</span></div><div class="pm-month-hd-right"><span class="pm-month-chev${isOpen?' open':''}">▼</span></div></div><div class="pm-month-detail" id="pmcd_${ymId}" style="display:${isOpen?'block':'none'}">${myTopStats}${statsHtml}${peopleSection}</div></div>`;
   }).join('');
   const monthSortCtrl=`<div class="pm-month-sort-row"><span class="pm-month-sort-lbl">인원 정렬</span><button class="pm-month-sort-btn${_pmMonthPeopleSort==='amt'?' on':''}" onclick="_pmSetMonthPeopleSort('amt')">금액순</button><button class="pm-month-sort-btn${_pmMonthPeopleSort==='cnt'?' on':''}" onclick="_pmSetMonthPeopleSort('cnt')">만남순</button><button class="pm-month-sort-btn${_pmMonthPeopleSort==='name'?' on':''}" onclick="_pmSetMonthPeopleSort('name')">이름순</button></div>`;
   return `<div class="pay-section-title" style="margin-top:8px">월별 통계 · ${keys.length}개월</div>${monthSortCtrl}`+cardsHtml;
