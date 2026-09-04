@@ -1348,8 +1348,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.79';
-const BUILD_TIME='2026-09-04 11:00';
+const APP_VERSION='v5.80';
+const BUILD_TIME='2026-09-04 11:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4311,11 +4311,15 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
 // 홈(입력) 아닌 탭이면 입력 탭으로 돌아가고, 더 돌아갈 게 없을 때만 정상적으로 앱을 나간다.
 (()=>{
   let _trap=false;
+  const _tabStack=[];      // 방문한 탭의 되돌아갈 자취(현재 탭 제외)
+  let _tracked='input';    // 마지막으로 관측한 탭
   const OVL='.rcpt-viewer,.mob-sheet.open,.hist-page.open,#histDr.open,.pm-payer-modal-bg,'
           +'.sc-overlay,.couple-ov,.share-fallback,.data-pop,.group-pop,.icon-pop,.rounder-pop,.pop-backdrop';
   const anyOverlay=()=>!!document.querySelector(OVL);
   const isMob=()=>matchMedia('(max-width:700px)').matches;
   const curTab=()=>isMob()?(typeof mTab!=='undefined'?mTab:'input'):(typeof dTab!=='undefined'?dTab:'input');
+  const setTab=(t)=>{if(isMob()){if(typeof mSetTab==='function')mSetTab(t);}else{if(typeof dSetTab==='function')dSetTab(t);}};
+  const needTrap=()=>anyOverlay()||_tabStack.length>0;
   const arm=()=>{if(!_trap){try{history.pushState({dpNav:1},'');}catch(e){}_trap=true;}};
   function closeTop(){
     const rv=document.querySelector('.rcpt-viewer');
@@ -4331,16 +4335,21 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
     }
     return false;
   }
-  function goHome(){const t='input';if(isMob()){if(typeof mSetTab==='function')mSetTab(t);}else{if(typeof dSetTab==='function')dSetTab(t);}}
   addEventListener('popstate',()=>{
     _trap=false;
-    if(!closeTop()&&curTab()!=='input')goHome();
-    // 닫을 게 남아 있으면 다시 무장(back을 계속 가로챈다). 없으면 다음 back은 정상 이탈.
-    if(anyOverlay()||curTab()!=='input')arm();
+    // 1) 열린 오버레이가 있으면 그것부터 닫는다.
+    // 2) 없으면 직전 탭으로 한 단계 되돌린다(탭 히스토리 스택).
+    if(!closeTop()&&_tabStack.length){const prev=_tabStack.pop();_tracked=prev;setTab(prev);}
+    // 닫을 게(오버레이·이전 탭) 남아 있으면 다시 무장. 없으면 다음 back은 정상 이탈.
+    if(needTrap())arm();
   });
-  // 오버레이가 열리거나 홈 아닌 탭이 되면(클릭 직후) trap을 무장한다.
-  // 각 열기 함수를 일일이 건드리지 않고 클릭 캡처로 일괄 감지 — 홈 상태에선 무장 안 해 곧바로 이탈 가능.
-  addEventListener('click',()=>{setTimeout(()=>{if(anyOverlay()||curTab()!=='input')arm();},0);},true);
+  // 클릭 직후 상태를 관측해: 탭이 바뀌었으면 이전 탭을 스택에 쌓고, 오버레이/스택이 있으면 trap 무장.
+  // 각 열기 함수를 건드리지 않고 클릭 캡처로 일괄 감지 — 되돌리기(back)는 클릭이 아니라 오탐 없음.
+  addEventListener('click',()=>{setTimeout(()=>{
+    const t=curTab();
+    if(t!==_tracked){_tabStack.push(_tracked);if(_tabStack.length>50)_tabStack.shift();_tracked=t;}
+    if(needTrap())arm();
+  },0);},true);
 })();
 // 모바일 당겨서 새로고침.
 // 홈 화면에 추가한 PWA에는 브라우저 기본 당겨서 새로고침이 없어 직접 구현한다.
