@@ -1072,7 +1072,13 @@ svg{display:block;flex-shrink:0;}
 .pm-mtable .pm-mhead span{font-size:10px;font-weight:700;color:var(--label3);letter-spacing:.02em;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pm-mtable .pm-mhead .h-nm{text-align:left;}
 .pm-mtable .pm-mhead .h-ctr{text-align:center;}
-.pm-mtable .pm-month-person-row{padding:9px 14px!important;min-height:46px;}
+/* 구분선 규칙: 음수 마진(.pm-name-tap margin:0 -6px)이 행만 카드 밖으로 삐져나가게 해
+   머리글은 짧고 행은 길어 보이던 문제 해소 → 머리글·모든 행을 동일하게 상세영역 14px
+   패딩 안에 정렬. 결과: 모든 구분선이 좌우 14px 여분으로 균일, 글자는 그 안쪽(패딩 14px 더) */
+.pm-mtable .pm-month-person-row{padding:9px 14px!important;margin:0!important;border-radius:0!important;min-height:46px;}
+.pm-mtable .pm-mhead,
+.pm-mtable .pm-month-person-row:not(:last-child){border-bottom:1px solid var(--sep)!important;}
+.pm-mtable .pm-month-person-row:last-child{border-bottom:none!important;}
 .pm-mrow-name{display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0;}
 .pm-mrow-nameline{display:flex;align-items:center;gap:8px;min-width:0;}
 .pm-mrow-name .pm-month-person-name{overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;}
@@ -1385,8 +1391,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.88';
-const BUILD_TIME='2026-09-04 18:05';
+const APP_VERSION='v5.89';
+const BUILD_TIME='2026-09-04 18:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
