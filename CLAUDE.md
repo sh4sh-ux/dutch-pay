@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v5.75** (2026-09-04) — 작업 브랜치
+**v5.76** (2026-09-04) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v5.76 | 수금 탭 월별 통계 리디자인 — 디자인 A(정돈된 리스트) 적용. (1) 인원 행 오른쪽을 '청구 금액(크게, 800·tabular-nums) + 상태칩' 2줄로 정리(옛 델타·청구·상태가 한 줄에 몰려 위계 흐리던 문제). 상태를 텍스트→알약칩(pm-chip: 완납 green-bg/초과 blue-bg/미수 red-bg/한턱 amber/참석 fill). (2) 내 행(_myName)은 파란 그라데이션 배경+왼쪽 3px 인셋 바+'나' 배지로 강조, 결제/지출/쏜 요약(me-box)을 파란 박스로 묶음. (3) 구분선을 폭 꽉 찬 1px 직선으로(옛 status 음수 마진·고정폭 정렬 핵을 칩 구조로 자연 제거). _pmMonthlyHtml 마크업 교체 + 디자인 A CSS 블록 추가, 데스크탑·모바일·다크 공통 |
 | v5.75 | (1) 기록 보관함을 하단/레일 nav에 노출 — 수금 왼쪽(입력·정산·공유·기록·수금)에 배치, 잠금 해제 시 표시. 모바일 mTHistory·데스크탑 dRailHistory 추가, onclick=goToHistory()로 다듬어온 기록 보관함 드로어를 엶(옛 인-바디 history 탭 대신). renderAll의 owner reveal에 mTHistory/dRailHistory 포함. (2) 내 이름=소유자명(조상현)이면 5탭 잠금 해제 없이 자동 해제 — `_ownerUnlocked=…||_myName===OWNER_NAME`, setMyName에서도 재계산+renderAll+안내 토스트. 친구가 우연히 같은 이름이어도 각 기기 로컬 데이터만 보이므로 유출 없음 |
 | v5.74 | 정산 탭 하단에 '기록 보관함 저장' 버튼 추가 — 영수증을 붙인 뒤 저장하려면 수금 탭/⋯ 메뉴까지 가야 했던 동선 개선. 상태 반영(_histSaveBtnHtml): 미저장 '📌 기록 보관함에 저장'(파랑), 저장됨 '✓ 저장됨'(초록)+'다시 눌러 업데이트' 안내. _histFingerprint가 영수증을 해시에 포함하지 않으므로 항상 클릭 가능하게 해 saveToHistory로 재저장(fingerprint/soft-fingerprint 매칭 시 업데이트)해 영수증 반영. 데스크탑 renderResultView·모바일 result 뷰 양쪽에 삽입, _saveHistFromResult가 저장 후 renderAll |
 | v5.73 | 송금 색상 구분선(파랑/주황)을 수취인 그룹이 2개 이상일 때만 표시 — 원래 '내 수취(파랑) ↔ 다른 사람 수취(주황)'를 구분하려는 장치라, 그룹이 하나뿐(예: 모두가 나에게 송금)이면 구분 대상이 없어 불필요했음. `_txnRowsHtml`은 `groups.length>1`일 때만 `.txn-group-div` 출력, `generateSettleCanvas`도 `_multiG`로 구분선·높이(txnCardH) 반영 |
