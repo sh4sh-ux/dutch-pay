@@ -1393,8 +1393,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.90';
-const BUILD_TIME='2026-09-04 18:50';
+const APP_VERSION='v5.91';
+const BUILD_TIME='2026-09-04 19:15';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3099,7 +3099,7 @@ function renderEditor(id,eyeId,titleId,subId,bodyId){
           <textarea class="field-inp editor-receipt" placeholder="곱창구이(250g) | 2 | 24,000 | 48,000" oninput="updateField(${id},'receiptText',this.value)">${e(it.receiptText||'')}</textarea>
         </div>
         <div class="field-g editor-span-2">
-          <label class="field-lbl">영수증 사진 <span style="font-size:11px;font-weight:400;text-transform:none;color:var(--label3)">사진 첨부 또는 이미지 링크</span></label>
+          <label class="field-lbl">영수증 사진 <span style="font-size:11px;font-weight:400;text-transform:none;color:var(--label3)">사진 첨부 또는 이미지 링크 · 여러 장 고르면 한 장으로 합쳐요</span></label>
           <div class="rcpt-attach-row">
             <input class="field-inp rcpt-url-inp" type="url" inputmode="url" placeholder="https:// 이미지 링크 (선택)" value="${(_isDataUrl(it.receiptUrl)||_isIdbRef(it.receiptUrl))?'':ea(it.receiptUrl||'')}" oninput="updateField(${id},'receiptUrl',this.value)"/>
             <button type="button" class="rcpt-attach-btn" onclick="pickReceiptPhoto(${id})">📷 사진</button>
@@ -3391,15 +3391,40 @@ function _compressImageToDataURL(file,maxDim,quality){
     img.src=url;
   });
 }
+// 한 매장에서 테이블이 나뉘어 영수증이 여러 장이지만 계산은 1건인 경우(드묾):
+// 스키마(receiptUrl 1개)를 유지하려고 여러 장을 세로로 이어붙여 1장으로 합성한다.
+// 각 장은 공통 폭으로 맞추고(업스케일 없음) 사이에 얇은 구분선을 둔다. JPEG로 출력.
+function _stitchReceiptsVertical(dataUrls){
+  return new Promise((resolve,reject)=>{
+    const imgs=[];let left=dataUrls.length;
+    dataUrls.forEach((u,i)=>{const im=new Image();im.onload=()=>{imgs[i]=im;if(--left===0)draw();};im.onerror=()=>reject(new Error('load'));im.src=u;});
+    function draw(){
+      try{
+        const W=Math.min(...imgs.map(im=>im.naturalWidth||im.width));
+        const GAP=Math.max(6,Math.round(W*0.012));
+        const scaled=imgs.map(im=>{const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height;return{im,h:Math.round(h*(W/w))};});
+        const totalH=scaled.reduce((s,x)=>s+x.h,0)+GAP*(scaled.length-1);
+        const c=document.createElement('canvas');c.width=W;c.height=totalH;
+        const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,W,totalH);
+        let y=0;scaled.forEach((x,idx)=>{ctx.drawImage(x.im,0,y,W,x.h);y+=x.h;if(idx<scaled.length-1){ctx.fillStyle='#d8d8dd';ctx.fillRect(0,y+Math.floor(GAP/2)-1,W,2);y+=GAP;}});
+        resolve(c.toDataURL('image/jpeg',0.75));
+      }catch(err){reject(err);}
+    }
+  });
+}
 function pickReceiptPhoto(itemId){
-  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-  inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;
-    const t=toast('영수증 사진 처리 중…',{duration:8000});
-    try{const dataUrl=await _compressImageToDataURL(f,1400,0.72);
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;
+  inp.onchange=async()=>{const fs=inp.files?[...inp.files]:[];if(!fs.length)return;
+    const multi=fs.length>1;
+    const t=toast(multi?`영수증 ${fs.length}장 합치는 중…`:'영수증 사진 처리 중…',{duration:12000});
+    try{
+      let dataUrl;
+      if(multi){const parts=await Promise.all(fs.map(f=>_compressImageToDataURL(f,1400,0.72)));dataUrl=await _stitchReceiptsVertical(parts);}
+      else{dataUrl=await _compressImageToDataURL(fs[0],1400,0.72);}
       const it=items.find(i=>i.id===itemId);if(!it){t&&t.dismiss&&t.dismiss();return;}
       const ref=await _storeReceiptImage(it.id,dataUrl);it.receiptUrl=ref;saveState();renderAll();
       const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(itemId);
-      t&&t.dismiss&&t.dismiss();toast('영수증 사진이 첨부됐어요',{type:'success'});
+      t&&t.dismiss&&t.dismiss();toast(multi?`영수증 ${fs.length}장을 한 장으로 첨부했어요`:'영수증 사진이 첨부됐어요',{type:'success'});
     }catch(err){t&&t.dismiss&&t.dismiss();toast('사진을 처리하지 못했어요',{type:'error'});}
   };
   inp.click();
