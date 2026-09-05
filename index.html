@@ -585,7 +585,10 @@ svg{display:block;flex-shrink:0;}
 .data-menu-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid var(--sep);background:var(--fill);border-radius:8px;color:var(--label2);cursor:pointer;padding:0;flex-shrink:0;font-family:inherit;}
 .data-menu-btn:hover{background:var(--fill2);color:var(--label);}
 .group-pop{position:absolute;background:var(--card);border:1px solid var(--sep);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:8px;z-index:200;min-width:300px;max-width:360px;}
-.group-pop-hd{font-size:12px;font-weight:600;color:var(--label3);padding:6px 8px 8px;}
+.group-pop-hd{font-size:12px;font-weight:600;color:var(--label3);padding:6px 8px 8px;display:flex;justify-content:space-between;gap:8px;}
+.group-search{width:100%;box-sizing:border-box;border:1px solid var(--sep);background:var(--fill);color:var(--label);border-radius:9px;padding:9px 10px;margin-bottom:7px;font:13px inherit;outline:none;}
+.group-search:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);}
+.desktop-group-switcher{width:100%;justify-content:space-between;margin-bottom:18px;}
 .group-list{display:flex;flex-direction:column;gap:4px;max-height:380px;overflow-y:auto;}
 .group-card{display:flex;align-items:stretch;border:1px solid var(--sep);border-radius:10px;overflow:hidden;background:var(--card);transition:all .12s;}
 .group-card:hover{border-color:var(--sep2);background:var(--fill2);}
@@ -1257,7 +1260,7 @@ svg{display:block;flex-shrink:0;}
   <div class="left" id="dLeft">
     <div class="left-top">
       <div class="app-label" id="dOwnerLabel" onclick="_ownerAreaClick(this,event)" style="user-select:none;-webkit-tap-highlight-color:transparent;cursor:default">Dutch Pay <span id="appVersionD" style="font-size:10px;font-weight:600;letter-spacing:.2px;text-transform:none;line-height:1.4;font-variant-numeric:tabular-nums;padding:1px 2px;border:1px solid transparent;border-radius:4px"></span></div>
-      <div class="app-title" onclick="dSetTab('input')" style="cursor:pointer">더치페이</div>
+      <button class="group-switcher desktop-group-switcher" type="button" onclick="showGroupManager(this,event)" aria-label="정산 그룹 선택"><span class="group-switcher-name">더치페이</span><span class="group-switcher-arrow">▾</span></button>
       <div style="margin-bottom:14px"></div>
       <div class="tab-row">
         <button class="tab on" id="dTInput" onclick="dSetTab('input')">입력</button>
@@ -1324,7 +1327,7 @@ svg{display:block;flex-shrink:0;}
       <button class="mob-ver-badge" id="appVersionM"></button>
     </div>
     <div class="mob-title-row">
-      <span class="mob-title" id="mobTitleEl" style="cursor:pointer">더치페이</span>
+      <span class="mob-title" id="mobTitleEl" role="button" tabindex="0" aria-label="정산 그룹 선택" style="cursor:pointer"><span class="group-switcher-name">더치페이</span> <span class="group-switcher-arrow">▾</span></span>
       <div class="mob-total-stack">
         <span class="mob-total-caption">총 지출</span>
         <span id="mTotal">0원</span>
@@ -1393,8 +1396,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.95';
-const BUILD_TIME='2026-09-05 01:35';
+const APP_VERSION='v5.96';
+const BUILD_TIME='2026-09-05 15:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1444,9 +1447,11 @@ function showGroupManager(anchorEl,ev){
   if(ev){ev.stopPropagation();ev.preventDefault();}
   document.querySelectorAll('.icon-pop,.rounder-pop,.group-pop,.data-pop,.pop-backdrop').forEach(el=>el.remove());
   const pop=document.createElement('div');pop.className='group-pop';
-  const cardsHtml=groups.map(g=>{const s=_groupSummary(g);const on=g.id===currentGroupId;return `<div class="group-card${on?' on':''}"><button class="group-card-main" data-action="switch" data-id="${e(g.id)}"><span class="group-card-dot"></span><span class="group-card-info"><span class="group-card-name">${e(g.name)}</span><span class="group-card-meta"><span class="group-card-people">${e(s.peopleText)}</span>${s.dateText?`<span class="group-card-date">${e(s.dateText)}</span>`:''}</span></span><span class="group-card-amt">${s.totalText}</span></button><button class="group-card-more" data-action="more" data-id="${e(g.id)}" aria-label="더보기">⋯</button></div>`;}).join('');
-  pop.innerHTML=`<div class="group-pop-hd">정산 그룹</div><div class="group-list">${cardsHtml}</div><button class="group-add" data-action="add">＋ 새 그룹</button>`;
-  pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action,id=btn.dataset.id;if(action==='switch'){switchGroup(id);pop.remove();}else if(action==='more'){e2.preventDefault();_openGroupMorePop(btn,id,pop);}else if(action==='rename'){const g=groups.find(g=>g.id===id);const newName=prompt('새 이름:',g?g.name:'');if(newName&&newName.trim())renameGroup(id,newName);pop.remove();}else if(action==='delete'){const g=groups.find(g=>g.id===id);if(g&&confirm(`'${g.name}' 그룹을 삭제할까요?`)){deleteGroup(id);}pop.remove();}else if(action==='add'){const name=prompt('새 그룹 이름:','');if(name&&name.trim())createGroup(name.trim());pop.remove();}else if(action==='duplicate'){duplicateGroup(id);pop.remove();}});
+  const ordered=[...groups].sort((a,b)=>{const ad=a.data?.settleDateStart||a.updatedAt||'',bd=b.data?.settleDateStart||b.updatedAt||'';return bd.localeCompare(ad)||(b.updatedAt||'').localeCompare(a.updatedAt||'');});
+  const cardsHtml=ordered.map(g=>{const s=_groupSummary(g);const on=g.id===currentGroupId;const search=[g.name,s.peopleText,s.dateText,g.data?.settleDateStart||''].join(' ').toLowerCase();return `<div class="group-card${on?' on':''}" data-group-search="${e(search)}"><button class="group-card-main" data-action="switch" data-id="${e(g.id)}"><span class="group-card-dot"></span><span class="group-card-info"><span class="group-card-name">${e(g.name)}</span><span class="group-card-meta"><span class="group-card-people">${e(s.peopleText)}</span>${s.dateText?`<span class="group-card-date">${e(s.dateText)}</span>`:''}</span></span><span class="group-card-amt">${s.totalText}</span></button><button class="group-card-more" data-action="more" data-id="${e(g.id)}" aria-label="더보기">⋯</button></div>`;}).join('');
+  pop.innerHTML=`<div class="group-pop-hd"><span>정산 그룹</span><span>${groups.length}개</span></div><input class="group-search" type="search" placeholder="날짜·모임·참여자 검색" aria-label="정산 그룹 검색"><div class="group-list">${cardsHtml}</div><button class="group-add" data-action="add">＋ 새 그룹</button>`;
+  const searchInput=pop.querySelector('.group-search');searchInput.addEventListener('input',()=>{const q=searchInput.value.trim().toLowerCase();pop.querySelectorAll('.group-card').forEach(card=>{card.style.display=!q||(card.dataset.groupSearch||'').includes(q)?'':'none';});});
+  pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action,id=btn.dataset.id;if(action==='switch'){switchGroup(id);pop.remove();}else if(action==='more'){e2.preventDefault();_openGroupMorePop(btn,id,pop);}else if(action==='rename'){const g=groups.find(g=>g.id===id);const newName=prompt('새 이름:',g?g.name:'');if(newName&&newName.trim())renameGroup(id,newName);pop.remove();}else if(action==='delete'){deleteGroup(id);pop.remove();}else if(action==='add'){const name=prompt('새 그룹 이름:','');if(name&&name.trim())createGroup(name.trim());pop.remove();}else if(action==='duplicate'){duplicateGroup(id);pop.remove();}});
   document.body.appendChild(pop);_positionPopover(pop,anchorEl);
   setTimeout(()=>{const h=(e3)=>{if(!pop.contains(e3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=(e3)=>{if(e3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);
 }
@@ -1471,7 +1476,7 @@ function _positionPopover(pop,anchorEl,rightAlign){
   }
 }
 
-function _openGroupMorePop(anchorBtn,id,parentPop){document.querySelectorAll('.group-more-pop').forEach(el=>el.remove());const g=groups.find(x=>x.id===id);if(!g)return;const canDelete=groups.length>1;const menu=document.createElement('div');menu.className='group-more-pop';menu.innerHTML=`<button class="group-more-opt" data-mact="duplicate">${svgCopy}<span>복사</span></button><button class="group-more-opt" data-mact="rename">${svgPencil}<span>이름 변경</span></button>${canDelete?`<button class="group-more-opt danger" data-mact="delete">${svgTrash}<span>삭제</span></button>`:''}`;document.body.appendChild(menu);const r=anchorBtn.getBoundingClientRect();const mr=menu.getBoundingClientRect();let top=r.bottom+4;if(top+mr.height>window.innerHeight-8)top=r.top-mr.height-4;let left=r.right-mr.width;if(left<8)left=8;menu.style.top=top+'px';menu.style.left=left+'px';menu.addEventListener('click',(e2)=>{e2.stopPropagation();const b=e2.target.closest('[data-mact]');if(!b)return;const mact=b.dataset.mact;menu.remove();if(parentPop&&parentPop.remove)parentPop.remove();if(mact==='duplicate'){duplicateGroup(id);}else if(mact==='rename'){const newName=prompt('새 이름:',g.name);if(newName&&newName.trim())renameGroup(id,newName);}else if(mact==='delete'){if(confirm(`'${g.name}' 그룹을 삭제할까요?`))deleteGroup(id);}});setTimeout(()=>{const close=(ev)=>{if(!menu.contains(ev.target)){menu.remove();document.removeEventListener('click',close);document.removeEventListener('keydown',esc);}};const esc=(ev)=>{if(ev.key==='Escape'){menu.remove();document.removeEventListener('click',close);document.removeEventListener('keydown',esc);}};document.addEventListener('click',close);document.addEventListener('keydown',esc);},0);}
+function _openGroupMorePop(anchorBtn,id,parentPop){document.querySelectorAll('.group-more-pop').forEach(el=>el.remove());const g=groups.find(x=>x.id===id);if(!g)return;const canDelete=groups.length>1;const menu=document.createElement('div');menu.className='group-more-pop';menu.innerHTML=`<button class="group-more-opt" data-mact="duplicate">${svgCopy}<span>복사</span></button><button class="group-more-opt" data-mact="rename">${svgPencil}<span>이름 변경</span></button>${canDelete?`<button class="group-more-opt danger" data-mact="delete">${svgTrash}<span>삭제</span></button>`:''}`;document.body.appendChild(menu);const r=anchorBtn.getBoundingClientRect();const mr=menu.getBoundingClientRect();let top=r.bottom+4;if(top+mr.height>window.innerHeight-8)top=r.top-mr.height-4;let left=r.right-mr.width;if(left<8)left=8;menu.style.top=top+'px';menu.style.left=left+'px';menu.addEventListener('click',(e2)=>{e2.stopPropagation();const b=e2.target.closest('[data-mact]');if(!b)return;const mact=b.dataset.mact;menu.remove();if(parentPop&&parentPop.remove)parentPop.remove();if(mact==='duplicate'){duplicateGroup(id);}else if(mact==='rename'){const newName=prompt('새 이름:',g.name);if(newName&&newName.trim())renameGroup(id,newName);}else if(mact==='delete'){deleteGroup(id);}});setTimeout(()=>{const close=(ev)=>{if(!menu.contains(ev.target)){menu.remove();document.removeEventListener('click',close);document.removeEventListener('keydown',esc);}};const esc=(ev)=>{if(ev.key==='Escape'){menu.remove();document.removeEventListener('click',close);document.removeEventListener('keydown',esc);}};document.addEventListener('click',close);document.addEventListener('keydown',esc);},0);}
 
 function _getEffectiveDark(){const stored=localStorage.getItem('dutchpay_dark_mode');if(stored==='dark')return true;if(stored==='light')return false;return window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;}
 function _getDarkModeLabel(){const stored=localStorage.getItem('dutchpay_dark_mode');if(stored==='dark')return '☀️ 라이트 모드로 전환';if(stored==='light')return '🌙 다크 모드로 전환';return _getEffectiveDark()?'☀️ 라이트 모드로 전환':'🌙 다크 모드로 전환';}
@@ -1506,7 +1511,7 @@ function showDataMenu(anchorEl,ev){
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
   if(_ownerUnlocked){
-    pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxImportOld">📥 옛 위치에서 가져오기</button><button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><button class="data-pop-btn" data-action="setCouples">💑 공유 이미지 커플 설정</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
+    pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxImportOld">📥 옛 위치에서 가져오기</button><button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><button class="data-pop-btn" data-action="setCouples">💑 공유 이미지 커플 설정</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${e(_myName)}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
   } else {
     pop.innerHTML=`<button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-version" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
   }
@@ -1588,6 +1593,8 @@ function _autoBackup(reason){
     // 자동 백업엔 인라인 이미지(data URI)를 넣지 않는다 — 슬롯마다 통째로 복사돼 저장공간이 폭증하던 원인 (v5.61). 이미지는 IndexedDB/Dropbox에 있음
     snap.forEach(g=>{((g.data&&g.data.items)||[]).forEach(it=>{if(_isDataUrl(it.receiptUrl))it.receiptUrl='';});});
     const slots=_loadAutoBackups();
+    // 동일한 상태를 반복 저장해 실제 복구점을 밀어내지 않는다.
+    if(slots[0]&&JSON.stringify(slots[0].groups)===JSON.stringify(snap))return;
     slots.unshift({reason:reason||'',savedAt:new Date().toISOString(),version:3,groups:snap,currentGroupId});
     if(slots.length>AUTO_BACKUP_MAX)slots.length=AUTO_BACKUP_MAX;
     try{localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(slots));}
@@ -1779,6 +1786,28 @@ async function _dbxDownload(token,path){
   if(res.status===409)return null;if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownload(t,path);return null;}if(!res.ok)return null;
   try{return JSON.parse(await res.text());}catch(e){return null;}
 }
+let _dbxMainRev='';
+async function _dbxDownloadMain(token){
+  const path=dbxMainFile();
+  const arg=JSON.stringify({path}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
+  const res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
+  if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownloadMain(t);return{data:null,rev:''};}
+  if(res.status===409)return{data:null,rev:''};
+  if(!res.ok)throw new Error(`Dropbox download ${res.status}`);
+  let meta={};try{meta=JSON.parse(res.headers.get('dropbox-api-result')||'{}');}catch(e){}
+  let data=null;try{data=JSON.parse(await res.text());}catch(e){}
+  return{data,rev:meta.rev||''};
+}
+async function _dbxUploadMain(token,content,expectedRev){
+  const mode=expectedRev?{'.tag':'update',update:expectedRev}:'add';
+  const arg=JSON.stringify({path:dbxMainFile(),mode,autorename:false,mute:true}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
+  const res=await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':arg},body:content});
+  if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxUploadMain(t,content,expectedRev);return{ok:false,conflict:false,rev:''};}
+  if(res.status===409)return{ok:false,conflict:true,rev:''};
+  if(!res.ok)return{ok:false,conflict:false,rev:''};
+  let meta={};try{meta=await res.json();}catch(e){}
+  return{ok:true,conflict:false,rev:meta.rev||''};
+}
 // 이미지 등 바이너리 파일을 Blob으로 다운로드 (영수증 사진 다른 기기 복원용, v5.60)
 async function _dbxDownloadBlob(token,path){
   const arg=JSON.stringify({path}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
@@ -1819,18 +1848,23 @@ try{
   });
   window.addEventListener('pagehide',()=>{if(dbxGetToken()&&_syncPending&&!_attachInProgress)_syncFlushNow();});
 }catch(e){}
-async function syncToDropbox(){
+async function syncToDropbox(expectedRev=_dbxMainRev){
   if(_syncing||!dbxGetToken())return;
   _syncing=true;
   try{
     syncCurrentToGroup();
-    const ok=await _dbxUpload(dbxGetToken(),dbxMainFile(),JSON.stringify({version:2,groups,currentGroupId,deletedGroups,coupleNames:_coupleNames||[],syncedAt:new Date().toISOString()}));
-    if(ok){
+    await _flushReceiptUploads();
+    await _flushReceiptDeletes();
+    const result=await _dbxUploadMain(dbxGetToken(),JSON.stringify({version:2,groups,currentGroupId,deletedGroups,coupleNames:_coupleNames||[],syncedAt:new Date().toISOString()}),expectedRev);
+    if(result.ok){
+      _dbxMainRev=result.rev||_dbxMainRev;
       localStorage.setItem(DBX_LASTSYNC_MAIN,new Date().toISOString());
       const hashes={};groups.forEach(g=>{hashes[g.id]=_groupHash(g);});
       _saveSyncedHashes(hashes);
       _updateSyncBadge();
-      try{_flushReceiptUploads();}catch(e){} // 대기 중 영수증 이미지도 함께 올림
+    }else if(result.conflict){
+      // 다운로드와 업로드 사이 다른 기기가 저장했다. 무조건 덮어쓰지 말고 최신본을 다시 병합한다.
+      setTimeout(()=>syncFromDropbox(),0);
     }
   }catch(e){}finally{_syncing=false;}
 }
@@ -1838,7 +1872,9 @@ async function syncFromDropbox(){
   const token=dbxGetToken();if(!token)return;
   if(_syncFromRunning)return;_syncFromRunning=true;
   try{
-    const remote=await _dbxDownload(token,dbxMainFile());
+    const downloaded=await _dbxDownloadMain(token);
+    const remote=downloaded.data;
+    _dbxMainRev=downloaded.rev||'';
     if(!remote||!Array.isArray(remote.groups)||!remote.groups.length){await syncToDropbox();return;}
     if(remote.coupleNames?.length&&!localStorage.getItem('dutchpay_couple')){_coupleNames=remote.coupleNames;localStorage.setItem('dutchpay_couple',JSON.stringify(_coupleNames));}
 
@@ -1881,7 +1917,7 @@ async function syncFromDropbox(){
     }
 
     const changed=JSON.stringify(filtered)!==JSON.stringify(groups)||JSON.stringify(mergedDeleted)!==JSON.stringify(deletedGroups);
-    if(changed)toast('Dropbox에서 최신 내용을 병합했어요',{type:'success'});
+    if(changed){_autoBackup('Dropbox 병합 전');toast('Dropbox에서 최신 내용을 병합했어요',{type:'success'});}
     await _applySyncMerge(filtered,remote.currentGroupId,mergedDeleted);
   }catch(e){}finally{_syncFromRunning=false;}
 }
@@ -2228,7 +2264,7 @@ function _initMobTitle(){
   const title=document.getElementById('mobTitleEl');if(!title)return;
   let _lp=null;
   const _longPress=()=>{_lp=null;navigator.vibrate&&navigator.vibrate(30);showDataMenu(title,{stopPropagation:()=>{},preventDefault:()=>{}});};
-  const _shortTap=()=>mSetTab('input');
+  const _shortTap=()=>showGroupManager(title,{stopPropagation:()=>{},preventDefault:()=>{}});
   title.addEventListener('touchstart',e=>{e.preventDefault();_lp=setTimeout(_longPress,600);},{passive:false});
   title.addEventListener('touchend',e=>{e.preventDefault();if(_lp){clearTimeout(_lp);_lp=null;_shortTap();}});
   title.addEventListener('touchcancel',()=>{if(_lp){clearTimeout(_lp);_lp=null;}});
@@ -2236,6 +2272,7 @@ function _initMobTitle(){
   title.addEventListener('mousedown',()=>{_lp=setTimeout(_longPress,600);});
   title.addEventListener('mouseup',()=>{if(_lp){clearTimeout(_lp);_lp=null;_shortTap();}});
   title.addEventListener('mouseleave',()=>{if(_lp){clearTimeout(_lp);_lp=null;}});
+  title.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();_shortTap();}});
 }
 function _initVerBadge(){
   const badge=document.getElementById('appVersionM');if(!badge)return;
@@ -2349,7 +2386,7 @@ function togglePaymentPanel(key){
   const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
   const panel=document.createElement('div');
   panel.className='pay-panel';
-  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="pmToggleDone('${ea(key)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':'미입금'}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!==null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="pmUpdateAmt('${ea(key)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>pmUpdate('${ea(key)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="pmSetNow('${ea(key)}')">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span>${_pmAcctHtml(key,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="pmUpdate('${ea(key)}','memo',this.value)"/></div>`;
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="pmToggleDone('${jsa(key)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':'미입금'}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!==null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="pmUpdateAmt('${jsa(key)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>pmUpdate('${jsa(key)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="pmSetNow('${jsa(key)}')">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span>${_pmAcctHtml(key,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="pmUpdate('${jsa(key)}','memo',this.value)"/></div>`;
   item.appendChild(panel);
 }
 
@@ -2569,7 +2606,7 @@ function _txnRowsOwnerHtml(txns){
     const amtCls='txn-amt'+(isGreen?' done-clr':isRed?' neg-clr':'');
     const metaParts=[];if(pm.done)metaParts.push('입금완료');if(pm.account)metaParts.push(pm.account);
     const sdiffHtml=diff!==null&&diff!==0?`<div class="txn-sdiff ${diff>0?'pos':'neg'}">${diff>0?'+':''}${fmt(diff)}원</div>`:'<div class="txn-sdiff"></div>';
-    return `<div class="txn-item" data-pm-key="${ea(key)}"><div class="${rowCls}" onclick="togglePaymentPanel('${ea(key)}')"><div class="${icCls}">${pm.done?svgPayCheck:''}</div><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><div class="txn-right"><div class="${amtCls}">${fmt(t.amt)}원</div><div class="txn-pmeta">${e(metaParts.join(' · '))}</div>${sdiffHtml}</div><span class="txn-chev">▾</span></div></div>`;
+    return `<div class="txn-item" data-pm-key="${ea(key)}"><div class="${rowCls}" onclick="togglePaymentPanel('${jsa(key)}')"><div class="${icCls}">${pm.done?svgPayCheck:''}</div><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><div class="txn-right"><div class="${amtCls}">${fmt(t.amt)}원</div><div class="txn-pmeta">${e(metaParts.join(' · '))}</div>${sdiffHtml}</div><span class="txn-chev">▾</span></div></div>`;
   }).join('');
 }
 
@@ -2663,10 +2700,10 @@ function toggleAllRecCard(recId){
   const rec=loadHistory().find(r=>r.id===recId);if(!rec)return;
   const txns=_myName?(rec.txns||[]).filter(t=>t.to===_myName):(rec.txns||[]);const pmObj=rec.payments||{};
   const detail=document.createElement('div');detail.className='pm-allrec-detail';
-  const dbxBtn=hDbxGetToken()?`<div style="padding:10px 14px 4px"><button class="pm-dbx-btn" style="margin-top:0" onclick="saveHistRecToDropbox('${ea(recId)}')">☁️ Dropbox에 이미지 저장</button></div>`:'';
-  const ownerBtns=_ownerUnlocked?`<div class="rc-owner-actions"><button class="rc-owner-btn edit" onclick="loadHistoryForEdit('${ea(recId)}')">✏️ 불러오기</button><button class="rc-owner-btn del" onclick="_pmDelRec('${ea(recId)}',event)">🗑 삭제</button></div>`:'';
+  const dbxBtn=hDbxGetToken()?`<div style="padding:10px 14px 4px"><button class="pm-dbx-btn" style="margin-top:0" onclick="saveHistRecToDropbox('${jsa(recId)}')">☁️ Dropbox에 이미지 저장</button></div>`:'';
+  const ownerBtns=_ownerUnlocked?`<div class="rc-owner-actions"><button class="rc-owner-btn edit" onclick="loadHistoryForEdit('${jsa(recId)}')">✏️ 불러오기</button><button class="rc-owner-btn del" onclick="_pmDelRec('${jsa(recId)}',event)">🗑 삭제</button></div>`:'';
   if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>'+dbxBtn+ownerBtns;}
-  else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va2=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va2?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">${t.to===_myName?'✓ 입금완료':'✓ 송금완료'}</span>`):`<span class="pm-badge pending">${t.to===_myName?'미입금':'미확인'}</span>`;const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+dbxBtn+ownerBtns;}
+  else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va2=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va2?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">${t.to===_myName?'✓ 입금완료':'✓ 송금완료'}</span>`):`<span class="pm-badge pending">${t.to===_myName?'미입금':'미확인'}</span>`;const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(recId)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+dbxBtn+ownerBtns;}
   card.insertAdjacentElement('afterend',detail);
 }
 
@@ -2700,7 +2737,7 @@ function _pmHistResultsHtml(){
         :doneCount===0?`<span class="pm-badge pending">${totalCount}명 미입금</span>`
         :`<span class="pm-badge pending">${totalCount-doneCount}명 미입금</span>`;
       const rid=ea(rec.id);
-      return `<div class="pm-allrec-card" data-rec-id="${rid}" onclick="toggleAllRecCard('${rid}')"><div class="pm-allrec-left"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((rec.people||[]).join(', ')||rec.groupName||'')}</div></div><div class="pm-allrec-right"><div class="pm-record-total">${fmt(rec.total||0)}원</div>${statusHtml}<span class="pm-allrec-chev">▼</span></div></div>`;
+      return `<div class="pm-allrec-card" data-rec-id="${rid}" onclick="toggleAllRecCard('${jsa(rec.id)}')"><div class="pm-allrec-left"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((rec.people||[]).join(', ')||rec.groupName||'')}</div></div><div class="pm-allrec-right"><div class="pm-record-total">${fmt(rec.total||0)}원</div>${statusHtml}<span class="pm-allrec-chev">▼</span></div></div>`;
     }).join('');
     return viewToggle+`<div class="pay-section-title" style="margin-top:8px">전체 기록 · ${allRecs.length}건</div>`+recsHtml;
   }
@@ -2797,8 +2834,8 @@ function _pmHistResultsHtml(){
     const itemsHtml=recItems.length?`<div class="pm-rec-items"><div class="pm-rec-items-title">지출 내역</div>${recItems.map(it=>{const uid='rcpt_'+(c.rec.id||'')+'_'+(it.id||'');const _mems=(it.members&&it.members.length)?it.members:(c.rec.people||[]);const _ws=(it.watchers||[]).filter(w=>!_mems.includes(w));const memsStr=it.isTreat?[..._mems,..._ws].map(m=>e(m)).join(', '):[..._mems.map(m=>e(m)),..._ws.map(w=>`${e(w)}(깍두기)`)].join(', ');const rowClick=it.receiptText?` onclick="toggleItemReceipt('${uid}',event)" style="cursor:pointer"`:'';const chev=it.receiptText?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';return `<div class="rc-item-row"${rowClick}><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉&nbsp;&nbsp;&nbsp;👏👏👏</span>':''}</div><div class="rc-item-meta">${memsStr}</div></div>${chev}<span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid,c.rec.id)}`;}).join('')}</div>`:'';
     const bodyHtml=!c.isParticipant&&c.done?`<div class="pm-record-body"><div class="pm-record-row"><span class="pm-record-lbl">실수령액</span><span class="pm-record-val${recValCls}">${fmt(c.received)}원</span></div></div>`:'';
     const footHtml=!c.isParticipant&&(c.pm.account||c.pm.timestamp)?`<div class="pm-record-foot"><span class="pm-record-account">${e(c.pm.account||'')}</span><span class="pm-record-ts">${c.pm.timestamp?_dtpFmt(c.pm.timestamp):''}</span></div>`:'';
-    const editBtnHtml=!c.isParticipant&&c.isOwnerTxn?`<div class="pm-rec-edit-row"><button class="pm-rec-edit-btn" onclick="event.stopPropagation();toggleHistRecordPanel('${rid}','${rkey}')">✏️ 수정</button></div>`:'';
-    return `<div class="pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="pm-record-hd" onclick="togglePmRecCard('${rid}','${rkey}')"><div class="pm-record-meta"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="pm-record-members">${e(members)}</div></div><div class="pm-record-right">${amtHtml}${statusHtml}${treatLineHtml}<span class="pm-record-chev">▼</span></div></div><div class="pm-rec-detail" style="display:none">${itemsHtml}${bodyHtml}${footHtml}${editBtnHtml}</div></div>`;
+    const editBtnHtml=!c.isParticipant&&c.isOwnerTxn?`<div class="pm-rec-edit-row"><button class="pm-rec-edit-btn" onclick="event.stopPropagation();toggleHistRecordPanel('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')">✏️ 수정</button></div>`:'';
+    return `<div class="pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="pm-record-hd" onclick="togglePmRecCard('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')"><div class="pm-record-meta"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="pm-record-members">${e(members)}</div></div><div class="pm-record-right">${amtHtml}${statusHtml}${treatLineHtml}<span class="pm-record-chev">▼</span></div></div><div class="pm-rec-detail" style="display:none">${itemsHtml}${bodyHtml}${footHtml}${editBtnHtml}</div></div>`;
   };
   // 년도 선택 시 월별 그룹, 특정 월/전체 시 flat
   let cardsHtml='';
@@ -2883,15 +2920,15 @@ function _pmMonthlyHtml(allRecs){
     const statsHtml=`<div class="pm-month-stats-row"><div class="pm-mstat"><div class="pm-mstat-lbl">청구</div><div class="pm-mstat-val">${fmt(totalBilled)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">수령${netInline}</div><div class="pm-mstat-val pos">${fmt(totalReceived)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">미수</div><div class="pm-mstat-val${totalUnpaid>0?' neg':' mut'}">${totalUnpaid>0?fmt(totalUnpaid)+'원':'없음'}</div></div></div>`;
     const myNet=myReceived-myBilled;
     const myActual=mySpend-myBilled;
-    const myTopStats=(_myName&&mySpend>0)?`<div class="pm-month-stats-row pm-my-stats-row"><div class="pm-mstat pm-mstat-tap" onclick="event.stopPropagation();_pmShowPayerItems('${ea(_myName)}','${ym}')"><div class="pm-mstat-lbl">결제</div><div class="pm-mstat-val">${fmt(mySpend)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">지출</div><div class="pm-mstat-val blue">${fmt(myActual)}원</div></div><div class="pm-mstat${myTreat>0?' pm-mstat-tap':''}"${myTreat>0?` onclick="event.stopPropagation();_pmShowTreatItems('${ea(_myName)}','${ym}')"`:''}><div class="pm-mstat-lbl">쏜 금액</div><div class="pm-mstat-val amber">${fmt(myTreat)}원</div></div></div>`:'';
-    const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(_myName)}')"><div class="pm-mrow-name"><div class="pm-mrow-nameline"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-person-cnt">${mySettleCount}회</span></div></div><span class="pm-mrow-delta ${myNet>0?'pos':myNet<0?'neg':''}">${myNet!==0?`${myNet>0?'+':'-'}${fmt(Math.abs(myNet))}원`:''}</span><span class="pm-mrow-billed">${fmt(myBilled)}<span class="won">원</span></span><span class="pm-mrow-status ${myNet>0?'pos':myNet<0?'neg':'done'}">${myNet>0?'초과':myNet<0?'미수':'완납'}</span></div>`:'';
+    const myTopStats=(_myName&&mySpend>0)?`<div class="pm-month-stats-row pm-my-stats-row"><div class="pm-mstat pm-mstat-tap" onclick="event.stopPropagation();_pmShowPayerItems('${jsa(_myName)}','${ym}')"><div class="pm-mstat-lbl">결제</div><div class="pm-mstat-val">${fmt(mySpend)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">지출</div><div class="pm-mstat-val blue">${fmt(myActual)}원</div></div><div class="pm-mstat${myTreat>0?' pm-mstat-tap':''}"${myTreat>0?` onclick="event.stopPropagation();_pmShowTreatItems('${jsa(_myName)}','${ym}')"`:''}><div class="pm-mstat-lbl">쏜 금액</div><div class="pm-mstat-val amber">${fmt(myTreat)}원</div></div></div>`:'';
+    const myRow=(_myName&&(mySpend>0||myBilled>0))?`<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${jsa(_myName)}')"><div class="pm-mrow-name"><div class="pm-mrow-nameline"><span class="pm-month-person-name">${e(_myName)}</span><span class="pm-month-person-cnt">${mySettleCount}회</span></div></div><span class="pm-mrow-delta ${myNet>0?'pos':myNet<0?'neg':''}">${myNet!==0?`${myNet>0?'+':'-'}${fmt(Math.abs(myNet))}원`:''}</span><span class="pm-mrow-billed">${fmt(myBilled)}<span class="won">원</span></span><span class="pm-mrow-status ${myNet>0?'pos':myNet<0?'neg':'done'}">${myNet>0?'초과':myNet<0?'미수':'완납'}</span></div>`:'';
     const _pplSort=(a,b)=>_pmMonthPeopleSort==='cnt'?(personCount[b[0]]||0)-(personCount[a[0]]||0):_pmMonthPeopleSort==='name'?a[0].localeCompare(b[0],'ko'):b[1].billed-a[1].billed;
     const peopleRows=Object.entries(personStats).sort(_pplSort).map(([nm,s])=>{
       const pnet=s.received-s.billed;
       const cnt=personCount[nm]||1;
       const paidAmt=personPaid[nm]||0;
-      const paidSub=paidAmt>0?`<span class="pm-mrow-paid" onclick="event.stopPropagation();_pmShowPayerItems('${ea(nm)}','${ym}')">결제 ${fmt(paidAmt)}원</span>`:'';
-      return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-mrow-name"><div class="pm-mrow-nameline"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span></div>${paidSub}</div><span class="pm-mrow-delta ${pnet>0?'pos':pnet<0?'neg':''}">${pnet!==0?`${pnet>0?'+':'-'}${fmt(Math.abs(pnet))}원`:''}</span><span class="pm-mrow-billed">${fmt(s.billed)}<span class="won">원</span></span><span class="pm-mrow-status ${pnet>0?'pos':pnet<0?'neg':'done'}">${pnet>0?'초과':pnet<0?'미수':'완납'}</span></div>`;
+      const paidSub=paidAmt>0?`<span class="pm-mrow-paid" onclick="event.stopPropagation();_pmShowPayerItems('${jsa(nm)}','${ym}')">결제 ${fmt(paidAmt)}원</span>`:'';
+      return `<div class="pm-month-person-row pm-name-tap" onclick="_pmFilterByName('${jsa(nm)}')"><div class="pm-mrow-name"><div class="pm-mrow-nameline"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span></div>${paidSub}</div><span class="pm-mrow-delta ${pnet>0?'pos':pnet<0?'neg':''}">${pnet!==0?`${pnet>0?'+':'-'}${fmt(Math.abs(pnet))}원`:''}</span><span class="pm-mrow-billed">${fmt(s.billed)}<span class="won">원</span></span><span class="pm-mrow-status ${pnet>0?'pos':pnet<0?'neg':'done'}">${pnet>0?'초과':pnet<0?'미수':'완납'}</span></div>`;
     }).join('');
     const _ptSort=(a,b)=>_pmMonthPeopleSort==='cnt'?(personCount[b]||0)-(personCount[a]||0):_pmMonthPeopleSort==='name'?a.localeCompare(b,'ko'):(personTreat[b]||0)-(personTreat[a]||0);
     const participantRows=Object.keys(personCount).filter(nm=>!personStats[nm]&&(!_myName||nm!==_myName)).sort(_ptSort).map(nm=>{
@@ -2899,8 +2936,8 @@ function _pmMonthlyHtml(allRecs){
       const treatAmt=personTreat[nm]||0;
       const badge=treatAmt>0?`<span class="pm-mrow-badge treat">한턱 ${fmt(treatAmt)}원</span>`:`<span class="pm-mrow-badge attend">참석</span>`;
       const paidAmt2=personPaid[nm]||0;
-      const paidSub2=paidAmt2>0?`<span class="pm-mrow-paid" onclick="event.stopPropagation();_pmShowPayerItems('${ea(nm)}','${ym}')">결제 ${fmt(paidAmt2)}원</span>`:'';
-      return `<div class="pm-month-person-row pm-mrow-participant pm-name-tap" onclick="_pmFilterByName('${ea(nm)}')"><div class="pm-mrow-name"><div class="pm-mrow-nameline"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span></div>${paidSub2}</div>${badge}</div>`;
+      const paidSub2=paidAmt2>0?`<span class="pm-mrow-paid" onclick="event.stopPropagation();_pmShowPayerItems('${jsa(nm)}','${ym}')">결제 ${fmt(paidAmt2)}원</span>`:'';
+      return `<div class="pm-month-person-row pm-mrow-participant pm-name-tap" onclick="_pmFilterByName('${jsa(nm)}')"><div class="pm-mrow-name"><div class="pm-mrow-nameline"><span class="pm-month-person-name">${e(nm)}</span><span class="pm-month-person-cnt">${cnt}회</span></div>${paidSub2}</div>${badge}</div>`;
     }).join('');
     const _pmHead=(myRow||peopleRows||participantRows)?`<div class="pm-mhead"><span class="h-nm">참여자 · 횟수</span><span>차액</span><span>청구금액</span><span class="h-ctr">상태</span></div>`:'';
     const peopleSection=(myRow||peopleRows||participantRows)?`<div class="pm-month-people pm-mtable">${_pmHead}${myRow}${peopleRows}${participantRows}</div>`:'';
@@ -2924,7 +2961,7 @@ function toggleHistRecordPanel(recId,txnKey){
   const diffVal=(pm.amount!=null&&pm.amount!=='')?(+pm.amount-baseAmt):null;
   const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
   const panel=document.createElement('div');panel.className='pm-hist-edit-panel';
-  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="histPmToggleDone('${ea(recId)}','${ea(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':'미입금'}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="histPmUpdateAmt('${ea(recId)}','${ea(txnKey)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>histPmUpdate('${ea(recId)}','${ea(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="histPmSetNow('${ea(recId)}','${ea(txnKey)}')">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span>${_histAcctHtml(recId,txnKey,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="histPmUpdate('${ea(recId)}','${ea(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="toggleHistRecordPanel('${ea(recId)}','${ea(txnKey)}')">저장</button>`;
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="histPmToggleDone('${jsa(recId)}','${jsa(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':'미입금'}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="histPmUpdateAmt('${jsa(recId)}','${jsa(txnKey)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>histPmUpdate('${jsa(recId)}','${jsa(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="histPmSetNow('${jsa(recId)}','${jsa(txnKey)}')">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span>${_histAcctHtml(recId,txnKey,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="histPmUpdate('${jsa(recId)}','${jsa(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="toggleHistRecordPanel('${jsa(recId)}','${jsa(txnKey)}')">저장</button>`;
   card.appendChild(panel);
 }
 function histPmToggleDone(recId,txnKey){
@@ -3288,11 +3325,11 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   body.innerHTML=dateRow+hero+txnSection+paySection+noticeHtml+shareBtn;
 }
 
-function _pmAcctHtml(key,cur){const ps=['케이뱅크','카카오페이','토스뱅크','우리은행','현금'];if(cur&&!ps.includes(cur))return`<input class="pay-inp" type="text" placeholder="계좌" value="${ea(cur)}" oninput="pmUpdate('${ea(key)}','account',this.value)"/>`;return`<select class="pay-sel" onchange="if(this.value==='__custom__'){_pmAcctCustom('${ea(key)}',this)}else pmUpdate('${ea(key)}','account',this.value)"><option value="">선택</option>${ps.map(p=>`<option value="${ea(p)}"${cur===p?' selected':''}>${p}</option>`).join('')}<option value="__custom__">직접 입력...</option></select>`;}
+function _pmAcctHtml(key,cur){const ps=['케이뱅크','카카오페이','토스뱅크','우리은행','현금'];if(cur&&!ps.includes(cur))return`<input class="pay-inp" type="text" placeholder="계좌" value="${ea(cur)}" oninput="pmUpdate('${jsa(key)}','account',this.value)"/>`;return`<select class="pay-sel" onchange="if(this.value==='__custom__'){_pmAcctCustom('${jsa(key)}',this)}else pmUpdate('${jsa(key)}','account',this.value)"><option value="">선택</option>${ps.map(p=>`<option value="${ea(p)}"${cur===p?' selected':''}>${p}</option>`).join('')}<option value="__custom__">직접 입력...</option></select>`;}
 function _pmAcctCustom(key,el){const i=document.createElement('input');i.className='pay-inp';i.type='text';i.placeholder='계좌 직접 입력';i.oninput=()=>pmUpdate(key,'account',i.value);el.replaceWith(i);i.focus();}
-function _histAcctHtml(recId,txnKey,cur){const ps=['케이뱅크','카카오페이','토스뱅크','우리은행','현금'];if(cur&&!ps.includes(cur))return`<input class="pay-inp" type="text" placeholder="계좌" value="${ea(cur)}" oninput="histPmUpdate('${ea(recId)}','${ea(txnKey)}','account',this.value)"/>`;return`<select class="pay-sel" onchange="if(this.value==='__custom__'){_histAcctCustom('${ea(recId)}','${ea(txnKey)}',this)}else histPmUpdate('${ea(recId)}','${ea(txnKey)}','account',this.value)"><option value="">선택</option>${ps.map(p=>`<option value="${ea(p)}"${cur===p?' selected':''}>${p}</option>`).join('')}<option value="__custom__">직접 입력...</option></select>`;}
+function _histAcctHtml(recId,txnKey,cur){const ps=['케이뱅크','카카오페이','토스뱅크','우리은행','현금'];if(cur&&!ps.includes(cur))return`<input class="pay-inp" type="text" placeholder="계좌" value="${ea(cur)}" oninput="histPmUpdate('${jsa(recId)}','${jsa(txnKey)}','account',this.value)"/>`;return`<select class="pay-sel" onchange="if(this.value==='__custom__'){_histAcctCustom('${jsa(recId)}','${jsa(txnKey)}',this)}else histPmUpdate('${jsa(recId)}','${jsa(txnKey)}','account',this.value)"><option value="">선택</option>${ps.map(p=>`<option value="${ea(p)}"${cur===p?' selected':''}>${p}</option>`).join('')}<option value="__custom__">직접 입력...</option></select>`;}
 function _histAcctCustom(recId,txnKey,el){const i=document.createElement('input');i.className='pay-inp';i.type='text';i.placeholder='계좌 직접 입력';i.oninput=()=>histPmUpdate(recId,txnKey,'account',i.value);el.replaceWith(i);i.focus();}
-function _rcAcctHtml(recId,txnKey,cur){const ps=['케이뱅크','카카오페이','토스뱅크','우리은행','현금'];if(cur&&!ps.includes(cur))return`<input class="pay-inp" type="text" placeholder="계좌" value="${ea(cur)}" oninput="rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','account',this.value)"/>`;return`<select class="pay-sel" onchange="if(this.value==='__custom__'){_rcAcctCustom('${ea(recId)}','${ea(txnKey)}',this)}else rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','account',this.value)"><option value="">선택</option>${ps.map(p=>`<option value="${ea(p)}"${cur===p?' selected':''}>${p}</option>`).join('')}<option value="__custom__">직접 입력...</option></select>`;}
+function _rcAcctHtml(recId,txnKey,cur){const ps=['케이뱅크','카카오페이','토스뱅크','우리은행','현금'];if(cur&&!ps.includes(cur))return`<input class="pay-inp" type="text" placeholder="계좌" value="${ea(cur)}" oninput="rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','account',this.value)"/>`;return`<select class="pay-sel" onchange="if(this.value==='__custom__'){_rcAcctCustom('${jsa(recId)}','${jsa(txnKey)}',this)}else rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','account',this.value)"><option value="">선택</option>${ps.map(p=>`<option value="${ea(p)}"${cur===p?' selected':''}>${p}</option>`).join('')}<option value="__custom__">직접 입력...</option></select>`;}
 function _rcAcctCustom(recId,txnKey,el){const i=document.createElement('input');i.className='pay-inp';i.type='text';i.placeholder='계좌 직접 입력';i.oninput=()=>rcTxnUpdate(recId,txnKey,'account',i.value);el.replaceWith(i);i.focus();}
 function parseReceiptLines(text){if(!text)return[];return text.split('\n').map(l=>l.trim()).filter(l=>l&&!/^품목/.test(l)).map(l=>{const p=l.split('|').map(s=>s.trim());return{name:p[0]||'',qty:p[1]||'',unitPrice:p[2]||'',amount:p[3]||''};}).filter(r=>r.name);}
 function _receiptTableHtml(it,uid,historyId){const lines=parseReceiptLines(it.receiptText||'');const src=getReceiptSrc(it);if(!lines.length&&!src)return'';const viewer=historyId?`openArchivedReceiptViewer(${ja(historyId)},${ja(it.id)},event)`:`openReceiptViewer(${it.id},event)`;const rcptLink=src?` <button type="button" class="rc-foot-link" onclick="${viewer}" aria-label="${ea(it.name||'')} 영수증 보기">영수증<span class="rc-foot-arrow">›</span></button>`:'';if(!lines.length){return`<div class="rc-receipt-wrap" id="rcpt_${uid}"><div class="rc-photo-only">${rcptLink}</div></div>`;}const rows=lines.map(r=>{const isGift=/증정|gift/i.test(r.amount);const n=+(r.amount||'').replace(/,/g,'');const neg=!isGift&&!isNaN(n)&&n<0;const amt=isGift?'<span class="rc-gift-badge">증정품</span>':e(r.amount);return`<tr><td>${e(r.name)}</td><td class="rc-qty">${e(r.qty)}</td><td class="rc-unit">${e(r.unitPrice)}</td><td${neg?' class="rc-neg"':''}>${amt}</td></tr>`;}).join('');const total=lines.reduce((s,r)=>{if(/증정/i.test(r.amount))return s;const n=+(r.amount||'').replace(/,/g,'');return s+(isNaN(n)?0:n);},0);const foot=`<tfoot><tr><td>합계</td><td colspan="2" class="rc-foot-cell">${rcptLink}</td><td${total<0?' class="rc-neg"':''}>${fmt(total)}</td></tr></tfoot>`;return`<div class="rc-receipt-wrap" id="rcpt_${uid}"><table class="rc-receipt-tbl"><thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th></tr></thead><tbody>${rows}</tbody>${foot}</table></div>`;}
@@ -3320,27 +3357,79 @@ function _rcptIdb(){return new Promise((res,rej)=>{try{const q=indexedDB.open('d
 async function _rcptIdbPut(k,v){const db=await _rcptIdb();return new Promise((res,rej)=>{const t=db.transaction('imgs','readwrite');t.objectStore('imgs').put(v,k);t.oncomplete=()=>res(true);t.onerror=()=>rej(t.error);});}
 async function _rcptIdbGet(k){try{const db=await _rcptIdb();return await new Promise(res=>{const t=db.transaction('imgs','readonly');const r=t.objectStore('imgs').get(k);r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);});}catch(e){return null;}}
 async function _rcptIdbDel(k){try{const db=await _rcptIdb();return await new Promise(res=>{const t=db.transaction('imgs','readwrite');t.objectStore('imgs').delete(k);t.oncomplete=()=>res(true);t.onerror=()=>res(false);});}catch(e){return false;}}
+function _receiptKeyStillReferenced(key){
+  const ref='idb:'+key;
+  if(items.some(it=>it&&it.receiptUrl===ref))return true;
+  if(groups.some(g=>((g.data&&g.data.items)||[]).some(it=>it&&it.receiptUrl===ref)))return true;
+  return loadHistory().some(r=>(r.items||[]).some(it=>it&&it.receiptUrl===ref));
+}
+async function _dbxDeleteReceiptBlob(key,token=dbxGetToken()){
+  if(!key||!token)return false;
+  try{
+    const res=await fetch('https://api.dropboxapi.com/2/files/delete_v2',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({path:`${dbxDir()}/receipts/${key}.jpg`})});
+    if(res.status===401){const next=await _dbxRefreshToken();return next?_dbxDeleteReceiptBlob(key,next):false;}
+    if(res.ok)return true;
+    if(res.status===409){const msg=await res.text();return /not_found/i.test(msg);}
+    return false;
+  }catch(e){return false;}
+}
+const RCPT_DELETE_PENDING_KEY='dutchpay_receipt_delete_pending_v1';
+function _pendingReceiptDeletes(){try{const a=JSON.parse(localStorage.getItem(RCPT_DELETE_PENDING_KEY)||'[]');return new Set(Array.isArray(a)?a:[]);}catch(e){return new Set();}}
+function _savePendingReceiptDeletes(keys){try{if(keys.size)localStorage.setItem(RCPT_DELETE_PENDING_KEY,JSON.stringify([...keys]));else localStorage.removeItem(RCPT_DELETE_PENDING_KEY);}catch(e){}}
+function _markReceiptDeletePending(key){const keys=_pendingReceiptDeletes();keys.add(key);_savePendingReceiptDeletes(keys);}
+function _clearReceiptDeletePending(key){const keys=_pendingReceiptDeletes();keys.delete(key);_savePendingReceiptDeletes(keys);}
+async function _flushReceiptDeletes(){
+  if(!dbxGetToken())return;
+  for(const key of _pendingReceiptDeletes()){
+    if(_receiptKeyStillReferenced(key)){_clearReceiptDeletePending(key);continue;}
+    if(await _dbxDeleteReceiptBlob(key))_clearReceiptDeletePending(key);
+  }
+}
+async function _deleteReceiptBlobIfUnused(key){
+  if(!key||_receiptKeyStillReferenced(key))return false;
+  _clearReceiptUploadPending(key);
+  _markReceiptDeletePending(key);
+  await _rcptIdbDel(key);
+  if(await _dbxDeleteReceiptBlob(key))_clearReceiptDeletePending(key);
+  return true;
+}
 function _isIdbRef(u){return String(u||'').slice(0,4)==='idb:';}
 // 로컬 IndexedDB에만 있고 Dropbox 백업이 실패했을 수 있는 영수증을 다른 기기용으로 재업로드 — 성공할 때까지 재시도(실패 시 done 표시 안 함) (v5.61/5.63)
 const _rcptBackfilled=new Set();
-async function _backfillReceiptToDbx(key,dataUrl){if(!key||_rcptBackfilled.has(key))return;const tok=dbxGetToken();if(!tok)return;try{const b=_dataUrlToBlob(dataUrl);if(b){const ok=await _dbxUpload(tok,`${dbxDir()}/receipts/${key}.jpg`,b);if(ok)_rcptBackfilled.add(key);}}catch(e){}}
-// 아직 Dropbox에 못 올린 영수증 이미지 큐(키→dataUrl). '쏘고 잊기' 대신 성공할 때까지 재시도해
-// 다른 기기에서 이미지가 비는 문제 방지. 포그라운드 복귀·동기화·첨부 시 flush (v5.92)
+async function _backfillReceiptToDbx(key,dataUrl){if(!key||_rcptBackfilled.has(key))return;const tok=dbxGetToken();if(!tok)return;try{const b=_dataUrlToBlob(dataUrl);if(b){const ok=await _dbxUpload(tok,`${dbxDir()}/receipts/${key}.jpg`,b);if(ok){_clearReceiptUploadPending(key);_rcptBackfilled.add(key);}}}catch(e){}}
+// 아직 Dropbox에 못 올린 영수증 이미지 큐. 키 목록은 localStorage에도 남겨 새로고침·종료 후 복구한다.
+const RCPT_UPLOAD_PENDING_KEY='dutchpay_receipt_upload_pending_v1';
 const _rcptUploadQ=new Map();
-let _rcptFlushing=false;
+let _rcptFlushPromise=null;
+function _pendingReceiptKeys(){try{const a=JSON.parse(localStorage.getItem(RCPT_UPLOAD_PENDING_KEY)||'[]');return new Set(Array.isArray(a)?a:[]);}catch(e){return new Set();}}
+function _savePendingReceiptKeys(keys){try{if(keys.size)localStorage.setItem(RCPT_UPLOAD_PENDING_KEY,JSON.stringify([...keys]));else localStorage.removeItem(RCPT_UPLOAD_PENDING_KEY);}catch(e){}}
+function _markReceiptUploadPending(key){const keys=_pendingReceiptKeys();keys.add(key);_savePendingReceiptKeys(keys);}
+function _clearReceiptUploadPending(key){const keys=_pendingReceiptKeys();keys.delete(key);_savePendingReceiptKeys(keys);_rcptUploadQ.delete(key);}
+async function _restoreReceiptUploadQueue(){
+  for(const key of _pendingReceiptKeys()){
+    if(_rcptUploadQ.has(key))continue;
+    const dataUrl=await _rcptIdbGet(key);
+    if(dataUrl)_rcptUploadQ.set(key,dataUrl);
+  }
+}
 async function _flushReceiptUploads(){
-  const tok=dbxGetToken();if(!tok||_rcptFlushing||!_rcptUploadQ.size)return;
-  _rcptFlushing=true;
-  try{
-    for(const [key,dataUrl] of [..._rcptUploadQ]){
-      try{const b=_dataUrlToBlob(dataUrl);if(b){const ok=await _dbxUpload(tok,`${dbxDir()}/receipts/${key}.jpg`,b);if(ok){_rcptUploadQ.delete(key);_rcptBackfilled.add(key);}}}catch(e){}
-    }
-  }finally{_rcptFlushing=false;}
+  const tok=dbxGetToken();if(!tok)return;
+  if(_rcptFlushPromise)return _rcptFlushPromise;
+  _rcptFlushPromise=(async()=>{
+    try{
+      await _restoreReceiptUploadQueue();
+      for(const [key,dataUrl] of [..._rcptUploadQ]){
+        try{const b=_dataUrlToBlob(dataUrl);if(b){const ok=await _dbxUpload(tok,`${dbxDir()}/receipts/${key}.jpg`,b);if(ok){_clearReceiptUploadPending(key);_rcptBackfilled.add(key);}}}catch(e){}
+      }
+    }finally{_rcptFlushPromise=null;}
+  })();
+  return _rcptFlushPromise;
 }
 // data URI 사진을 IndexedDB에 저장하고(로컬 원본), Dropbox 업로드는 큐에 넣어 성공까지 재시도. 'idb:<키>' 참조 반환
 async function _storeReceiptImage(itemId,dataUrl){
   const key='r'+itemId+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   try{await _rcptIdbPut(key,dataUrl);}catch(e){return dataUrl;} // IndexedDB 불가 시 최후로 data URI 그대로(작을 때만 권장)
+  _markReceiptUploadPending(key);
   _rcptUploadQ.set(key,dataUrl);
   _flushReceiptUploads();
   return 'idb:'+key;
@@ -3362,7 +3451,7 @@ async function _resolveReceiptSrc(it){
 // 기존에 localStorage에 박혀 있던 data URI 사진들을 IndexedDB로 이전 → 저장공간 확보 (부팅 시 1회)
 async function _migrateReceiptsToIdb(){
   let changed=false;
-  const mig=async arr=>{for(const it of (arr||[])){const u=it.receiptUrl||'';if(_isDataUrl(u)){try{const key='r'+(it.id||'x')+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);await _rcptIdbPut(key,u);const tok=dbxGetToken();if(tok){try{const b=_dataUrlToBlob(u);if(b)_dbxUpload(tok,`${dbxDir()}/receipts/${key}.jpg`,b);}catch(e){}}it.receiptUrl='idb:'+key;changed=true;}catch(e){}}}};
+  const mig=async arr=>{for(const it of (arr||[])){const u=it.receiptUrl||'';if(_isDataUrl(u)){try{const key='r'+(it.id||'x')+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);await _rcptIdbPut(key,u);_markReceiptUploadPending(key);_rcptUploadQ.set(key,u);it.receiptUrl='idb:'+key;changed=true;}catch(e){}}}};
   await mig(items);
   for(const g of groups){await mig(g.data&&g.data.items);}
   // 기록 보관함
@@ -3370,7 +3459,7 @@ async function _migrateReceiptsToIdb(){
   if(Array.isArray(hist)){let hc=false;for(const rec of hist){const before=changed;await mig(rec.items);if(changed!==before)hc=true;}if(hc){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(hist));}catch(e){}}}
   // 자동 백업 슬롯에 옛 인라인 이미지가 그대로 박혀 저장공간을 크게 잡아먹던 문제 — data URI 제거로 확보 (v5.61)
   try{const abs=_loadAutoBackups();let ac=false;abs.forEach(s=>{((s.groups)||[]).forEach(g=>{((g.data&&g.data.items)||[]).forEach(it=>{if(_isDataUrl(it.receiptUrl)){it.receiptUrl='';ac=true;}});});});if(ac)localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(abs));}catch(e){}
-  if(changed){try{saveState();}catch(e){}renderAll();}
+  if(changed){try{saveState();}catch(e){}renderAll();_flushReceiptUploads();}
 }
 async function openReceiptViewer(itemId,ev){
   if(ev){ev.stopPropagation();ev.preventDefault();}
@@ -3476,9 +3565,11 @@ function pickReceiptPhoto(itemId){
       if(multi){const parts=await Promise.all(fs.map(f=>_compressImageToDataURL(f,1400,0.72)));dataUrl=await _stitchReceiptsVertical(parts);}
       else{dataUrl=await _compressImageToDataURL(fs[0],1400,0.72);}
       const it=items.find(i=>i.id===itemId);if(!it){t&&t.dismiss&&t.dismiss();return;}
+      const oldReceiptUrl=it.receiptUrl||'';
       const ref=await _storeReceiptImage(it.id,dataUrl);it.receiptUrl=ref;saveState();renderAll();
       const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(itemId);
       const histUpdated=_updateArchivedReceipts(); // 이미 보관함에 있으면 그 기록도 최신화(사진 포함)
+      if(_isIdbRef(oldReceiptUrl)&&oldReceiptUrl!==ref)_deleteReceiptBlobIfUnused(oldReceiptUrl.slice(4));
       renderAll();
       _syncFlushNow(); // 3초 대기 없이 참조+이미지를 바로 Dropbox로 (다른 기기에 즉시 반영)
       const _base=multi?`영수증 ${fs.length}장을 한 장으로 첨부했어요`:'영수증 사진이 첨부됐어요';
@@ -3493,9 +3584,10 @@ function pickReceiptPhoto(itemId){
 }
 function removeReceipt(itemId){
   const it=items.find(i=>i.id===itemId);if(!it)return;
-  if(_isIdbRef(it.receiptUrl))_rcptIdbDel(it.receiptUrl.slice(4));
+  const oldReceiptUrl=it.receiptUrl||'';
   it.receiptUrl='';saveState();
-  _updateArchivedReceipts(); // 보관함에 있으면 그 기록도 최신화(사진 제거 반영)
+  _updateArchivedReceipts({preserveReceiptUrl:false}); // 보관함에 있으면 그 기록도 최신화(사진 제거 반영)
+  if(_isIdbRef(oldReceiptUrl))_deleteReceiptBlobIfUnused(oldReceiptUrl.slice(4));
   renderAll();
   const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(itemId);
   _syncFlushNow();
@@ -3505,6 +3597,7 @@ function _itMembersHtml(it){const mems=it.members.length?it.members:people;const
 function fmt(n){return Math.round(n).toLocaleString('ko-KR');}
 function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function ea(s){return String(s||'').replace(/"/g,'&quot;');}
+function jsa(s){return JSON.stringify(String(s==null?'':s)).slice(1,-1).replace(/'/g,"\\'").replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'\\x3c').replace(/>/g,'\\x3e');}
 function ja(s){return JSON.stringify(String(s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function fmtAmt(v){if(v===''||v===null||v===undefined)return '';const n=+v;return isNaN(n)||n===0?'':n.toLocaleString('ko-KR');}
 
@@ -3550,20 +3643,15 @@ function saveToHistory(){
     }else{
       const dupIdx=arr.findIndex(r=>_histFingerprint(r)===_histFingerprint(record));
       if(dupIdx>=0){
+        record.items=_mergeHistoryReceiptDetails(arr[dupIdx].items,record.items);
         arr[dupIdx]={...arr[dupIdx],people:record.people,items:record.items,total:record.total,payments:record.payments,txns:record.txns,savedAt:record.savedAt};
         localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
         toast('기록이 업데이트됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
       }else{
-        const softIdx=arr.findIndex(r=>_histSoftFingerprint(r)===_histSoftFingerprint(record));
-        if(softIdx>=0){
-          arr[softIdx]={...arr[softIdx],people:record.people,items:record.items,total:record.total,payments:record.payments,txns:record.txns,savedAt:record.savedAt};
-          localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
-          toast('기록이 업데이트됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
-        }else{
-          arr.unshift(record);
-          localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
-          toast('기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
-        }
+        // 날짜·참여자만 같은 다른 정산을 기존 기록으로 오인해 덮어쓰지 않는다.
+        arr.unshift(record);
+        localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
+        toast('기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
       }
     }
     if(hDbxGetToken())hSyncDropbox(true);
@@ -3575,7 +3663,13 @@ function saveToHistory(){
 // 이미 기록 보관함에 저장돼 있는 정산이면, 영수증 첨부/삭제 시 그 기록의 items·savedAt를 자동 갱신.
 // 보관함에 없던 정산은 새로 만들지 않음(사용자가 명시적으로 저장한 것만 유지). 정확 지문 일치만 갱신
 // (soft 지문은 다른 정산을 오인 갱신할 수 있어 제외). 반환: 갱신했으면 true.
-function _updateArchivedReceipts(){
+function _historyItemDetailKey(it){return[ it?.name||'',Number(it?.amount)||0,it?.payer||'',(it?.members||[]).slice().sort().join('|'),(it?.watchers||[]).slice().sort().join('|'),it?.rounderOverride||'' ].join('§');}
+function _mergeHistoryReceiptDetails(oldItems,newItems,{preserveUrl=true}={}){
+  const buckets=new Map();
+  (oldItems||[]).forEach(it=>{const key=_historyItemDetailKey(it);if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(it);});
+  return (newItems||[]).map(it=>{const old=(buckets.get(_historyItemDetailKey(it))||[]).shift();if(!old)return it;return{...it,receiptText:it.receiptText||old.receiptText||'',receiptUrl:(preserveUrl?(it.receiptUrl||old.receiptUrl):it.receiptUrl)||''};});
+}
+function _updateArchivedReceipts({preserveReceiptUrl=true}={}){
   try{
     const total=items.reduce((s,it)=>s+(+it.amount||0),0);
     if(!total)return false;
@@ -3586,7 +3680,7 @@ function _updateArchivedReceipts(){
     if(_loadedHistId)idx=arr.findIndex(r=>r.id===_loadedHistId);
     if(idx<0)idx=arr.findIndex(r=>_histFingerprint(r)===_histFingerprint(cur));
     if(idx<0)return false; // 보관함에 없으면 아무것도 안 함
-    arr[idx]={...arr[idx],items:JSON.parse(JSON.stringify(items)),savedAt:new Date().toISOString()};
+    arr[idx]={...arr[idx],items:_mergeHistoryReceiptDetails(arr[idx].items,JSON.parse(JSON.stringify(items)),{preserveUrl:preserveReceiptUrl}),savedAt:new Date().toISOString()};
     saveHistory(arr);
     if(hDbxGetToken())try{hSyncDropbox(true);}catch(e){}
     return true;
@@ -3602,9 +3696,9 @@ function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JS
 function _loadDelIds(){try{return new Set(JSON.parse(localStorage.getItem(HISTORY_DEL_KEY)||'[]'));}catch(e){return new Set();}}
 function _saveDelId(id){try{const s=_loadDelIds();s.add(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
 function _mergeDelIds(remoteIds){try{const s=_loadDelIds();(remoteIds||[]).forEach(id=>s.add(id));localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));return s;}catch(e){return _loadDelIds();}}
-function _histFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|'),(r.items||[]).map(i=>`${i.name||''}|${+i.amount||0}|${i.payer||''}|${i.isTreat?1:0}`).sort().join(',')].join('§');}
+function _histFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|'),(r.items||[]).map(i=>`${i.name||''}|${+i.amount||0}|${i.payer||''}|${i.isTreat?1:0}|${(i.members||[]).slice().sort().join('~')}|${(i.watchers||[]).slice().sort().join('~')}|${i.rounderOverride||''}`).sort().join(',')].join('§');}
 function _histSoftFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|')].join('§');}
-function _dedupHistory(arr){const map=new Map();arr.forEach(r=>{const fp=_histFingerprint(r);const ex=map.get(fp);if(!ex){map.set(fp,r);}else{const isNewer=(r.savedAt||'')>(ex.savedAt||'');const winner=isNewer?r:ex,loser=isNewer?ex:r;map.set(fp,{...winner,payments:{...(loser.payments||{}),...(winner.payments||{})}});}});return Array.from(map.values());}
+function _dedupHistory(arr){const map=new Map();arr.forEach((r,idx)=>{const key=r&&r.id!=null?'id:'+String(r.id):'legacy:'+idx;const ex=map.get(key);if(!ex){map.set(key,r);}else{const isNewer=(r.savedAt||'')>(ex.savedAt||'');const winner=isNewer?r:ex,loser=isNewer?ex:r;map.set(key,{...winner,payments:{...(loser.payments||{}),...(winner.payments||{})}});}});return Array.from(map.values());}
 function saveHistory(arr){try{const deduped=_dedupHistory(arr);const removed=arr.length-deduped.length;localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));if(removed>0)setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),50);}catch(e){toast('저장 공간이 부족해 기록을 저장하지 못했어요',{type:'error'});}}
 function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const deduped=_dedupHistory(arr);const removed=arr.length-deduped.length;if(removed>0){localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),400);}}catch(e){}}
 function _migrateHistoryGroupNames(){try{const arr=loadHistory();let changed=false;arr.forEach(r=>{const correct=(r.people||[]).join(', ');if(correct&&r.groupName!==correct){r.groupName=correct;changed=true;}});if(changed)saveHistory(arr);}catch(e){}}
@@ -3643,7 +3737,7 @@ function toggleRcTxnPanel(recId,txnKey){
   const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
   const panel=document.createElement('div');panel.className='rc-txn-edit-panel';
   panel.setAttribute('data-rec-id',recId);panel.setAttribute('data-txn-key',txnKey);
-  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="rcTxnToggleDone('${ea(recId)}','${ea(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':_rcPendingLbl}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="rcTxnUpdateAmt('${ea(recId)}','${ea(txnKey)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="rcTxnSetNow('${ea(recId)}','${ea(txnKey)}')">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span>${_rcAcctHtml(recId,txnKey,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="rcTxnUpdate('${ea(recId)}','${ea(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="_closeRcTxnPanel('${ea(recId)}','${ea(txnKey)}')">저장</button>`;
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${pm.done?' on':''}" onclick="rcTxnToggleDone('${jsa(recId)}','${jsa(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${pm.done?' on':''}">${pm.done?'입금완료':_rcPendingLbl}</span></div><div class="pay-panel-row"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="rcTxnUpdateAmt('${jsa(recId)}','${jsa(txnKey)}',this)"/><span class="pay-unit">원</span>${diffHtml}</div><div class="pay-panel-row"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="rcTxnSetNow('${jsa(recId)}','${jsa(txnKey)}')">지금</button></div><div class="pay-panel-row"><span class="pay-panel-lbl">계좌</span>${_rcAcctHtml(recId,txnKey,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="_closeRcTxnPanel('${jsa(recId)}','${jsa(txnKey)}')">저장</button>`;
   row.insertAdjacentElement('afterend',panel);
 }
 function rcTxnToggleDone(recId,txnKey){
@@ -3708,7 +3802,7 @@ function _buildRecordCardHtml(r){
       }).join(''):'';
   const pmObj=r.payments||{};
   const txnHtml=txns.length
-    ?`<div class="rc-section-title">송금</div><div class="rc-txns">`+txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va3=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va3?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">${t.to===_myName?'✓ 입금완료':'✓ 송금완료'}</span>`):`<span class="pm-badge pending">${t.to===_myName?'미입금':'미확인'}</span>`;const rid=ea(r.id);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${rid}','${rkey}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+`</div>`
+    ?`<div class="rc-section-title">송금</div><div class="rc-txns">`+txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va3=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va3?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">${t.to===_myName?'✓ 입금완료':'✓ 송금완료'}</span>`):`<span class="pm-badge pending">${t.to===_myName?'미입금':'미확인'}</span>`;const rid=ea(r.id);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(r.id)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+`</div>`
     :`<div class="rc-no-txn">모두 정산 완료 ✓</div>`;
   const savedAtStr=(()=>{try{const d=new Date(r.savedAt);return d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e2){return '';}})();
   return `<div class="record-card" data-rec-id="${e(r.id)}">
@@ -3728,10 +3822,10 @@ function _buildRecordCardHtml(r){
     <div class="rc-foot">
       <span class="rc-saved-at">${savedAtStr} 저장 · ${(r.people||[]).length}명</span>
       <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
-        <button class="rc-load-btn" onclick="shareHistoryImage('${e(r.id)}')">이미지</button>
-        <button class="rc-load-btn" onclick="loadHistoryAsGroup('${e(r.id)}')">불러오기</button>
-        <button class="rc-load-btn" onclick="loadHistoryForEdit('${e(r.id)}')">수정</button>
-        <button class="rc-del-btn" onclick="deleteHistoryRecord('${e(r.id)}')">삭제</button>
+        <button class="rc-load-btn" onclick="shareHistoryImage('${jsa(r.id)}')">이미지</button>
+        <button class="rc-load-btn" onclick="loadHistoryAsGroup('${jsa(r.id)}')">불러오기</button>
+        <button class="rc-load-btn" onclick="loadHistoryForEdit('${jsa(r.id)}')">수정</button>
+        <button class="rc-del-btn" onclick="deleteHistoryRecord('${jsa(r.id)}')">삭제</button>
       </div>
     </div>
   </div>`;
@@ -4458,6 +4552,7 @@ _deduplicateHistoryOnStartup();
 renderAll();
 // 영수증 사진을 localStorage→IndexedDB로 이전(저장공간 확보). 비동기·1회, 실패해도 앱 동작엔 지장 없음
 try{_migrateReceiptsToIdb();}catch(e){}
+try{_restoreReceiptUploadQueue().then(()=>_flushReceiptUploads());_flushReceiptDeletes();}catch(e){}
 if(_receiptDbImportResult){
   const detail=_receiptDbImportResult.updated?` · 업데이트 ${_receiptDbImportResult.updated}건`:'';
   toast(`영수증 ${_receiptDbImportResult.count}건을 모두 가져왔어요${detail}`,{type:'success',duration:4200});
