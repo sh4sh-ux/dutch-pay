@@ -1,4 +1,4 @@
-const CACHE_NAME = "dutch-pay-v5.95";
+const CACHE_NAME = "dutch-pay-v5.96";
 const STATIC_ASSETS = [
   "./category-icons-1.js",
   "./category-icons-2.js",
@@ -83,7 +83,7 @@ self.addEventListener("fetch", (event) => {
         const copy = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
         return response;
-      }).catch(() => caches.match("./index.html"));
+      }).catch(() => Response.error());
     })
   );
 });

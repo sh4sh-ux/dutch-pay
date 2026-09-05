@@ -542,6 +542,59 @@ suite('TC13: 사용자 카테고리 SVG [v5.25 회귀]', () => {
   });
 });
 
+suite('TC14: 데이터 무결성 안전장치 [v5.96 회귀]', () => {
+  const base={dateStart:'2026-09-05',dateEnd:null,people:['A','B','C'],items:[{id:1,name:'식사',amount:30000,payer:'A',members:['A','B'],watchers:[],isTreat:false}]};
+  test('분담 참여자가 다르면 기록 지문도 다름', () => {
+    const changed=JSON.parse(JSON.stringify(base));changed.items[0].members=['A','C'];
+    if(APP._histFingerprint(base)===APP._histFingerprint(changed))throw new Error('참여자 차이를 구분하지 못함');
+  });
+  test('내용이 같아도 기록 ID가 다르면 삭제하지 않음', () => {
+    const a={...JSON.parse(JSON.stringify(base)),id:'h1',savedAt:'2026-09-05T01:00:00Z'};
+    const b={...JSON.parse(JSON.stringify(base)),id:'h2',savedAt:'2026-09-05T02:00:00Z'};
+    expect(APP._dedupHistory([a,b]).length).toBe(2);
+  });
+  test('같은 기록 ID만 안전하게 병합', () => {
+    const a={...JSON.parse(JSON.stringify(base)),id:'h1',savedAt:'2026-09-05T01:00:00Z',payments:{a:{done:true}}};
+    const b={...JSON.parse(JSON.stringify(base)),id:'h1',savedAt:'2026-09-05T02:00:00Z',payments:{b:{done:true}}};
+    const out=APP._dedupHistory([a,b]);expect(out.length).toBe(1);expect(Object.keys(out[0].payments).sort()).toEqual(['a','b']);
+  });
+  test('사진 업로드 대기 키가 새로고침 가능한 저장소에 남음', () => {
+    const key='test_pending_receipt';APP._markReceiptUploadPending(key);
+    if(!APP._pendingReceiptKeys().has(key))throw new Error('대기 키가 저장되지 않음');
+    APP._clearReceiptUploadPending(key);
+  });
+  test('작은따옴표·태그가 인라인 이벤트 문자열을 깨뜨리지 않음', () => {
+    const s=APP.jsa("O'Brien <script>");
+    if(!s.includes("\\'")||!s.includes('\\x3c'))throw new Error('JavaScript 문자열 인코딩 누락: '+s);
+  });
+  test('기록 ID에 따옴표가 있어도 버튼 이벤트가 정상 생성됨', () => {
+    const rec={...JSON.parse(JSON.stringify(base)),id:"h'O",savedAt:'2026-09-05T02:00:00Z',txns:[],total:30000};
+    const host=APP.document.createElement('div');host.innerHTML=APP._buildRecordCardHtml(rec);
+    const attr=host.querySelector('.rc-load-btn').getAttribute('onclick')||'';
+    if(!attr.includes("h\\'O"))throw new Error('이벤트 ID 이스케이프 누락: '+attr);
+  });
+  test('삭제 실패한 사진 키를 재시도용으로 보존', () => {
+    const key='test_delete_receipt';APP._markReceiptDeletePending(key);
+    if(!APP._pendingReceiptDeletes().has(key))throw new Error('삭제 대기 키가 저장되지 않음');
+    APP._clearReceiptDeletePending(key);
+  });
+  test('데스크톱·모바일에 정산 그룹 선택기가 표시됨', () => {
+    if(APP.document.querySelectorAll('.group-switcher-name').length<2)throw new Error('그룹 선택기가 누락됨');
+  });
+  test('같은 기록 업데이트 시 기존 상세·사진을 유지', () => {
+    const old=[{name:'식사',amount:30000,payer:'A',members:['A','B'],watchers:[],receiptText:'메뉴 | 1 | 30000 | 30000',receiptUrl:'idb:old'}];
+    const fresh=[{name:'식사',amount:30000,payer:'A',members:['A','B'],watchers:[],receiptText:'',receiptUrl:''}];
+    const out=APP._mergeHistoryReceiptDetails(old,fresh);
+    if(!out[0].receiptText||out[0].receiptUrl!=='idb:old')throw new Error('기존 영수증 정보가 소실됨');
+  });
+  test('사진 삭제는 상세 품목은 유지하고 사진만 반영', () => {
+    const old=[{name:'식사',amount:30000,payer:'A',members:['A'],watchers:[],receiptText:'메뉴 | 1 | 30000 | 30000',receiptUrl:'idb:old'}];
+    const fresh=[{name:'식사',amount:30000,payer:'A',members:['A'],watchers:[],receiptText:'',receiptUrl:''}];
+    const out=APP._mergeHistoryReceiptDetails(old,fresh,{preserveUrl:false});
+    if(!out[0].receiptText||out[0].receiptUrl)throw new Error('상세/사진 분리 병합 실패');
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────
