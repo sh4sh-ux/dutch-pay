@@ -595,6 +595,30 @@ suite('TC14: 데이터 무결성 안전장치 [v5.96 회귀]', () => {
   });
 });
 
+suite('TC15: FIX 불변 기록 [v5.97]', () => {
+  const key='dutchpay_fixed_history_v1';
+  const rec={id:'fixed-h1',savedAt:'2026-09-05T07:00:00Z',dateStart:'2026-06-26',dateEnd:null,people:['A','B'],total:30000,items:[{id:1,name:'원본 식사',amount:30000,payer:'A',members:['A','B'],watchers:[],receiptText:'메뉴 | 1 | 30000 | 30000'}],txns:[],payments:{}};
+  const install=()=>{const payload=JSON.parse(JSON.stringify(rec));APP.localStorage.setItem(key,JSON.stringify([{schemaVersion:1,fixId:'fix-test',recordId:rec.id,fixedAt:'2026-09-05T07:01:00Z',payload,guard:APP._fixedGuard(payload)}]));};
+  test('객체 키 순서가 달라도 무결성 표식이 같다', () => {
+    const a={x:1,nested:{a:2,b:3}},b={nested:{b:3,a:2},x:1};
+    expect(APP._fixedGuard(a)).toBe(APP._fixedGuard(b));
+  });
+  test('FIX 기록을 수정해 저장해도 원본으로 되돌림', () => {
+    install();
+    try{const changed={...JSON.parse(JSON.stringify(rec)),total:1,items:[{...rec.items[0],name:'변조'}]};const out=APP._enforceFixedHistory([changed]);expect(out[0].total).toBe(30000);expect(out[0].items[0].name).toBe('원본 식사');}
+    finally{APP.localStorage.removeItem(key);}
+  });
+  test('FIX 기록을 삭제해도 원본을 자동 복구', () => {
+    install();
+    try{const out=APP._enforceFixedHistory([]);expect(out.length).toBe(1);expect(out[0].id).toBe('fixed-h1');}
+    finally{APP.localStorage.removeItem(key);}
+  });
+  test('보관함 카드에 FIX 동작이 표시됨', () => {
+    APP.localStorage.removeItem(key);const host=APP.document.createElement('div');host.innerHTML=APP._buildRecordCardHtml(rec);
+    if(!host.querySelector('.rc-fix-btn')||!host.textContent.includes('FIX'))throw new Error('FIX 버튼 누락');
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────
