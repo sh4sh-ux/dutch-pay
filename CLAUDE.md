@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v5.94** (2026-09-04) — 작업 브랜치
+**v5.95** (2026-09-05) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v5.95 | **기록보관함 영수증 사진 오매칭 수정** — 보관 기록의 사진 버튼이 보관 항목이 아니라 같은 숫자 id를 가진 현재 정산 항목을 열던 문제를 `openArchivedReceiptViewer(recordId,itemId)`로 분리해 정확한 기록·항목에서 조회. IndexedDB 참조 유실 시 전역에서 같은 item id 접두사의 사진을 추측하던 복구 로직도 제거하여, id가 반복되는 다른 그룹 사진을 대신 표시하지 않음. |
 | v5.94 | **영수증 첨부 시 기록보관함 자동 갱신**(사용자 '사진 첨부했는데 보관함 수정일자가 안 바뀜') — 기록보관함은 📌로 찍는 스냅샷이라, 그 뒤 사진을 붙여도 보관함 기록은 자동 갱신 안 됐음(단 화면엔 '저장됨 ✓'이라 사진까지 저장된 줄 오해). `_updateArchivedReceipts()` 추가: 현재 정산이 **정확 지문(`_histFingerprint`)으로 보관함에 이미 있으면** 그 기록의 items·savedAt를 자동 갱신(사진 포함)·hSyncDropbox. **보관함에 없던 정산은 새로 만들지 않음**(명시 저장한 것만). soft 지문은 오인 갱신 위험으로 제외. `pickReceiptPhoto`·`removeReceipt`에서 호출, 갱신 시 토스트 '· 기록보관함도 갱신됨 ✓'. 헤드리스 검증: 첨부 후 보관함 record.savedAt 현재시각·items[0].receiptUrl='idb:' 확인, 계산 80/80 |
 | v5.93 | **사진 첨부 간헐 실패 수정**(사용자 '파일 선택→열기 해도 첨부 안 될 때가 있어') — 원인은 `pickReceiptPhoto`의 file input이 DOM에 안 붙어 있어 iOS/PWA에서 선택 후 `change`가 안 뜨거나 참조가 GC된 것. 화면 밖(`position:fixed;left:-9999px`)에 실제로 붙였다가 선택/취소 후 제거(`cleanup`), 취소 시 `window focus` 후 orphan 정리. 첨부 중 `_attachInProgress` 플래그로 포그라운드 동기화(visibilitychange/pagehide)가 끼어들지 않게 가드(v5.92 동기화와의 레이스 예방). 오류 토스트에 '형식 문제일 수 있어요' 힌트. 헤드리스 end-to-end 검증: input 주입 시 receiptUrl='idb:...' 첨부·플래그 복귀·input 정리·큐 적재 확인, 계산 80/80 |
 | v5.92 | **저장·동기화 신뢰성 강화**(사용자 '간헐적으로 저장 안 되는 느낌') — 원인 3가지 수정. (A) **포그라운드 복귀 동기화 추가**: 지금까지 Dropbox pull이 부팅/로컬편집 때만 일어나 이미 열려 있던 다른 기기는 최신을 못 받았음("데스크탑 첨부→모바일에 없음"). `visibilitychange` visible 시 `syncFromDropbox`(1.5s 스로틀), hidden/`pagehide` 시 대기 중 동기화 즉시 flush(`_syncFlushNow`)로 3초 디바운스 안에 닫아도 유실 방지. (B) **영수증 이미지 업로드 보장형**: '쏘고 잊기'였던 Dropbox 업로드를 큐(`_rcptUploadQ`)+성공까지 재시도(`_flushReceiptUploads`)로 바꿔 다른 기기에서 이미지 비던 문제 해결. 첨부 직후 `_syncFlushNow`로 참조+이미지 즉시 반영, 매 `syncToDropbox` 성공 시에도 대기분 flush. 계산 로직 무관, test.html 80/80 통과. 저장 3층 구조(라이브 자동저장 / 기록보관함 스냅샷 📌 / Dropbox 동기화) 이해 필요 |

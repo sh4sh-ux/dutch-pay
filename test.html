@@ -467,6 +467,15 @@ suite('TC11: 영수증 상세표 합계 표시 [v5.06 회귀]', () => {
     if (!f) throw new Error('합계 행 없음');
     expect(f.val).toBe('10,000');
   });
+  test('기록보관함 사진은 기록 id와 항목 id를 함께 전달', () => {
+    const html=APP._receiptTableHtml({id:1,name:'과거 영수증',receiptUrl:'idb:r1_old'},'hist','history-123');
+    if(!html.includes('openArchivedReceiptViewer(&quot;history-123&quot;,&quot;1&quot;,event)'))throw new Error('보관 기록 전용 뷰어 호출 누락: '+html);
+    if(html.includes('openReceiptViewer(1,event)'))throw new Error('현재 정산 뷰어로 잘못 연결됨');
+  });
+  test('현재 정산 사진은 기존 현재 항목 뷰어를 유지', () => {
+    const html=APP._receiptTableHtml({id:1,name:'현재 영수증',receiptUrl:'idb:r1_now'},'live');
+    if(!html.includes('openReceiptViewer(1,event)'))throw new Error('현재 정산 뷰어 호출 누락');
+  });
 });
 
 suite('TC12: 정산 공유 수취인 순서 [v5.24 회귀]', () => {
