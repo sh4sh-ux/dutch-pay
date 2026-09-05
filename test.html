@@ -476,6 +476,11 @@ suite('TC11: 영수증 상세표 합계 표시 [v5.06 회귀]', () => {
     const html=APP._receiptTableHtml({id:1,name:'현재 영수증',receiptUrl:'idb:r1_now'},'live');
     if(!html.includes('openReceiptViewer(1,event)'))throw new Error('현재 정산 뷰어 호출 누락');
   });
+  test('상세가 없어도 영수증 버튼은 상세표와 같은 열에 표시', () => {
+    const d=document.createElement('div');d.innerHTML=APP._receiptTableHtml({id:1,name:'사진만',receiptUrl:'idb:r1_only'},'only');
+    const cell=d.querySelector('.rc-photo-only-tbl .rc-foot-cell');
+    if(!cell||cell.getAttribute('colspan')!=='2'||!cell.querySelector('.rc-foot-link'))throw new Error('영수증 버튼 열 정렬이 다름');
+  });
 });
 
 suite('TC12: 정산 공유 수취인 순서 [v5.24 회귀]', () => {
