@@ -721,12 +721,14 @@ svg{display:block;flex-shrink:0;}
 }
 .saved-badge{margin-top:10px;text-align:center;font-size:13px;color:var(--green);font-weight:600;}
 /* 정산 탭 기록 보관함 저장 버튼 (상태 반영, v5.74) */
-.hist-save-row{margin-top:16px;}
+.hist-save-row{margin-top:16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;}
 .hist-save-btn{width:100%;border:none;border-radius:var(--rs);padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--blue-bg);color:var(--blue-txt);transition:opacity .12s,transform .1s;}
 .hist-save-btn:hover{opacity:.85;}
 .hist-save-btn:active{transform:scale(.99);}
 .hist-save-btn.saved{background:var(--green-bg);color:var(--green-txt);}
-.hist-save-hint{text-align:center;font-size:11.5px;color:var(--label3);margin-top:7px;line-height:1.45;}
+.hist-fix-btn{border:1px solid #e8c66a;border-radius:var(--rs);padding:0 15px;font-size:13px;font-weight:800;font-family:inherit;background:#fff8dc;color:#8b6200;cursor:pointer;white-space:nowrap;}
+.hist-fix-btn.fixed{border-color:transparent;background:var(--green-bg);color:var(--green-txt);cursor:default;}
+.hist-save-hint{grid-column:1/-1;text-align:center;font-size:11.5px;color:var(--label3);margin-top:0;line-height:1.45;}
 .share-save-btn{width:100%;border:none;border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;background:var(--blue);color:#fff;cursor:pointer;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .share-save-btn:hover{opacity:.88;}
 .share-save-btn:active{transform:scale(.99);}
@@ -829,6 +831,9 @@ svg{display:block;flex-shrink:0;}
 .rc-del-btn:hover{opacity:.7;}
 .rc-load-btn{font-size:12px;color:var(--blue);border:none;background:transparent;font-weight:500;padding:8px 6px;cursor:pointer;}
 .rc-load-btn:hover{opacity:.7;}
+.rc-fix-btn{font-size:12px;color:#8b6200;border:1px solid #e8c66a;background:#fff8dc;border-radius:8px;font-weight:700;padding:6px 8px;cursor:pointer;white-space:nowrap;}
+.rc-fix-btn:hover{opacity:.8;}
+.rc-fix-btn.fixed{color:var(--green-txt);border-color:transparent;background:var(--green-bg);cursor:default;}
 .hist-search-wrap{padding:10px 0 4px;}
 .hist-search{width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--sep2);border-radius:10px;background:var(--card);color:var(--label);outline:none;font-family:inherit;box-sizing:border-box;}
 .hist-search:focus{border-color:var(--blue);}
@@ -1396,8 +1401,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.96';
-const BUILD_TIME='2026-09-05 15:45';
+const APP_VERSION='v5.97';
+const BUILD_TIME='2026-09-05 16:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1511,7 +1516,7 @@ function showDataMenu(anchorEl,ev){
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
   if(_ownerUnlocked){
-    pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxImportOld">📥 옛 위치에서 가져오기</button><button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><button class="data-pop-btn" data-action="setCouples">💑 공유 이미지 커플 설정</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${e(_myName)}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
+    pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxImportOld">📥 옛 위치에서 가져오기</button><button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><button class="data-pop-btn" data-action="fixHistory">🔒 저장 후 FIX</button><button class="data-pop-btn" data-action="setCouples">💑 공유 이미지 커플 설정</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${e(_myName)}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
   } else {
     pop.innerHTML=`<button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-version" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
   }
@@ -1524,6 +1529,7 @@ function showDataMenu(anchorEl,ev){
     else if(action==='dbxDisconnect'){hDbxDisconnect();pop.remove();}
     else if(action==='openHistory'){goToHistory();pop.remove();}
     else if(action==='saveHistory'){saveToHistory();pop.remove();}
+    else if(action==='fixHistory'){pop.remove();_fixCurrentHistory();}
     else if(action==='setCouples'){pop.remove();showCoupleSettings();}
     else if(action==='exportCsv'){exportCurrentGroupCsv();pop.remove();}
     else if(action==='export'){exportData();pop.remove();}
@@ -1583,6 +1589,7 @@ function openInExternalBrowser(){const t=detectInAppBrowser();const url=location
 const STORAGE_KEY='dutchpay_v1';
 const HISTORY_KEY='dutchpay_history';
 const HISTORY_DEL_KEY='dutchpay_hist_deleted';
+const FIXED_HISTORY_KEY='dutchpay_fixed_history_v1';
 const AUTO_BACKUP_KEY='dutchpay_autobackups';
 const AUTO_BACKUP_MAX=5;
 
@@ -1731,6 +1738,8 @@ let   DBX_DIR=localStorage.getItem(DBX_MIGRATED)==='1'?DBX_ROOT:DBX_OLD_ROOT;
 const dbxDir=()=>DBX_DIR;
 const dbxMainFile=()=>DBX_DIR+'/dutch-pay_data.json';
 const dbxHistFile=()=>DBX_DIR+'/dutch-pay_history.json';
+const dbxFixedFile=()=>DBX_DIR+'/dutch-pay_fixed-history.json';
+const dbxFixedDir=()=>DBX_DIR+'/fixed-archives';
 
 /* 저장 위치 확인·이전 — 부팅 때 한 번. 원본은 그대로 두고 복사만 한다. */
 async function _dbxRpc(token,ep,body){
@@ -2686,7 +2695,7 @@ function _pmShowTreatItems(nm,ym){
   const html=`<div class="pm-payer-modal-bg" onclick="this.remove()"><div class="pm-payer-modal" onclick="event.stopPropagation()"><div class="pm-payer-modal-handle"></div><div class="pm-payer-modal-hd"><div class="pm-payer-modal-name">${e(nm)}</div><div class="pm-payer-modal-sub">${label} 한턱 내역</div><button class="pm-payer-modal-close" onclick="this.closest('.pm-payer-modal-bg').remove()">✕</button></div><div class="pm-payer-modal-body">${rowsHtml||'<p style="padding:16px 16px;color:var(--label3);font-size:13px">한턱 항목이 없어요</p>'}</div><div class="pm-payer-modal-foot"><span class="pm-payer-modal-foot-lbl">합계</span><span class="pm-payer-modal-foot-amt">${fmt(total)}원</span></div></div></div>`;
   document.body.insertAdjacentHTML('beforeend',html);
 }
-function _pmDelRec(id,e){e.stopPropagation();if(!confirm('이 기록을 삭제할까요?'))return;_saveDelId(id);saveHistory(loadHistory().filter(r=>r.id!==id));toast('기록이 삭제됐어요');if(hDbxGetToken())hSyncDropbox(true);_patchHistResults();}
+function _pmDelRec(id,e){e.stopPropagation();if(_fixedMutationBlocked(id))return;if(!confirm('이 기록을 삭제할까요?'))return;_saveDelId(id);saveHistory(loadHistory().filter(r=>r.id!==id));toast('기록이 삭제됐어요');if(hDbxGetToken())hSyncDropbox(true);_patchHistResults();}
 function _reRenderPayment(){if(window.innerWidth<700){const el=document.getElementById('mBody');if(el&&mTab==='payment')renderPaymentBody(el);}else{if(dTab==='payment')renderPaymentView('dREye','dRTitle','dRSub','dRBody');}}
 function _patchHistResults(){const el=document.querySelector('.pm-hist-results');if(!el)return;const openAllRec=el.querySelector('.pm-allrec-card.open');const openAllRecId=openAllRec?openAllRec.dataset.recId:null;const openRec=el.querySelector('.pm-record-card.open');const openRecId=openRec?openRec.dataset.recId:null;const openRecTxn=openRec?openRec.dataset.txnKey:null;el.innerHTML=_pmHistResultsHtml();if(openAllRecId)toggleAllRecCard(openAllRecId);if(openRecId&&openRecTxn)togglePmRecCard(openRecId,openRecTxn);}
 function togglePmRecCard(rid,rkey){const card=document.querySelector(`.pm-record-card[data-rec-id="${CSS.escape(rid)}"]`);if(!card)return;const detail=card.querySelector('.pm-rec-detail');if(!detail)return;const chev=card.querySelector('.pm-record-chev');const isOpen=detail.style.display!=='none';if(isOpen){detail.style.display='none';card.classList.remove('open');if(chev)chev.classList.remove('open');card.querySelector('.pm-hist-edit-panel')?.remove();}else{detail.style.display='block';card.classList.add('open');if(chev)chev.classList.add('open');}}
@@ -2701,7 +2710,8 @@ function toggleAllRecCard(recId){
   const txns=_myName?(rec.txns||[]).filter(t=>t.to===_myName):(rec.txns||[]);const pmObj=rec.payments||{};
   const detail=document.createElement('div');detail.className='pm-allrec-detail';
   const dbxBtn=hDbxGetToken()?`<div style="padding:10px 14px 4px"><button class="pm-dbx-btn" style="margin-top:0" onclick="saveHistRecToDropbox('${jsa(recId)}')">☁️ Dropbox에 이미지 저장</button></div>`:'';
-  const ownerBtns=_ownerUnlocked?`<div class="rc-owner-actions"><button class="rc-owner-btn edit" onclick="loadHistoryForEdit('${jsa(recId)}')">✏️ 불러오기</button><button class="rc-owner-btn del" onclick="_pmDelRec('${jsa(recId)}',event)">🗑 삭제</button></div>`:'';
+  const fixed=_isHistoryFixed(recId);
+  const ownerBtns=_ownerUnlocked?`<div class="rc-owner-actions"><button class="rc-owner-btn edit" onclick="${fixed?`loadHistoryAsGroup('${jsa(recId)}')`:`loadHistoryForEdit('${jsa(recId)}')`}">${fixed?'📄 복사본 불러오기':'✏️ 불러오기'}</button>${fixed?'<span class="rc-fix-btn fixed">🔒 FIX됨</span>':`<button class="rc-owner-btn del" onclick="_pmDelRec('${jsa(recId)}',event)">🗑 삭제</button>`}</div>`:'';
   if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>'+dbxBtn+ownerBtns;}
   else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va2=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va2?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">${t.to===_myName?'✓ 입금완료':'✓ 송금완료'}</span>`):`<span class="pm-badge pending">${t.to===_myName?'미입금':'미확인'}</span>`;const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(recId)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+dbxBtn+ownerBtns;}
   card.insertAdjacentElement('afterend',detail);
@@ -2714,7 +2724,7 @@ function _pmSegHtml(){
 function _pmCurrentHtml(txns){
   const hasItems=items.some(it=>+it.amount!==0);
   const dbxBtn=hDbxGetToken()?'<button class="pm-dbx-btn" onclick="saveSettleToDropbox()">☁️ Dropbox에 이미지 저장</button>':'';
-  const saveBtn='<button class="pm-save-btn" onclick="saveToHistory()">📌 기록보관함에 저장</button>';
+  const saveBtn='<button class="pm-save-btn" onclick="saveToHistory()">📌 기록보관함에 저장</button><button class="pm-save-btn" style="margin-top:8px;background:#8b6200" onclick="_fixCurrentHistory()">🔒 저장 후 FIX</button>';
   if(!txns.length)return '<div class="empty" style="padding:40px 0"><div class="empty-icon">'+svgEmpty+'</div><p>정산할 입금 내역이 없어요</p></div>'+(hasItems?saveBtn+dbxBtn:'');
   return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">입금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>'+saveBtn+dbxBtn;
 }
@@ -2948,6 +2958,7 @@ function _pmMonthlyHtml(allRecs){
 }
 
 function toggleHistRecordPanel(recId,txnKey){
+  if(_fixedMutationBlocked(recId))return;
   const card=document.querySelector(`.pm-record-card[data-rec-id="${CSS.escape(recId)}"]`);
   if(!card)return;
   const existing=card.querySelector('.pm-hist-edit-panel');
@@ -3631,32 +3642,36 @@ function saveToHistory(){
     const raw=localStorage.getItem(HISTORY_KEY);
     const arr=raw?JSON.parse(raw):[];
     if(_loadedHistId){
+      if(_fixedMutationBlocked(_loadedHistId)){_loadedHistId=null;return null;}
       const editIdx=arr.findIndex(r=>r.id===_loadedHistId);
       if(editIdx>=0){
         arr[editIdx]={...arr[editIdx],...record,id:_loadedHistId};
       }else{
         arr.unshift(record);
       }
-      localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
+      saveHistory(arr);
       _loadedHistId=null;
       toast('기록이 수정됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
     }else{
       const dupIdx=arr.findIndex(r=>_histFingerprint(r)===_histFingerprint(record));
-      if(dupIdx>=0){
+      if(dupIdx>=0&&!_isHistoryFixed(arr[dupIdx].id)){
         record.items=_mergeHistoryReceiptDetails(arr[dupIdx].items,record.items);
         arr[dupIdx]={...arr[dupIdx],people:record.people,items:record.items,total:record.total,payments:record.payments,txns:record.txns,savedAt:record.savedAt};
-        localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
+        record.id=arr[dupIdx].id;
+        saveHistory(arr);
         toast('기록이 업데이트됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
       }else{
-        // 날짜·참여자만 같은 다른 정산을 기존 기록으로 오인해 덮어쓰지 않는다.
+        // FIX 원본 또는 날짜·참여자만 같은 다른 정산은 덮어쓰지 않고 새 기록으로 남긴다.
         arr.unshift(record);
-        localStorage.setItem(HISTORY_KEY,JSON.stringify(arr));
-        toast('기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+        saveHistory(arr);
+        toast(dupIdx>=0?'FIX 원본은 유지하고 새 기록으로 저장했어요 ✓':'기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
       }
     }
     if(hDbxGetToken())hSyncDropbox(true);
+    return record;
   }catch(err){
     toast('저장에 실패했어요',{type:'error'});
+    return null;
   }
 }
 
@@ -3680,6 +3695,7 @@ function _updateArchivedReceipts({preserveReceiptUrl=true}={}){
     if(_loadedHistId)idx=arr.findIndex(r=>r.id===_loadedHistId);
     if(idx<0)idx=arr.findIndex(r=>_histFingerprint(r)===_histFingerprint(cur));
     if(idx<0)return false; // 보관함에 없으면 아무것도 안 함
+    if(_isHistoryFixed(arr[idx].id))return false;
     arr[idx]={...arr[idx],items:_mergeHistoryReceiptDetails(arr[idx].items,JSON.parse(JSON.stringify(items)),{preserveUrl:preserveReceiptUrl}),savedAt:new Date().toISOString()};
     saveHistory(arr);
     if(hDbxGetToken())try{hSyncDropbox(true);}catch(e){}
@@ -3693,17 +3709,64 @@ const DBX_H_LASTSYNC='dutchpay_dbx_lastsync';
 const svgArrowH='<svg width="13" height="13" viewBox="0 0 24 24"><line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M13 6 L22 12 L13 18 Z" fill="currentColor"/></svg>';
 
 function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JSON.parse(r):[];}catch(e){return [];}}
+function _stableJson(v){
+  if(v===null||typeof v!=='object')return JSON.stringify(v);
+  if(Array.isArray(v))return'['+v.map(_stableJson).join(',')+']';
+  return'{'+Object.keys(v).filter(k=>v[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+_stableJson(v[k])).join(',')+'}';
+}
+function _fixedGuard(payload){
+  const s=_stableJson(payload);let a=0x811c9dc5,b=0x9e3779b9;
+  for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);a=Math.imul(a^c,0x01000193);b=Math.imul(b^(c+i),0x85ebca6b);}
+  return((a>>>0).toString(16).padStart(8,'0')+(b>>>0).toString(16).padStart(8,'0'));
+}
+function _loadFixedArchivesRaw(){try{const v=JSON.parse(localStorage.getItem(FIXED_HISTORY_KEY)||'[]');return Array.isArray(v)?v:[];}catch(e){return[];}}
+function loadFixedArchives(){return _loadFixedArchivesRaw().filter(x=>x&&x.fixId&&x.recordId&&x.payload&&x.guard===_fixedGuard(x.payload));}
+function _saveFixedArchives(arr){
+  const map=new Map();(arr||[]).forEach(x=>{if(x&&x.fixId&&x.recordId&&x.payload&&x.guard===_fixedGuard(x.payload)&&!map.has(x.fixId))map.set(x.fixId,x);});
+  const clean=[...map.values()].sort((a,b)=>(a.fixedAt||'').localeCompare(b.fixedAt||''));
+  localStorage.setItem(FIXED_HISTORY_KEY,JSON.stringify(clean));return clean;
+}
+function _fixedArchiveFor(recordId){return loadFixedArchives().find(x=>x.recordId===recordId)||null;}
+function _isHistoryFixed(recordId){return!!_fixedArchiveFor(recordId);}
+function _removeDelId(id){try{const s=_loadDelIds();s.delete(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
+function _enforceFixedHistory(arr){
+  const out=_dedupHistory(Array.isArray(arr)?arr:[]),byId=new Map(out.map((r,i)=>[r.id,i]));
+  const applied=new Set();loadFixedArchives().forEach(f=>{if(applied.has(f.recordId))return;applied.add(f.recordId);const copy=JSON.parse(JSON.stringify(f.payload));const idx=byId.get(f.recordId);if(idx===undefined){byId.set(f.recordId,out.length);out.push(copy);}else{out[idx]=copy;}_removeDelId(f.recordId);});
+  return out.sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));
+}
+async function _verifyAndRepairFixedHistory(){
+  const raw=_loadFixedArchivesRaw(),fixed=loadFixedArchives();let bad=raw.length-fixed.length;
+  for(const f of fixed){if(f.sha256&&await _hSha256b64url(_stableJson(f.payload))!==f.sha256)bad++;}
+  if(bad){toast(`FIX 원본 ${bad}건의 무결성 확인이 필요해요`,{type:'error',duration:5000});return false;}
+  const before=JSON.stringify(_dedupHistory(loadHistory()));const repaired=_enforceFixedHistory(loadHistory());
+  if(JSON.stringify(repaired)!==before){localStorage.setItem(HISTORY_KEY,JSON.stringify(repaired));toast('FIX 원본으로 기록을 자동 복구했어요',{type:'success',duration:4000});return true;}
+  return false;
+}
+async function fixHistoryRecord(id){
+  const record=loadHistory().find(r=>r.id===id);if(!record){toast('고정할 기록을 찾지 못했어요',{type:'error'});return false;}
+  if(_isHistoryFixed(id)){toast('이미 FIX된 기록이에요',{type:'info'});return true;}
+  if(!confirm('이 기록을 FIX할까요?\n\nFIX 후에는 원본을 수정하거나 삭제할 수 없습니다. 변경이 필요하면 원본을 불러와 새 기록으로 저장할 수 있어요.'))return false;
+  const payload=JSON.parse(JSON.stringify(record));const canonical=_stableJson(payload);const fixedAt=new Date().toISOString();
+  const entry={schemaVersion:1,fixId:'fix_'+Date.now()+'_'+_hRandomStr(8),recordId:id,fixedAt,payload,guard:_fixedGuard(payload),sha256:await _hSha256b64url(canonical)};
+  try{_saveFixedArchives([...loadFixedArchives(),entry]);_removeDelId(id);saveHistory(loadHistory());}
+  catch(e){toast('저장 공간이 부족해 FIX하지 못했어요',{type:'error'});return false;}
+  if(hDbxGetToken())try{await _syncFixedArchives(hDbxGetToken());}catch(e){toast('기기에는 FIX됐지만 Dropbox 원본 저장은 재시도가 필요해요',{type:'error',duration:5000});}
+  if(_histDrawerOpen)_refreshHistDrawer();else renderAll();
+  toast('🔒 FIX 완료 — 이 원본은 수정·삭제되지 않아요',{type:'success',duration:4500});return true;
+}
+function _fixedMutationBlocked(id){if(!_isHistoryFixed(id))return false;toast('🔒 FIX된 원본은 바꿀 수 없어요. “불러오기” 후 새 기록으로 저장하세요.',{type:'info',duration:4200});return true;}
 function _loadDelIds(){try{return new Set(JSON.parse(localStorage.getItem(HISTORY_DEL_KEY)||'[]'));}catch(e){return new Set();}}
-function _saveDelId(id){try{const s=_loadDelIds();s.add(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
+function _saveDelId(id){try{if(_isHistoryFixed(id))return;const s=_loadDelIds();s.add(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
 function _mergeDelIds(remoteIds){try{const s=_loadDelIds();(remoteIds||[]).forEach(id=>s.add(id));localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));return s;}catch(e){return _loadDelIds();}}
 function _histFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|'),(r.items||[]).map(i=>`${i.name||''}|${+i.amount||0}|${i.payer||''}|${i.isTreat?1:0}|${(i.members||[]).slice().sort().join('~')}|${(i.watchers||[]).slice().sort().join('~')}|${i.rounderOverride||''}`).sort().join(',')].join('§');}
 function _histSoftFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|')].join('§');}
 function _dedupHistory(arr){const map=new Map();arr.forEach((r,idx)=>{const key=r&&r.id!=null?'id:'+String(r.id):'legacy:'+idx;const ex=map.get(key);if(!ex){map.set(key,r);}else{const isNewer=(r.savedAt||'')>(ex.savedAt||'');const winner=isNewer?r:ex,loser=isNewer?ex:r;map.set(key,{...winner,payments:{...(loser.payments||{}),...(winner.payments||{})}});}});return Array.from(map.values());}
-function saveHistory(arr){try{const deduped=_dedupHistory(arr);const removed=arr.length-deduped.length;localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));if(removed>0)setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),50);}catch(e){toast('저장 공간이 부족해 기록을 저장하지 못했어요',{type:'error'});}}
+function saveHistory(arr){try{const deduped=_enforceFixedHistory(arr);const removed=arr.length-_dedupHistory(arr).length;localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));if(removed>0)setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),50);}catch(e){toast('저장 공간이 부족해 기록을 저장하지 못했어요',{type:'error'});}}
 function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const deduped=_dedupHistory(arr);const removed=arr.length-deduped.length;if(removed>0){localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),400);}}catch(e){}}
 function _migrateHistoryGroupNames(){try{const arr=loadHistory();let changed=false;arr.forEach(r=>{const correct=(r.people||[]).join(', ');if(correct&&r.groupName!==correct){r.groupName=correct;changed=true;}});if(changed)saveHistory(arr);}catch(e){}}
 
 function deleteHistoryRecord(id){
+  if(_fixedMutationBlocked(id))return;
   if(!confirm('이 기록을 삭제할까요?'))return;
   _saveDelId(id);
   saveHistory(loadHistory().filter(r=>r.id!==id));
@@ -3723,6 +3786,7 @@ function toggleHistoryCard(sid){
 }
 
 function toggleRcTxnPanel(recId,txnKey){
+  if(_fixedMutationBlocked(recId))return;
   const row=document.querySelector(`.rc-txn-row[data-rec-id="${CSS.escape(recId)}"][data-txn-key="${CSS.escape(txnKey)}"]`);
   if(!row)return;
   const next=row.nextElementSibling;
@@ -3786,6 +3850,7 @@ function _refreshRcCard(recId){
 
 function _buildRecordCardHtml(r){
   const sid=r.id.replace(/[^a-zA-Z0-9]/g,'');
+  const fixed=_isHistoryFixed(r.id);
   const fhd=d=>{if(!d)return'';const[y,m,day]=d.split('-');return`${y}년 ${+m}월 ${+day}일`;};
   const dateStr=r.dateEnd&&r.dateEnd!==r.dateStart
     ?`${fhd(r.dateStart)} ~ ${fhd(r.dateEnd)}`
@@ -3823,9 +3888,8 @@ function _buildRecordCardHtml(r){
       <span class="rc-saved-at">${savedAtStr} 저장 · ${(r.people||[]).length}명</span>
       <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
         <button class="rc-load-btn" onclick="shareHistoryImage('${jsa(r.id)}')">이미지</button>
-        <button class="rc-load-btn" onclick="loadHistoryAsGroup('${jsa(r.id)}')">불러오기</button>
-        <button class="rc-load-btn" onclick="loadHistoryForEdit('${jsa(r.id)}')">수정</button>
-        <button class="rc-del-btn" onclick="deleteHistoryRecord('${jsa(r.id)}')">삭제</button>
+        <button class="rc-load-btn" onclick="loadHistoryAsGroup('${jsa(r.id)}')">${fixed?'복사본':'불러오기'}</button>
+        ${fixed?'<span class="rc-fix-btn fixed" title="무결성 해시로 보호되는 원본">🔒 FIX됨</span>':`<button class="rc-fix-btn" onclick="fixHistoryRecord('${jsa(r.id)}')">🔒 FIX</button><button class="rc-load-btn" onclick="loadHistoryForEdit('${jsa(r.id)}')">수정</button><button class="rc-del-btn" onclick="deleteHistoryRecord('${jsa(r.id)}')">삭제</button>`}
       </div>
     </div>
   </div>`;
@@ -3903,6 +3967,7 @@ function loadHistoryAsGroup(id){
   toast(`'${newGroup.name}' 그룹으로 불러왔어요`,{type:'success'});
 }
 function loadHistoryForEdit(id){
+  if(_fixedMutationBlocked(id))return;
   const records=loadHistory();
   const r=records.find(rec=>rec.id===id);
   if(!r)return;
@@ -3971,7 +4036,7 @@ function _renderHDbxPanel(){
   let acHtml='';
   if(token){
     try{const ac=JSON.parse(localStorage.getItem('dutchpay_dbx_account')||'{}');if(ac.name){acHtml=`<div class="dbx-account"><div class="dbx-account-info"><div class="dbx-account-name">${e(ac.name)}</div><div class="dbx-account-email">${e(ac.email)}</div></div><button class="dbx-disconnect" onclick="hDbxDisconnect()">연결 해제</button></div>`;}}catch(e2){}
-    panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body">${acHtml}<div class="dbx-btn-row"><button class="dbx-btn secondary" onclick="hSyncDropbox()">지금 동기화</button></div><div style="font-size:11px;color:var(--label3);margin-top:10px;text-align:center">파일: ${e(dbxHistFile())}</div></div></div>`;
+    panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body">${acHtml}<div class="dbx-btn-row"><button class="dbx-btn secondary" onclick="hSyncDropbox()">지금 동기화</button></div><div style="font-size:11px;color:var(--label3);margin-top:10px;text-align:center">일반 기록 + FIX 원본 별도 보관</div></div></div>`;
   }else{
     const redirectUri=location.origin+location.pathname;
     panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body"><div class="dbx-field"><div class="dbx-label">Dropbox App Key</div><input class="dbx-inp" id="hDbxAppKey" placeholder="앱 키 입력" value="${e(appKey)}"/><div class="dbx-guide">1. Dropbox 개발자 콘솔에서 앱 생성<br>2. Permission: files.content.write, files.content.read<br>3. Redirect URI: <code>${redirectUri}</code><br>4. App Key 복사 후 위에 입력</div></div><button class="dbx-btn" onclick="hDbxConnect()">Dropbox 연결하기</button></div></div>`;
@@ -4048,10 +4113,28 @@ function hDbxDisconnect(){
 }
 
 let _hSyncing=false;
+async function _syncFixedArchives(token){
+  let candidates=[...loadFixedArchives()];
+  const manifest=await _dbxDownload(token,dbxFixedFile());
+  if(Array.isArray(manifest))candidates.push(...manifest);
+  // 매 FIX마다 만든 개별 원본도 훑어 manifest가 손상되거나 옛 기기에서 덮여도 다시 조립한다.
+  try{
+    let res=await _dbxRpc(token,'files/list_folder',{path:dbxFixedDir()});
+    while(res.ok){const data=await res.json();for(const ent of(data.entries||[])){if(ent['.tag']==='file'&&/\.json$/i.test(ent.name)){const one=await _dbxDownload(token,ent.path_display||ent.path_lower);if(one)candidates.push(one);}}if(!data.has_more)break;res=await _dbxRpc(token,'files/list_folder/continue',{cursor:data.cursor});}
+  }catch(e){}
+  const valid=[];
+  for(const f of candidates){if(!f||!f.fixId||!f.recordId||!f.payload||f.guard!==_fixedGuard(f.payload))continue;if(f.sha256&&await _hSha256b64url(_stableJson(f.payload))!==f.sha256)continue;valid.push(f);}
+  const merged=_saveFixedArchives(valid);
+  await _dbxRpc(token,'files/create_folder_v2',{path:dbxFixedDir()});
+  if(!await _dbxUpload(token,dbxFixedFile(),JSON.stringify(merged,null,2)))throw new Error('FIX manifest upload failed');
+  for(const f of merged){const safe=String(f.fixId).replace(/[^a-zA-Z0-9_-]/g,'_');if(!await _dbxUpload(token,dbxFixedDir()+'/'+safe+'.json',JSON.stringify(f,null,2)))throw new Error('FIX archive upload failed');}
+  await _verifyAndRepairFixedHistory();return merged;
+}
 async function hSyncDropbox(uploadOnly=false){
   const token=hDbxGetToken();if(!token)return;
   if(_hSyncing)return;_hSyncing=true;
   try{
+    await _syncFixedArchives(token);
     const local=loadHistory();
     if(!uploadOnly){
       const raw=await _dbxDownload(token,dbxHistFile());
@@ -4059,7 +4142,7 @@ async function hSyncDropbox(uploadOnly=false){
         const remoteRecs=Array.isArray(raw)?raw:(raw.records||[]);
         const delIds=_mergeDelIds(Array.isArray(raw)?[]:(raw.deletedIds||[]));
         const map=new Map();
-        [...remoteRecs,...local].forEach(r=>{if(delIds.has(r.id))return;const ex=map.get(r.id);if(!ex||(r.savedAt||'')>(ex.savedAt||''))map.set(r.id,r);});
+        [...remoteRecs,...local].forEach(r=>{if(delIds.has(r.id)&&!_isHistoryFixed(r.id))return;const ex=map.get(r.id);if(!ex||(r.savedAt||'')>(ex.savedAt||''))map.set(r.id,r);});
         const merged=Array.from(map.values()).sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));
         saveHistory(merged);
       }
@@ -4312,15 +4395,26 @@ async function generateSettleCanvas(){
 // 정산 탭 하단 '기록 보관함 저장' 버튼 — 저장 여부에 따라 라벨/색 전환, 항상 저장·업데이트 가능 (v5.74)
 function _histSaveBtnHtml(){
   if(!items.some(it=>+it.amount!==0))return '';
-  const saved=_isAlreadySaved();
-  const hint=saved?'<div class="hist-save-hint">영수증을 붙였거나 내용을 바꿨다면 다시 눌러 업데이트하세요</div>':'';
-  return `<div class="hist-save-row"><button class="hist-save-btn${saved?' saved':''}" onclick="_saveHistFromResult()">${saved?'✓ 기록 보관함에 저장됨':'📌 기록 보관함에 저장'}</button>${hint}</div>`;
+  const rec=_currentHistoryRecord(),saved=!!rec,fixed=!!(rec&&_isHistoryFixed(rec.id)&&_historyContentSignature(rec)===_currentContentSignature());
+  const hint=fixed?'<div class="hist-save-hint">FIX 원본은 내용·상세내역·정산값이 잠겨요. 변경본은 새 기록으로 저장됩니다.</div>':(saved?'<div class="hist-save-hint">영수증을 붙였거나 내용을 바꿨다면 다시 눌러 업데이트하세요</div>':'<div class="hist-save-hint">FIX는 먼저 보관함에 저장한 뒤 변경·삭제할 수 없는 원본을 만듭니다.</div>');
+  return `<div class="hist-save-row"><button class="hist-save-btn${saved?' saved':''}" onclick="_saveHistFromResult()">${saved?'✓ 기록 보관함에 저장됨':'📌 기록 보관함에 저장'}</button><button class="hist-fix-btn${fixed?' fixed':''}" onclick="_fixCurrentHistory()">${fixed?'🔒 FIX됨':'🔒 FIX'}</button>${hint}</div>`;
 }
 function _saveHistFromResult(){saveToHistory();renderAll();}
-function _isAlreadySaved(){
-  const total=items.reduce((s,it)=>s+(+it.amount||0),0);if(!total)return false;
+function _currentHistoryRecord(){
+  const total=items.reduce((s,it)=>s+(+it.amount||0),0);if(!total)return null;
   const record={dateStart:settleDateStart,dateEnd:settleDateEnd,people:[...people],items:JSON.parse(JSON.stringify(items))};
-  const fp=_histFingerprint(record);return loadHistory().some(r=>_histFingerprint(r)===fp);
+  const fp=_histFingerprint(record),matches=loadHistory().filter(r=>_histFingerprint(r)===fp);
+  return matches.find(r=>_historyContentSignature(r)===_currentContentSignature())||matches[0]||null;
+}
+function _historyContentSignature(r){return _stableJson({dateStart:r.dateStart||'',dateEnd:r.dateEnd||null,people:r.people||[],total:+r.total||0,items:(r.items||[]).map(({id,...it})=>it),payments:r.payments||{}});}
+function _currentContentSignature(){return _stableJson({dateStart:settleDateStart||'',dateEnd:settleDateEnd||null,people:[...people],total:items.reduce((s,it)=>s+(+it.amount||0),0),items:JSON.parse(JSON.stringify(items)).map(({id,...it})=>it),payments:JSON.parse(JSON.stringify(payments||{}))});}
+async function _fixCurrentHistory(){
+  let rec=_currentHistoryRecord();
+  if(!rec||(_isHistoryFixed(rec.id)&&_historyContentSignature(rec)!==_currentContentSignature())){const saved=saveToHistory();if(!saved)return;rec=loadHistory().find(r=>r.id===saved.id)||_currentHistoryRecord();}
+  if(rec)await fixHistoryRecord(rec.id);
+}
+function _isAlreadySaved(){
+  return!!_currentHistoryRecord();
 }
 function _afterShare(){
   if(_isAlreadySaved()){toast('이미지 공유 완료',{type:'success'});return;}
@@ -4550,6 +4644,7 @@ const _receiptDbImportResult=_consumeReceiptDbTransfer();
 _migrateHistoryGroupNames();
 _deduplicateHistoryOnStartup();
 renderAll();
+try{_verifyAndRepairFixedHistory().then(changed=>{if(changed)renderAll();});}catch(e){}
 // 영수증 사진을 localStorage→IndexedDB로 이전(저장공간 확보). 비동기·1회, 실패해도 앱 동작엔 지장 없음
 try{_migrateReceiptsToIdb();}catch(e){}
 try{_restoreReceiptUploadQueue().then(()=>_flushReceiptUploads());_flushReceiptDeletes();}catch(e){}
