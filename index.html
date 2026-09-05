@@ -1224,9 +1224,14 @@ svg{display:block;flex-shrink:0;}
   }
   .mob-eyebrow-row{display:flex;align-items:baseline;gap:10px;color:var(--label3);font-size:11px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;}
   .mob-ver-badge{padding:0;border:0;line-height:1.25;letter-spacing:0;text-transform:none;}
-  .mob-title-row{align-items:flex-end;margin:10px 0 20px;}
-  .mob-title{font-size:24px;line-height:1.15;}
-  .mob-total-stack{text-align:right;}
+  .mob-title-row{align-items:flex-end;gap:14px;min-width:0;margin:10px 0 20px;}
+  /* 모바일의 .mob-title은 span이라 전역 max-width만으로는 내부 이름의
+     overflow가 잘리지 않는다. 제목을 실제 flex 영역으로 만들고 이름만
+     줄여서, 참여자가 많아도 오른쪽 총액 칸을 절대 침범하지 않게 한다. */
+  .mob-title{display:flex;flex:1;align-items:center;gap:4px;min-width:0;font-size:24px;line-height:1.15;}
+  .mob-title .group-switcher-name{display:block;flex:1;min-width:0;max-width:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .mob-title .group-switcher-arrow{display:block;flex:0 0 auto;}
+  .mob-total-stack{flex:0 0 auto;min-width:max-content;text-align:right;}
   .mob-total-stack>span{display:block;}
   .mob-total-stack .mob-total-caption{margin-bottom:3px;font-size:10px;font-weight:600;color:var(--label3);}
   .mob-total-stack #mTotal{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;}
@@ -1406,7 +1411,7 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v5.99';
+const APP_VERSION='v6.00';
 const BUILD_TIME='2026-09-05 22:02';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
