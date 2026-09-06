@@ -629,6 +629,16 @@ suite('TC15: 잠금 불변 기록 [v6.12]', () => {
     try{const host=APP.document.createElement('div');host.innerHTML=APP._buildRecordCardHtml(rec);if(!host.textContent.includes('수정')||!host.textContent.includes('삭제'))throw new Error('잠긴 기록의 수정 또는 삭제 버튼 누락');}
     finally{APP.localStorage.removeItem(key);}
   });
+  test('잠금 수정본의 내용이 같으면 동일 기록으로 판단', () => {
+    const same={...JSON.parse(JSON.stringify(rec)),id:'new-id',savedAt:'2026-09-06T08:43:00Z'};
+    expect(APP._sameHistoryContent(rec,same)).toBe(true);
+  });
+  test('금액이나 깍두기가 바뀌면 변경 기록으로 판단', () => {
+    const amountChanged=JSON.parse(JSON.stringify(rec));amountChanged.items[0].amount=30001;
+    expect(APP._sameHistoryContent(rec,amountChanged)).toBe(false);
+    const coupleChanged={...JSON.parse(JSON.stringify(rec)),coupleNames:['B']};
+    expect(APP._sameHistoryContent(rec,coupleChanged)).toBe(false);
+  });
   test('잠금 삭제 표식이 있으면 원본이 다시 나타나지 않음', () => {
     const delKey='dutchpay_fixed_deleted_v1';install();APP.localStorage.setItem(delKey,JSON.stringify([rec.id]));
     try{expect(APP._isHistoryFixed(rec.id)).toBe(false);expect(APP._enforceFixedHistory([]).length).toBe(0);}

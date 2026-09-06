@@ -3676,6 +3676,13 @@ function saveToHistory(){
     const raw=localStorage.getItem(HISTORY_KEY);
     const arr=raw?JSON.parse(raw):[];
     if(_editingFixedSourceId){
+      const sourceIdx=arr.findIndex(r=>r.id===_editingFixedSourceId);
+      if(sourceIdx>=0&&_sameHistoryContent(arr[sourceIdx],record)){
+        const source=arr[sourceIdx];
+        _loadedHistId=source.id;_editingFixedSourceId=null;
+        toast('변경된 내용이 없어 기존 기록을 그대로 유지했어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+        return source;
+      }
       // 잠긴 원본은 그대로 두고 사용자가 수정한 내용은 새 버전으로 저장한다.
       arr.unshift(record);
       if(!saveHistory(arr))return null;
@@ -4494,8 +4501,9 @@ function _currentHistoryRecord(){
   const fp=_histFingerprint(record),matches=loadHistory().filter(r=>_histFingerprint(r)===fp);
   return matches.find(r=>_historyContentSignature(r)===_currentContentSignature())||matches[0]||null;
 }
-function _historyContentSignature(r){return _stableJson({dateStart:r.dateStart||'',dateEnd:r.dateEnd||null,people:r.people||[],total:+r.total||0,items:(r.items||[]).map(({id,...it})=>it),payments:r.payments||{}});}
-function _currentContentSignature(){return _stableJson({dateStart:settleDateStart||'',dateEnd:settleDateEnd||null,people:[...people],total:items.reduce((s,it)=>s+(+it.amount||0),0),items:JSON.parse(JSON.stringify(items)).map(({id,...it})=>it),payments:JSON.parse(JSON.stringify(payments||{}))});}
+function _historyContentSignature(r){return _stableJson({dateStart:r.dateStart||'',dateEnd:r.dateEnd||null,people:r.people||[],total:+r.total||0,items:(r.items||[]).map(({id,...it})=>it),payments:r.payments||{},coupleNames:r.coupleNames||[]});}
+function _currentContentSignature(){return _stableJson({dateStart:settleDateStart||'',dateEnd:settleDateEnd||null,people:[...people],total:items.reduce((s,it)=>s+(+it.amount||0),0),items:JSON.parse(JSON.stringify(items)).map(({id,...it})=>it),payments:JSON.parse(JSON.stringify(payments||{})),coupleNames:_coupleNames.slice()});}
+function _sameHistoryContent(a,b){return!!(a&&b&&_historyContentSignature(a)===_historyContentSignature(b));}
 async function _fixCurrentHistory(){
   if(_editingFixedSourceId){const saved=saveToHistory();if(saved)await fixHistoryRecord(saved.id);return;}
   let rec=_currentHistoryRecord();
