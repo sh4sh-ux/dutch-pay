@@ -731,8 +731,8 @@ svg{display:block;flex-shrink:0;}
 .hist-save-btn:hover{opacity:.85;}
 .hist-save-btn:active{transform:scale(.99);}
 .hist-save-btn.saved{background:var(--green-bg);color:var(--green-txt);}
-.hist-fix-btn{border:1px solid #e8c66a;border-radius:var(--rs);padding:0 15px;font-size:13px;font-weight:800;font-family:inherit;background:#fff8dc;color:#8b6200;cursor:pointer;white-space:nowrap;}
-.hist-fix-btn.fixed{border-color:transparent;background:var(--green-bg);color:var(--green-txt);cursor:default;}
+.hist-fix-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #e1b72f;border-radius:var(--rs);padding:0 15px;font-size:13px;font-weight:800;font-family:inherit;background:#fff3a6;color:#665000;cursor:pointer;white-space:nowrap;}
+.hist-fix-btn.fixed{border-color:transparent;background:var(--green-bg);color:var(--green-txt);cursor:pointer;}
 .hist-save-hint{grid-column:1/-1;text-align:center;font-size:11.5px;color:var(--label3);margin-top:0;line-height:1.45;}
 .share-save-btn{width:100%;border:none;border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;background:var(--blue);color:#fff;cursor:pointer;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .share-save-btn:hover{opacity:.88;}
@@ -836,9 +836,16 @@ svg{display:block;flex-shrink:0;}
 .rc-del-btn:hover{opacity:.7;}
 .rc-load-btn{font-size:12px;color:var(--blue);border:none;background:transparent;font-weight:500;padding:8px 6px;cursor:pointer;}
 .rc-load-btn:hover{opacity:.7;}
-.rc-fix-btn{font-size:12px;color:#8b6200;border:1px solid #e8c66a;background:#fff8dc;border-radius:8px;font-weight:700;padding:6px 8px;cursor:pointer;white-space:nowrap;}
+.rc-fix-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#665000;border:1px solid #e1b72f;background:#fff3a6;border-radius:8px;font-weight:700;padding:6px 8px;cursor:pointer;white-space:nowrap;}
 .rc-fix-btn:hover{opacity:.8;}
-.rc-fix-btn.fixed{color:var(--green-txt);border-color:transparent;background:var(--green-bg);cursor:default;}
+.rc-fix-btn.fixed{color:var(--green-txt);border-color:transparent;background:var(--green-bg);cursor:pointer;}
+.lock-ico{width:14px;height:14px;display:inline-block;flex:0 0 auto;}
+.receipt-audit{display:inline-flex;align-items:center;margin-left:5px;padding:2px 6px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;}
+.receipt-audit.ok{color:var(--green-txt);background:var(--green-bg);}
+.receipt-audit.warn{color:#665000;background:#fff3a6;}
+.receipt-audit.bad{color:var(--red);background:rgba(255,59,48,.1);}
+.rc-receipt-tbl tr.audit-bad td{background:rgba(255,59,48,.045);}
+.pm-save-btn.lock-action{background:#fff3a6;color:#665000;border:1px solid #e1b72f;}
 .hist-search-wrap{padding:10px 0 4px;}
 .hist-search{width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--sep2);border-radius:10px;background:var(--card);color:var(--label);outline:none;font-family:inherit;box-sizing:border-box;}
 .hist-search:focus{border-color:var(--blue);}
@@ -1406,8 +1413,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.01';
-const BUILD_TIME='2026-09-06 07:07';
+const APP_VERSION='v6.02';
+const BUILD_TIME='2026-09-06 12:11';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1521,7 +1528,7 @@ function showDataMenu(anchorEl,ev){
   const dbxConnected=!!dbxGetToken();
   const dbxLabel=dbxConnected?'☁ Dropbox 연결됨 · 지금 동기화':'☁ Dropbox 연결 / 설정';
   if(_ownerUnlocked){
-    pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxImportOld">📥 옛 위치에서 가져오기</button><button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><button class="data-pop-btn" data-action="fixHistory">🔒 저장 후 FIX</button><button class="data-pop-btn" data-action="setCouples">💑 공유 이미지 커플 설정</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${e(_myName)}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
+    pop.innerHTML=`<div class="data-pop-hd">데이터</div><button class="data-pop-btn" data-action="dbxAction" style="color:${dbxConnected?'var(--green)':'var(--blue)'}">${dbxLabel}</button>${dbxConnected?'<button class="data-pop-btn" data-action="dbxImportOld">📥 옛 위치에서 가져오기</button><button class="data-pop-btn" data-action="dbxRename">🗂 이미지 파일명 일괄 변경</button><button class="data-pop-btn danger" data-action="dbxDisconnect">☁ Dropbox 연결 해제</button>':''}<button class="data-pop-btn" data-action="openHistory">📋 기록 보관함</button><button class="data-pop-btn" data-action="saveHistory">📌 기록 보관함에 저장</button><button class="data-pop-btn" data-action="fixHistory">잠금</button><button class="data-pop-btn" data-action="setCouples">💑 공유 이미지 커플 설정</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="exportCsv">CSV 저장</button><button class="data-pop-btn" data-action="export">전체 JSON 백업</button><div class="data-pop-divider"></div><button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${e(_myName)}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-divider"></div><button class="data-pop-btn danger" data-action="resetCurrent">↺ 이번 정산 초기화</button><button class="data-pop-btn danger" data-action="reset">전체 초기화</button><div class="data-pop-version" data-action="lockOwner" style="cursor:pointer">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
   } else {
     pop.innerHTML=`<button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-version" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
   }
@@ -1595,6 +1602,8 @@ const STORAGE_KEY='dutchpay_v1';
 const HISTORY_KEY='dutchpay_history';
 const HISTORY_DEL_KEY='dutchpay_hist_deleted';
 const FIXED_HISTORY_KEY='dutchpay_fixed_history_v1';
+const LOCK_PIN_HASH_KEY='dutchpay_lock_pin_hash_v1';
+const LOCK_PIN_SALT_KEY='dutchpay_lock_pin_salt_v1';
 const AUTO_BACKUP_KEY='dutchpay_autobackups';
 const AUTO_BACKUP_MAX=5;
 
@@ -1606,12 +1615,14 @@ function _autoBackup(reason){
     snap.forEach(g=>{((g.data&&g.data.items)||[]).forEach(it=>{if(_isDataUrl(it.receiptUrl))it.receiptUrl='';});});
     const slots=_loadAutoBackups();
     // 동일한 상태를 반복 저장해 실제 복구점을 밀어내지 않는다.
-    if(slots[0]&&JSON.stringify(slots[0].groups)===JSON.stringify(snap))return;
-    slots.unshift({reason:reason||'',savedAt:new Date().toISOString(),version:3,groups:snap,currentGroupId});
+    if(slots[0]&&JSON.stringify(slots[0].groups)===JSON.stringify(snap))return true;
+    const slot={reason:reason||'',savedAt:new Date().toISOString(),version:3,groups:snap,currentGroupId};
+    slots.unshift(slot);
     if(slots.length>AUTO_BACKUP_MAX)slots.length=AUTO_BACKUP_MAX;
-    try{localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(slots));}
-    catch(e){try{localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(slots.slice(0,1)));}catch(e2){try{localStorage.removeItem(AUTO_BACKUP_KEY);}catch(e3){}}}
-  }catch(e){}
+    localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(slots));
+    _safeStorePut('backups','auto_'+slot.savedAt+'_'+_hRandomStr(5),slot).catch(()=>{});
+    return true;
+  }catch(e){toast(_storageErrorMessage(e,'안전 백업'),{type:'error',duration:5000});return false;}
 }
 function _loadAutoBackups(){
   try{const d=JSON.parse(localStorage.getItem(AUTO_BACKUP_KEY)||'[]');return Array.isArray(d)?d:[];}catch(e){return [];}
@@ -1925,14 +1936,15 @@ async function syncFromDropbox(){
     const filtered=mergedGroups.filter(g=>!mergedDeleted[g.id]);
 
     if(conflicts.length){
-      _autoBackup('Dropbox 충돌 감지');
+      if(!_autoBackup('Dropbox 충돌 감지'))return;
       _showSyncConflictUI(conflicts,filtered,remote.currentGroupId,mergedDeleted);
       return;
     }
 
     const changed=JSON.stringify(filtered)!==JSON.stringify(groups)||JSON.stringify(mergedDeleted)!==JSON.stringify(deletedGroups);
-    if(changed){_autoBackup('Dropbox 병합 전');toast('Dropbox에서 최신 내용을 병합했어요',{type:'success'});}
+    if(changed&&!_autoBackup('Dropbox 병합 전'))return;
     await _applySyncMerge(filtered,remote.currentGroupId,mergedDeleted);
+    if(changed)toast('Dropbox에서 최신 내용을 병합했어요',{type:'success'});
   }catch(e){}finally{_syncFromRunning=false;}
 }
 async function _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted){
@@ -2002,13 +2014,17 @@ function _evictInlineReceipts(){
   return changed;
 }
 // 저장 공간 부족 시 확보: 인라인 이미지를 몰아내고, 이미지 data URI를 그대로 품은 오래된 자동 백업을 비운다
-function _reclaimStorage(){let freed=false;try{if(_evictInlineReceipts())freed=true;}catch(e){}try{if(localStorage.getItem(AUTO_BACKUP_KEY)){localStorage.removeItem(AUTO_BACKUP_KEY);freed=true;}}catch(e){}return freed;}
+function _isQuotaError(e){return!!(e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014));}
+function _storageErrorMessage(e,what){return _isQuotaError(e)?`브라우저 저장공간이 부족해 ${what}에 실패했어요`:`${what} 중 오류가 발생했어요${e&&e.message?' · '+e.message:''}`;}
+// 사용자의 복구 지점인 자동 백업은 저장공간 확보 대상으로 삼지 않는다.
+// 인라인 영수증만 IndexedDB로 이동하며 기록·백업 자체는 절대 지우지 않는다.
+function _reclaimStorage(){let freed=false;try{if(_evictInlineReceipts())freed=true;}catch(e){}return freed;}
 function saveState(){
   try{syncCurrentToGroup();_persistMainState();_scheduleSyncToDropbox();}
   catch(e){
     // 저장 공간 부족 — 인라인 이미지·오래된 백업을 정리하고 한 번 재시도 (v5.61)
     if(_reclaimStorage()){try{syncCurrentToGroup();_persistMainState();_scheduleSyncToDropbox();return;}catch(e2){}}
-    toast('저장 공간이 부족해 데이터를 저장하지 못했어요',{type:'error'});
+    toast(_storageErrorMessage(e,'데이터 저장'),{type:'error'});
   }
 }
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if((d.version===2||d.version===3)&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;deletedGroups=d.deletedGroups||{};currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);groups.forEach(g=>{_syncSnapshots[g.id]=JSON.stringify(g.data);});if(!localStorage.getItem('dutchpay_couple')){for(const grp of groups){const c=(grp.data?.couples||[])[0];if(c?.length){_coupleNames=c;localStorage.setItem('dutchpay_couple',JSON.stringify(c));break;}}}}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
@@ -2089,8 +2105,8 @@ function _consumeReceiptDbTransfer(){
     return{count:entries.length,created:existing?0:entries.length,updated:existing?entries.length:0};
   }catch(e){return null;}
 }
-function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;_autoBackup('전체 초기화 전');if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const now=new Date().toISOString();groups.forEach(g=>{deletedGroups[g.id]=now;});const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:now,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
-function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;_autoBackup('이번 정산 초기화 전');people=[];items=[];payments={};idc=0;settleDateStart=new Date().toISOString().slice(0,10);settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
+function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!_autoBackup('전체 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const now=new Date().toISOString();groups.forEach(g=>{deletedGroups[g.id]=now;});const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:now,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
+function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!_autoBackup('이번 정산 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}people=[];items=[];payments={};idc=0;settleDateStart=new Date().toISOString().slice(0,10);settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
 
 function updateMeetingDate(val){settleDateStart=val||new Date().toISOString().slice(0,10);_dpUpdate('meetingDateDisp',settleDateStart);saveState();}
 function fmtDate(iso){if(!iso)return '';const[y,m,d]=iso.split('-');return `${y}.${m}.${d}`;}
@@ -2715,7 +2731,7 @@ function toggleAllRecCard(recId){
   const detail=document.createElement('div');detail.className='pm-allrec-detail';
   const dbxBtn=hDbxGetToken()?`<div style="padding:10px 14px 4px"><button class="pm-dbx-btn" style="margin-top:0" onclick="saveHistRecToDropbox('${jsa(recId)}')">☁️ Dropbox에 이미지 저장</button></div>`:'';
   const fixed=_isHistoryFixed(recId);
-  const ownerBtns=_ownerUnlocked?`<div class="rc-owner-actions"><button class="rc-owner-btn edit" onclick="${fixed?`loadHistoryAsGroup('${jsa(recId)}')`:`loadHistoryForEdit('${jsa(recId)}')`}">${fixed?'📄 복사본 불러오기':'✏️ 불러오기'}</button>${fixed?'<span class="rc-fix-btn fixed">🔒 FIX됨</span>':`<button class="rc-owner-btn del" onclick="_pmDelRec('${jsa(recId)}',event)">🗑 삭제</button>`}</div>`:'';
+  const ownerBtns=_ownerUnlocked?`<div class="rc-owner-actions"><button class="rc-owner-btn edit" onclick="${fixed?`unlockHistoryForEdit('${jsa(recId)}')`:`loadHistoryForEdit('${jsa(recId)}')`}">${fixed?'수정':'✏️ 불러오기'}</button>${fixed?`<span class="rc-fix-btn fixed">${LOCK_CLOSED_SVG}잠김</span>`:`<button class="rc-owner-btn del" onclick="_pmDelRec('${jsa(recId)}',event)">🗑 삭제</button>`}</div>`:'';
   if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>'+dbxBtn+ownerBtns;}
   else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va2=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va2?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">${t.to===_myName?'✓ 입금완료':'✓ 송금완료'}</span>`):`<span class="pm-badge pending">${t.to===_myName?'미입금':'미확인'}</span>`;const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(recId)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+dbxBtn+ownerBtns;}
   card.insertAdjacentElement('afterend',detail);
@@ -2728,7 +2744,7 @@ function _pmSegHtml(){
 function _pmCurrentHtml(txns){
   const hasItems=items.some(it=>+it.amount!==0);
   const dbxBtn=hDbxGetToken()?'<button class="pm-dbx-btn" onclick="saveSettleToDropbox()">☁️ Dropbox에 이미지 저장</button>':'';
-  const saveBtn='<button class="pm-save-btn" onclick="saveToHistory()">📌 기록보관함에 저장</button><button class="pm-save-btn" style="margin-top:8px;background:#8b6200" onclick="_fixCurrentHistory()">🔒 저장 후 FIX</button>';
+  const saveBtn=`<button class="pm-save-btn" onclick="saveToHistory()">📌 기록보관함에 저장</button><button class="pm-save-btn lock-action" style="margin-top:8px" onclick="_fixCurrentHistory()">${LOCK_OPEN_SVG} 잠금</button>`;
   if(!txns.length)return '<div class="empty" style="padding:40px 0"><div class="empty-icon">'+svgEmpty+'</div><p>정산할 입금 내역이 없어요</p></div>'+(hasItems?saveBtn+dbxBtn:'');
   return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">입금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>'+saveBtn+dbxBtn;
 }
@@ -3347,7 +3363,9 @@ function _histAcctCustom(recId,txnKey,el){const i=document.createElement('input'
 function _rcAcctHtml(recId,txnKey,cur){const ps=['케이뱅크','카카오페이','토스뱅크','우리은행','현금'];if(cur&&!ps.includes(cur))return`<input class="pay-inp" type="text" placeholder="계좌" value="${ea(cur)}" oninput="rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','account',this.value)"/>`;return`<select class="pay-sel" onchange="if(this.value==='__custom__'){_rcAcctCustom('${jsa(recId)}','${jsa(txnKey)}',this)}else rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','account',this.value)"><option value="">선택</option>${ps.map(p=>`<option value="${ea(p)}"${cur===p?' selected':''}>${p}</option>`).join('')}<option value="__custom__">직접 입력...</option></select>`;}
 function _rcAcctCustom(recId,txnKey,el){const i=document.createElement('input');i.className='pay-inp';i.type='text';i.placeholder='계좌 직접 입력';i.oninput=()=>rcTxnUpdate(recId,txnKey,'account',i.value);el.replaceWith(i);i.focus();}
 function parseReceiptLines(text){if(!text)return[];return text.split('\n').map(l=>l.trim()).filter(l=>l&&!/^품목/.test(l)).map(l=>{const p=l.split('|').map(s=>s.trim());return{name:p[0]||'',qty:p[1]||'',unitPrice:p[2]||'',amount:p[3]||''};}).filter(r=>r.name);}
-function _receiptTableHtml(it,uid,historyId){const lines=parseReceiptLines(it.receiptText||'');const src=getReceiptSrc(it);if(!lines.length&&!src)return'';const viewer=historyId?`openArchivedReceiptViewer(${ja(historyId)},${ja(it.id)},event)`:`openReceiptViewer(${it.id},event)`;const rcptLink=src?` <button type="button" class="rc-foot-link" onclick="${viewer}" aria-label="${ea(it.name||'')} 영수증 보기">영수증<span class="rc-foot-arrow">›</span></button>`:'';const cols='<colgroup><col><col><col><col></colgroup>';if(!lines.length){return`<div class="rc-receipt-wrap" id="rcpt_${uid}"><table class="rc-receipt-tbl rc-photo-only-tbl">${cols}<tfoot><tr><td></td><td colspan="2" class="rc-foot-cell">${rcptLink}</td><td></td></tr></tfoot></table></div>`;}const rows=lines.map(r=>{const isGift=/증정|gift/i.test(r.amount);const n=+(r.amount||'').replace(/,/g,'');const neg=!isGift&&!isNaN(n)&&n<0;const amt=isGift?'<span class="rc-gift-badge">증정품</span>':e(r.amount);return`<tr><td>${e(r.name)}</td><td class="rc-qty">${e(r.qty)}</td><td class="rc-unit">${e(r.unitPrice)}</td><td${neg?' class="rc-neg"':''}>${amt}</td></tr>`;}).join('');const total=lines.reduce((s,r)=>{if(/증정/i.test(r.amount))return s;const n=+(r.amount||'').replace(/,/g,'');return s+(isNaN(n)?0:n);},0);const foot=`<tfoot><tr><td>합계</td><td colspan="2" class="rc-foot-cell">${rcptLink}</td><td${total<0?' class="rc-neg"':''}>${fmt(total)}</td></tr></tfoot>`;return`<div class="rc-receipt-wrap" id="rcpt_${uid}"><table class="rc-receipt-tbl">${cols}<thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th></tr></thead><tbody>${rows}</tbody>${foot}</table></div>`;}
+function _receiptNum(v){const s=String(v??'').replace(/,/g,'').replace(/원/g,'').trim();if(!s)return null;const n=Number(s);return Number.isFinite(n)?n:null;}
+function _receiptAudit(it,lines){let total=0,incomplete=false;const badRows=new Set();for(let i=0;i<lines.length;i++){const r=lines[i];if(/증정|gift/i.test(r.amount))continue;const q=_receiptNum(r.qty),u=_receiptNum(r.unitPrice),a=_receiptNum(r.amount);if(a===null){incomplete=true;badRows.add(i);continue;}total+=a;if(q===null||u===null)incomplete=true;else if(Math.round(q*u)!==Math.round(a))badRows.add(i);}const expense=Math.round(Number(it.amount)||0),diff=Math.round(total)-expense;if(badRows.size||diff)return{status:'bad',label:diff?`차액 ${diff>0?'+':''}${fmt(diff)}원`:'수량×단가 불일치',total,diff,badRows};if(incomplete)return{status:'warn',label:'계산 확인 필요',total,diff,badRows};return{status:'ok',label:'계산 일치',total,diff,badRows};}
+function _receiptTableHtml(it,uid,historyId){const lines=parseReceiptLines(it.receiptText||'');const src=getReceiptSrc(it);if(!lines.length&&!src)return'';const viewer=historyId?`openArchivedReceiptViewer(${ja(historyId)},${ja(it.id)},event)`:`openReceiptViewer(${it.id},event)`;const rcptLink=src?`<button type="button" class="rc-foot-link" onclick="${viewer}" aria-label="${ea(it.name||'')} 영수증 보기">영수증<span class="rc-foot-arrow">›</span></button>`:'';const detailLink=historyId?`<button type="button" class="rc-foot-link" onclick="event.stopPropagation();shareHistoryItemImage('${jsa(historyId)}','${jsa(it.id)}')">상세 이미지<span class="rc-foot-arrow">›</span></button>`:'';const cols='<colgroup><col><col><col><col></colgroup>';if(!lines.length){return`<div class="rc-receipt-wrap" id="rcpt_${uid}"><table class="rc-receipt-tbl rc-photo-only-tbl">${cols}<tfoot><tr><td></td><td colspan="2" class="rc-foot-cell">${rcptLink}${detailLink}</td><td></td></tr></tfoot></table></div>`;}const audit=_receiptAudit(it,lines);const rows=lines.map((r,i)=>{const isGift=/증정|gift/i.test(r.amount);const n=_receiptNum(r.amount);const neg=!isGift&&n!==null&&n<0;const amt=isGift?'<span class="rc-gift-badge">증정품</span>':e(r.amount);return`<tr${audit.badRows.has(i)?' class="audit-bad"':''}><td>${e(r.name)}</td><td class="rc-qty">${e(r.qty)}</td><td class="rc-unit">${e(r.unitPrice)}</td><td${neg?' class="rc-neg"':''}>${amt}</td></tr>`;}).join('');const badge=`<span class="receipt-audit ${audit.status}">${audit.status==='ok'?'✓ ':''}${e(audit.label)}</span>`;const foot=`<tfoot><tr><td>품목 전체 합계</td><td colspan="2" class="rc-foot-cell">${rcptLink}${detailLink}${badge}</td><td${audit.total<0?' class="rc-neg"':''}>${fmt(audit.total)}</td></tr></tfoot>`;return`<div class="rc-receipt-wrap" id="rcpt_${uid}"><table class="rc-receipt-tbl">${cols}<thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th></tr></thead><tbody>${rows}</tbody>${foot}</table></div>`;}
 function toggleItemReceipt(uid,ev){if(ev){ev.stopPropagation();ev.preventDefault();}const el=document.getElementById('rcpt_'+uid);if(!el)return;const open=el.classList.contains('open');el.classList.toggle('open');const btn=document.querySelector(`[data-rcpt="${uid}"]`);if(btn)btn.textContent=open?'영수증 ▼':'영수증 ▲';const chev=document.querySelector(`[data-rcpt-chev="${uid}"]`);if(chev)chev.textContent=open?'▼':'▲';}
 // ── 영수증 사진/링크 (v5.52) — 표시 전용, 정산 계산과 무관 ──
 // receiptUrl 은 외부 https 이미지 링크 또는 첨부 사진(data URI)을 담는다.
@@ -3653,7 +3671,7 @@ function saveToHistory(){
       }else{
         arr.unshift(record);
       }
-      saveHistory(arr);
+      if(!saveHistory(arr))return null;
       _loadedHistId=null;
       toast('기록이 수정됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
     }else{
@@ -3662,13 +3680,13 @@ function saveToHistory(){
         record.items=_mergeHistoryReceiptDetails(arr[dupIdx].items,record.items);
         arr[dupIdx]={...arr[dupIdx],people:record.people,items:record.items,total:record.total,payments:record.payments,txns:record.txns,savedAt:record.savedAt};
         record.id=arr[dupIdx].id;
-        saveHistory(arr);
+        if(!saveHistory(arr))return null;
         toast('기록이 업데이트됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
       }else{
         // FIX 원본 또는 날짜·참여자만 같은 다른 정산은 덮어쓰지 않고 새 기록으로 남긴다.
         arr.unshift(record);
-        saveHistory(arr);
-        toast(dupIdx>=0?'FIX 원본은 유지하고 새 기록으로 저장했어요 ✓':'기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+        if(!saveHistory(arr))return null;
+        toast(dupIdx>=0?'잠금 원본은 유지하고 새 기록으로 저장했어요 ✓':'기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
       }
     }
     if(hDbxGetToken())hSyncDropbox(true);
@@ -3723,49 +3741,75 @@ function _fixedGuard(payload){
   for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);a=Math.imul(a^c,0x01000193);b=Math.imul(b^(c+i),0x85ebca6b);}
   return((a>>>0).toString(16).padStart(8,'0')+(b>>>0).toString(16).padStart(8,'0'));
 }
+const LOCK_OPEN_SVG='<svg class="lock-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M9 10V7a4 4 0 0 1 7.5-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const LOCK_CLOSED_SVG='<svg class="lock-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="15" r="1.2" fill="currentColor"/></svg>';
+async function _lockPinHash(pin,salt){return _hSha256b64url('dutchpay-lock:'+salt+':'+pin);}
+async function _ensureLockPin(){let hash=localStorage.getItem(LOCK_PIN_HASH_KEY),salt=localStorage.getItem(LOCK_PIN_SALT_KEY);if(hash&&salt)return true;const pin=prompt('잠금에 사용할 숫자 4자리를 설정하세요.');if(pin===null)return false;if(!/^\d{4}$/.test(pin)){toast('숫자 4자리로 입력해주세요',{type:'error'});return false;}const again=prompt('같은 숫자 4자리를 한 번 더 입력하세요.');if(again!==pin){toast('비밀번호가 일치하지 않아요',{type:'error'});return false;}salt=_hRandomStr(16);hash=await _lockPinHash(pin,salt);localStorage.setItem(LOCK_PIN_SALT_KEY,salt);localStorage.setItem(LOCK_PIN_HASH_KEY,hash);return true;}
+async function _verifyLockPin(recordId){const lock=_fixedArchiveFor(recordId)||{},hash=lock.pinHash||localStorage.getItem(LOCK_PIN_HASH_KEY),salt=lock.pinSalt||localStorage.getItem(LOCK_PIN_SALT_KEY);if(!hash||!salt)return _ensureLockPin();const pin=prompt('잠금 수정 비밀번호 숫자 4자리를 입력하세요.');if(pin===null)return false;if(!/^\d{4}$/.test(pin)||await _lockPinHash(pin,salt)!==hash){toast('비밀번호가 맞지 않아요',{type:'error'});return false;}return true;}
+async function unlockHistoryForEdit(id){if(!_isHistoryFixed(id)){loadHistoryForEdit(id);return;}try{if(!await _verifyLockPin(id))return;}catch(e){toast(_storageErrorMessage(e,'비밀번호 확인'),{type:'error'});return;}toast('잠금 원본은 보존하고 수정용 복사본을 만듭니다',{type:'success',duration:3500});loadHistoryAsGroup(id);}
+function _safeStoreDb(){return new Promise((res,rej)=>{try{const q=indexedDB.open('dutchpay_safe_store',1);q.onupgradeneeded=()=>{['fixed','snapshots','backups'].forEach(n=>{if(!q.result.objectStoreNames.contains(n))q.result.createObjectStore(n);});};q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error||new Error('안전 저장소를 열 수 없습니다'));}catch(e){rej(e);}});}
+async function _safeStorePut(store,key,value){const db=await _safeStoreDb();return new Promise((res,rej)=>{const t=db.transaction(store,'readwrite');t.objectStore(store).put(value,key);t.oncomplete=()=>res(true);t.onerror=()=>rej(t.error||new Error('안전 저장소 쓰기 실패'));t.onabort=()=>rej(t.error||new Error('안전 저장소 쓰기 중단'));});}
+async function _safeStoreGet(store,key){try{const db=await _safeStoreDb();return await new Promise((res,rej)=>{const t=db.transaction(store,'readonly');const q=t.objectStore(store).get(key);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error);});}catch(e){return null;}}
+async function _safeStoreGetAll(store){const db=await _safeStoreDb();return new Promise((res,rej)=>{const t=db.transaction(store,'readonly');const q=t.objectStore(store).getAll();q.onsuccess=()=>res(Array.isArray(q.result)?q.result:[]);q.onerror=()=>rej(q.error||new Error('안전 저장소 읽기 실패'));});}
+function _validFixedEntry(x){return!!(x&&x.fixId&&x.recordId&&x.payload&&x.guard===_fixedGuard(x.payload));}
 function _loadFixedArchivesRaw(){try{const v=JSON.parse(localStorage.getItem(FIXED_HISTORY_KEY)||'[]');return Array.isArray(v)?v:[];}catch(e){return[];}}
-function loadFixedArchives(){return _loadFixedArchivesRaw().filter(x=>x&&x.fixId&&x.recordId&&x.payload&&x.guard===_fixedGuard(x.payload));}
-function _saveFixedArchives(arr){
-  const map=new Map();(arr||[]).forEach(x=>{if(x&&x.fixId&&x.recordId&&x.payload&&x.guard===_fixedGuard(x.payload)&&!map.has(x.fixId))map.set(x.fixId,x);});
+function _loadFixedManifest(){return _loadFixedArchivesRaw().filter(x=>x&&x.fixId&&x.recordId&&x.guard).map(x=>({schemaVersion:x.schemaVersion||1,fixId:x.fixId,recordId:x.recordId,fixedAt:x.fixedAt||'',guard:x.guard,sha256:x.sha256||'',pinHash:x.pinHash||'',pinSalt:x.pinSalt||''}));}
+let _fixedArchivesCache=null,_fixedHydratePromise=null;
+function loadFixedArchives(){return _fixedArchivesCache||_loadFixedArchivesRaw().filter(_validFixedEntry);}
+async function _saveFixedArchives(arr){
+  const map=new Map();(arr||[]).forEach(x=>{if(_validFixedEntry(x)&&!map.has(x.fixId))map.set(x.fixId,x);});
   const clean=[...map.values()].sort((a,b)=>(a.fixedAt||'').localeCompare(b.fixedAt||''));
-  localStorage.setItem(FIXED_HISTORY_KEY,JSON.stringify(clean));return clean;
+  const oldRaw=localStorage.getItem(FIXED_HISTORY_KEY)||'[]';
+  const oldFull=_loadFixedArchivesRaw().some(x=>x&&x.payload);
+  // 기존 원본을 건드리기 전에 대용량 안전 저장소에 원문 스냅샷을 먼저 보관한다.
+  if(oldFull)await _safeStorePut('snapshots','fixed-migration-'+Date.now(),{savedAt:new Date().toISOString(),raw:oldRaw});
+  for(const f of clean){await _safeStorePut('fixed',f.fixId,f);const check=await _safeStoreGet('fixed',f.fixId);if(!check||_stableJson(check)!==_stableJson(f))throw new Error('잠금 원본 복사 검증 실패');}
+  const compact=clean.map(f=>({schemaVersion:f.schemaVersion||1,fixId:f.fixId,recordId:f.recordId,fixedAt:f.fixedAt||'',guard:f.guard,sha256:f.sha256||'',pinHash:f.pinHash||'',pinSalt:f.pinSalt||''}));
+  // 같은 키를 더 작은 manifest로 원자 교체한다. 성공 전까지 기존 전체 원본은 그대로다.
+  localStorage.setItem(FIXED_HISTORY_KEY,JSON.stringify(compact));
+  _fixedArchivesCache=clean;
+  return clean;
 }
-function _fixedArchiveFor(recordId){return loadFixedArchives().find(x=>x.recordId===recordId)||null;}
+async function _hydrateFixedArchives(){const raw=_loadFixedArchivesRaw(),legacy=raw.filter(_validFixedEntry),manifest=_loadFixedManifest(),stored=(await _safeStoreGetAll('fixed')).filter(_validFixedEntry);if(!legacy.length&&manifest.some(m=>!stored.some(f=>f.fixId===m.fixId&&f.guard===m.guard)))throw new Error('잠금 원본을 안전 저장소에서 찾지 못했습니다');const map=new Map();[...stored,...legacy].forEach(x=>{if(!map.has(x.fixId))map.set(x.fixId,x);});const all=[...map.values()];if(legacy.length)await _saveFixedArchives(all);else _fixedArchivesCache=all;return _fixedArchivesCache;}
+function _ensureFixedArchives(){if(_fixedArchivesCache)return Promise.resolve(_fixedArchivesCache);if(!_fixedHydratePromise)_fixedHydratePromise=_hydrateFixedArchives().catch(e=>{_fixedHydratePromise=null;throw e;});return _fixedHydratePromise;}
+function _fixedArchiveFor(recordId){return loadFixedArchives().find(x=>x.recordId===recordId)||_loadFixedManifest().find(x=>x.recordId===recordId)||null;}
 function _isHistoryFixed(recordId){return!!_fixedArchiveFor(recordId);}
 function _removeDelId(id){try{const s=_loadDelIds();s.delete(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
 function _enforceFixedHistory(arr){
-  const out=_dedupHistory(Array.isArray(arr)?arr:[]),byId=new Map(out.map((r,i)=>[r.id,i]));
+  const out=Array.isArray(arr)?[...arr]:[],byId=new Map(out.map((r,i)=>[r.id,i]));
   const applied=new Set();loadFixedArchives().forEach(f=>{if(applied.has(f.recordId))return;applied.add(f.recordId);const copy=JSON.parse(JSON.stringify(f.payload));const idx=byId.get(f.recordId);if(idx===undefined){byId.set(f.recordId,out.length);out.push(copy);}else{out[idx]=copy;}_removeDelId(f.recordId);});
   return out.sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));
 }
 async function _verifyAndRepairFixedHistory(){
-  const raw=_loadFixedArchivesRaw(),fixed=loadFixedArchives();let bad=raw.length-fixed.length;
+  const fixed=await _ensureFixedArchives(),manifest=_loadFixedManifest();let bad=manifest.filter(m=>!fixed.some(f=>f.fixId===m.fixId&&f.guard===m.guard)).length;
   for(const f of fixed){if(f.sha256&&await _hSha256b64url(_stableJson(f.payload))!==f.sha256)bad++;}
-  if(bad){toast(`FIX 원본 ${bad}건의 무결성 확인이 필요해요`,{type:'error',duration:5000});return false;}
+  if(bad){toast(`잠금 원본 ${bad}건의 무결성 확인이 필요해요`,{type:'error',duration:5000});return false;}
   const before=JSON.stringify(_dedupHistory(loadHistory()));const repaired=_enforceFixedHistory(loadHistory());
-  if(JSON.stringify(repaired)!==before){localStorage.setItem(HISTORY_KEY,JSON.stringify(repaired));toast('FIX 원본으로 기록을 자동 복구했어요',{type:'success',duration:4000});return true;}
+  if(JSON.stringify(repaired)!==before){localStorage.setItem(HISTORY_KEY,JSON.stringify(repaired));toast('잠금 원본으로 기록을 자동 복구했어요',{type:'success',duration:4000});return true;}
   return false;
 }
 async function fixHistoryRecord(id){
+  try{await _ensureFixedArchives();}catch(e){toast(_storageErrorMessage(e,'잠금 안전 저장소 준비'),{type:'error',duration:5000});return false;}
   const record=loadHistory().find(r=>r.id===id);if(!record){toast('고정할 기록을 찾지 못했어요',{type:'error'});return false;}
-  if(_isHistoryFixed(id)){toast('이미 FIX된 기록이에요',{type:'info'});return true;}
-  if(!confirm('이 기록을 FIX할까요?\n\nFIX 후에는 원본을 수정하거나 삭제할 수 없습니다. 변경이 필요하면 원본을 불러와 새 기록으로 저장할 수 있어요.'))return false;
+  if(_isHistoryFixed(id)){toast('이미 잠긴 기록이에요',{type:'info'});return true;}
+  try{if(!await _ensureLockPin())return false;}catch(e){toast(_storageErrorMessage(e,'잠금 비밀번호 저장'),{type:'error',duration:5000});return false;}
+  if(!confirm('이 기록을 잠글까요?\n\n원본은 그대로 보존됩니다. 수정할 때는 숫자 4자리 비밀번호로 수정용 복사본을 만들 수 있어요.'))return false;
   const payload=JSON.parse(JSON.stringify(record));const canonical=_stableJson(payload);const fixedAt=new Date().toISOString();
-  const entry={schemaVersion:1,fixId:'fix_'+Date.now()+'_'+_hRandomStr(8),recordId:id,fixedAt,payload,guard:_fixedGuard(payload),sha256:await _hSha256b64url(canonical)};
-  try{_saveFixedArchives([...loadFixedArchives(),entry]);_removeDelId(id);saveHistory(loadHistory());}
-  catch(e){toast('저장 공간이 부족해 FIX하지 못했어요',{type:'error'});return false;}
-  if(hDbxGetToken())try{await _syncFixedArchives(hDbxGetToken());}catch(e){toast('기기에는 FIX됐지만 Dropbox 원본 저장은 재시도가 필요해요',{type:'error',duration:5000});}
+  const entry={schemaVersion:2,fixId:'fix_'+Date.now()+'_'+_hRandomStr(8),recordId:id,fixedAt,payload,guard:_fixedGuard(payload),sha256:await _hSha256b64url(canonical),pinHash:localStorage.getItem(LOCK_PIN_HASH_KEY)||'',pinSalt:localStorage.getItem(LOCK_PIN_SALT_KEY)||''};
+  try{await _saveFixedArchives([...loadFixedArchives(),entry]);_removeDelId(id);saveHistory(loadHistory());}
+  catch(e){toast(_storageErrorMessage(e,'잠금'),{type:'error',duration:5000});return false;}
+  if(hDbxGetToken())try{await _syncFixedArchives(hDbxGetToken());}catch(e){toast('기기에는 잠겼지만 Dropbox 원본 저장은 재시도가 필요해요',{type:'error',duration:5000});}
   if(_histDrawerOpen)_refreshHistDrawer();else renderAll();
-  toast('🔒 FIX 완료 — 이 원본은 수정·삭제되지 않아요',{type:'success',duration:4500});return true;
+  toast('잠금 완료 — 원본이 안전하게 보존됩니다',{type:'success',duration:4500});return true;
 }
-function _fixedMutationBlocked(id){if(!_isHistoryFixed(id))return false;toast('🔒 FIX된 원본은 바꿀 수 없어요. “불러오기” 후 새 기록으로 저장하세요.',{type:'info',duration:4200});return true;}
+function _fixedMutationBlocked(id){if(!_isHistoryFixed(id))return false;toast('잠긴 원본은 바꿀 수 없어요. “수정”에서 비밀번호를 입력하면 복사본이 만들어집니다.',{type:'info',duration:4200});return true;}
 function _loadDelIds(){try{return new Set(JSON.parse(localStorage.getItem(HISTORY_DEL_KEY)||'[]'));}catch(e){return new Set();}}
 function _saveDelId(id){try{if(_isHistoryFixed(id))return;const s=_loadDelIds();s.add(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
 function _mergeDelIds(remoteIds){try{const s=_loadDelIds();(remoteIds||[]).forEach(id=>s.add(id));localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));return s;}catch(e){return _loadDelIds();}}
 function _histFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|'),(r.items||[]).map(i=>`${i.name||''}|${+i.amount||0}|${i.payer||''}|${i.isTreat?1:0}|${(i.members||[]).slice().sort().join('~')}|${(i.watchers||[]).slice().sort().join('~')}|${i.rounderOverride||''}`).sort().join(',')].join('§');}
 function _histSoftFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|')].join('§');}
 function _dedupHistory(arr){const map=new Map();arr.forEach((r,idx)=>{const key=r&&r.id!=null?'id:'+String(r.id):'legacy:'+idx;const ex=map.get(key);if(!ex){map.set(key,r);}else{const isNewer=(r.savedAt||'')>(ex.savedAt||'');const winner=isNewer?r:ex,loser=isNewer?ex:r;map.set(key,{...winner,payments:{...(loser.payments||{}),...(winner.payments||{})}});}});return Array.from(map.values());}
-function saveHistory(arr){try{const deduped=_enforceFixedHistory(arr);const removed=arr.length-_dedupHistory(arr).length;localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));if(removed>0)setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),50);}catch(e){toast('저장 공간이 부족해 기록을 저장하지 못했어요',{type:'error'});}}
+function saveHistory(arr){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(arr)));return true;}catch(e){toast(_storageErrorMessage(e,'기록 저장'),{type:'error',duration:5000});return false;}}
 function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const deduped=_dedupHistory(arr);const removed=arr.length-deduped.length;if(removed>0){localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),400);}}catch(e){}}
 function _migrateHistoryGroupNames(){try{const arr=loadHistory();let changed=false;arr.forEach(r=>{const correct=(r.people||[]).join(', ');if(correct&&r.groupName!==correct){r.groupName=correct;changed=true;}});if(changed)saveHistory(arr);}catch(e){}}
 
@@ -3865,7 +3909,7 @@ function _buildRecordCardHtml(r){
   const itemsHtml=rcItems.length
     ?`<div class="rc-section-title">지출 내역</div>`+rcItems.map(it=>{
         const uid='hist_'+sid+'_'+(it.id||'');
-        const mems=(it.members&&it.members.length)?it.members.join(', '):(r.people||[]).join(', ');
+        const memsArr=(it.members&&it.members.length)?it.members:(r.people||[]);const watchers=(it.watchers||[]).filter(w=>!memsArr.includes(w));const mems=it.isTreat?[...memsArr,...watchers].join(', '):[...memsArr,...watchers.map(w=>w+'(깍두기)')].join(', ');
         const rowClick=it.receiptText?` onclick="toggleItemReceipt('${uid}',event)" style="cursor:pointer"`:'';const chev=it.receiptText?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';
         return `<div class="rc-item-row"${rowClick}><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱 쏨 🎉&nbsp;&nbsp;&nbsp;👏👏👏</span>':''}</div><div class="rc-item-meta">${e(mems)}</div></div>${chev}<span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid,r.id)}`;
       }).join(''):'';
@@ -3893,7 +3937,7 @@ function _buildRecordCardHtml(r){
       <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
         <button class="rc-load-btn" onclick="shareHistoryImage('${jsa(r.id)}')">이미지</button>
         <button class="rc-load-btn" onclick="loadHistoryAsGroup('${jsa(r.id)}')">${fixed?'복사본':'불러오기'}</button>
-        ${fixed?'<span class="rc-fix-btn fixed" title="무결성 해시로 보호되는 원본">🔒 FIX됨</span>':`<button class="rc-fix-btn" onclick="fixHistoryRecord('${jsa(r.id)}')">🔒 FIX</button><button class="rc-load-btn" onclick="loadHistoryForEdit('${jsa(r.id)}')">수정</button><button class="rc-del-btn" onclick="deleteHistoryRecord('${jsa(r.id)}')">삭제</button>`}
+        ${fixed?`<button class="rc-fix-btn fixed" title="비밀번호 입력 후 수정용 복사본 생성" onclick="unlockHistoryForEdit('${jsa(r.id)}')">${LOCK_CLOSED_SVG}잠김</button>`:`<button class="rc-fix-btn" onclick="fixHistoryRecord('${jsa(r.id)}')">${LOCK_OPEN_SVG}잠금</button><button class="rc-load-btn" onclick="loadHistoryForEdit('${jsa(r.id)}')">수정</button><button class="rc-del-btn" onclick="deleteHistoryRecord('${jsa(r.id)}')">삭제</button>`}
       </div>
     </div>
   </div>`;
@@ -4040,7 +4084,7 @@ function _renderHDbxPanel(){
   let acHtml='';
   if(token){
     try{const ac=JSON.parse(localStorage.getItem('dutchpay_dbx_account')||'{}');if(ac.name){acHtml=`<div class="dbx-account"><div class="dbx-account-info"><div class="dbx-account-name">${e(ac.name)}</div><div class="dbx-account-email">${e(ac.email)}</div></div><button class="dbx-disconnect" onclick="hDbxDisconnect()">연결 해제</button></div>`;}}catch(e2){}
-    panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body">${acHtml}<div class="dbx-btn-row"><button class="dbx-btn secondary" onclick="hSyncDropbox()">지금 동기화</button></div><div style="font-size:11px;color:var(--label3);margin-top:10px;text-align:center">일반 기록 + FIX 원본 별도 보관</div></div></div>`;
+    panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body">${acHtml}<div class="dbx-btn-row"><button class="dbx-btn secondary" onclick="hSyncDropbox()">지금 동기화</button></div><div style="font-size:11px;color:var(--label3);margin-top:10px;text-align:center">일반 기록 + 잠금 원본 별도 보관</div></div></div>`;
   }else{
     const redirectUri=location.origin+location.pathname;
     panel.innerHTML=`<div class="dbx-panel"><div class="dbx-panel-body"><div class="dbx-field"><div class="dbx-label">Dropbox App Key</div><input class="dbx-inp" id="hDbxAppKey" placeholder="앱 키 입력" value="${e(appKey)}"/><div class="dbx-guide">1. Dropbox 개발자 콘솔에서 앱 생성<br>2. Permission: files.content.write, files.content.read<br>3. Redirect URI: <code>${redirectUri}</code><br>4. App Key 복사 후 위에 입력</div></div><button class="dbx-btn" onclick="hDbxConnect()">Dropbox 연결하기</button></div></div>`;
@@ -4118,7 +4162,7 @@ function hDbxDisconnect(){
 
 let _hSyncing=false;
 async function _syncFixedArchives(token){
-  let candidates=[...loadFixedArchives()];
+  let candidates=[];try{candidates=[...await _ensureFixedArchives()];}catch(e){}
   const manifest=await _dbxDownload(token,dbxFixedFile());
   if(Array.isArray(manifest))candidates.push(...manifest);
   // 매 FIX마다 만든 개별 원본도 훑어 manifest가 손상되거나 옛 기기에서 덮여도 다시 조립한다.
@@ -4128,10 +4172,10 @@ async function _syncFixedArchives(token){
   }catch(e){}
   const valid=[];
   for(const f of candidates){if(!f||!f.fixId||!f.recordId||!f.payload||f.guard!==_fixedGuard(f.payload))continue;if(f.sha256&&await _hSha256b64url(_stableJson(f.payload))!==f.sha256)continue;valid.push(f);}
-  const merged=_saveFixedArchives(valid);
+  const merged=await _saveFixedArchives(valid);
   await _dbxRpc(token,'files/create_folder_v2',{path:dbxFixedDir()});
-  if(!await _dbxUpload(token,dbxFixedFile(),JSON.stringify(merged,null,2)))throw new Error('FIX manifest upload failed');
-  for(const f of merged){const safe=String(f.fixId).replace(/[^a-zA-Z0-9_-]/g,'_');if(!await _dbxUpload(token,dbxFixedDir()+'/'+safe+'.json',JSON.stringify(f,null,2)))throw new Error('FIX archive upload failed');}
+  if(!await _dbxUpload(token,dbxFixedFile(),JSON.stringify(merged,null,2)))throw new Error('잠금 목록 업로드 실패');
+  for(const f of merged){const safe=String(f.fixId).replace(/[^a-zA-Z0-9_-]/g,'_');if(!await _dbxUpload(token,dbxFixedDir()+'/'+safe+'.json',JSON.stringify(f,null,2)))throw new Error('잠금 원본 업로드 실패');}
   await _verifyAndRepairFixedHistory();return merged;
 }
 async function hSyncDropbox(uploadOnly=false){
@@ -4400,8 +4444,8 @@ async function generateSettleCanvas(){
 function _histSaveBtnHtml(){
   if(!items.some(it=>+it.amount!==0))return '';
   const rec=_currentHistoryRecord(),saved=!!rec,fixed=!!(rec&&_isHistoryFixed(rec.id)&&_historyContentSignature(rec)===_currentContentSignature());
-  const hint=fixed?'<div class="hist-save-hint">FIX 원본은 내용·상세내역·정산값이 잠겨요. 변경본은 새 기록으로 저장됩니다.</div>':(saved?'<div class="hist-save-hint">영수증을 붙였거나 내용을 바꿨다면 다시 눌러 업데이트하세요</div>':'<div class="hist-save-hint">FIX는 먼저 보관함에 저장한 뒤 변경·삭제할 수 없는 원본을 만듭니다.</div>');
-  return `<div class="hist-save-row"><button class="hist-save-btn${saved?' saved':''}" onclick="_saveHistFromResult()">${saved?'✓ 기록 보관함에 저장됨':'📌 기록 보관함에 저장'}</button><button class="hist-fix-btn${fixed?' fixed':''}" onclick="_fixCurrentHistory()">${fixed?'🔒 FIX됨':'🔒 FIX'}</button>${hint}</div>`;
+  const hint=fixed?'<div class="hist-save-hint">잠긴 원본은 보존됩니다. 수정 시 비밀번호 확인 후 복사본을 만듭니다.</div>':(saved?'<div class="hist-save-hint">영수증을 붙였거나 내용을 바꿨다면 다시 눌러 업데이트하세요</div>':'<div class="hist-save-hint">보관함에 저장한 뒤 잠그면 원본을 안전하게 보존합니다.</div>');
+  return `<div class="hist-save-row"><button class="hist-save-btn${saved?' saved':''}" onclick="_saveHistFromResult()">${saved?'✓ 기록 보관함에 저장됨':'📌 기록 보관함에 저장'}</button><button class="hist-fix-btn${fixed?' fixed':''}" onclick="${fixed?`unlockHistoryForEdit('${jsa(rec.id)}')`:'_fixCurrentHistory()'}">${fixed?LOCK_CLOSED_SVG+'잠김':LOCK_OPEN_SVG+'잠금'}</button>${hint}</div>`;
 }
 function _saveHistFromResult(){saveToHistory();renderAll();}
 function _currentHistoryRecord(){
@@ -4628,6 +4672,16 @@ async function generateHistoryCanvas(rec){
   return canvas;
 }
 
+async function shareHistoryItemImage(recordId,itemId){
+  const rec=loadHistory().find(r=>String(r.id)===String(recordId)),it=rec&&(rec.items||[]).find(x=>String(x.id)===String(itemId));if(!rec||!it){toast('상세내역을 찾을 수 없어요',{type:'error'});return;}
+  const lines=parseReceiptLines(it.receiptText||''),audit=_receiptAudit(it,lines),W=1080,rowH=66,H=380+Math.max(1,lines.length)*rowH;const canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;const ctx=canvas.getContext('2d');ctx.scale(2,2);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);const font=(s,w=400)=>ctx.font=`${w} ${s}px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Arial,sans-serif`;
+  ctx.fillStyle='#111';font(42,800);ctx.fillText(it.name||'매장 상세내역',50,70);ctx.fillStyle='#8e8e93';font(22,500);ctx.fillText((rec.dateStart||'')+' · '+(it.payer||'결제자 미정')+' 결제',50,110);const mems=it.members&&it.members.length?it.members:(rec.people||[]),ws=(it.watchers||[]).filter(w=>!mems.includes(w));ctx.fillText([...mems,...ws.map(w=>w+'(깍두기)')].join(', '),50,145);
+  const xs=[50,620,750,900,1030],headY=205;ctx.fillStyle='#f4f5f8';ctx.fillRect(40,headY-38,1000,56);ctx.fillStyle='#666';font(21,700);['품목명','수량','단가','금액'].forEach((t,i)=>{ctx.textAlign=i?'right':'left';ctx.fillText(t,xs[i?i+1:0],headY);});
+  font(22,500);lines.forEach((r,i)=>{const y=headY+58+i*rowH;if(audit.badRows.has(i)){ctx.fillStyle='#fff0ef';ctx.fillRect(40,y-36,1000,rowH);}ctx.fillStyle='#222';ctx.textAlign='left';ctx.fillText(truncateCanvasText(ctx,r.name,530),50,y);ctx.textAlign='right';ctx.fillText(r.qty||'',xs[1],y);ctx.fillText(r.unitPrice||'',xs[2],y);ctx.fillText(r.amount||'',xs[3],y);ctx.strokeStyle='#ececf0';ctx.beginPath();ctx.moveTo(40,y+24);ctx.lineTo(1040,y+24);ctx.stroke();});
+  const footY=headY+75+Math.max(1,lines.length)*rowH;ctx.fillStyle='#111';font(26,800);ctx.textAlign='left';ctx.fillText('품목 전체 합계',50,footY);ctx.textAlign='right';ctx.fillText(fmt(audit.total)+'원',1030,footY);ctx.fillStyle=audit.status==='ok'?'#16843b':audit.status==='bad'?'#d92d20':'#665000';font(22,700);ctx.textAlign='left';ctx.fillText((audit.status==='ok'?'✓ ':'')+audit.label,50,footY+48);ctx.fillStyle='#666';ctx.textAlign='right';ctx.fillText('매장 결제금액 '+fmt(+it.amount||0)+'원',1030,footY+48);ctx.fillStyle='#a0a0a6';font(18,500);ctx.textAlign='center';ctx.fillText('더치페이 '+APP_VERSION,W/2,H-28);
+  const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));if(!blob){toast('상세 이미지 생성에 실패했어요',{type:'error'});return;}const safe=String(it.name||'상세내역').replace(/[\\/:*?"<>|]/g,'_'),date=(rec.dateStart||'').replace(/-/g,'');const filename=`상세내역_${date}_${safe}.png`,file=new File([blob],filename,{type:'image/png'});if(_canShareFiles({files:[file]})){try{await navigator.share({files:[file]});return;}catch(e){if(e?.name==='AbortError')return;}}_downloadShareBlob(blob,filename);toast('상세 이미지를 저장했어요',{type:'success'});
+}
+
 async function shareHistoryImage(id){
   const rec=loadHistory().find(r=>r.id===id);if(!rec){toast('기록을 찾을 수 없어요',{type:'error'});return;}
   toast('이미지 생성 중…',{type:'info'});
@@ -4646,9 +4700,8 @@ _applyDarkMode();
 loadState();
 const _receiptDbImportResult=_consumeReceiptDbTransfer();
 _migrateHistoryGroupNames();
-_deduplicateHistoryOnStartup();
 renderAll();
-try{_verifyAndRepairFixedHistory().then(changed=>{if(changed)renderAll();});}catch(e){}
+try{_verifyAndRepairFixedHistory().then(changed=>{if(changed)renderAll();}).catch(()=>{});}catch(e){}
 // 영수증 사진을 localStorage→IndexedDB로 이전(저장공간 확보). 비동기·1회, 실패해도 앱 동작엔 지장 없음
 try{_migrateReceiptsToIdb();}catch(e){}
 try{_restoreReceiptUploadQueue().then(()=>_flushReceiptUploads());_flushReceiptDeletes();}catch(e){}
