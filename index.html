@@ -1416,8 +1416,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.12';
-const BUILD_TIME='2026-09-06 17:45';
+const APP_VERSION='v6.13';
+const BUILD_TIME='2026-09-06 18:24';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4593,7 +4593,7 @@ function generateFullDetailCanvases(rec){
     for(const seg of pg.segments){const{it,audit,rows,start,first,last}=seg;const titleH=104;ctx.fillStyle='#f3f5ff';roundRectPath(ctx,42,y,996,titleH,14);ctx.fill();
       const payer=`${it.payer||'결제자 미정'} 결제`;font(14,500);const pillW=Math.min(150,ctx.measureText(payer).width+22);font(22,750);ctx.fillStyle='#111';ctx.textAlign='left';const store=truncateCanvasText(ctx,(it.name||'이름 없음')+(first?'':' (계속)'),610-pillW);ctx.fillText(store,62,y+45);const pillX=62+ctx.measureText(store).width+10;ctx.fillStyle='#e9e9ec';roundRectPath(ctx,pillX,y+25,pillW,26,13);ctx.fill();ctx.fillStyle='#666';font(14,500);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(truncateCanvasText(ctx,payer,pillW-16),pillX+pillW/2,y+38);ctx.textBaseline='alphabetic';ctx.textAlign='right';ctx.fillStyle='#111';font(22,800);ctx.fillText(fmt(+it.amount||0)+'원',1018,y+45);
       ctx.fillStyle='#777';font(15,500);ctx.textAlign='left';const mems=it.members&&it.members.length?it.members:(rec.people||[]),watch=(it.watchers||[]).filter(w=>!mems.includes(w)).map(w=>w+'(깍두기)');ctx.fillText(truncateCanvasText(ctx,[...mems,...watch].join(', '),760),62,y+79);ctx.textAlign='right';ctx.fillStyle=getReceiptSrc(it)?'#16843b':'#8e8e93';ctx.fillText(getReceiptSrc(it)?'영수증 연결됨':'영수증 없음',1018,y+79);y+=titleH+CARD_GAP;
-      ctx.fillStyle='#777';font(15,700);ctx.textAlign='left';ctx.fillText('품목명',62,y+29);ctx.textAlign='right';ctx.fillText('수량',700,y+29);ctx.fillText('단가',855,y+29);ctx.fillText('금액',1018,y+29);ctx.strokeStyle='#dedee3';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(42,y+44);ctx.lineTo(1038,y+44);ctx.stroke();y+=44;
+      ctx.fillStyle='#9a9aa1';font(15,400);ctx.textAlign='left';ctx.fillText('품목명',62,y+29);ctx.textAlign='right';ctx.fillText('수량',700,y+29);ctx.fillText('단가',855,y+29);ctx.fillText('금액',1018,y+29);ctx.strokeStyle='#dedee3';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(42,y+44);ctx.lineTo(1038,y+44);ctx.stroke();y+=44;
       const drawRows=rows.length?rows:[{name:'상세 품목 없음',qty:'',unitPrice:'',amount:''}];font(17,500);drawRows.forEach((r,i)=>{if(rows.length&&audit.badRows.has(start+i)){ctx.fillStyle='#fff0ef';ctx.fillRect(42,y,996,ROW);}ctx.fillStyle='#222';ctx.textAlign='left';ctx.fillText(truncateCanvasText(ctx,r.name,570),62,y+31);ctx.textAlign='right';ctx.fillText(r.qty||'',700,y+31);ctx.fillText(r.unitPrice||'',855,y+31);font(17,700);ctx.fillText(r.amount||'',1018,y+31);ctx.strokeStyle='#ececf0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(42,y+ROW);ctx.lineTo(1038,y+ROW);ctx.stroke();font(17,500);y+=ROW;});
       if(last){ctx.fillStyle='#111';font(19,800);ctx.textAlign='left';ctx.fillText('합계',62,y+35);const badge=audit.status==='ok'?'✓ 계산 일치':audit.label;ctx.fillStyle=audit.status==='ok'?'#16843b':audit.status==='bad'?'#d92d20':'#777';font(15,700);ctx.fillText(badge,120,y+35);ctx.fillStyle='#111';font(20,800);ctx.textAlign='right';ctx.fillText(fmt(audit.total)+'원',1018,y+35);y+=72;}else{ctx.fillStyle='#8e8e93';font(14,600);ctx.textAlign='right';ctx.fillText('다음 페이지에 계속',1018,y+24);y+=36;}y+=22;
     }
