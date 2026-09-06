@@ -597,7 +597,7 @@ suite('TC14: 데이터 무결성 안전장치 [v5.96 회귀]', () => {
   });
 });
 
-suite('TC15: 잠금 불변 기록 [v6.13]', () => {
+suite('TC15: 잠금 불변 기록 [v6.14]', () => {
   const key='dutchpay_fixed_history_v1';
   const rec={id:'fixed-h1',savedAt:'2026-09-05T07:00:00Z',dateStart:'2026-06-26',dateEnd:null,people:['A','B'],total:30000,items:[{id:1,name:'원본 식사',amount:30000,payer:'A',members:['A','B'],watchers:[],receiptText:'메뉴 | 1 | 30000 | 30000'}],txns:[],payments:{}};
   const install=()=>{const payload=JSON.parse(JSON.stringify(rec));APP.localStorage.setItem(key,JSON.stringify([{schemaVersion:1,fixId:'fix-test',recordId:rec.id,fixedAt:'2026-09-05T07:01:00Z',payload,guard:APP._fixedGuard(payload)}]));};
@@ -643,6 +643,24 @@ suite('TC15: 잠금 불변 기록 [v6.13]', () => {
     const delKey='dutchpay_fixed_deleted_v1';install();APP.localStorage.setItem(delKey,JSON.stringify([rec.id]));
     try{expect(APP._isHistoryFixed(rec.id)).toBe(false);expect(APP._enforceFixedHistory([]).length).toBe(0);}
     finally{APP.localStorage.removeItem(key);APP.localStorage.removeItem(delKey);}
+  });
+});
+
+suite('TC16: 상세 이미지 일괄 저장 [v6.14]', () => {
+  const rec={id:'bulk-1',savedAt:'2026-09-06T01:00:00Z',dateStart:'2026-08-20',dateEnd:null,people:['A','B'],total:64000,items:[{id:1,name:'식사',amount:64000,payer:'A',members:['A','B'],watchers:[],receiptText:'메뉴 | 1 | 64000 | 64000'}],payments:{},coupleNames:[]};
+  test('내용이 완전히 같은 기록은 이미지 한 건만 준비', () => {
+    const same={...JSON.parse(JSON.stringify(rec)),id:'bulk-2',savedAt:'2026-09-06T02:00:00Z'};
+    expect(APP._prepareDetailHistoryExports([rec,same]).length).toBe(1);
+  });
+  test('파일명이 같아도 내용이 다르면 별도 이름으로 모두 보존', () => {
+    const changed={...JSON.parse(JSON.stringify(rec)),id:'bulk-3',payments:{'B|A':{done:true,amount:32000}}};
+    const out=APP._prepareDetailHistoryExports([rec,changed]);
+    expect(out.length).toBe(2);
+    if(out[0].base===out[1].base||!out[1].base.endsWith('_기록2'))throw new Error('서로 다른 기록의 파일명이 충돌함');
+  });
+  test('금액이 없는 빈 기록은 일괄 저장에서 제외', () => {
+    const empty={...JSON.parse(JSON.stringify(rec)),items:[{...rec.items[0],amount:0}],total:0};
+    expect(APP._prepareDetailHistoryExports([empty]).length).toBe(0);
   });
 });
 
