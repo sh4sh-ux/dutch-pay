@@ -837,6 +837,7 @@ svg{display:block;flex-shrink:0;}
 .rc-del-btn:hover{opacity:.7;}
 .rc-load-btn{font-size:12px;color:var(--blue);border:none;background:transparent;font-weight:500;padding:8px 6px;cursor:pointer;}
 .rc-load-btn:hover{opacity:.7;}
+.rc-edit-btn{border:1px solid #aab4ff;background:#f4f5ff;border-radius:8px;font-weight:700;padding:6px 9px;}
 .rc-fix-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#665000;border:1px solid #e1b72f;background:#fff3a6;border-radius:8px;font-weight:700;padding:6px 8px;cursor:pointer;white-space:nowrap;}
 .rc-fix-btn:hover{opacity:.8;}
 .rc-fix-btn.fixed{color:var(--green-txt);border-color:transparent;background:var(--green-bg);cursor:pointer;}
@@ -1415,8 +1416,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.10';
-const BUILD_TIME='2026-09-06 17:03';
+const APP_VERSION='v6.11';
+const BUILD_TIME='2026-09-06 17:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1606,6 +1607,7 @@ const HISTORY_DEL_KEY='dutchpay_hist_deleted';
 const FIXED_HISTORY_KEY='dutchpay_fixed_history_v1';
 const LOCK_PIN_HASH_KEY='dutchpay_lock_pin_hash_v1';
 const LOCK_PIN_SALT_KEY='dutchpay_lock_pin_salt_v1';
+const FIXED_DELETED_KEY='dutchpay_fixed_deleted_v1';
 const AUTO_BACKUP_KEY='dutchpay_autobackups';
 const AUTO_BACKUP_MAX=5;
 
@@ -1757,6 +1759,7 @@ const dbxDir=()=>DBX_DIR;
 const dbxMainFile=()=>DBX_DIR+'/dutch-pay_data.json';
 const dbxHistFile=()=>DBX_DIR+'/dutch-pay_history.json';
 const dbxFixedFile=()=>DBX_DIR+'/dutch-pay_fixed-history.json';
+const dbxFixedDeletedFile=()=>DBX_DIR+'/dutch-pay_fixed-deleted.json';
 const dbxFixedDir=()=>DBX_DIR+'/fixed-archives';
 const dbxDetailDir=()=>DBX_DIR+'/상세내역';
 
@@ -2724,7 +2727,7 @@ function _pmShowTreatItems(nm,ym){
   const html=`<div class="pm-payer-modal-bg" onclick="this.remove()"><div class="pm-payer-modal" onclick="event.stopPropagation()"><div class="pm-payer-modal-handle"></div><div class="pm-payer-modal-hd"><div class="pm-payer-modal-name">${e(nm)}</div><div class="pm-payer-modal-sub">${label} 한턱 내역</div><button class="pm-payer-modal-close" onclick="this.closest('.pm-payer-modal-bg').remove()">✕</button></div><div class="pm-payer-modal-body">${rowsHtml||'<p style="padding:16px 16px;color:var(--label3);font-size:13px">한턱 항목이 없어요</p>'}</div><div class="pm-payer-modal-foot"><span class="pm-payer-modal-foot-lbl">합계</span><span class="pm-payer-modal-foot-amt">${fmt(total)}원</span></div></div></div>`;
   document.body.insertAdjacentHTML('beforeend',html);
 }
-function _pmDelRec(id,e){e.stopPropagation();if(_fixedMutationBlocked(id))return;if(!confirm('이 기록을 삭제할까요?'))return;_saveDelId(id);saveHistory(loadHistory().filter(r=>r.id!==id));toast('기록이 삭제됐어요');if(hDbxGetToken())hSyncDropbox(true);_patchHistResults();}
+function _pmDelRec(id,e){deleteHistoryRecord(id,e);}
 function _reRenderPayment(){if(window.innerWidth<700){const el=document.getElementById('mBody');if(el&&mTab==='payment')renderPaymentBody(el);}else{if(dTab==='payment')renderPaymentView('dREye','dRTitle','dRSub','dRBody');}}
 function _patchHistResults(){const el=document.querySelector('.pm-hist-results');if(!el)return;const openAllRec=el.querySelector('.pm-allrec-card.open');const openAllRecId=openAllRec?openAllRec.dataset.recId:null;const openRec=el.querySelector('.pm-record-card.open');const openRecId=openRec?openRec.dataset.recId:null;const openRecTxn=openRec?openRec.dataset.txnKey:null;el.innerHTML=_pmHistResultsHtml();if(openAllRecId)toggleAllRecCard(openAllRecId);if(openRecId&&openRecTxn)togglePmRecCard(openRecId,openRecTxn);}
 function togglePmRecCard(rid,rkey){const card=document.querySelector(`.pm-record-card[data-rec-id="${CSS.escape(rid)}"]`);if(!card)return;const detail=card.querySelector('.pm-rec-detail');if(!detail)return;const chev=card.querySelector('.pm-record-chev');const isOpen=detail.style.display!=='none';if(isOpen){detail.style.display='none';card.classList.remove('open');if(chev)chev.classList.remove('open');card.querySelector('.pm-hist-edit-panel')?.remove();}else{detail.style.display='block';card.classList.add('open');if(chev)chev.classList.add('open');}}
@@ -2740,7 +2743,7 @@ function toggleAllRecCard(recId){
   const detail=document.createElement('div');detail.className='pm-allrec-detail';
   const dbxBtn=hDbxGetToken()?`<div style="padding:10px 14px 4px"><button class="pm-dbx-btn" style="margin-top:0" onclick="saveHistRecToDropbox('${jsa(recId)}')">☁️ Dropbox에 이미지 저장</button></div>`:'';
   const fixed=_isHistoryFixed(recId);
-  const ownerBtns=_ownerUnlocked?`<div class="rc-owner-actions"><button class="rc-owner-btn edit" onclick="${fixed?`unlockHistoryForEdit('${jsa(recId)}')`:`loadHistoryForEdit('${jsa(recId)}')`}">${fixed?'수정':'✏️ 불러오기'}</button>${fixed?`<span class="rc-fix-btn fixed">${LOCK_CLOSED_SVG}잠김</span>`:`<button class="rc-owner-btn del" onclick="_pmDelRec('${jsa(recId)}',event)">🗑 삭제</button>`}</div>`:'';
+  const ownerBtns=_ownerUnlocked?`<div class="rc-owner-actions"><button class="rc-owner-btn edit" onclick="${fixed?`unlockHistoryForEdit('${jsa(recId)}')`:`loadHistoryForEdit('${jsa(recId)}')`}">수정</button>${fixed?`<span class="rc-fix-btn fixed">${LOCK_CLOSED_SVG}잠김</span>`:''}<button class="rc-owner-btn del" onclick="_pmDelRec('${jsa(recId)}',event)">삭제</button></div>`:'';
   if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>'+dbxBtn+ownerBtns;}
   else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const billing=t.amt;const _va2=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va2?+pm.amount:billing):0;const diff=pm.done?received-billing:null;const badge=pm.done?(diff>0?`<span class="pm-badge pos">+${fmt(diff)}원 초과</span>`:diff<0?`<span class="pm-badge neg">-${fmt(-diff)}원 부족</span>`:`<span class="pm-badge done">${t.to===_myName?'✓ 입금완료':'✓ 송금완료'}</span>`):`<span class="pm-badge pending">${t.to===_myName?'미입금':'미확인'}</span>`;const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(recId)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+dbxBtn+ownerBtns;}
   card.insertAdjacentElement('afterend',detail);
@@ -3766,13 +3769,18 @@ function _safeStoreDb(){return new Promise((res,rej)=>{try{const q=indexedDB.ope
 async function _safeStorePut(store,key,value){const db=await _safeStoreDb();return new Promise((res,rej)=>{const t=db.transaction(store,'readwrite');t.objectStore(store).put(value,key);t.oncomplete=()=>res(true);t.onerror=()=>rej(t.error||new Error('안전 저장소 쓰기 실패'));t.onabort=()=>rej(t.error||new Error('안전 저장소 쓰기 중단'));});}
 async function _safeStoreGet(store,key){try{const db=await _safeStoreDb();return await new Promise((res,rej)=>{const t=db.transaction(store,'readonly');const q=t.objectStore(store).get(key);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error);});}catch(e){return null;}}
 async function _safeStoreGetAll(store){const db=await _safeStoreDb();return new Promise((res,rej)=>{const t=db.transaction(store,'readonly');const q=t.objectStore(store).getAll();q.onsuccess=()=>res(Array.isArray(q.result)?q.result:[]);q.onerror=()=>rej(q.error||new Error('안전 저장소 읽기 실패'));});}
+async function _safeStoreDelete(store,key){const db=await _safeStoreDb();return new Promise((res,rej)=>{const t=db.transaction(store,'readwrite');t.objectStore(store).delete(key);t.oncomplete=()=>res(true);t.onerror=()=>rej(t.error||new Error('안전 저장소 삭제 실패'));t.onabort=()=>rej(t.error||new Error('안전 저장소 삭제 중단'));});}
 function _validFixedEntry(x){return!!(x&&x.fixId&&x.recordId&&x.payload&&x.guard===_fixedGuard(x.payload));}
+function _loadFixedDeletedIds(){try{return new Set(JSON.parse(localStorage.getItem(FIXED_DELETED_KEY)||'[]'));}catch(e){return new Set();}}
+function _mergeFixedDeletedIds(ids){const s=_loadFixedDeletedIds();(ids||[]).forEach(id=>{if(id)s.add(String(id));});localStorage.setItem(FIXED_DELETED_KEY,JSON.stringify([...s]));return s;}
+function _markFixedDeletedId(id){return _mergeFixedDeletedIds([id]);}
+function _removeFixedDeletedId(id){const s=_loadFixedDeletedIds();s.delete(String(id));localStorage.setItem(FIXED_DELETED_KEY,JSON.stringify([...s]));}
 function _loadFixedArchivesRaw(){try{const v=JSON.parse(localStorage.getItem(FIXED_HISTORY_KEY)||'[]');return Array.isArray(v)?v:[];}catch(e){return[];}}
 function _loadFixedManifest(){return _loadFixedArchivesRaw().filter(x=>x&&x.fixId&&x.recordId&&x.guard).map(x=>({schemaVersion:x.schemaVersion||1,fixId:x.fixId,recordId:x.recordId,fixedAt:x.fixedAt||'',guard:x.guard,sha256:x.sha256||'',pinHash:x.pinHash||'',pinSalt:x.pinSalt||''}));}
 let _fixedArchivesCache=null,_fixedHydratePromise=null;
-function loadFixedArchives(){return _fixedArchivesCache||_loadFixedArchivesRaw().filter(_validFixedEntry);}
+function loadFixedArchives(){const deleted=_loadFixedDeletedIds();return(_fixedArchivesCache||_loadFixedArchivesRaw().filter(_validFixedEntry)).filter(x=>!deleted.has(String(x.recordId)));}
 async function _saveFixedArchives(arr){
-  const map=new Map();(arr||[]).forEach(x=>{if(_validFixedEntry(x)&&!map.has(x.fixId))map.set(x.fixId,x);});
+  const deleted=_loadFixedDeletedIds(),map=new Map();(arr||[]).forEach(x=>{if(_validFixedEntry(x)&&!deleted.has(String(x.recordId))&&!map.has(x.fixId))map.set(x.fixId,x);});
   const clean=[...map.values()].sort((a,b)=>(a.fixedAt||'').localeCompare(b.fixedAt||''));
   const oldRaw=localStorage.getItem(FIXED_HISTORY_KEY)||'[]';
   const oldFull=_loadFixedArchivesRaw().some(x=>x&&x.payload);
@@ -3785,9 +3793,9 @@ async function _saveFixedArchives(arr){
   _fixedArchivesCache=clean;
   return clean;
 }
-async function _hydrateFixedArchives(){const raw=_loadFixedArchivesRaw(),legacy=raw.filter(_validFixedEntry),manifest=_loadFixedManifest(),stored=(await _safeStoreGetAll('fixed')).filter(_validFixedEntry);if(!legacy.length&&manifest.some(m=>!stored.some(f=>f.fixId===m.fixId&&f.guard===m.guard)))throw new Error('잠금 원본을 안전 저장소에서 찾지 못했습니다');const map=new Map();[...stored,...legacy].forEach(x=>{if(!map.has(x.fixId))map.set(x.fixId,x);});const all=[...map.values()];if(legacy.length)await _saveFixedArchives(all);else _fixedArchivesCache=all;return _fixedArchivesCache;}
+async function _hydrateFixedArchives(){const deleted=_loadFixedDeletedIds(),raw=_loadFixedArchivesRaw(),legacy=raw.filter(x=>_validFixedEntry(x)&&!deleted.has(String(x.recordId))),manifest=_loadFixedManifest().filter(x=>!deleted.has(String(x.recordId))),stored=(await _safeStoreGetAll('fixed')).filter(x=>_validFixedEntry(x)&&!deleted.has(String(x.recordId)));if(!legacy.length&&manifest.some(m=>!stored.some(f=>f.fixId===m.fixId&&f.guard===m.guard)))throw new Error('잠금 원본을 안전 저장소에서 찾지 못했습니다');const map=new Map();[...stored,...legacy].forEach(x=>{if(!map.has(x.fixId))map.set(x.fixId,x);});const all=[...map.values()];if(legacy.length)await _saveFixedArchives(all);else _fixedArchivesCache=all;return _fixedArchivesCache;}
 function _ensureFixedArchives(){if(_fixedArchivesCache)return Promise.resolve(_fixedArchivesCache);if(!_fixedHydratePromise)_fixedHydratePromise=_hydrateFixedArchives().catch(e=>{_fixedHydratePromise=null;throw e;});return _fixedHydratePromise;}
-function _fixedArchiveFor(recordId){return loadFixedArchives().find(x=>x.recordId===recordId)||_loadFixedManifest().find(x=>x.recordId===recordId)||null;}
+function _fixedArchiveFor(recordId){if(_loadFixedDeletedIds().has(String(recordId)))return null;return loadFixedArchives().find(x=>x.recordId===recordId)||_loadFixedManifest().find(x=>x.recordId===recordId)||null;}
 function _isHistoryFixed(recordId){return!!_fixedArchiveFor(recordId);}
 function _refreshHistoryLockSurfaces(){if(_histDrawerOpen){_refreshHistDrawer();return;}renderAll(true);}
 function _removeDelId(id){try{const s=_loadDelIds();s.delete(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
@@ -3818,7 +3826,7 @@ async function fixHistoryRecord(id){
 }
 function _fixedMutationBlocked(id){if(!_isHistoryFixed(id))return false;toast('잠긴 기록입니다. ‘잠김’을 누르고 암호를 입력하면 수정할 수 있어요.',{type:'info',duration:4200});return true;}
 function _loadDelIds(){try{return new Set(JSON.parse(localStorage.getItem(HISTORY_DEL_KEY)||'[]'));}catch(e){return new Set();}}
-function _saveDelId(id){try{if(_isHistoryFixed(id))return;const s=_loadDelIds();s.add(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
+function _saveDelId(id,force=false){try{if(!force&&_isHistoryFixed(id))return;const s=_loadDelIds();s.add(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
 function _mergeDelIds(remoteIds){try{const s=_loadDelIds();(remoteIds||[]).forEach(id=>s.add(id));localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));return s;}catch(e){return _loadDelIds();}}
 function _histFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|'),(r.items||[]).map(i=>`${i.name||''}|${+i.amount||0}|${i.payer||''}|${i.isTreat?1:0}|${(i.members||[]).slice().sort().join('~')}|${(i.watchers||[]).slice().sort().join('~')}|${i.rounderOverride||''}`).sort().join(',')].join('§');}
 function _histSoftFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|')].join('§');}
@@ -3827,13 +3835,28 @@ function saveHistory(arr){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(_e
 function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const deduped=_dedupHistory(arr);const removed=arr.length-deduped.length;if(removed>0){localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),400);}}catch(e){}}
 function _migrateHistoryGroupNames(){try{const arr=loadHistory();let changed=false;arr.forEach(r=>{const correct=(r.people||[]).join(', ');if(correct&&r.groupName!==correct){r.groupName=correct;changed=true;}});if(changed)saveHistory(arr);}catch(e){}}
 
-function deleteHistoryRecord(id){
-  if(_fixedMutationBlocked(id))return;
-  if(!confirm('이 기록을 삭제할까요?'))return;
-  _saveDelId(id);
-  saveHistory(loadHistory().filter(r=>r.id!==id));
-  toast('기록이 삭제됐어요');
+async function deleteHistoryRecord(id,event){
+  if(event)event.stopPropagation();
+  const record=loadHistory().find(r=>r.id===id);if(!record){toast('삭제할 기록을 찾지 못했어요',{type:'error'});return;}
+  const fixed=_isHistoryFixed(id);
+  if(fixed){try{if(!await _verifyLockPin(id))return;}catch(e){toast(_storageErrorMessage(e,'비밀번호 확인'),{type:'error'});return;}}
+  const date=formatShareDate(record.dateStart,record.dateEnd),amount=fmt(record.total!=null?record.total:(record.items||[]).reduce((s,it)=>s+(+it.amount||0),0));
+  if(!confirm(`${date} · ${amount}원\n\n이 기록을 삭제할까요?${fixed?'\n잠긴 원본은 기기 안전백업에 보관됩니다.':''}`))return;
+  try{
+    if(fixed){
+      const fixedEntries=loadFixedArchives().filter(f=>String(f.recordId)===String(id));
+      await _safeStorePut('backups','deleted-'+Date.now()+'-'+id,{deletedAt:new Date().toISOString(),record:JSON.parse(JSON.stringify(record)),fixedEntries:JSON.parse(JSON.stringify(fixedEntries))});
+      _markFixedDeletedId(id);
+      for(const f of fixedEntries)await _safeStoreDelete('fixed',f.fixId);
+      const remaining=loadFixedArchives().filter(f=>String(f.recordId)!==String(id));
+      const compact=remaining.map(f=>({schemaVersion:f.schemaVersion||1,fixId:f.fixId,recordId:f.recordId,fixedAt:f.fixedAt||'',guard:f.guard,sha256:f.sha256||'',pinHash:f.pinHash||'',pinSalt:f.pinSalt||''}));
+      localStorage.setItem(FIXED_HISTORY_KEY,JSON.stringify(compact));_fixedArchivesCache=remaining;
+    }
+    _saveDelId(id,fixed);saveHistory(loadHistory().filter(r=>r.id!==id));
+  }catch(e){toast(_storageErrorMessage(e,'기록 삭제'),{type:'error',duration:5000});return;}
+  toast(fixed?'잠긴 기록이 삭제됐어요 · 안전백업 보관됨':'기록이 삭제됐어요',{type:'success',duration:4000});
   if(hDbxGetToken())hSyncDropbox(true);
+  if(typeof _patchHistResults==='function')_patchHistResults();
   if(_histDrawerOpen){_refreshHistDrList();return;}
   if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
   if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
@@ -3950,7 +3973,7 @@ function _buildRecordCardHtml(r){
       <span class="rc-saved-at">${savedAtStr} 저장 · ${(r.people||[]).length}명</span>
       <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
         <button class="rc-load-btn" onclick="shareHistoryImage('${jsa(r.id)}')">이미지</button>
-        ${fixed?`<button class="rc-fix-btn fixed" title="암호 입력 후 수정 가능 상태로 전환" onclick="unlockHistoryForEdit('${jsa(r.id)}')">${LOCK_CLOSED_SVG}잠김</button>`:`<button class="rc-load-btn" onclick="loadHistoryForEdit('${jsa(r.id)}')">수정</button><button class="rc-fix-btn" onclick="fixHistoryRecord('${jsa(r.id)}')">${LOCK_OPEN_SVG}잠금</button><button class="rc-del-btn" onclick="deleteHistoryRecord('${jsa(r.id)}')">삭제</button>`}
+        ${fixed?`<button class="rc-load-btn rc-edit-btn" title="암호 입력 후 수정" onclick="unlockHistoryForEdit('${jsa(r.id)}')">수정</button><span class="rc-fix-btn fixed" title="잠긴 기록">${LOCK_CLOSED_SVG}잠김</span><button class="rc-del-btn" title="암호 입력 후 삭제" onclick="deleteHistoryRecord('${jsa(r.id)}',event)">삭제</button>`:`<button class="rc-load-btn rc-edit-btn" onclick="loadHistoryForEdit('${jsa(r.id)}')">수정</button><button class="rc-fix-btn" onclick="fixHistoryRecord('${jsa(r.id)}')">${LOCK_OPEN_SVG}잠금</button><button class="rc-del-btn" onclick="deleteHistoryRecord('${jsa(r.id)}',event)">삭제</button>`}
       </div>
     </div>
   </div>`;
@@ -4176,17 +4199,20 @@ function hDbxDisconnect(){
 let _hSyncing=false;
 async function _syncFixedArchives(token){
   let candidates=[];try{candidates=[...await _ensureFixedArchives()];}catch(e){}
+  const remoteDeleted=await _dbxDownload(token,dbxFixedDeletedFile());
+  const deleted=_mergeFixedDeletedIds(Array.isArray(remoteDeleted)?remoteDeleted:[]);
   const manifest=await _dbxDownload(token,dbxFixedFile());
   if(Array.isArray(manifest))candidates.push(...manifest);
   // 매 FIX마다 만든 개별 원본도 훑어 manifest가 손상되거나 옛 기기에서 덮여도 다시 조립한다.
   try{
     let res=await _dbxRpc(token,'files/list_folder',{path:dbxFixedDir()});
-    while(res.ok){const data=await res.json();for(const ent of(data.entries||[])){if(ent['.tag']==='file'&&/\.json$/i.test(ent.name)){const one=await _dbxDownload(token,ent.path_display||ent.path_lower);if(one)candidates.push(one);}}if(!data.has_more)break;res=await _dbxRpc(token,'files/list_folder/continue',{cursor:data.cursor});}
+    while(res.ok){const data=await res.json();for(const ent of(data.entries||[])){if(ent['.tag']==='file'&&/\.json$/i.test(ent.name)){const path=ent.path_display||ent.path_lower,one=await _dbxDownload(token,path);if(one&&deleted.has(String(one.recordId))){await _dbxRpc(token,'files/delete_v2',{path});continue;}if(one)candidates.push(one);}}if(!data.has_more)break;res=await _dbxRpc(token,'files/list_folder/continue',{cursor:data.cursor});}
   }catch(e){}
   const valid=[];
-  for(const f of candidates){if(!f||!f.fixId||!f.recordId||!f.payload||f.guard!==_fixedGuard(f.payload))continue;if(f.sha256&&await _hSha256b64url(_stableJson(f.payload))!==f.sha256)continue;valid.push(f);}
+  for(const f of candidates){if(!f||!f.fixId||!f.recordId||deleted.has(String(f.recordId))||!f.payload||f.guard!==_fixedGuard(f.payload))continue;if(f.sha256&&await _hSha256b64url(_stableJson(f.payload))!==f.sha256)continue;valid.push(f);}
   const merged=await _saveFixedArchives(valid);
   await _dbxRpc(token,'files/create_folder_v2',{path:dbxFixedDir()});
+  if(!await _dbxUpload(token,dbxFixedDeletedFile(),JSON.stringify([...deleted],null,2)))throw new Error('잠금 삭제 목록 업로드 실패');
   if(!await _dbxUpload(token,dbxFixedFile(),JSON.stringify(merged,null,2)))throw new Error('잠금 목록 업로드 실패');
   for(const f of merged){const safe=String(f.fixId).replace(/[^a-zA-Z0-9_-]/g,'_');if(!await _dbxUpload(token,dbxFixedDir()+'/'+safe+'.json',JSON.stringify(f,null,2)))throw new Error('잠금 원본 업로드 실패');}
   await _verifyAndRepairFixedHistory();return merged;
@@ -4552,7 +4578,8 @@ function generateFullDetailCanvases(rec){
   const total=rec.total!=null?rec.total:valid.reduce((s,it)=>s+(+it.amount||0),0),date=formatShareDate(rec.dateStart,rec.dateEnd),people=(rec.people||[]).join(', ');
   return pages.map((pg,pageIndex)=>{
     const H=Math.max(620,Math.min(MAX_H,pg.used+FOOTER));const canvas=document.createElement('canvas');canvas.width=W*SCALE;canvas.height=H*SCALE;const ctx=canvas.getContext('2d');ctx.scale(SCALE,SCALE);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
-    const font=(size,weight=400)=>ctx.font=`${weight} ${size}px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Arial,sans-serif`;
+    // Dropbox 보관용 상세 이미지의 모든 글꼴은 화면용 기준보다 2px 작게 그린다.
+    const font=(size,weight=400)=>ctx.font=`${weight} ${Math.max(1,size-2)}px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Arial,sans-serif`;
     ctx.fillStyle='#4355e8';font(17,800);ctx.textAlign='left';ctx.fillText('DUTCH PAY '+APP_VERSION,46,42);ctx.fillStyle='#111';font(34,800);ctx.fillText('전체 상세내역',46,90);ctx.textAlign='right';font(29,800);ctx.fillText(fmt(total)+'원',1034,90);ctx.fillStyle='#777';font(16,500);ctx.textAlign='left';ctx.fillText(date,46,126);ctx.fillText(truncateCanvasText(ctx,people,820),46,156);ctx.textAlign='right';ctx.fillText(`${pageIndex+1} / ${pages.length}`,1034,156);ctx.strokeStyle='#dedee3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(42,178);ctx.lineTo(1038,178);ctx.stroke();
     let y=HEADER;
     for(const seg of pg.segments){const{it,audit,rows,start,first,last}=seg;const titleH=first?104:70;ctx.fillStyle='#f3f5ff';roundRectPath(ctx,42,y,996,titleH,14);ctx.fill();
