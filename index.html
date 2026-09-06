@@ -4577,7 +4577,8 @@ function generateFullDetailCanvases(rec){
   const total=rec.total!=null?rec.total:valid.reduce((s,it)=>s+(+it.amount||0),0),date=formatShareDate(rec.dateStart,rec.dateEnd),people=(rec.people||[]).join(', ');
   return pages.map((pg,pageIndex)=>{
     const H=Math.max(620,Math.min(MAX_H,pg.used+FOOTER));const canvas=document.createElement('canvas');canvas.width=W*SCALE;canvas.height=H*SCALE;const ctx=canvas.getContext('2d');ctx.scale(SCALE,SCALE);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
-    const font=(size,weight=400)=>ctx.font=`${weight} ${size}px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Arial,sans-serif`;
+    // Dropbox 보관용 상세 이미지의 모든 글꼴은 화면용 기준보다 2px 작게 그린다.
+    const font=(size,weight=400)=>ctx.font=`${weight} ${Math.max(1,size-2)}px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Arial,sans-serif`;
     ctx.fillStyle='#4355e8';font(17,800);ctx.textAlign='left';ctx.fillText('DUTCH PAY '+APP_VERSION,46,42);ctx.fillStyle='#111';font(34,800);ctx.fillText('전체 상세내역',46,90);ctx.textAlign='right';font(29,800);ctx.fillText(fmt(total)+'원',1034,90);ctx.fillStyle='#777';font(16,500);ctx.textAlign='left';ctx.fillText(date,46,126);ctx.fillText(truncateCanvasText(ctx,people,820),46,156);ctx.textAlign='right';ctx.fillText(`${pageIndex+1} / ${pages.length}`,1034,156);ctx.strokeStyle='#dedee3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(42,178);ctx.lineTo(1038,178);ctx.stroke();
     let y=HEADER;
     for(const seg of pg.segments){const{it,audit,rows,start,first,last}=seg;const titleH=first?104:70;ctx.fillStyle='#f3f5ff';roundRectPath(ctx,42,y,996,titleH,14);ctx.fill();
