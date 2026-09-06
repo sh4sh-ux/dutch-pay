@@ -1415,8 +1415,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.06';
-const BUILD_TIME='2026-09-06 13:02';
+const APP_VERSION='v6.07';
+const BUILD_TIME='2026-09-06 13:06';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4557,7 +4557,7 @@ function generateFullDetailCanvases(rec){
 async function saveFullDetailToDropbox(){
   if(_shareBusy)return;if(!hDbxGetToken()){toast('Dropbox가 연결되지 않았어요. ⋯ 메뉴에서 연결해주세요.',{type:'error'});return;}
   const rec=_currentSettleRec();if(!(rec.items||[]).some(it=>+it.amount!==0)){toast('저장할 상세내역이 없어요',{type:'error'});return;}_setShareBusy(true);
-  try{toast('전체 상세 이미지 만드는 중…',{duration:10000});const token=await _dbxEnsureFolder(hDbxGetToken(),dbxDetailDir());if(!token)throw new Error('상세내역 폴더 준비 실패');const canvases=generateFullDetailCanvases(rec),base=_buildDetailFilename(rec);let saved=0;for(let i=0;i<canvases.length;i++){const blob=await new Promise(r=>canvases[i].toBlob(r,'image/png'));if(!blob)throw new Error('이미지 생성 실패');const suffix=canvases.length>1?`_${String(i+1).padStart(2,'0')}-${String(canvases.length).padStart(2,'0')}`:'';const ok=await _dbxUpload(token,`${dbxDetailDir()}/${base}${suffix}.png`,blob);if(!ok)throw new Error('Dropbox 업로드 실패');saved++;}toast(saved>1?`Dropbox 상세내역 폴더에 ${saved}장으로 나눠 저장했어요 ✓`:'Dropbox 상세내역 폴더에 저장했어요 ✓',{type:'success',duration:4200});}
+  try{toast('전체 상세 이미지 만드는 중…',{duration:10000});const token=await _dbxEnsureFolder(hDbxGetToken(),dbxDetailDir());if(!token)throw new Error('상세내역 폴더 준비 실패');const canvases=generateFullDetailCanvases(rec),base=_buildDetailFilename(rec);let saved=0;for(let i=0;i<canvases.length;i++){const blob=await new Promise(r=>canvases[i].toBlob(r,'image/png'));if(!blob)throw new Error('이미지 생성 실패');const suffix=canvases.length>1?`_${String(i+1).padStart(2,'0')}`:'';const ok=await _dbxUpload(token,`${dbxDetailDir()}/${base}${suffix}.png`,blob);if(!ok)throw new Error('Dropbox 업로드 실패');saved++;}toast(saved>1?`Dropbox 상세내역 폴더에 ${saved}장으로 나눠 저장했어요 ✓`:'Dropbox 상세내역 폴더에 저장했어요 ✓',{type:'success',duration:4200});}
   catch(err){console.error('[detail image]',err);toast('상세 이미지 저장에 실패했어요. 기존 데이터는 변경되지 않았습니다.',{type:'error'});}finally{_setShareBusy(false);}
 }
 
