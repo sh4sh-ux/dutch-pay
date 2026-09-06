@@ -597,7 +597,7 @@ suite('TC14: 데이터 무결성 안전장치 [v5.96 회귀]', () => {
   });
 });
 
-suite('TC15: 잠금 불변 기록 [v6.11]', () => {
+suite('TC15: 잠금 불변 기록 [v6.12]', () => {
   const key='dutchpay_fixed_history_v1';
   const rec={id:'fixed-h1',savedAt:'2026-09-05T07:00:00Z',dateStart:'2026-06-26',dateEnd:null,people:['A','B'],total:30000,items:[{id:1,name:'원본 식사',amount:30000,payer:'A',members:['A','B'],watchers:[],receiptText:'메뉴 | 1 | 30000 | 30000'}],txns:[],payments:{}};
   const install=()=>{const payload=JSON.parse(JSON.stringify(rec));APP.localStorage.setItem(key,JSON.stringify([{schemaVersion:1,fixId:'fix-test',recordId:rec.id,fixedAt:'2026-09-05T07:01:00Z',payload,guard:APP._fixedGuard(payload)}]));};

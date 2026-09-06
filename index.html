@@ -1416,8 +1416,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.11';
-const BUILD_TIME='2026-09-06 17:30';
+const APP_VERSION='v6.12';
+const BUILD_TIME='2026-09-06 17:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4565,27 +4565,27 @@ function _buildDetailFilename(rec){
 }
 
 function generateFullDetailCanvases(rec){
-  const W=1080,MAX_H=3300,SCALE=2,HEADER=190,FOOTER=58,ROW=48,CARD_GAP=14,MAX_ROWS=38;
+  const W=1080,MAX_H=3300,SCALE=2,HEADER=154,FOOTER=58,ROW=48,CARD_GAP=14,MAX_ROWS=38;
   const valid=(rec.items||[]).filter(it=>+it.amount!==0),segments=[];
   for(const it of valid){
     const all=parseReceiptLines(it.receiptText||''),audit=all.length?_receiptAudit(it,all):{status:'warn',label:'상세 품목 없음',total:0,diff:-(+it.amount||0),badRows:new Set()};
     if(!all.length){segments.push({it,audit,rows:[],start:0,first:true,last:true,h:104+CARD_GAP+44+ROW+72+22});continue;}
-    for(let start=0;start<all.length;start+=MAX_ROWS){const rows=all.slice(start,start+MAX_ROWS),first=start===0,last=start+rows.length>=all.length;segments.push({it,audit,rows,start,first,last,h:(first?104:70)+CARD_GAP+44+rows.length*ROW+(last?72:36)+22});}
+    for(let start=0;start<all.length;start+=MAX_ROWS){const rows=all.slice(start,start+MAX_ROWS),first=start===0,last=start+rows.length>=all.length;segments.push({it,audit,rows,start,first,last,h:104+CARD_GAP+44+rows.length*ROW+(last?72:36)+22});}
   }
   const pages=[];let page={segments:[],used:HEADER};
   for(const seg of segments){if(page.segments.length&&page.used+seg.h>MAX_H-FOOTER){pages.push(page);page={segments:[],used:HEADER};}page.segments.push(seg);page.used+=seg.h;}
   if(page.segments.length||!pages.length)pages.push(page);
-  const total=rec.total!=null?rec.total:valid.reduce((s,it)=>s+(+it.amount||0),0),date=formatShareDate(rec.dateStart,rec.dateEnd),people=(rec.people||[]).join(', ');
+  const total=rec.total!=null?rec.total:valid.reduce((s,it)=>s+(+it.amount||0),0),date=formatShareDate(rec.dateStart,rec.dateEnd);
   return pages.map((pg,pageIndex)=>{
     const H=Math.max(620,Math.min(MAX_H,pg.used+FOOTER));const canvas=document.createElement('canvas');canvas.width=W*SCALE;canvas.height=H*SCALE;const ctx=canvas.getContext('2d');ctx.scale(SCALE,SCALE);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
     // Dropbox 보관용 상세 이미지의 모든 글꼴은 화면용 기준보다 2px 작게 그린다.
     const font=(size,weight=400)=>ctx.font=`${weight} ${Math.max(1,size-2)}px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Arial,sans-serif`;
-    ctx.fillStyle='#4355e8';font(17,800);ctx.textAlign='left';ctx.fillText('DUTCH PAY '+APP_VERSION,46,42);ctx.fillStyle='#111';font(34,800);ctx.fillText('전체 상세내역',46,90);ctx.textAlign='right';font(29,800);ctx.fillText(fmt(total)+'원',1034,90);ctx.fillStyle='#777';font(16,500);ctx.textAlign='left';ctx.fillText(date,46,126);ctx.fillText(truncateCanvasText(ctx,people,820),46,156);ctx.textAlign='right';ctx.fillText(`${pageIndex+1} / ${pages.length}`,1034,156);ctx.strokeStyle='#dedee3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(42,178);ctx.lineTo(1038,178);ctx.stroke();
+    ctx.fillStyle='#4355e8';font(17,800);ctx.textAlign='left';ctx.fillText('DUTCH PAY '+APP_VERSION,46,42);ctx.fillStyle='#111';font(34,800);ctx.fillText('상세내역',46,90);ctx.textAlign='right';font(29,800);ctx.fillText(fmt(total)+'원',1034,90);ctx.fillStyle='#777';font(16,500);ctx.textAlign='left';ctx.fillText(date,46,126);ctx.textAlign='right';ctx.fillText(`${pageIndex+1} / ${pages.length}`,1034,126);ctx.strokeStyle='#dedee3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(42,142);ctx.lineTo(1038,142);ctx.stroke();
     let y=HEADER;
-    for(const seg of pg.segments){const{it,audit,rows,start,first,last}=seg;const titleH=first?104:70;ctx.fillStyle='#f3f5ff';roundRectPath(ctx,42,y,996,titleH,14);ctx.fill();
-      const payer=`${it.payer||'결제자 미정'} 결제`;font(14,500);const pillW=Math.min(150,ctx.measureText(payer).width+22);font(22,750);ctx.fillStyle='#111';ctx.textAlign='left';const store=truncateCanvasText(ctx,(it.name||'이름 없음')+(first?'':' (계속)'),610-pillW);ctx.fillText(store,62,y+35);const pillX=62+ctx.measureText(store).width+10;ctx.fillStyle='#e9e9ec';roundRectPath(ctx,pillX,y+15,pillW,26,13);ctx.fill();ctx.fillStyle='#666';font(14,500);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(truncateCanvasText(ctx,payer,pillW-16),pillX+pillW/2,y+28);ctx.textBaseline='alphabetic';ctx.textAlign='right';ctx.fillStyle='#111';font(22,800);ctx.fillText(fmt(+it.amount||0)+'원',1018,y+35);
-      ctx.fillStyle='#777';font(15,500);ctx.textAlign='left';const mems=it.members&&it.members.length?it.members:(rec.people||[]),watch=(it.watchers||[]).filter(w=>!mems.includes(w)).map(w=>w+'(깍두기)');ctx.fillText(truncateCanvasText(ctx,[...mems,...watch].join(', '),760),62,y+69);ctx.textAlign='right';ctx.fillStyle=getReceiptSrc(it)?'#16843b':'#8e8e93';ctx.fillText(getReceiptSrc(it)?'영수증 연결됨':'영수증 없음',1018,y+69);y+=titleH+CARD_GAP;
-      ctx.fillStyle='#777';font(15,700);ctx.textAlign='left';ctx.fillText('품목명',62,y+29);ctx.textAlign='right';ctx.fillText('수량',700,y+29);ctx.fillText('단가',855,y+29);ctx.fillText('금액',1018,y+29);y+=44;
+    for(const seg of pg.segments){const{it,audit,rows,start,first,last}=seg;const titleH=104;ctx.fillStyle='#f3f5ff';roundRectPath(ctx,42,y,996,titleH,14);ctx.fill();
+      const payer=`${it.payer||'결제자 미정'} 결제`;font(14,500);const pillW=Math.min(150,ctx.measureText(payer).width+22);font(22,750);ctx.fillStyle='#111';ctx.textAlign='left';const store=truncateCanvasText(ctx,(it.name||'이름 없음')+(first?'':' (계속)'),610-pillW);ctx.fillText(store,62,y+45);const pillX=62+ctx.measureText(store).width+10;ctx.fillStyle='#e9e9ec';roundRectPath(ctx,pillX,y+25,pillW,26,13);ctx.fill();ctx.fillStyle='#666';font(14,500);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(truncateCanvasText(ctx,payer,pillW-16),pillX+pillW/2,y+38);ctx.textBaseline='alphabetic';ctx.textAlign='right';ctx.fillStyle='#111';font(22,800);ctx.fillText(fmt(+it.amount||0)+'원',1018,y+45);
+      ctx.fillStyle='#777';font(15,500);ctx.textAlign='left';const mems=it.members&&it.members.length?it.members:(rec.people||[]),watch=(it.watchers||[]).filter(w=>!mems.includes(w)).map(w=>w+'(깍두기)');ctx.fillText(truncateCanvasText(ctx,[...mems,...watch].join(', '),760),62,y+79);ctx.textAlign='right';ctx.fillStyle=getReceiptSrc(it)?'#16843b':'#8e8e93';ctx.fillText(getReceiptSrc(it)?'영수증 연결됨':'영수증 없음',1018,y+79);y+=titleH+CARD_GAP;
+      ctx.fillStyle='#777';font(15,700);ctx.textAlign='left';ctx.fillText('품목명',62,y+29);ctx.textAlign='right';ctx.fillText('수량',700,y+29);ctx.fillText('단가',855,y+29);ctx.fillText('금액',1018,y+29);ctx.strokeStyle='#dedee3';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(42,y+44);ctx.lineTo(1038,y+44);ctx.stroke();y+=44;
       const drawRows=rows.length?rows:[{name:'상세 품목 없음',qty:'',unitPrice:'',amount:''}];font(17,500);drawRows.forEach((r,i)=>{if(rows.length&&audit.badRows.has(start+i)){ctx.fillStyle='#fff0ef';ctx.fillRect(42,y,996,ROW);}ctx.fillStyle='#222';ctx.textAlign='left';ctx.fillText(truncateCanvasText(ctx,r.name,570),62,y+31);ctx.textAlign='right';ctx.fillText(r.qty||'',700,y+31);ctx.fillText(r.unitPrice||'',855,y+31);font(17,700);ctx.fillText(r.amount||'',1018,y+31);ctx.strokeStyle='#ececf0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(42,y+ROW);ctx.lineTo(1038,y+ROW);ctx.stroke();font(17,500);y+=ROW;});
       if(last){ctx.fillStyle='#111';font(19,800);ctx.textAlign='left';ctx.fillText('합계',62,y+35);const badge=audit.status==='ok'?'✓ 계산 일치':audit.label;ctx.fillStyle=audit.status==='ok'?'#16843b':audit.status==='bad'?'#d92d20':'#777';font(15,700);ctx.fillText(badge,120,y+35);ctx.fillStyle='#111';font(20,800);ctx.textAlign='right';ctx.fillText(fmt(audit.total)+'원',1018,y+35);y+=72;}else{ctx.fillStyle='#8e8e93';font(14,600);ctx.textAlign='right';ctx.fillText('다음 페이지에 계속',1018,y+24);y+=36;}y+=22;
     }
