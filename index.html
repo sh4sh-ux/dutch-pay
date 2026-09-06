@@ -1415,8 +1415,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.07';
-const BUILD_TIME='2026-09-06 13:06';
+const APP_VERSION='v6.08';
+const BUILD_TIME='2026-09-06 16:49';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2423,10 +2423,15 @@ function togglePaymentPanel(key){
   item.appendChild(panel);
 }
 
+function _filenamePeople(ppl){
+  const names=(ppl||[]).map(v=>String(v||'').trim()).filter(Boolean);
+  if(!names.length)return'참여자없음';
+  return names.length<=6?names.join('·'):`${names.slice(0,5).join('·')}·외${names.length-5}명`;
+}
 function _buildSettleFilename(dateStart,total,ppl){
   const d=(dateStart||'').replace(/-/g,'');
   const yymmd=d.slice(2,8)||'000000';
-  return `${yymmd}_정산내역(${fmt(total)})_${(ppl||[]).join(', ')}`;
+  return `${yymmd}_정산(${fmt(total)})_${_filenamePeople(ppl)}`.replace(/[\\/:*?"<>|]/g,'_');
 }
 function _settleAutoSaveFp(){return `${settleDateStart}|${people.slice().sort().join(',')}|${items.reduce((s,i)=>s+(+i.amount||0),0)}`;}
 function _currentSettleRec(){
@@ -4524,8 +4529,7 @@ async function shareReceiptsImages(){
 function _buildDetailFilename(rec){
   const raw=String(rec.dateStart||'').replace(/-/g,''),date=raw.slice(2,8)||'000000';
   const total=rec.total!=null?rec.total:(rec.items||[]).reduce((s,it)=>s+(+it.amount||0),0);
-  const names=(rec.people||[]).join(', ')||'참여자없음';
-  return `${date}_상세내역(${fmt(total)})_${names}`.replace(/[\\/:*?"<>|]/g,'_');
+  return `${date}_상세(${fmt(total)})_${_filenamePeople(rec.people)}`.replace(/[\\/:*?"<>|]/g,'_');
 }
 
 function generateFullDetailCanvases(rec){
