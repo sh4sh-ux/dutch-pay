@@ -1415,8 +1415,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.04';
-const BUILD_TIME='2026-09-06 12:39';
+const APP_VERSION='v6.05';
+const BUILD_TIME='2026-09-06 12:47';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1758,6 +1758,7 @@ const dbxMainFile=()=>DBX_DIR+'/dutch-pay_data.json';
 const dbxHistFile=()=>DBX_DIR+'/dutch-pay_history.json';
 const dbxFixedFile=()=>DBX_DIR+'/dutch-pay_fixed-history.json';
 const dbxFixedDir=()=>DBX_DIR+'/fixed-archives';
+const dbxDetailDir=()=>DBX_DIR+'/상세내역';
 
 /* 저장 위치 확인·이전 — 부팅 때 한 번. 원본은 그대로 두고 복사만 한다. */
 async function _dbxRpc(token,ep,body){
@@ -1765,6 +1766,7 @@ async function _dbxRpc(token,ep,body){
     headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
     body:JSON.stringify(body)});   // 본문은 UTF-8 — 한글 그대로 보내도 된다 (헤더만 ASCII 제약)
 }
+async function _dbxEnsureFolder(token,path){let res=await _dbxRpc(token,'files/create_folder_v2',{path});if(res.status===401){token=await _dbxRefreshToken();if(!token)return null;res=await _dbxRpc(token,'files/create_folder_v2',{path});}return(res.ok||res.status===409)?token:null;}
 async function _dbxExists(token,path){ try{ return (await _dbxRpc(token,'files/get_metadata',{path})).ok; }catch(e){ return false; } }
 let _dbxRootPromise=null;
 function dbxResolveRoot(){ return _dbxRootPromise||(_dbxRootPromise=_dbxResolveRoot()); }
@@ -4531,8 +4533,8 @@ function generateFullDetailCanvases(rec){
   const valid=(rec.items||[]).filter(it=>+it.amount!==0),segments=[];
   for(const it of valid){
     const all=parseReceiptLines(it.receiptText||''),audit=all.length?_receiptAudit(it,all):{status:'warn',label:'상세 품목 없음',total:0,diff:-(+it.amount||0),badRows:new Set()};
-    if(!all.length){segments.push({it,audit,rows:[],start:0,first:true,last:true,h:104+44+ROW+116+22});continue;}
-    for(let start=0;start<all.length;start+=MAX_ROWS){const rows=all.slice(start,start+MAX_ROWS),first=start===0,last=start+rows.length>=all.length;segments.push({it,audit,rows,start,first,last,h:(first?104:70)+44+rows.length*ROW+(last?116:36)+22});}
+    if(!all.length){segments.push({it,audit,rows:[],start:0,first:true,last:true,h:104+44+ROW+72+22});continue;}
+    for(let start=0;start<all.length;start+=MAX_ROWS){const rows=all.slice(start,start+MAX_ROWS),first=start===0,last=start+rows.length>=all.length;segments.push({it,audit,rows,start,first,last,h:(first?104:70)+44+rows.length*ROW+(last?72:36)+22});}
   }
   const pages=[];let page={segments:[],used:HEADER};
   for(const seg of segments){if(page.segments.length&&page.used+seg.h>MAX_H-FOOTER){pages.push(page);page={segments:[],used:HEADER};}page.segments.push(seg);page.used+=seg.h;}
@@ -4546,7 +4548,7 @@ function generateFullDetailCanvases(rec){
     for(const seg of pg.segments){const{it,audit,rows,start,first,last}=seg;const titleH=first?104:70;ctx.fillStyle='#f3f5ff';roundRectPath(ctx,42,y,996,titleH,14);ctx.fill();ctx.fillStyle='#111';font(25,750);ctx.textAlign='left';ctx.fillText(truncateCanvasText(ctx,(it.name||'이름 없음')+(first?'':' (계속)'),650),62,y+35);ctx.textAlign='right';ctx.fillText(fmt(+it.amount||0)+'원',1018,y+35);ctx.fillStyle='#777';font(17,500);ctx.textAlign='left';const mems=it.members&&it.members.length?it.members:(rec.people||[]),watch=(it.watchers||[]).filter(w=>!mems.includes(w)).map(w=>w+'(깍두기)');const meta=`${it.payer||'결제자 미정'} 결제 · ${[...mems,...watch].join(', ')}`;ctx.fillText(truncateCanvasText(ctx,meta,760),62,y+68);ctx.textAlign='right';ctx.fillStyle=getReceiptSrc(it)?'#16843b':'#8e8e93';ctx.fillText(getReceiptSrc(it)?'영수증 연결됨':'영수증 없음',1018,y+68);y+=titleH;
       ctx.fillStyle='#f5f5f7';ctx.fillRect(42,y,996,44);ctx.fillStyle='#777';font(17,700);ctx.textAlign='left';ctx.fillText('품목명',62,y+29);ctx.textAlign='right';ctx.fillText('수량',700,y+29);ctx.fillText('단가',855,y+29);ctx.fillText('금액',1018,y+29);y+=44;
       const drawRows=rows.length?rows:[{name:'상세 품목 없음',qty:'',unitPrice:'',amount:''}];font(19,500);drawRows.forEach((r,i)=>{if(rows.length&&audit.badRows.has(start+i)){ctx.fillStyle='#fff0ef';ctx.fillRect(42,y,996,ROW);}ctx.fillStyle='#222';ctx.textAlign='left';ctx.fillText(truncateCanvasText(ctx,r.name,570),62,y+31);ctx.textAlign='right';ctx.fillText(r.qty||'',700,y+31);ctx.fillText(r.unitPrice||'',855,y+31);ctx.font=`700 19px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Arial,sans-serif`;ctx.fillText(r.amount||'',1018,y+31);ctx.strokeStyle='#ececf0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(42,y+ROW);ctx.lineTo(1038,y+ROW);ctx.stroke();font(19,500);y+=ROW;});
-      if(last){ctx.fillStyle='#111';font(21,800);ctx.textAlign='left';ctx.fillText('합계',62,y+35);const badge=audit.status==='ok'?'✓ 계산 일치':audit.label;ctx.fillStyle=audit.status==='ok'?'#16843b':audit.status==='bad'?'#d92d20':'#777';font(17,700);ctx.fillText(badge,125,y+35);ctx.fillStyle='#111';font(22,800);ctx.textAlign='right';ctx.fillText(fmt(audit.total)+'원',1018,y+35);ctx.fillStyle='#666';font(17,600);ctx.textAlign='left';ctx.fillText('실제 결제금액',62,y+76);ctx.textAlign='right';ctx.fillText(fmt(+it.amount||0)+'원',1018,y+76);y+=116;}else{ctx.fillStyle='#8e8e93';font(16,600);ctx.textAlign='right';ctx.fillText('다음 페이지에 계속',1018,y+24);y+=36;}y+=22;
+      if(last){ctx.fillStyle='#111';font(21,800);ctx.textAlign='left';ctx.fillText('합계',62,y+35);const badge=audit.status==='ok'?'✓ 계산 일치':audit.label;ctx.fillStyle=audit.status==='ok'?'#16843b':audit.status==='bad'?'#d92d20':'#777';font(17,700);ctx.fillText(badge,125,y+35);ctx.fillStyle='#111';font(22,800);ctx.textAlign='right';ctx.fillText(fmt(audit.total)+'원',1018,y+35);y+=72;}else{ctx.fillStyle='#8e8e93';font(16,600);ctx.textAlign='right';ctx.fillText('다음 페이지에 계속',1018,y+24);y+=36;}y+=22;
     }
     ctx.fillStyle='#a0a0a6';font(16,500);ctx.textAlign='center';ctx.fillText('Dropbox 보관용 상세내역 · '+APP_VERSION,W/2,H-22);return canvas;
   });
@@ -4555,7 +4557,7 @@ function generateFullDetailCanvases(rec){
 async function saveFullDetailToDropbox(){
   if(_shareBusy)return;if(!hDbxGetToken()){toast('Dropbox가 연결되지 않았어요. ⋯ 메뉴에서 연결해주세요.',{type:'error'});return;}
   const rec=_currentSettleRec();if(!(rec.items||[]).some(it=>+it.amount!==0)){toast('저장할 상세내역이 없어요',{type:'error'});return;}_setShareBusy(true);
-  try{toast('전체 상세 이미지 만드는 중…',{duration:10000});const canvases=generateFullDetailCanvases(rec),base=_buildDetailFilename(rec);let saved=0;for(let i=0;i<canvases.length;i++){const blob=await new Promise(r=>canvases[i].toBlob(r,'image/png'));if(!blob)throw new Error('이미지 생성 실패');const suffix=canvases.length>1?`_${String(i+1).padStart(2,'0')}-${String(canvases.length).padStart(2,'0')}`:'';const ok=await _dbxUpload(hDbxGetToken(),`${dbxDir()}/${base}${suffix}.png`,blob);if(!ok)throw new Error('Dropbox 업로드 실패');saved++;}toast(saved>1?`Dropbox에 상세 이미지 ${saved}장으로 나눠 저장했어요 ✓`:'Dropbox에 전체 상세 이미지를 저장했어요 ✓',{type:'success',duration:4200});}
+  try{toast('전체 상세 이미지 만드는 중…',{duration:10000});const token=await _dbxEnsureFolder(hDbxGetToken(),dbxDetailDir());if(!token)throw new Error('상세내역 폴더 준비 실패');const canvases=generateFullDetailCanvases(rec),base=_buildDetailFilename(rec);let saved=0;for(let i=0;i<canvases.length;i++){const blob=await new Promise(r=>canvases[i].toBlob(r,'image/png'));if(!blob)throw new Error('이미지 생성 실패');const suffix=canvases.length>1?`_${String(i+1).padStart(2,'0')}-${String(canvases.length).padStart(2,'0')}`:'';const ok=await _dbxUpload(token,`${dbxDetailDir()}/${base}${suffix}.png`,blob);if(!ok)throw new Error('Dropbox 업로드 실패');saved++;}toast(saved>1?`Dropbox 상세내역 폴더에 ${saved}장으로 나눠 저장했어요 ✓`:'Dropbox 상세내역 폴더에 저장했어요 ✓',{type:'success',duration:4200});}
   catch(err){console.error('[detail image]',err);toast('상세 이미지 저장에 실패했어요. 기존 데이터는 변경되지 않았습니다.',{type:'error'});}finally{_setShareBusy(false);}
 }
 
