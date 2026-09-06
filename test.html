@@ -600,7 +600,8 @@ suite('TC14: 데이터 무결성 안전장치 [v5.96 회귀]', () => {
 suite('TC15: 잠금 불변 기록 [v6.14]', () => {
   const key='dutchpay_fixed_history_v1';
   const rec={id:'fixed-h1',savedAt:'2026-09-05T07:00:00Z',dateStart:'2026-06-26',dateEnd:null,people:['A','B'],total:30000,items:[{id:1,name:'원본 식사',amount:30000,payer:'A',members:['A','B'],watchers:[],receiptText:'메뉴 | 1 | 30000 | 30000'}],txns:[],payments:{}};
-  const install=()=>{const payload=JSON.parse(JSON.stringify(rec));APP.localStorage.setItem(key,JSON.stringify([{schemaVersion:1,fixId:'fix-test',recordId:rec.id,fixedAt:'2026-09-05T07:01:00Z',payload,guard:APP._fixedGuard(payload)}]));};
+  const install=()=>{const payload=JSON.parse(JSON.stringify(rec));APP.localStorage.setItem(key,JSON.stringify([{schemaVersion:1,fixId:'fix-test',recordId:rec.id,fixedAt:'2026-09-05T07:01:00Z',payload,guard:APP._fixedGuard(payload)}]));APP.__test.resetFixed();};
+  const clear=()=>{APP.localStorage.removeItem(key);APP.__test.resetFixed();};
   test('객체 키 순서가 달라도 무결성 표식이 같다', () => {
     const a={x:1,nested:{a:2,b:3}},b={nested:{b:3,a:2},x:1};
     expect(APP._fixedGuard(a)).toBe(APP._fixedGuard(b));
@@ -608,26 +609,26 @@ suite('TC15: 잠금 불변 기록 [v6.14]', () => {
   test('잠긴 기록을 수정해 저장해도 원본으로 되돌림', () => {
     install();
     try{const changed={...JSON.parse(JSON.stringify(rec)),total:1,items:[{...rec.items[0],name:'변조'}]};const out=APP._enforceFixedHistory([changed]);expect(out[0].total).toBe(30000);expect(out[0].items[0].name).toBe('원본 식사');}
-    finally{APP.localStorage.removeItem(key);}
+    finally{clear();}
   });
   test('잠긴 기록을 삭제해도 원본을 자동 복구', () => {
     install();
     try{const out=APP._enforceFixedHistory([]);expect(out.length).toBe(1);expect(out[0].id).toBe('fixed-h1');}
-    finally{APP.localStorage.removeItem(key);}
+    finally{clear();}
   });
   test('일반 보관함 카드에 잠금 동작이 표시됨', () => {
-    APP.localStorage.removeItem(key);const host=APP.document.createElement('div');host.innerHTML=APP._buildRecordCardHtml(rec);
+    clear();const host=APP.document.createElement('div');host.innerHTML=APP._buildRecordCardHtml(rec);
     if(!host.querySelector('.rc-fix-btn')||!host.textContent.includes('잠금'))throw new Error('잠금 버튼 누락');
   });
   test('잠긴 카드에는 잠김 상태가 표시되고 복사본 표현은 없음', () => {
     install();
     try{const host=APP.document.createElement('div');host.innerHTML=APP._buildRecordCardHtml(rec);if(!host.querySelector('.rc-fix-btn.fixed')||!host.textContent.includes('잠김'))throw new Error('잠김 버튼 누락');if(host.textContent.includes('복사본'))throw new Error('복사본 표현이 남아 있음');}
-    finally{APP.localStorage.removeItem(key);}
+    finally{clear();}
   });
   test('잠긴 카드에도 수정과 삭제 버튼이 명확히 표시됨', () => {
     install();
     try{const host=APP.document.createElement('div');host.innerHTML=APP._buildRecordCardHtml(rec);if(!host.textContent.includes('수정')||!host.textContent.includes('삭제'))throw new Error('잠긴 기록의 수정 또는 삭제 버튼 누락');}
-    finally{APP.localStorage.removeItem(key);}
+    finally{clear();}
   });
   test('잠금 수정본의 내용이 같으면 동일 기록으로 판단', () => {
     const same={...JSON.parse(JSON.stringify(rec)),id:'new-id',savedAt:'2026-09-06T08:43:00Z'};
@@ -642,7 +643,7 @@ suite('TC15: 잠금 불변 기록 [v6.14]', () => {
   test('잠금 삭제 표식이 있으면 원본이 다시 나타나지 않음', () => {
     const delKey='dutchpay_fixed_deleted_v1';install();APP.localStorage.setItem(delKey,JSON.stringify([rec.id]));
     try{expect(APP._isHistoryFixed(rec.id)).toBe(false);expect(APP._enforceFixedHistory([]).length).toBe(0);}
-    finally{APP.localStorage.removeItem(key);APP.localStorage.removeItem(delKey);}
+    finally{clear();APP.localStorage.removeItem(delKey);}
   });
 });
 
@@ -661,6 +662,20 @@ suite('TC16: 상세 이미지 일괄 저장 [v6.14]', () => {
   test('금액이 없는 빈 기록은 일괄 저장에서 제외', () => {
     const empty={...JSON.parse(JSON.stringify(rec)),items:[{...rec.items[0],amount:0}],total:0};
     expect(APP._prepareDetailHistoryExports([empty]).length).toBe(0);
+  });
+});
+
+suite('TC17: 정산 이미지 폴더 분리 [v6.15]', () => {
+  test('현재 정산 이미지 파일명을 이동 대상으로 인식', () => {
+    expect(APP._isSettlementImageName('260820_정산(64,000)_신유철·조상현.png')).toBe(true);
+  });
+  test('예전 정산내역 이름도 이동 대상으로 인식', () => {
+    expect(APP._isSettlementImageName('260820_정산내역(64,000)_신유철·조상현.PNG')).toBe(true);
+  });
+  test('상세내역·영수증·데이터 파일은 이동하지 않음', () => {
+    expect(APP._isSettlementImageName('260820_상세(64,000)_신유철·조상현.png')).toBe(false);
+    expect(APP._isSettlementImageName('260820_영수증(64,000)_매장.jpg')).toBe(false);
+    expect(APP._isSettlementImageName('dutch-pay_data.json')).toBe(false);
   });
 });
 
@@ -720,6 +735,7 @@ function render() {
           set: function(p, i){ people = p; items = i; },
           // APP_VERSION은 최상위 const라 window 속성이 아니다. 이 스코프에서 읽어 넘긴다.
           ver: function(){ try { return APP_VERSION; } catch(e) { return null; } },
+          resetFixed: function(){ try { _fixedArchivesCache = null; _fixedHydratePromise = null; } catch(e) {} },
           stub: function(){
             try{ saveState = function(){}; }catch(e){}
             try{ syncCurrentToGroup = function(){}; }catch(e){}
