@@ -910,6 +910,8 @@ svg{display:block;flex-shrink:0;}
 .hist-sort-chk{font-size:13px;}
 .hist-settle-btn{display:flex;align-items:center;gap:3px;padding:6px 12px;border-radius:20px;border:1.5px solid var(--sep2);background:transparent;font-size:12px;font-weight:500;color:var(--label2);cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .12s;-webkit-tap-highlight-color:transparent;}
 .hist-settle-btn.on{background:var(--green-bg);border-color:var(--green-txt);color:var(--green-txt);font-weight:600;}
+.hist-bulk-detail-btn{margin-left:auto;display:flex;align-items:center;padding:6px 12px;border-radius:20px;border:1.5px solid #aab4ff;background:var(--blue-bg);font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;font-family:inherit;white-space:nowrap;}
+.hist-bulk-detail-btn:disabled{opacity:.55;cursor:default;}
 .rc-settle-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:2px 7px;border-radius:100px;white-space:nowrap;margin-top:1px;}
 .rc-settle-badge.pos{background:var(--green-bg);color:var(--green-txt);}
 .rc-settle-badge.neg{background:var(--red-bg);color:var(--red);}
@@ -1399,6 +1401,7 @@ svg{display:block;flex-shrink:0;}
       </div>
     </div>
     <button class="hist-settle-btn" id="histSettleBtn" onclick="toggleHistSettle()">정산상태</button>
+    <button class="hist-bulk-detail-btn" id="histBulkDetailBtn" onclick="saveAllHistoryDetailsToDropbox()">전체 상세 저장</button>
   </div>
   <div class="hist-dr-body" id="histDrBody">
     <div class="hist-dr-sinp-wrap">
@@ -1416,8 +1419,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.13';
-const BUILD_TIME='2026-09-06 18:24';
+const APP_VERSION='v6.14';
+const BUILD_TIME='2026-09-06 18:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4570,6 +4573,48 @@ function _buildDetailFilename(rec){
   const raw=String(rec.dateStart||'').replace(/-/g,''),date=raw.slice(2,8)||'000000';
   const total=rec.total!=null?rec.total:(rec.items||[]).reduce((s,it)=>s+(+it.amount||0),0);
   return `${date}_상세(${fmt(total)})_${_filenamePeople(rec.people)}`.replace(/[\\/:*?"<>|]/g,'_');
+}
+
+function _prepareDetailHistoryExports(records){
+  const seen=new Set(),usedNames=new Map(),out=[];
+  for(const rec of records||[]){
+    if(!(rec.items||[]).some(it=>+it.amount!==0))continue;
+    const signature=_historyContentSignature(rec);if(seen.has(signature))continue;seen.add(signature);
+    const original=_buildDetailFilename(rec),n=(usedNames.get(original)||0)+1;usedNames.set(original,n);
+    out.push({rec,base:n===1?original:`${original}_기록${n}`});
+  }
+  return out;
+}
+
+let _bulkDetailBusy=false;
+function _setBulkDetailProgress(text,busy){const btn=document.getElementById('histBulkDetailBtn');if(!btn)return;btn.textContent=text;btn.disabled=!!busy;btn.setAttribute('aria-busy',busy?'true':'false');}
+async function saveAllHistoryDetailsToDropbox(){
+  if(_bulkDetailBusy)return;
+  let token=hDbxGetToken();if(!token){toast('Dropbox가 연결되지 않았어요. 먼저 Dropbox를 연결해주세요.',{type:'error'});return;}
+  const all=loadHistory(),plans=_prepareDetailHistoryExports(all);
+  if(!plans.length){toast('이미지로 저장할 상세 기록이 없어요',{type:'info'});return;}
+  const skipped=all.length-plans.length;
+  if(!confirm(`기록보관함의 상세내역 ${plans.length}건을 Dropbox 상세내역 폴더에 저장할까요?\n같은 파일명은 안전하게 덮어쓰며 기록 데이터는 변경하지 않습니다.${skipped>0?`\n빈 기록 또는 완전히 같은 기록 ${skipped}건은 제외합니다.`:''}`))return;
+  _bulkDetailBusy=true;_setBulkDetailProgress(`0/${plans.length} 저장 중`,true);let savedRecords=0,savedImages=0,failed=0;
+  try{
+    token=await _dbxEnsureFolder(token,dbxDetailDir());if(!token)throw new Error('상세내역 폴더 준비 실패');
+    for(let i=0;i<plans.length;i++){
+      const{rec,base}=plans[i];_setBulkDetailProgress(`${i+1}/${plans.length} 저장 중`,true);
+      try{
+        const canvases=generateFullDetailCanvases(rec);
+        for(let p=0;p<canvases.length;p++){
+          const blob=await new Promise(r=>canvases[p].toBlob(r,'image/png'));if(!blob)throw new Error('이미지 생성 실패');
+          const suffix=canvases.length>1?`_${String(p+1).padStart(2,'0')}`:'';
+          if(!await _dbxUpload(token,`${dbxDetailDir()}/${base}${suffix}.png`,blob))throw new Error('Dropbox 업로드 실패');savedImages++;
+        }
+        savedRecords++;
+      }catch(err){failed++;console.error('[bulk detail image]',rec.id,err);}
+      await new Promise(r=>setTimeout(r,0));
+    }
+    if(failed)toast(`${savedRecords}건 저장 완료 · ${failed}건 실패했어요. 기존 데이터는 그대로입니다.`,{type:'error',duration:6000});
+    else toast(`Dropbox 상세내역 폴더에 ${savedRecords}건 · 이미지 ${savedImages}장을 저장했어요 ✓`,{type:'success',duration:6000});
+  }catch(err){console.error('[bulk detail image]',err);toast('전체 상세 이미지 저장에 실패했어요. 기존 데이터는 변경되지 않았습니다.',{type:'error',duration:6000});}
+  finally{_bulkDetailBusy=false;_setBulkDetailProgress('전체 상세 저장',false);}
 }
 
 function generateFullDetailCanvases(rec){
