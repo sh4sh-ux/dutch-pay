@@ -837,6 +837,7 @@ svg{display:block;flex-shrink:0;}
 .rc-del-btn:hover{opacity:.7;}
 .rc-load-btn{font-size:12px;color:var(--blue);border:none;background:transparent;font-weight:500;padding:8px 6px;cursor:pointer;}
 .rc-load-btn:hover{opacity:.7;}
+.rc-edit-btn{border:1px solid #aab4ff;background:#f4f5ff;border-radius:8px;font-weight:700;padding:6px 9px;}
 .rc-fix-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#665000;border:1px solid #e1b72f;background:#fff3a6;border-radius:8px;font-weight:700;padding:6px 8px;cursor:pointer;white-space:nowrap;}
 .rc-fix-btn:hover{opacity:.8;}
 .rc-fix-btn.fixed{color:var(--green-txt);border-color:transparent;background:var(--green-bg);cursor:pointer;}
@@ -3972,7 +3973,7 @@ function _buildRecordCardHtml(r){
       <span class="rc-saved-at">${savedAtStr} 저장 · ${(r.people||[]).length}명</span>
       <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
         <button class="rc-load-btn" onclick="shareHistoryImage('${jsa(r.id)}')">이미지</button>
-        ${fixed?`<button class="rc-load-btn" title="암호 입력 후 수정" onclick="unlockHistoryForEdit('${jsa(r.id)}')">수정</button><span class="rc-fix-btn fixed" title="잠긴 기록">${LOCK_CLOSED_SVG}잠김</span><button class="rc-del-btn" title="암호 입력 후 삭제" onclick="deleteHistoryRecord('${jsa(r.id)}',event)">삭제</button>`:`<button class="rc-load-btn" onclick="loadHistoryForEdit('${jsa(r.id)}')">수정</button><button class="rc-fix-btn" onclick="fixHistoryRecord('${jsa(r.id)}')">${LOCK_OPEN_SVG}잠금</button><button class="rc-del-btn" onclick="deleteHistoryRecord('${jsa(r.id)}',event)">삭제</button>`}
+        ${fixed?`<button class="rc-load-btn rc-edit-btn" title="암호 입력 후 수정" onclick="unlockHistoryForEdit('${jsa(r.id)}')">수정</button><span class="rc-fix-btn fixed" title="잠긴 기록">${LOCK_CLOSED_SVG}잠김</span><button class="rc-del-btn" title="암호 입력 후 삭제" onclick="deleteHistoryRecord('${jsa(r.id)}',event)">삭제</button>`:`<button class="rc-load-btn rc-edit-btn" onclick="loadHistoryForEdit('${jsa(r.id)}')">수정</button><button class="rc-fix-btn" onclick="fixHistoryRecord('${jsa(r.id)}')">${LOCK_OPEN_SVG}잠금</button><button class="rc-del-btn" onclick="deleteHistoryRecord('${jsa(r.id)}',event)">삭제</button>`}
       </div>
     </div>
   </div>`;
