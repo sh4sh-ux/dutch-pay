@@ -1415,8 +1415,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.08';
-const BUILD_TIME='2026-09-06 16:49';
+const APP_VERSION='v6.09';
+const BUILD_TIME='2026-09-06 16:55';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2426,7 +2426,7 @@ function togglePaymentPanel(key){
 function _filenamePeople(ppl){
   const names=(ppl||[]).map(v=>String(v||'').trim()).filter(Boolean);
   if(!names.length)return'참여자없음';
-  return names.length<=6?names.join('·'):`${names.slice(0,5).join('·')}·외${names.length-5}명`;
+  return names.length<=8?names.join('·'):`${names.slice(0,7).join('·')}·외${names.length-7}명`;
 }
 function _buildSettleFilename(dateStart,total,ppl){
   const d=(dateStart||'').replace(/-/g,'');
