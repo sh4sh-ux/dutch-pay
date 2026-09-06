@@ -1415,8 +1415,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.03';
-const BUILD_TIME='2026-09-06 12:21';
+const APP_VERSION='v6.04';
+const BUILD_TIME='2026-09-06 12:39';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3776,6 +3776,7 @@ async function _hydrateFixedArchives(){const raw=_loadFixedArchivesRaw(),legacy=
 function _ensureFixedArchives(){if(_fixedArchivesCache)return Promise.resolve(_fixedArchivesCache);if(!_fixedHydratePromise)_fixedHydratePromise=_hydrateFixedArchives().catch(e=>{_fixedHydratePromise=null;throw e;});return _fixedHydratePromise;}
 function _fixedArchiveFor(recordId){return loadFixedArchives().find(x=>x.recordId===recordId)||_loadFixedManifest().find(x=>x.recordId===recordId)||null;}
 function _isHistoryFixed(recordId){return!!_fixedArchiveFor(recordId);}
+function _refreshHistoryLockSurfaces(){if(_histDrawerOpen){_refreshHistDrawer();return;}renderAll(true);}
 function _removeDelId(id){try{const s=_loadDelIds();s.delete(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
 function _enforceFixedHistory(arr){
   const out=Array.isArray(arr)?[...arr]:[],byId=new Map(out.map((r,i)=>[r.id,i]));
@@ -3793,15 +3794,14 @@ async function _verifyAndRepairFixedHistory(){
 async function fixHistoryRecord(id){
   try{await _ensureFixedArchives();}catch(e){toast(_storageErrorMessage(e,'잠금 안전 저장소 준비'),{type:'error',duration:5000});return false;}
   const record=loadHistory().find(r=>r.id===id);if(!record){toast('고정할 기록을 찾지 못했어요',{type:'error'});return false;}
-  if(_isHistoryFixed(id)){toast('이미 잠긴 기록이에요',{type:'info'});return true;}
+  if(_isHistoryFixed(id)){_refreshHistoryLockSurfaces();toast('이미 잠긴 기록이에요',{type:'info'});return true;}
   try{if(!await _ensureLockPin())return false;}catch(e){toast(_storageErrorMessage(e,'잠금 비밀번호 저장'),{type:'error',duration:5000});return false;}
   if(!confirm('이 기록을 잠글까요?\n\n원본은 그대로 보존됩니다. 수정할 때는 숫자 4자리 비밀번호로 수정용 복사본을 만들 수 있어요.'))return false;
   const payload=JSON.parse(JSON.stringify(record));const canonical=_stableJson(payload);const fixedAt=new Date().toISOString();
   const entry={schemaVersion:2,fixId:'fix_'+Date.now()+'_'+_hRandomStr(8),recordId:id,fixedAt,payload,guard:_fixedGuard(payload),sha256:await _hSha256b64url(canonical),pinHash:localStorage.getItem(LOCK_PIN_HASH_KEY)||'',pinSalt:localStorage.getItem(LOCK_PIN_SALT_KEY)||''};
-  try{await _saveFixedArchives([...loadFixedArchives(),entry]);_removeDelId(id);saveHistory(loadHistory());}
+  try{await _saveFixedArchives([...loadFixedArchives(),entry]);_removeDelId(id);saveHistory(loadHistory());_refreshHistoryLockSurfaces();}
   catch(e){toast(_storageErrorMessage(e,'잠금'),{type:'error',duration:5000});return false;}
   if(hDbxGetToken())try{await _syncFixedArchives(hDbxGetToken());}catch(e){toast('기기에는 잠겼지만 Dropbox 원본 저장은 재시도가 필요해요',{type:'error',duration:5000});}
-  if(_histDrawerOpen)_refreshHistDrawer();else renderAll();
   toast('잠금 완료 — 원본이 안전하게 보존됩니다',{type:'success',duration:4500});return true;
 }
 function _fixedMutationBlocked(id){if(!_isHistoryFixed(id))return false;toast('잠긴 원본은 바꿀 수 없어요. “수정”에서 비밀번호를 입력하면 복사본이 만들어집니다.',{type:'info',duration:4200});return true;}
