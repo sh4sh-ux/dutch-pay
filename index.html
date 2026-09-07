@@ -1419,8 +1419,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.17';
-const BUILD_TIME='2026-09-07 13:49';
+const APP_VERSION='v6.18';
+const BUILD_TIME='2026-09-07 14:25';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1599,8 +1599,9 @@ function getDisplayItems(){return items.slice();}
 function setItemSort(v){itemSort=v;renderAll();}
 
 let _toastContainer=null;
+const _activeToasts=new Map();
 function _getToastContainer(){if(!_toastContainer||!document.body.contains(_toastContainer)){_toastContainer=document.createElement('div');_toastContainer.className='toast-container';document.body.appendChild(_toastContainer);}return _toastContainer;}
-function toast(msg,opts){opts=opts||{};const container=_getToastContainer();const t=document.createElement('div');t.className='toast'+(opts.type?' '+opts.type:'');const span=document.createElement('span');span.className='toast-msg';span.textContent=msg;t.appendChild(span);let timer=null;const dismiss=()=>{if(timer){clearTimeout(timer);timer=null;}t.classList.remove('show');setTimeout(()=>{if(t.parentNode)t.remove();},250);};if(opts.action&&opts.actionLabel){const btn=document.createElement('button');btn.type='button';btn.className='toast-action';btn.textContent=opts.actionLabel;btn.addEventListener('click',()=>{opts.action();dismiss();});t.appendChild(btn);}container.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));const duration=opts.duration||(opts.action?5000:2500);timer=setTimeout(dismiss,duration);return{dismiss};}
+function toast(msg,opts){opts=opts||{};const container=_getToastContainer();const key=(opts.type||'')+'\n'+msg;const active=_activeToasts.get(key);if(active&&active.el&&active.el.isConnected)return active.handle;const t=document.createElement('div');t.className='toast'+(opts.type?' '+opts.type:'');const span=document.createElement('span');span.className='toast-msg';span.textContent=msg;t.appendChild(span);let timer=null,handle=null;const dismiss=()=>{if(timer){clearTimeout(timer);timer=null;}if(_activeToasts.get(key)?.el===t)_activeToasts.delete(key);t.classList.remove('show');setTimeout(()=>{if(t.parentNode)t.remove();},250);};handle={dismiss};_activeToasts.set(key,{el:t,handle});if(opts.action&&opts.actionLabel){const btn=document.createElement('button');btn.type='button';btn.className='toast-action';btn.textContent=opts.actionLabel;btn.addEventListener('click',()=>{opts.action();dismiss();});t.appendChild(btn);}container.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));const duration=opts.duration||(opts.action?5000:2500);timer=setTimeout(dismiss,duration);return handle;}
 
 function detectInAppBrowser(){const ua=navigator.userAgent||'';if(/KAKAOTALK/i.test(ua))return{name:'카카오톡',scheme:'kakaotalk://web/openExternal?url='};if(/NAVER\(inapp/i.test(ua))return{name:'네이버',scheme:null};if(/Line\//i.test(ua))return{name:'Line',scheme:'line://nv/openExternalBrowser/?url='};if(/Instagram/i.test(ua))return{name:'Instagram',scheme:null};if(/FBAN|FBAV/i.test(ua))return{name:'Facebook',scheme:null};return null;}
 function openInExternalBrowser(){const t=detectInAppBrowser();const url=location.href;if(t&&t.scheme){window.location.href=t.scheme+encodeURIComponent(url);}else{alert('우측 상단 ⋮ 메뉴에서 "다른 브라우저로 열기"를 눌러주세요.');}}
@@ -1615,28 +1616,49 @@ const FIXED_DELETED_KEY='dutchpay_fixed_deleted_v1';
 const AUTO_BACKUP_KEY='dutchpay_autobackups';
 const AUTO_BACKUP_MAX=5;
 
-function _autoBackup(reason){
+function _loadLegacyAutoBackups(){
+  try{const d=JSON.parse(localStorage.getItem(AUTO_BACKUP_KEY)||'[]');return Array.isArray(d)?d:[];}catch(e){return [];}
+}
+function _validAutoBackup(x){return!!(x&&x.savedAt&&Array.isArray(x.groups)&&x.groups.length);}
+function _autoBackupStoreKey(slot){return'auto_'+slot.savedAt+'_'+_hRandomStr(5);}
+async function _loadAutoBackups(){
+  let safe=[];try{safe=await _safeStoreGetAll('backups');}catch(e){}
+  const map=new Map();[...safe,..._loadLegacyAutoBackups()].filter(_validAutoBackup).forEach(s=>{const k=s.savedAt+'\n'+(s.reason||'');if(!map.has(k))map.set(k,s);});
+  return[...map.values()].sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||'')).slice(0,AUTO_BACKUP_MAX);
+}
+async function _migrateAutoBackupsToSafeStore(){
+  const legacy=_loadLegacyAutoBackups().filter(_validAutoBackup);if(!legacy.length)return true;
+  for(const slot of legacy){const key=_autoBackupStoreKey(slot);await _safeStorePut('backups',key,slot);const check=await _safeStoreGet('backups',key);if(!check||_stableJson(check)!==_stableJson(slot))throw new Error('자동 백업 이전 검증 실패');}
+  localStorage.removeItem(AUTO_BACKUP_KEY);return true;
+}
+async function _pruneAutoBackups(){
+  const entries=(await _safeStoreGetEntries('backups')).filter(x=>_validAutoBackup(x.value)).sort((a,b)=>(b.value.savedAt||'').localeCompare(a.value.savedAt||''));
+  for(const entry of entries.slice(AUTO_BACKUP_MAX))await _safeStoreDelete('backups',entry.key);
+}
+async function _autoBackup(reason){
   try{
     syncCurrentToGroup();
     const snap=JSON.parse(JSON.stringify(groups));
     // 자동 백업엔 인라인 이미지(data URI)를 넣지 않는다 — 슬롯마다 통째로 복사돼 저장공간이 폭증하던 원인 (v5.61). 이미지는 IndexedDB/Dropbox에 있음
     snap.forEach(g=>{((g.data&&g.data.items)||[]).forEach(it=>{if(_isDataUrl(it.receiptUrl))it.receiptUrl='';});});
-    const slots=_loadAutoBackups();
+    let legacyMigrated=false;try{legacyMigrated=await _migrateAutoBackupsToSafeStore();}catch(e){}
+    const slots=await _loadAutoBackups();
     // 동일한 상태를 반복 저장해 실제 복구점을 밀어내지 않는다.
     if(slots[0]&&JSON.stringify(slots[0].groups)===JSON.stringify(snap))return true;
     const slot={reason:reason||'',savedAt:new Date().toISOString(),version:3,groups:snap,currentGroupId};
-    slots.unshift(slot);
-    if(slots.length>AUTO_BACKUP_MAX)slots.length=AUTO_BACKUP_MAX;
-    localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(slots));
-    _safeStorePut('backups','auto_'+slot.savedAt+'_'+_hRandomStr(5),slot).catch(()=>{});
+    try{
+      const key=_autoBackupStoreKey(slot);await _safeStorePut('backups',key,slot);const check=await _safeStoreGet('backups',key);
+      if(!check||_stableJson(check)!==_stableJson(slot))throw new Error('안전 백업 검증 실패');
+      await _pruneAutoBackups();if(legacyMigrated)localStorage.removeItem(AUTO_BACKUP_KEY);
+    }catch(idbError){
+      const fallback=[slot,..._loadLegacyAutoBackups()].filter(_validAutoBackup).slice(0,AUTO_BACKUP_MAX);
+      localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(fallback));
+    }
     return true;
   }catch(e){toast(_storageErrorMessage(e,'안전 백업'),{type:'error',duration:5000});return false;}
 }
-function _loadAutoBackups(){
-  try{const d=JSON.parse(localStorage.getItem(AUTO_BACKUP_KEY)||'[]');return Array.isArray(d)?d:[];}catch(e){return [];}
-}
-function _restoreAutoBackup(idx){
-  const slots=_loadAutoBackups();
+async function _restoreAutoBackup(idx){
+  const slots=await _loadAutoBackups();
   const slot=slots[idx];
   if(!slot||!Array.isArray(slot.groups)||!slot.groups.length){toast('백업 데이터가 없어요',{type:'error'});return;}
   if(!confirm(`"${slot.reason||'자동 백업'}" (${slot.savedAt?slot.savedAt.slice(0,16).replace('T',' '):'?'}) 시점으로 복원할까요?`))return;
@@ -1645,8 +1667,8 @@ function _restoreAutoBackup(idx){
   saveState();renderAll();
   toast('자동 백업에서 복원됐어요',{type:'success'});
 }
-function _showAutoBackupList(){
-  const slots=_loadAutoBackups();
+async function _showAutoBackupList(){
+  const slots=await _loadAutoBackups();
   if(!slots.length){toast('저장된 자동 백업이 없어요',{type:'error'});return;}
   const pop=document.createElement('div');pop.className='data-pop';
   const rows=slots.map((s,i)=>{
@@ -1948,13 +1970,13 @@ async function syncFromDropbox(){
     const filtered=mergedGroups.filter(g=>!mergedDeleted[g.id]);
 
     if(conflicts.length){
-      if(!_autoBackup('Dropbox 충돌 감지'))return;
+      if(!await _autoBackup('Dropbox 충돌 감지'))return;
       _showSyncConflictUI(conflicts,filtered,remote.currentGroupId,mergedDeleted);
       return;
     }
 
     const changed=JSON.stringify(filtered)!==JSON.stringify(groups)||JSON.stringify(mergedDeleted)!==JSON.stringify(deletedGroups);
-    if(changed&&!_autoBackup('Dropbox 병합 전'))return;
+    if(changed&&!await _autoBackup('Dropbox 병합 전'))return;
     await _applySyncMerge(filtered,remote.currentGroupId,mergedDeleted);
     if(changed)toast('Dropbox에서 최신 내용을 병합했어요',{type:'success'});
   }catch(e){}finally{_syncFromRunning=false;}
@@ -2117,8 +2139,8 @@ function _consumeReceiptDbTransfer(){
     return{count:entries.length,created:existing?0:entries.length,updated:existing?entries.length:0};
   }catch(e){return null;}
 }
-function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!_autoBackup('전체 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const now=new Date().toISOString();groups.forEach(g=>{deletedGroups[g.id]=now;});const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:now,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
-function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!_autoBackup('이번 정산 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}people=[];items=[];payments={};idc=0;settleDateStart=new Date().toISOString().slice(0,10);settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
+async function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!await _autoBackup('전체 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const now=new Date().toISOString();groups.forEach(g=>{deletedGroups[g.id]=now;});const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:now,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
+async function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!await _autoBackup('이번 정산 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}people=[];items=[];payments={};idc=0;settleDateStart=new Date().toISOString().slice(0,10);settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
 
 function updateMeetingDate(val){settleDateStart=val||new Date().toISOString().slice(0,10);_dpUpdate('meetingDateDisp',settleDateStart);saveState();}
 function fmtDate(iso){if(!iso)return '';const[y,m,d]=iso.split('-');return `${y}.${m}.${d}`;}
@@ -3540,7 +3562,8 @@ async function _migrateReceiptsToIdb(){
   let hist=null;try{hist=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');}catch(e){hist=null;}
   if(Array.isArray(hist)){let hc=false;for(const rec of hist){const before=changed;await mig(rec.items);if(changed!==before)hc=true;}if(hc){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(hist));}catch(e){}}}
   // 자동 백업 슬롯에 옛 인라인 이미지가 그대로 박혀 저장공간을 크게 잡아먹던 문제 — data URI 제거로 확보 (v5.61)
-  try{const abs=_loadAutoBackups();let ac=false;abs.forEach(s=>{((s.groups)||[]).forEach(g=>{((g.data&&g.data.items)||[]).forEach(it=>{if(_isDataUrl(it.receiptUrl)){it.receiptUrl='';ac=true;}});});});if(ac)localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(abs));}catch(e){}
+  try{const abs=_loadLegacyAutoBackups();let ac=false;abs.forEach(s=>{((s.groups)||[]).forEach(g=>{((g.data&&g.data.items)||[]).forEach(it=>{if(_isDataUrl(it.receiptUrl)){it.receiptUrl='';ac=true;}});});});if(ac)localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(abs));}catch(e){}
+  try{await _migrateAutoBackupsToSafeStore();}catch(e){}
   if(changed){try{saveState();}catch(e){}renderAll();_flushReceiptUploads();}
 }
 async function openReceiptViewer(itemId,ev){
@@ -3824,6 +3847,7 @@ function _safeStoreDb(){return new Promise((res,rej)=>{try{const q=indexedDB.ope
 async function _safeStorePut(store,key,value){const db=await _safeStoreDb();return new Promise((res,rej)=>{const t=db.transaction(store,'readwrite');t.objectStore(store).put(value,key);t.oncomplete=()=>res(true);t.onerror=()=>rej(t.error||new Error('안전 저장소 쓰기 실패'));t.onabort=()=>rej(t.error||new Error('안전 저장소 쓰기 중단'));});}
 async function _safeStoreGet(store,key){try{const db=await _safeStoreDb();return await new Promise((res,rej)=>{const t=db.transaction(store,'readonly');const q=t.objectStore(store).get(key);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error);});}catch(e){return null;}}
 async function _safeStoreGetAll(store){const db=await _safeStoreDb();return new Promise((res,rej)=>{const t=db.transaction(store,'readonly');const q=t.objectStore(store).getAll();q.onsuccess=()=>res(Array.isArray(q.result)?q.result:[]);q.onerror=()=>rej(q.error||new Error('안전 저장소 읽기 실패'));});}
+async function _safeStoreGetEntries(store){const db=await _safeStoreDb();return new Promise((res,rej)=>{const out=[];const t=db.transaction(store,'readonly');const q=t.objectStore(store).openCursor();q.onsuccess=()=>{const c=q.result;if(!c){res(out);return;}out.push({key:c.key,value:c.value});c.continue();};q.onerror=()=>rej(q.error||new Error('안전 저장소 목록 읽기 실패'));});}
 async function _safeStoreDelete(store,key){const db=await _safeStoreDb();return new Promise((res,rej)=>{const t=db.transaction(store,'readwrite');t.objectStore(store).delete(key);t.oncomplete=()=>res(true);t.onerror=()=>rej(t.error||new Error('안전 저장소 삭제 실패'));t.onabort=()=>rej(t.error||new Error('안전 저장소 삭제 중단'));});}
 function _validFixedEntry(x){return!!(x&&x.fixId&&x.recordId&&x.payload&&x.guard===_fixedGuard(x.payload));}
 function _loadFixedDeletedIds(){try{return new Set(JSON.parse(localStorage.getItem(FIXED_DELETED_KEY)||'[]'));}catch(e){return new Set();}}
