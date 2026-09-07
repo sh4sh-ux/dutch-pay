@@ -698,6 +698,25 @@ suite('TC17: 정산 이미지 폴더 분리 [v6.15]', () => {
   });
 });
 
+suite('TC18: 저장공간 안전 백업 [v6.18]', () => {
+  test('자동 백업은 IndexedDB 저장과 읽기 검증을 완료한 뒤 성공', () => {
+    const src=APP._autoBackup.toString();
+    if(!src.includes("await _safeStorePut('backups'")||!src.includes("await _safeStoreGet('backups'"))throw new Error('안전 저장소 쓰기 또는 검증 누락');
+  });
+  test('기존 localStorage 백업은 안전 저장소 이전 후 제거', () => {
+    const src=APP._migrateAutoBackupsToSafeStore.toString();
+    if(!src.includes("localStorage.removeItem(AUTO_BACKUP_KEY)"))throw new Error('기존 대용량 백업 키 정리 누락');
+  });
+  test('동일한 오류 알림은 한 개만 표시', () => {
+    APP.document.querySelectorAll('.toast').forEach(el=>el.remove());
+    const a=APP.toast('저장공간 테스트',{type:'error',duration:5000});
+    const b=APP.toast('저장공간 테스트',{type:'error',duration:5000});
+    if(a!==b)throw new Error('동일 알림 핸들이 재사용되지 않음');
+    expect(APP.document.querySelectorAll('.toast').length).toBe(1);
+    a.dismiss();
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────
