@@ -645,6 +645,25 @@ suite('TC15: 잠금 불변 기록 [v6.14]', () => {
     try{expect(APP._isHistoryFixed(rec.id)).toBe(false);expect(APP._enforceFixedHistory([]).length).toBe(0);}
     finally{clear();APP.localStorage.removeItem(delKey);}
   });
+  test('기존 잠금 기록의 비밀번호 정보는 전체 PIN으로 재사용', () => {
+    clear();
+    const payload=JSON.parse(JSON.stringify(rec));
+    APP.localStorage.setItem(key,JSON.stringify([{schemaVersion:2,fixId:'fix-pin',recordId:rec.id,fixedAt:'2026-09-05T07:01:00Z',payload,guard:APP._fixedGuard(payload),pinHash:'hash-once',pinSalt:'salt-once'}]));
+    APP.localStorage.removeItem('dutchpay_lock_pin_hash_v1');
+    APP.localStorage.removeItem('dutchpay_lock_pin_salt_v1');
+    APP.__test.resetFixed();
+    try{
+      const creds=APP._storedLockPinCredentials();
+      expect(creds.hash).toBe('hash-once');
+      expect(creds.salt).toBe('salt-once');
+      expect(APP.localStorage.getItem('dutchpay_lock_pin_hash_v1')).toBe('hash-once');
+      expect(APP.localStorage.getItem('dutchpay_lock_pin_salt_v1')).toBe('salt-once');
+    }finally{
+      clear();
+      APP.localStorage.removeItem('dutchpay_lock_pin_hash_v1');
+      APP.localStorage.removeItem('dutchpay_lock_pin_salt_v1');
+    }
+  });
 });
 
 suite('TC16: 상세 이미지 일괄 저장 [v6.14]', () => {

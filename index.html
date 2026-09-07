@@ -1419,8 +1419,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.16';
-const BUILD_TIME='2026-09-06 22:46';
+const APP_VERSION='v6.17';
+const BUILD_TIME='2026-09-07 13:49';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3806,8 +3806,19 @@ function _fixedGuard(payload){
 const LOCK_OPEN_SVG='<svg class="lock-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="6" y="11" width="12" height="9" rx="2" stroke="currentColor" stroke-width="2"/><path d="M9 11V8a5 5 0 0 1 9-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 const LOCK_CLOSED_SVG='<svg class="lock-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="15" r="1.2" fill="currentColor"/></svg>';
 async function _lockPinHash(pin,salt){return _hSha256b64url('dutchpay-lock:'+salt+':'+pin);}
-async function _ensureLockPin(){let hash=localStorage.getItem(LOCK_PIN_HASH_KEY),salt=localStorage.getItem(LOCK_PIN_SALT_KEY);if(hash&&salt)return true;const pin=prompt('잠금에 사용할 숫자 4자리를 설정하세요.');if(pin===null)return false;if(!/^\d{4}$/.test(pin)){toast('숫자 4자리로 입력해주세요',{type:'error'});return false;}const again=prompt('같은 숫자 4자리를 한 번 더 입력하세요.');if(again!==pin){toast('비밀번호가 일치하지 않아요',{type:'error'});return false;}salt=_hRandomStr(16);hash=await _lockPinHash(pin,salt);localStorage.setItem(LOCK_PIN_SALT_KEY,salt);localStorage.setItem(LOCK_PIN_HASH_KEY,hash);return true;}
-async function _verifyLockPin(recordId){const lock=_fixedArchiveFor(recordId)||{},hash=lock.pinHash||localStorage.getItem(LOCK_PIN_HASH_KEY),salt=lock.pinSalt||localStorage.getItem(LOCK_PIN_SALT_KEY);if(!hash||!salt)return _ensureLockPin();const pin=prompt('잠금 수정 비밀번호 숫자 4자리를 입력하세요.');if(pin===null)return false;if(!/^\d{4}$/.test(pin)||await _lockPinHash(pin,salt)!==hash){toast('비밀번호가 맞지 않아요',{type:'error'});return false;}return true;}
+function _lockPinCredentialsFromArchives(){return loadFixedArchives().find(f=>f.pinHash&&f.pinSalt)||_loadFixedManifest().find(f=>f.pinHash&&f.pinSalt)||null;}
+function _storedLockPinCredentials(){
+  let hash=localStorage.getItem(LOCK_PIN_HASH_KEY),salt=localStorage.getItem(LOCK_PIN_SALT_KEY);
+  if(hash&&salt)return{hash,salt};
+  const archived=_lockPinCredentialsFromArchives();
+  if(!archived)return null;
+  hash=archived.pinHash;salt=archived.pinSalt;
+  localStorage.setItem(LOCK_PIN_HASH_KEY,hash);
+  localStorage.setItem(LOCK_PIN_SALT_KEY,salt);
+  return{hash,salt};
+}
+async function _ensureLockPin(){if(_storedLockPinCredentials())return true;const pin=prompt('잠금에 사용할 숫자 4자리를 설정하세요.');if(pin===null)return false;if(!/^\d{4}$/.test(pin)){toast('숫자 4자리로 입력해주세요',{type:'error'});return false;}const again=prompt('같은 숫자 4자리를 한 번 더 입력하세요.');if(again!==pin){toast('비밀번호가 일치하지 않아요',{type:'error'});return false;}const salt=_hRandomStr(16),hash=await _lockPinHash(pin,salt);localStorage.setItem(LOCK_PIN_SALT_KEY,salt);localStorage.setItem(LOCK_PIN_HASH_KEY,hash);return true;}
+async function _verifyLockPin(recordId){const lock=_fixedArchiveFor(recordId)||{},stored=_storedLockPinCredentials(),hash=lock.pinHash||(stored&&stored.hash),salt=lock.pinSalt||(stored&&stored.salt);if(!hash||!salt)return _ensureLockPin();const pin=prompt('잠금 수정 비밀번호 숫자 4자리를 입력하세요.');if(pin===null)return false;if(!/^\d{4}$/.test(pin)||await _lockPinHash(pin,salt)!==hash){toast('비밀번호가 맞지 않아요',{type:'error'});return false;}return true;}
 async function unlockHistoryForEdit(id){if(!_isHistoryFixed(id)){loadHistoryForEdit(id);return;}try{if(!await _verifyLockPin(id))return;}catch(e){toast(_storageErrorMessage(e,'비밀번호 확인'),{type:'error'});return;}loadHistoryForEdit(id,true);}
 function _safeStoreDb(){return new Promise((res,rej)=>{try{const q=indexedDB.open('dutchpay_safe_store',1);q.onupgradeneeded=()=>{['fixed','snapshots','backups'].forEach(n=>{if(!q.result.objectStoreNames.contains(n))q.result.createObjectStore(n);});};q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error||new Error('안전 저장소를 열 수 없습니다'));}catch(e){rej(e);}});}
 async function _safeStorePut(store,key,value){const db=await _safeStoreDb();return new Promise((res,rej)=>{const t=db.transaction(store,'readwrite');t.objectStore(store).put(value,key);t.oncomplete=()=>res(true);t.onerror=()=>rej(t.error||new Error('안전 저장소 쓰기 실패'));t.onabort=()=>rej(t.error||new Error('안전 저장소 쓰기 중단'));});}
