@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v6.21** (2026-09-26) — 작업 브랜치
+**v6.22** (2026-09-26) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v6.22 | **차수(지출) 순서 변경 기능**(사용자 요청, C안: 순서 변경 모드 + 드래그 핸들) — 지출 목록 헤더에 `⇅ 순서` 토글(지출 2개 이상일 때). 켜면 각 행이 왼쪽 드래그 핸들(≡)로 바뀌고 탭-편집은 꺼져 오탭·충돌 없음. 핸들 pointer 이벤트(`touch-action:none`)로 끌어 재배치, 드롭 위치는 파란 선(inset box-shadow)으로 표시. 표시 순서 = `items` 배열 순서라 배열만 splice 후 `saveState`(계산·분담 무관, order-independent). `_itemRowHtml` 공용 빌더로 데스크탑/모바일 통일, `toggleReorderMode`/`_startItemDrag`/`_commitReorder`. addItem 시 모드 해제. 헤드리스 검증: 재정렬 렌더(핸들·onclick 제거)·드래그 [1,2,3]→[2,3,1]·localStorage 저장·총액 불변, 계산 111/111 |
 | v6.21 | **영수증 DB에서 보낸 분담 방식(한턱·깍두기) 그대로 적용**(사용자 요청). `_consumeReceiptDbTransfer`가 전송 항목의 새 필드 `members`(나누는 사람)·`watchers`(깍두기)·`treat`(한턱)를 읽어 지출의 `members`·`watchers`·`isTreat`로 넣는다(전엔 `members=전원`·`watchers=[]`·`isTreat=false` 고정). 전송된 이름은 그 항목 `people` 안의 이름만 받고, `members`가 비면 기존처럼 전원 — **옛 영수증 DB(필드 없음)는 동작 불변**. 영수증 DB 쪽은 v3.99(나누는 사람=참석자−깍두기, 결제자는 참석자일 때만, 한턱=결제자 전액). 계산 함수(`computeShares`·`calcTxns`) 무변경. 검증: 두 앱을 한 origin에 띄워 한턱·깍두기·일반·전원 깍두기 4건 전송 → isTreat·watchers·members 일치, 분담액 = 영수증 DB `_receiptShare`(한턱 제외), 옛 전송 호환, test.html 111/111 |
 | v6.20 | **상세내역 캔버스 이미지 단가·금액 천 단위 쉼표**(사용자 요청, 표시 전용) — v6.19는 HTML 표만 고쳤는데, 'Dropbox 보관용 상세내역' 등 **캔버스 이미지**(`generateFullDetailCanvases` line~4711, 단일 항목 상세 line~4887)는 여전히 `r.unitPrice`/`r.amount` 원문(30000)을 `fillText`로 그리고 있었음. 두 곳 모두 `_receiptNum`으로 파싱 → 숫자면 `fmt()`, 아니면(증정·빈칸) 원문 유지로 변경. 수량(`r.qty`)·SET 0원·계산·감사·데이터 무변경. 헤드리스로 `fillText` 인자 가로채 검증(원문 30000 미출력·30,000/14,000/5,000 출력·수량 유지), 계산 111/111 |
 | v6.19 | **지출 상세내역 표 금액 천 단위 쉼표**(사용자 요청, 표시 전용) — 상세내역 표(`_receiptTableHtml`)의 **단가·금액 행**이 `receiptText` 원문(`e(r.unitPrice)`/`e(r.amount)`)을 그대로 출력해 쉼표 없이 입력하면 그대로 보이던 문제. 이미 있는 `_receiptNum`으로 숫자 파싱 → 숫자면 `fmt()`(=`toLocaleString('ko-KR')`)로 표시, 아니면(증정·빈칸 등) 원문 유지. `_receiptNum`이 쉼표를 먼저 제거 후 재포맷하므로 `30,,000` 같은 중복 쉼표 없음, 음수 `-3,000` 정상. 합계(tfoot)는 이미 `fmt`. 수량·계산·감사(`_receiptAudit`)·레이아웃·열구성 무변경. 헤드리스 렌더 검증(18000→18,000·-3,000·이미쉼표 유지·증정품), 계산 111/111 |
