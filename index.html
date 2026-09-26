@@ -1419,8 +1419,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.20';
-const BUILD_TIME='2026-09-12 11:10';
+const APP_VERSION='v6.21';
+const BUILD_TIME='2026-09-26 13:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2116,7 +2116,11 @@ function _consumeReceiptDbTransfer(){
       const payer=String(entry.payer||entryPeople[0]||'').trim();
       if(payer&&!entryPeople.includes(payer))entryPeople.push(payer);
       const receiptText=(entry.items||[]).map(it=>`${it.name||''} | ${Number(it.quantity)||1} | ${Number(it.unitPrice)||0} | ${Number(it.amount)||0}`).join('\n');
-      return{...(previous||{}),id:previous?.id||++nextId,receiptSourceId:sourceId,name:String(entry.store||'영수증'),amount:Number(entry.total)||0,payer,members:entryPeople,watchers:[],isTreat:false,receiptText,receiptUrl:String(entry.receiptImage||entry.receiptUrl||entry.imageUrl||previous?.receiptUrl||'')};
+      // v6.21 — 영수증 DB의 분담 방식(한턱·깍두기)을 그대로 적용. 옛 영수증 DB(members 없음)는 기존처럼 전원 1/N.
+      const pick=list=>Array.isArray(list)?list.map(v=>String(v||'').trim()).filter((v,i,a)=>v&&a.indexOf(v)===i&&entryPeople.includes(v)):[];
+      let members=pick(entry.members);if(!members.length)members=entryPeople;
+      const watchers=pick(entry.watchers).filter(v=>!members.includes(v));
+      return{...(previous||{}),id:previous?.id||++nextId,receiptSourceId:sourceId,name:String(entry.store||'영수증'),amount:Number(entry.total)||0,payer,members,watchers,isTreat:entry.treat===true,receiptText,receiptUrl:String(entry.receiptImage||entry.receiptUrl||entry.imageUrl||previous?.receiptUrl||'')};
     });
     const retainedItems=oldItems.filter(item=>!replacedOldItems.has(item)&&!sourceIds.includes(String(item.receiptSourceId||'')));
     const finalItems=[...retainedItems,...importedItems];
