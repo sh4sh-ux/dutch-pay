@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v6.24** (2026-09-27) — 작업 브랜치
+**v6.25** (2026-09-27) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v6.25 | **한턱/결제 내역 모달 높이·구분선·스크롤 폴리시**(사용자 요청) — (1) **합계 구분선 굵게**: `.pm-payer-modal-foot` border-top 1px→**2px**(16px 인셋 border-image 유지). (2) **세 영역 높이 통일**: 헤더(`.pm-payer-modal-hd`)·상세내역 행(`.pm-payer-modal-body .rc-item-row`)·합계(`.pm-payer-modal-foot`) 모두 `min-height:64px`+`box-sizing:border-box`, 헤더·합계는 세로 가운데정렬 → 헤더/행/합계 64/65/64로 균일. (3) **약 7행 스크롤**: `.pm-payer-modal-body{max-height:480px}`로 7행 남짓만 보이고 넘치면 상세내역만 스크롤(헤더·합계는 `flex-shrink:0`으로 고정). 데스크탑 중복 오버라이드(`padding-top:18px`/`padding-bottom:14px`) 제거. 표시 전용·계산 무관. 헤드리스(9건 시드): 헤더 64·행 65·합계 64·합계 border 2px·일자정렬 09.05→09.30·마지막행 border 0·body 스크롤(client 443/480<scroll 584)·합계 불변, 계산 111/111 |
 | v6.24 | **한턱/결제 내역 모달 일자순 정렬 + 구분선 정리**(사용자 요청) — `_pmShowTreatItems`·`_pmShowPayerItems`가 항목을 레코드 순서로 나열해 날짜가 뒤섞였음 → `items.sort((a,b)=>a.date.localeCompare(b.date))`로 일자 오름차순. 구분선: 마지막 항목 행의 짧은 인셋 구분선이 합계의 풀폭 상단선 바로 위에 겹쳐 애매했음 → 마지막 행에 `pm-last-row` 클래스로 `border-bottom:none`, 합계 구분선(`.pm-payer-modal-foot` border-top)을 행과 동일한 16px 인셋(border-image)으로 통일 → 하나의 일관된 인셋 선. 표시 전용·계산 무관. 헤드리스: 16/22/17→16/17/22 정렬·마지막행 border 0·합계선 인셋·합계 불변, 계산 111/111 |
 | v6.23 | **한턱 배지 화면 UI 간소화 → 상호명 가림 해결**(사용자: 모바일에서 한턱 배지가 상호명을 밀어냄) — 화면 HTML 배지 `🎉 한턱 쏨 🎉 👏👏👏`(길고 `flex-shrink:0`)가 좁은 모바일에서 상호명(`.detail-name`/`.rc-item-name`, min-width:0)을 0폭으로 밀어냈음. 화면 배지 6곳을 **짧은 칩 `🎉 한턱`** 으로 교체하고, 이름 최소폭 `min-width:3em` 확보(배지에 밀려 사라지지 않게). **공유 이미지(캔버스) 문자열은 축하 버전 그대로 유지**(4602/4800/4897). 표시 전용·계산 무관. 헤드리스(390px 공유탭) 검증: 한턱 행 상호명 표시(48px)·배지 '🎉 한턱'·가로 오버플로 없음, 계산 111/111 |
 | v6.22 | **차수(지출) 순서 변경 기능**(사용자 요청, C안: 순서 변경 모드 + 드래그 핸들) — 지출 목록 헤더에 `⇅ 순서` 토글(지출 2개 이상일 때). 켜면 각 행이 왼쪽 드래그 핸들(≡)로 바뀌고 탭-편집은 꺼져 오탭·충돌 없음. 핸들 pointer 이벤트(`touch-action:none`)로 끌어 재배치, 드롭 위치는 파란 선(inset box-shadow)으로 표시. 표시 순서 = `items` 배열 순서라 배열만 splice 후 `saveState`(계산·분담 무관, order-independent). `_itemRowHtml` 공용 빌더로 데스크탑/모바일 통일, `toggleReorderMode`/`_startItemDrag`/`_commitReorder`. addItem 시 모드 해제. 헤드리스 검증: 재정렬 렌더(핸들·onclick 제거)·드래그 [1,2,3]→[2,3,1]·localStorage 저장·총액 불변, 계산 111/111 |
