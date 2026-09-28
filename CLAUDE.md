@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v6.26** (2026-09-27) — 작업 브랜치
+**v6.27** (2026-09-28) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v6.27 | **수금 '이번 정산' 저장/잠금 버튼 상태 미반영 버그 수정**(사용자: 이미 잠근 정산에서 '잠금'을 눌렀는데 "이미 잠긴 기록이에요" 토스트 — 버튼이 잠긴 걸 표시 안 함) — `_pmCurrentHtml`의 두 버튼이 정적('📌 기록보관함에 저장'·'🔒 잠금')이라 이미 저장·잠근 정산에도 그대로 떠 혼란. 정산 탭 결과뷰의 `_histSaveBtnHtml`과 동일하게 `_currentHistoryRecord()`로 저장 여부(`saved`)·잠금 여부(`fixed`, 내용 서명 일치 시)를 판정해: 저장됨이면 '✓ 기록보관함에 저장됨'(초록·`.saved`), 잠김이면 '잠김'(초록·`.fixed`) + 클릭 시 `unlockHistoryForEdit`(암호 후 수정), 아니면 기존 저장/`_fixCurrentHistory`. 저장 버튼도 `_saveHistFromResult`(saveToHistory+renderAll)로 바꿔 저장 후 즉시 라벨 갱신. CSS `.pm-save-btn.saved`·`.pm-save-btn.lock-action.fixed` 추가. 표시/상태 전용·계산 무관. 헤드리스: 미저장→'저장'/'잠금', 저장+잠금 후 재렌더→'✓ 저장됨'/'잠김'+onclick=unlock, 에러 0, 계산 111/111 |
 | v6.26 | **차수(지출) 순서 변경 — 행 어디를 잡아도 드래그**(사용자 요청) — 순서 변경 모드(v6.22)에서 드래그 핸들(≡) 아이콘만 잡아야 이동됐는데, 이제 행 어느 곳을 눌러도 끌어 재배치 가능. `_bindReorder`가 `.drag-handle` 대신 행 전체(`[data-item-id]`)에 pointerdown 바인딩, `_startItemDrag(container,row,ev)`가 행을 캡처 대상으로 사용(setPointerCapture·pointermove/up/cancel 모두 행 기준). CSS: `.item-row.reorder`/`.mob-item-row.reorder`에 `cursor:grab`+`touch-action:none`(터치 시 행 어디서나 스크롤 대신 드래그), 드래그 중 `cursor:grabbing`. ≡ 핸들은 '끌 수 있음' 표시로 그대로 유지. 표시 순서=`items` 배열 순서라 계산·분담 무관(order-independent). 비-순서 모드 행은 기존 onclick 선택 그대로(드래그 바인딩은 순서 모드에서만). 헤드리스: 데스크탑·모바일 모두 **행 본문(이름 텍스트) 잡고** ABC→BCA 재정렬 성공·에러 0, 계산 111/111 |
 | v6.25 | **한턱/결제 내역 모달 높이·구분선·스크롤 폴리시**(사용자 요청) — (1) **합계 구분선 굵게**: `.pm-payer-modal-foot` border-top 1px→**2px**(16px 인셋 border-image 유지). (2) **세 영역 높이 통일**: 헤더(`.pm-payer-modal-hd`)·상세내역 행(`.pm-payer-modal-body .rc-item-row`)·합계(`.pm-payer-modal-foot`) 모두 `min-height:64px`+`box-sizing:border-box`, 헤더·합계는 세로 가운데정렬 → 헤더/행/합계 64/65/64로 균일. (3) **약 7행 스크롤**: `.pm-payer-modal-body{max-height:480px}`로 7행 남짓만 보이고 넘치면 상세내역만 스크롤(헤더·합계는 `flex-shrink:0`으로 고정). 데스크탑 중복 오버라이드(`padding-top:18px`/`padding-bottom:14px`) 제거. 표시 전용·계산 무관. 헤드리스(9건 시드): 헤더 64·행 65·합계 64·합계 border 2px·일자정렬 09.05→09.30·마지막행 border 0·body 스크롤(client 443/480<scroll 584)·합계 불변, 계산 111/111 |
 | v6.24 | **한턱/결제 내역 모달 일자순 정렬 + 구분선 정리**(사용자 요청) — `_pmShowTreatItems`·`_pmShowPayerItems`가 항목을 레코드 순서로 나열해 날짜가 뒤섞였음 → `items.sort((a,b)=>a.date.localeCompare(b.date))`로 일자 오름차순. 구분선: 마지막 항목 행의 짧은 인셋 구분선이 합계의 풀폭 상단선 바로 위에 겹쳐 애매했음 → 마지막 행에 `pm-last-row` 클래스로 `border-bottom:none`, 합계 구분선(`.pm-payer-modal-foot` border-top)을 행과 동일한 16px 인셋(border-image)으로 통일 → 하나의 일관된 인셋 선. 표시 전용·계산 무관. 헤드리스: 16/22/17→16/17/22 정렬·마지막행 border 0·합계선 인셋·합계 불변, 계산 111/111 |

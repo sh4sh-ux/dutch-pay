@@ -864,6 +864,8 @@ svg{display:block;flex-shrink:0;}
 .receipt-audit.bad{color:var(--red);background:rgba(255,59,48,.1);}
 .rc-receipt-tbl tr.audit-bad td{background:rgba(255,59,48,.045);}
 .pm-save-btn.lock-action{background:#fff3a6;color:#665000;border:1px solid #e1b72f;}
+.pm-save-btn.saved{background:var(--green-bg);color:var(--green-txt);}
+.pm-save-btn.lock-action.fixed{background:var(--green-bg);color:var(--green-txt);border-color:transparent;}
 .hist-search-wrap{padding:10px 0 4px;}
 .hist-search{width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--sep2);border-radius:10px;background:var(--card);color:var(--label);outline:none;font-family:inherit;box-sizing:border-box;}
 .hist-search:focus{border-color:var(--blue);}
@@ -1435,8 +1437,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.26';
-const BUILD_TIME='2026-09-27 11:40';
+const APP_VERSION='v6.27';
+const BUILD_TIME='2026-09-28 09:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2837,7 +2839,8 @@ function _pmSegHtml(){
 function _pmCurrentHtml(txns){
   const hasItems=items.some(it=>+it.amount!==0);
   const dbxBtn=hDbxGetToken()?'<button class="pm-dbx-btn" onclick="saveSettleToDropbox()">☁️ Dropbox에 이미지 저장</button>':'';
-  const saveBtn=`<button class="pm-save-btn" onclick="saveToHistory()">📌 기록보관함에 저장</button><button class="pm-save-btn lock-action" style="margin-top:8px" onclick="_fixCurrentHistory()">${LOCK_OPEN_SVG} 잠금</button>`;
+  const _rec=_currentHistoryRecord(),_saved=!!_rec,_fixed=!!(_rec&&_isHistoryFixed(_rec.id)&&_historyContentSignature(_rec)===_currentContentSignature());
+  const saveBtn=`<button class="pm-save-btn${_saved?' saved':''}" onclick="_saveHistFromResult()">${_saved?'✓ 기록보관함에 저장됨':'📌 기록보관함에 저장'}</button><button class="pm-save-btn lock-action${_fixed?' fixed':''}" style="margin-top:8px" onclick="${_fixed?`unlockHistoryForEdit('${jsa(_rec.id)}')`:'_fixCurrentHistory()'}">${_fixed?LOCK_CLOSED_SVG+' 잠김':LOCK_OPEN_SVG+' 잠금'}</button>`;
   if(!txns.length)return '<div class="empty" style="padding:40px 0"><div class="empty-icon">'+svgEmpty+'</div><p>정산할 입금 내역이 없어요</p></div>'+(hasItems?saveBtn+dbxBtn:'');
   return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">입금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>'+saveBtn+dbxBtn;
 }
