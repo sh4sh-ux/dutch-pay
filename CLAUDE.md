@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v6.28** (2026-10-01) — 작업 브랜치
+**v6.29** (2026-10-01) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v6.29 | **정산 내역·기록 이미지(카드형)는 v6.27 모양·가로 1080으로 되돌림**(사용자: 720에서 3줄로 바뀐 것보다 기존이 낫다) — `generateSettleCanvas`·`generateHistoryCanvas` 복원, `_shareItemRow` 제거. **표형 두 이미지(전체 상세내역·매장 1건 상세)는 가로 720 유지 + 글자 굵기 한 단계 낮춤**(제목·금액 800→700, 카드 이름 750→650, 표 금액 700→600, 표 본문 500→400). `SHARE_IMG_W=720`은 표형에만 쓴다. 표시 전용·계산 무관 |
 | v6.28 | **공유 이미지 가로 1080 → 720**(사용자: 폰에서 글자가 너무 작다 — 폰은 이미지를 화면 폭에 맞춰 줄여 보여 주므로 같은 글자가 화면에서 1.5배 크게 보임). 대상 4종 전부 `SHARE_IMG_W=720` 한 상수: 정산 이미지(`generateSettleCanvas`)·기록 이미지(`generateHistoryCanvas`)·전체 상세내역(`generateFullDetailCanvases`, Dropbox 보관용)·매장 1건 상세(`shareHistoryItemImage`). 글자 크기·굵기·색은 그대로, 칸 위치만 720에 맞춤(표 열: 수량 440·단가 560·금액 676). 카드형은 폭이 좁아 한 줄에 안 들어가므로 지출 한 줄을 3줄(①이름+금액 ②결제자 알약·차액·한턱 ③참석자, 공용 `_shareItemRow`)로, 기록 이미지 입금 줄을 2줄(보내는→받는+금액 / 입금 배지+날짜·계좌)로 바꿈(전엔 4글자 이름이 …로 잘릴 수 있었음). 날짜 범위는 길면 글자를 줄여 맞춤, 빈 문구·한턱 배지는 폭 초과 시 줄임. 단건 상세는 머리·행의 열 위치 어긋남(머리 수량 750 ↔ 행 620)도 같이 정렬. 높이·페이지 나누기(전체 상세 MAX_H 3300)는 그대로. 표시 전용·계산 무관 |
 | v6.27 | **수금 '이번 정산' 저장/잠금 버튼 상태 미반영 버그 수정**(사용자: 이미 잠근 정산에서 '잠금'을 눌렀는데 "이미 잠긴 기록이에요" 토스트 — 버튼이 잠긴 걸 표시 안 함) — `_pmCurrentHtml`의 두 버튼이 정적('📌 기록보관함에 저장'·'🔒 잠금')이라 이미 저장·잠근 정산에도 그대로 떠 혼란. 정산 탭 결과뷰의 `_histSaveBtnHtml`과 동일하게 `_currentHistoryRecord()`로 저장 여부(`saved`)·잠금 여부(`fixed`, 내용 서명 일치 시)를 판정해: 저장됨이면 '✓ 기록보관함에 저장됨'(초록·`.saved`), 잠김이면 '잠김'(초록·`.fixed`) + 클릭 시 `unlockHistoryForEdit`(암호 후 수정), 아니면 기존 저장/`_fixCurrentHistory`. 저장 버튼도 `_saveHistFromResult`(saveToHistory+renderAll)로 바꿔 저장 후 즉시 라벨 갱신. CSS `.pm-save-btn.saved`·`.pm-save-btn.lock-action.fixed` 추가. 표시/상태 전용·계산 무관. 헤드리스: 미저장→'저장'/'잠금', 저장+잠금 후 재렌더→'✓ 저장됨'/'잠김'+onclick=unlock, 에러 0, 계산 111/111 |
 | v6.26 | **차수(지출) 순서 변경 — 행 어디를 잡아도 드래그**(사용자 요청) — 순서 변경 모드(v6.22)에서 드래그 핸들(≡) 아이콘만 잡아야 이동됐는데, 이제 행 어느 곳을 눌러도 끌어 재배치 가능. `_bindReorder`가 `.drag-handle` 대신 행 전체(`[data-item-id]`)에 pointerdown 바인딩, `_startItemDrag(container,row,ev)`가 행을 캡처 대상으로 사용(setPointerCapture·pointermove/up/cancel 모두 행 기준). CSS: `.item-row.reorder`/`.mob-item-row.reorder`에 `cursor:grab`+`touch-action:none`(터치 시 행 어디서나 스크롤 대신 드래그), 드래그 중 `cursor:grabbing`. ≡ 핸들은 '끌 수 있음' 표시로 그대로 유지. 표시 순서=`items` 배열 순서라 계산·분담 무관(order-independent). 비-순서 모드 행은 기존 onclick 선택 그대로(드래그 바인딩은 순서 모드에서만). 헤드리스: 데스크탑·모바일 모두 **행 본문(이름 텍스트) 잡고** ABC→BCA 재정렬 성공·에러 0, 계산 111/111 |
