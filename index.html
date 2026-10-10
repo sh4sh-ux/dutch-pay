@@ -1437,7 +1437,7 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.29';
+const APP_VERSION='v6.30';
 const BUILD_TIME='2026-10-01 20:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -1916,7 +1916,7 @@ try{
     if(!dbxGetToken()||_attachInProgress)return; // 파일 선택기 열려 있는 동안엔 동기화가 끼어들지 않게
     if(document.visibilityState==='visible'){
       const now=Date.now();if(now-_lastFgSync<1500)return;_lastFgSync=now;
-      try{syncFromDropbox();}catch(e){}
+      try{syncFromDropbox().then(()=>pullReceiptDbInbox());}catch(e){}
       try{_flushReceiptUploads();}catch(e){}
     }else{
       if(_syncPending)_syncFlushNow();
@@ -2091,8 +2091,16 @@ function _consumeReceiptDbTransfer(){
     const raw=localStorage.getItem(RECEIPT_DB_TRANSFER_KEY);if(!raw)return null;
     const envelope=JSON.parse(raw);
     const requestedBatch=params.get('batch');
+    if(requestedBatch&&envelope&&envelope.batchId!==requestedBatch)return null;
+    const res=_mergeReceiptEnvelope(envelope);
+    if(res)localStorage.removeItem(RECEIPT_DB_TRANSFER_KEY);
+    return res;
+  }catch(e){return null;}
+}
+// v6.30 — 봉투 병합 본체. localStorage 봉투(같은 브라우저)와 Dropbox 파일 봉투(홈 화면 앱끼리·폰↔PC)가 같이 쓴다.
+function _mergeReceiptEnvelope(envelope){
+  try{
     if(!envelope||envelope.version!==1||!Array.isArray(envelope.entries)||!envelope.entries.length)return null;
-    if(requestedBatch&&envelope.batchId!==requestedBatch)return null;
 
     syncCurrentToGroup();
     const now=new Date().toISOString();
@@ -2157,9 +2165,44 @@ function _consumeReceiptDbTransfer(){
     currentGroupId=groupId;loadGroupData(group);
     localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:now,groups,currentGroupId,deletedGroups}));
     _saveSyncedHashes(baseHashes);
-    localStorage.removeItem(RECEIPT_DB_TRANSFER_KEY);
     return{count:entries.length,created:existing?0:entries.length,updated:existing?entries.length:0};
   }catch(e){return null;}
+}
+// v6.30 — 영수증 DB가 Dropbox '영수증DB 전송' 폴더에 올린 봉투를 가져온다. 처리한 파일은 '처리됨' 폴더로 옮긴다(지우지 않음).
+let _rbPulling=false;
+async function pullReceiptDbInbox(){
+  if(_rbPulling)return;const token0=dbxGetToken();if(!token0)return;
+  _rbPulling=true;
+  try{
+    while(_syncFromRunning)await new Promise(r=>setTimeout(r,300));   // 시작 동기화가 끝난 뒤에 병합해야 덮어써지지 않는다
+    const dirs=[...new Set([DBX_ROOT,DBX_DIR].filter(Boolean))].map(d=>d+'/영수증DB 전송');
+    let total=0,updated=0;
+    for(const dir of dirs){
+      let token=dbxGetToken();
+      let res=await _dbxRpc(token,'files/list_folder',{path:dir});
+      if(res.status===401){token=await _dbxRefreshToken();if(!token)continue;res=await _dbxRpc(token,'files/list_folder',{path:dir});}
+      if(!res.ok)continue;
+      const list=((await res.json()).entries||[]).filter(e=>e['.tag']==='file'&&/\.json$/i.test(e.name)).sort((a,b)=>a.name<b.name?-1:1);
+      if(!list.length)continue;
+      let moved=false;
+      for(const f of list){
+        const env=await _dbxDownload(token,dir+'/'+f.name);
+        if(!env)continue;
+        const r=_mergeReceiptEnvelope(env);
+        if(!r&&!(env&&Array.isArray(env.entries)))continue;   // 읽을 수 없는 파일은 그대로 둔다
+        if(r){total+=r.count;updated+=r.updated||0;}
+        await _dbxEnsureFolder(token,dir+'/처리됨');
+        await _dbxRpc(token,'files/move_v2',{from_path:dir+'/'+f.name,to_path:dir+'/처리됨/'+f.name,autorename:false});   // 이름이 겹치면 실패 — 다음에 같은 sourceId는 중복 없이 합쳐진다
+        moved=true;
+      }
+      if(moved)break;
+    }
+    if(total){
+      renderAll();
+      toast(`영수증 ${total}건을 모두 가져왔어요${updated?` · 업데이트 ${updated}건`:''}`,{type:'success',duration:4200});
+      try{syncToDropbox();}catch(e){}
+    }
+  }catch(e){}finally{_rbPulling=false;}
 }
 async function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!await _autoBackup('전체 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const now=new Date().toISOString();groups.forEach(g=>{deletedGroups[g.id]=now;});const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:now,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
 async function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!await _autoBackup('이번 정산 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}people=[];items=[];payments={};idc=0;settleDateStart=new Date().toISOString().slice(0,10);settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
@@ -5151,7 +5194,7 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
   addEventListener('touchcancel',()=>{if(pulling){pulling=false;reset();}},{passive:true});
 })();
 _updateSyncBadge();
-if(dbxGetToken())dbxResolveRoot().then(()=>syncFromDropbox());
+if(dbxGetToken())dbxResolveRoot().then(()=>syncFromDropbox()).then(()=>pullReceiptDbInbox());
 hDbxHandleCallback().then(async()=>{if(hDbxGetToken()){await dbxResolveRoot();hSyncDropbox();}});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{try{navigator.serviceWorker.register('sw.js').then(reg=>{reg.update();reg.addEventListener('updatefound',()=>{const nw=reg.installing;if(!nw)return;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#4355E8;color:#fff;padding:12px 18px;border-radius:24px;font:600 13px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 4px 16px rgba(67,85,232,.35);z-index:99999;cursor:pointer;';t.textContent='새 버전이 있어요 · 탭해서 새로고침';t.onclick=()=>location.reload();document.body.appendChild(t);}});});}).catch(()=>{});}catch(e){}});}
 </script>
