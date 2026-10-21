@@ -717,6 +717,25 @@ suite('TC18: 저장공간 안전 백업 [v6.18]', () => {
   });
 });
 
+suite('TC19: 순서 변경 후 공유 푸터 [v6.31 회귀]', () => {
+  test('공유 탭에서 순서 모드를 켜도 공유 버튼 영역은 한 개만 유지', () => {
+    APP.__test.set(
+      ['A','B'],
+      [
+        {id:1,name:'식사',amount:57000,payer:'A',members:['A','B'],watchers:[],isTreat:false,receiptText:''},
+        {id:2,name:'카페',amount:22000,payer:'B',members:['A','B'],watchers:[],isTreat:false,receiptText:''}
+      ]
+    );
+    APP.dSetTab('settle');
+    APP.toggleReorderMode();
+    const actions=APP.document.querySelectorAll('.desktop-shell .share-actions');
+    const foot=APP.document.getElementById('dRFoot');
+    if(actions.length!==1)throw new Error(`공유 버튼 영역 ${actions.length}개 표시`);
+    if(!foot||!foot.contains(actions[0]))throw new Error('공유 버튼 영역이 하단 푸터 밖에 표시됨');
+    APP.toggleReorderMode();
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────

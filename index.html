@@ -135,7 +135,7 @@ svg{display:block;flex-shrink:0;}
   .mob-item-meta{font-size:11px;color:var(--label3);margin-top:2px;}
   .mob-item-amt{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;}
   .mob-add-item-row{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;}
-  .mob-add-ic{width:24px;height:24px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;}
+  .mob-add-ic{width:24px;height:24px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;line-height:0;}
   .mob-add-txt{font-size:14px;font-weight:500;color:var(--blue);}
   .mob-total-bar{background:var(--card);border-radius:var(--r);padding:14px 16px;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;}
   .mob-total-lbl{font-size:13px;color:var(--label2);}
@@ -214,7 +214,8 @@ svg{display:block;flex-shrink:0;}
 .item-amt{font-size:13px;font-weight:700;flex-shrink:0;font-variant-numeric:tabular-nums;}
 .add-row{display:flex;align-items:center;gap:10px;padding:11px var(--pad-x);cursor:pointer;transition:background .1s;}
 .add-row:hover{background:var(--fill);}
-.add-ic{width:22px;height:22px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:400;line-height:1;flex-shrink:0;}
+.add-ic{width:22px;height:22px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;line-height:0;flex-shrink:0;}
+.add-ic svg,.mob-add-ic svg{width:14px;height:14px;display:block;}
 .add-txt{font-size:13px;font-weight:500;color:var(--blue);}
 .left-foot{border-top:1px solid var(--sep);padding:14px var(--pad-x);}
 .foot-row{display:flex;align-items:baseline;justify-content:space-between;}
@@ -1332,7 +1333,7 @@ svg{display:block;flex-shrink:0;}
       </div>
       <div id="dItemRows"></div>
       <div class="add-row" onclick="addItem()">
-        <div class="add-ic">+</div>
+        <div class="add-ic" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
         <span class="add-txt">지출 추가</span>
       </div>
     </div>
@@ -1437,7 +1438,7 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.30';
+const APP_VERSION='v6.31';
 const BUILD_TIME='2026-10-01 20:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -3283,7 +3284,9 @@ function toggleReorderMode(){
   }
   _reorderMode=!_reorderMode;
   renderItemLists();
-  try{_renderDesktopRightInner();}catch(e){}
+  // 공유 탭은 렌더 뒤 .share-actions를 .right-foot으로 옮겨야 한다.
+  // 내부 렌더만 호출하면 기존 푸터는 남은 채 본문에 새 버튼이 생겨 중복 표시된다.
+  try{renderDesktopRight();}catch(e){}
   renderMobileBody();
   if(!_reorderMode){saveState();toast('순서를 저장했어요',{type:'success',duration:1500});}
 }
@@ -3451,7 +3454,7 @@ function renderMobileBody(){
   // input tab
   let html=`<div class="mob-section" style="margin-bottom:12px;padding:12px 16px;">${_dpHtml(settleDateStart,"updateMeetingDate(this.value)")}</div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">참여자</span></div><div class="mob-pin-wrap"><div class="mob-pin-row"><input id="mPInp" placeholder="홍길동, 홍길순, 아무개"/><button class="mob-add-btn" onclick="mFlush()">추가</button></div><div class="mob-hint">쉼표(,)로 구분하면 여러 명을 한 번에 추가할 수 있어요</div></div>`;
   if(people.length){html+=`<div class="mob-pills">${people.map(_pillHtml).join('')}</div>`;}else{html+=`<div class="mob-empty-pills">이름을 입력하세요</div>`;}
-  html+=`</div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">지출</span>${items.length>=2?`<button type="button" class="ilist-reorder-btn${_reorderMode?' on':''}" onclick="toggleReorderMode()">${_reorderMode?'✓ 완료':'⇅ 순서'}</button>`:''}</div><div id="mItemRows">${items.length?items.map(it=>`<div class="mob-item-row${it.id===selectedId?' sel':''}" onclick="selectItemMob(${it.id})"><div class="mob-item-dot"></div><div class="mob-item-info"><div class="mob-item-name">${e(it.name)||'(이름 없음)'}</div><div class="mob-item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="mob-item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join(''):'<div class="ilist-empty-hint">아직 지출이 없어요<span>아래 <b>＋ 지출 추가</b>를 눌러 시작하세요</span></div>'}</div><div class="mob-add-item-row" onclick="addItem()"><div class="mob-add-ic">+</div><span class="mob-add-txt">지출 추가</span></div><button class="mob-reset-btn" onclick="resetCurrentSettlement()">↺ 이번 정산 초기화</button></div>`;
+  html+=`</div><div class="mob-section"><div class="mob-section-hd"><span class="mob-section-title">지출</span>${items.length>=2?`<button type="button" class="ilist-reorder-btn${_reorderMode?' on':''}" onclick="toggleReorderMode()">${_reorderMode?'✓ 완료':'⇅ 순서'}</button>`:''}</div><div id="mItemRows">${items.length?items.map(it=>`<div class="mob-item-row${it.id===selectedId?' sel':''}" onclick="selectItemMob(${it.id})"><div class="mob-item-dot"></div><div class="mob-item-info"><div class="mob-item-name">${e(it.name)||'(이름 없음)'}</div><div class="mob-item-meta">${e(it.payer)||'결제자 미정'} · ${it.members.length}명</div></div><div class="mob-item-amt${+it.amount<0?' amt-neg':''}">${it.amount?fmt(+it.amount)+'원':'-'}</div></div>`).join(''):'<div class="ilist-empty-hint">아직 지출이 없어요<span>아래 <b>＋ 지출 추가</b>를 눌러 시작하세요</span></div>'}</div><div class="mob-add-item-row" onclick="addItem()"><div class="mob-add-ic" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div><span class="mob-add-txt">지출 추가</span></div><button class="mob-reset-btn" onclick="resetCurrentSettlement()">↺ 이번 정산 초기화</button></div>`;
   el.innerHTML=html;mSetupInput();updateTotals();_updateMobFab();
   if(_reorderMode)refreshMobItems();
 }
