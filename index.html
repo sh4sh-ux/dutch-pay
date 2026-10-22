@@ -1205,6 +1205,7 @@ svg{display:block;flex-shrink:0;}
 .left,.right{min-height:0;overflow:hidden;}
 .left-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:30px 28px 20px;border-bottom:1px solid var(--sep);}
 .left-controls{flex:0 0 auto;max-height:268px;overflow-y:auto;overscroll-behavior:contain;padding:18px 28px 0;}
+.left-controls.date-picker-open{position:relative;z-index:60;overflow:visible;}
 .left-controls::-webkit-scrollbar{width:3px;}
 .left-controls::-webkit-scrollbar-thumb{background:var(--sep2);border-radius:2px;}
 .left .tab-row{display:none;}
@@ -1467,8 +1468,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.34';
-const BUILD_TIME='2026-10-22 18:52';
+const APP_VERSION='v6.35';
+const BUILD_TIME='2026-10-22 21:08';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2244,7 +2245,7 @@ const _dpDesktopMq=matchMedia('(hover:hover) and (pointer:fine)');
 let _dpPicker=null;
 function _dpNative(inp){try{inp.showPicker();}catch(e){inp.focus();}}
 function _dpClose(focus){
-  if(!_dpPicker)return;const{pop,wrap,inp}=_dpPicker;_dpPicker=null;pop.remove();wrap.classList.remove('dp-open');
+  if(!_dpPicker)return;const{pop,wrap,inp,controls}=_dpPicker;_dpPicker=null;pop.remove();wrap.classList.remove('dp-open');controls?.classList.remove('date-picker-open');
   if(focus)try{inp.focus({preventScroll:true});}catch(e){}
 }
 function _dpSet(inp,value){
@@ -2286,7 +2287,7 @@ function _dpOpen(inp){
       return `<button class="dp-pop-day${iso===today?' today':''}${on?' on':''}" type="button" data-dp-value="${iso}" aria-label="${state.month+1}월 ${d}일" aria-pressed="${on}"${ok?'':' disabled'}>${d}</button>`;}).join('');
     daysEl.innerHTML=blanks+days;
   };
-  render();wrap.appendChild(pop);wrap.classList.add('dp-open');_dpPicker={pop,wrap,inp};
+  render();wrap.appendChild(pop);wrap.classList.add('dp-open');const controls=wrap.closest('.left-controls');controls?.classList.add('date-picker-open');_dpPicker={pop,wrap,inp,controls};
   title.onclick=()=>{if(state.mode!=='year'){state.mode='year';state.yearStart=state.year-5;render();selectEl.querySelector('.on')?.focus({preventScroll:true});}};
   pop.querySelector('[data-dp-prev]').onclick=()=>{if(state.mode==='year')state.yearStart-=12;else if(state.mode==='month')state.year--;else if(--state.month<0){state.month=11;state.year--;}render();};
   pop.querySelector('[data-dp-next]').onclick=()=>{if(state.mode==='year')state.yearStart+=12;else if(state.mode==='month')state.year++;else if(++state.month>11){state.month=0;state.year++;}render();};
