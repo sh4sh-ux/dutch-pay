@@ -962,7 +962,6 @@ svg{display:block;flex-shrink:0;}
 .dp-pop-head{display:grid;grid-template-columns:34px 1fr 34px;align-items:center;margin:0 -10px 7px;padding:7px 8px;border-bottom:1px solid var(--sep);}
 .dp-pop-title{min-height:32px;border:0;border-radius:8px;padding:0 4px;background:none;text-align:center;color:var(--label);font:inherit;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;cursor:pointer;}
 .dp-pop-title:hover{background:var(--fill);color:var(--blue);}
-.dp-pop-title::after{content:'⌄';display:inline-block;margin-left:5px;color:var(--label3);font-size:11px;transform:translateY(-1px);}
 .dp-pop-nav{width:34px;height:34px;border:0;border-radius:8px;background:none;color:var(--label2);font:inherit;font-size:20px;line-height:1;cursor:pointer;}
 .dp-pop-nav:hover{background:var(--fill);color:var(--label);}
 .dp-pop-week,.dp-pop-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;}
@@ -1468,8 +1467,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.33';
-const BUILD_TIME='2026-10-22 18:45';
+const APP_VERSION='v6.34';
+const BUILD_TIME='2026-10-22 18:52';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
