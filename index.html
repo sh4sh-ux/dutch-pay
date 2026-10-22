@@ -956,7 +956,7 @@ svg{display:block;flex-shrink:0;}
 .dp-wrap.share-date-dp>.dp-txt{height:36px;box-sizing:border-box;}
 .dp-wrap.pay-date-wrap{width:auto;flex:1;}
 .dp-ph{color:var(--label3);}
-.dp-inp{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;font-size:16px;}
+.dp-inp{position:absolute;inset:0;z-index:1;width:100%;height:100%;opacity:0;cursor:pointer;border:none;font-size:16px;}
 .dp-pop{position:absolute;z-index:220;top:calc(100% + 8px);left:-1px;right:-1px;padding:0 10px 10px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.16);cursor:default;box-sizing:border-box;}
 .dp-pop.up{top:auto;bottom:calc(100% + 8px);}
 .dp-pop-head{display:grid;grid-template-columns:34px 1fr 34px;align-items:center;margin:0 -10px 7px;padding:7px 8px;border-bottom:1px solid var(--sep);}
@@ -984,7 +984,12 @@ svg{display:block;flex-shrink:0;}
 .dp-pop-btn:hover{background:var(--fill);color:var(--label);}
 .dp-pop-btn.today{margin-left:auto;color:var(--blue);}
 .dp-pop-btn:disabled{opacity:.35;cursor:not-allowed;background:none;}
-@media(hover:none),(pointer:coarse){.dp-pop{display:none!important;}}
+@media(hover:none),(pointer:coarse){
+  .dp-pop{display:none!important;}
+  /* 모바일은 실제 input의 기본 탭으로 OS 날짜 다이얼을 연다. */
+  .dp-inp[type="date"]{-webkit-appearance:auto;appearance:auto;background:none!important;padding:0!important;}
+  .dp-inp[type="date"]::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer;}
+}
 /* ── 모바일 FAB ── */
 .mob-fab{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;border:none;border-radius:28px;padding:14px 28px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;box-shadow:0 4px 20px rgba(67,85,232,.35);z-index:50;white-space:nowrap;display:none;transition:opacity .15s;}
 .mob-fab:active{opacity:.85;}
@@ -1468,8 +1473,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.35';
-const BUILD_TIME='2026-10-22 21:08';
+const APP_VERSION='v6.36';
+const BUILD_TIME='2026-10-22 22:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2303,7 +2308,8 @@ function _dpOpen(inp){
 }
 function _dpInputClick(inp,event){
   event.stopPropagation();
-  if(inp.type==='date'&&_dpDesktopMq.matches){event.preventDefault();_dpOpen(inp);}else _dpNative(inp);
+  if(inp.type==='date'&&_dpDesktopMq.matches){event.preventDefault();_dpOpen(inp);}
+  // 터치 기기는 preventDefault/showPicker 없이 iOS·Android의 기본 클릭을 그대로 사용한다.
 }
 function _dpPick(wrap){const inp=wrap.querySelector('.dp-inp');if(!inp)return;if(inp.type==='date'&&_dpDesktopMq.matches)_dpOpen(inp);else _dpNative(inp);}
 document.addEventListener('click',event=>{if(_dpPicker&&!_dpPicker.pop.contains(event.target)&&!_dpPicker.wrap.contains(event.target))_dpClose(false);},true);
