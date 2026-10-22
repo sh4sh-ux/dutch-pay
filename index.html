@@ -960,10 +960,13 @@ svg{display:block;flex-shrink:0;}
 .dp-pop{position:absolute;z-index:220;top:calc(100% + 8px);left:-1px;right:-1px;padding:0 10px 10px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.16);cursor:default;box-sizing:border-box;}
 .dp-pop.up{top:auto;bottom:calc(100% + 8px);}
 .dp-pop-head{display:grid;grid-template-columns:34px 1fr 34px;align-items:center;margin:0 -10px 7px;padding:7px 8px;border-bottom:1px solid var(--sep);}
-.dp-pop-title{text-align:center;color:var(--label);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;}
+.dp-pop-title{min-height:32px;border:0;border-radius:8px;padding:0 4px;background:none;text-align:center;color:var(--label);font:inherit;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;cursor:pointer;}
+.dp-pop-title:hover{background:var(--fill);color:var(--blue);}
+.dp-pop-title::after{content:'⌄';display:inline-block;margin-left:5px;color:var(--label3);font-size:11px;transform:translateY(-1px);}
 .dp-pop-nav{width:34px;height:34px;border:0;border-radius:8px;background:none;color:var(--label2);font:inherit;font-size:20px;line-height:1;cursor:pointer;}
 .dp-pop-nav:hover{background:var(--fill);color:var(--label);}
 .dp-pop-week,.dp-pop-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;}
+.dp-pop-week[hidden],.dp-pop-days[hidden]{display:none;}
 .dp-pop-week span{padding:4px 0;text-align:center;color:var(--label3);font-size:10.5px;font-weight:600;}
 .dp-pop-day{aspect-ratio:1;min-height:29px;border:0;border-radius:8px;background:none;color:var(--label);font:inherit;font-size:12px;font-variant-numeric:tabular-nums;cursor:pointer;}
 .dp-pop-day:hover{background:var(--fill);}
@@ -971,6 +974,12 @@ svg{display:block;flex-shrink:0;}
 .dp-pop-day.on{background:var(--blue);box-shadow:none;color:#fff;font-weight:700;}
 .dp-pop-day:disabled{opacity:.3;cursor:not-allowed;background:none;box-shadow:none;}
 .dp-pop-blank{aspect-ratio:1;min-height:29px;}
+.dp-pop-select{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-content:center;min-height:226px;padding:7px 0;}
+.dp-pop-select[hidden]{display:none;}
+.dp-pop-choice{height:46px;border:0;border-radius:9px;background:none;color:var(--label);font:inherit;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;cursor:pointer;}
+.dp-pop-choice:hover{background:var(--fill);color:var(--blue);}
+.dp-pop-choice.on{background:var(--blue);color:#fff;}
+.dp-pop-choice:disabled{opacity:.3;cursor:not-allowed;background:none;color:var(--label3);}
 .dp-pop-actions{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--sep);}
 .dp-pop-btn{height:32px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--label2);font:inherit;font-size:12px;font-weight:600;cursor:pointer;}
 .dp-pop-btn:hover{background:var(--fill);color:var(--label);}
@@ -1459,8 +1468,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.32';
-const BUILD_TIME='2026-10-22 18:15';
+const APP_VERSION='v6.33';
+const BUILD_TIME='2026-10-22 18:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2251,26 +2260,42 @@ function _dpOpen(inp){
   const wrap=inp.closest('.dp-wrap');if(!wrap)return;
   const now=new Date(),match=String(inp.value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
   const picked=match?new Date(+match[1],+match[2]-1,+match[3]):now;
-  const state={year:picked.getFullYear(),month:picked.getMonth()};
+  const state={year:picked.getFullYear(),month:picked.getMonth(),mode:'day',yearStart:picked.getFullYear()-5};
   const pop=document.createElement('div');pop.className='dp-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','날짜 선택');
-  pop.innerHTML=`<div class="dp-pop-head"><button class="dp-pop-nav" type="button" data-dp-prev aria-label="이전 달">‹</button><div class="dp-pop-title" aria-live="polite"></div><button class="dp-pop-nav" type="button" data-dp-next aria-label="다음 달">›</button></div><div class="dp-pop-week" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="dp-pop-days"></div><div class="dp-pop-actions"><button class="dp-pop-btn" type="button" data-dp-clear>지우기</button><button class="dp-pop-btn today" type="button" data-dp-today>오늘</button></div>`;
+  pop.innerHTML=`<div class="dp-pop-head"><button class="dp-pop-nav" type="button" data-dp-prev aria-label="이전 달">‹</button><button class="dp-pop-title" type="button" aria-live="polite" aria-label="연도와 월 선택"></button><button class="dp-pop-nav" type="button" data-dp-next aria-label="다음 달">›</button></div><div class="dp-pop-week" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="dp-pop-days"></div><div class="dp-pop-select" hidden></div><div class="dp-pop-actions"><button class="dp-pop-btn" type="button" data-dp-clear>지우기</button><button class="dp-pop-btn today" type="button" data-dp-today>오늘</button></div>`;
   const allowed=value=>(!inp.min||value>=inp.min)&&(!inp.max||value<=inp.max);
+  const monthAllowed=(year,month)=>{const first=_dpIso(year,month,1),last=_dpIso(year,month,new Date(year,month+1,0).getDate());return(!inp.min||last>=inp.min)&&(!inp.max||first<=inp.max);};
+  const yearAllowed=year=>(!inp.min||`${year}-12-31`>=inp.min)&&(!inp.max||`${year}-01-01`<=inp.max);
   const today=_dpIso(now.getFullYear(),now.getMonth(),now.getDate());
+  const title=pop.querySelector('.dp-pop-title'),week=pop.querySelector('.dp-pop-week'),daysEl=pop.querySelector('.dp-pop-days'),selectEl=pop.querySelector('.dp-pop-select');
   const render=()=>{
-    pop.querySelector('.dp-pop-title').textContent=`${state.year}년 ${state.month+1}월`;
+    const dayMode=state.mode==='day';week.hidden=!dayMode;daysEl.hidden=!dayMode;selectEl.hidden=dayMode;
+    if(state.mode==='year'){
+      const end=state.yearStart+11;title.textContent=`${state.yearStart}–${String(end).slice(2)}년`;title.setAttribute('aria-label',`${state.yearStart}년부터 ${end}년`);
+      selectEl.innerHTML=Array.from({length:12},(_,i)=>{const year=state.yearStart+i,on=year===state.year,ok=yearAllowed(year);return `<button class="dp-pop-choice${on?' on':''}" type="button" data-dp-year="${year}" aria-pressed="${on}"${ok?'':' disabled'}>${year}</button>`;}).join('');
+      return;
+    }
+    if(state.mode==='month'){
+      title.textContent=`${state.year}년`;title.setAttribute('aria-label',`${state.year}년 월 선택`);
+      selectEl.innerHTML=Array.from({length:12},(_,i)=>{const on=i===state.month,ok=monthAllowed(state.year,i);return `<button class="dp-pop-choice${on?' on':''}" type="button" data-dp-month="${i}" aria-pressed="${on}"${ok?'':' disabled'}>${i+1}월</button>`;}).join('');
+      return;
+    }
+    title.textContent=`${state.year}년 ${state.month+1}월`;title.setAttribute('aria-label','연도와 월 선택');
     const first=new Date(state.year,state.month,1).getDay(),last=new Date(state.year,state.month+1,0).getDate();
     const blanks=Array.from({length:first},()=>'<span class="dp-pop-blank" aria-hidden="true"></span>').join('');
     const days=Array.from({length:last},(_,i)=>{const d=i+1,iso=_dpIso(state.year,state.month,d),on=iso===inp.value,ok=allowed(iso);
       return `<button class="dp-pop-day${iso===today?' today':''}${on?' on':''}" type="button" data-dp-value="${iso}" aria-label="${state.month+1}월 ${d}일" aria-pressed="${on}"${ok?'':' disabled'}>${d}</button>`;}).join('');
-    pop.querySelector('.dp-pop-days').innerHTML=blanks+days;
+    daysEl.innerHTML=blanks+days;
   };
   render();wrap.appendChild(pop);wrap.classList.add('dp-open');_dpPicker={pop,wrap,inp};
-  pop.querySelector('[data-dp-prev]').onclick=()=>{if(--state.month<0){state.month=11;state.year--;}render();};
-  pop.querySelector('[data-dp-next]').onclick=()=>{if(++state.month>11){state.month=0;state.year++;}render();};
+  title.onclick=()=>{if(state.mode!=='year'){state.mode='year';state.yearStart=state.year-5;render();selectEl.querySelector('.on')?.focus({preventScroll:true});}};
+  pop.querySelector('[data-dp-prev]').onclick=()=>{if(state.mode==='year')state.yearStart-=12;else if(state.mode==='month')state.year--;else if(--state.month<0){state.month=11;state.year--;}render();};
+  pop.querySelector('[data-dp-next]').onclick=()=>{if(state.mode==='year')state.yearStart+=12;else if(state.mode==='month')state.year++;else if(++state.month>11){state.month=0;state.year++;}render();};
   pop.querySelector('[data-dp-clear]').onclick=()=>{_dpSet(inp,'');_dpClose(true);};
   const todayBtn=pop.querySelector('[data-dp-today]');todayBtn.disabled=!allowed(today);
   todayBtn.onclick=()=>{if(allowed(today)){_dpSet(inp,today);_dpClose(true);}};
-  pop.querySelector('.dp-pop-days').onclick=ev=>{const b=ev.target.closest('[data-dp-value]');if(!b||b.disabled)return;_dpSet(inp,b.dataset.dpValue);_dpClose(true);};
+  daysEl.onclick=ev=>{const b=ev.target.closest('[data-dp-value]');if(!b||b.disabled)return;_dpSet(inp,b.dataset.dpValue);_dpClose(true);};
+  selectEl.onclick=ev=>{const yearBtn=ev.target.closest('[data-dp-year]'),monthBtn=ev.target.closest('[data-dp-month]');if(yearBtn&&!yearBtn.disabled){state.year=+yearBtn.dataset.dpYear;state.mode='month';render();(selectEl.querySelector('.on:not(:disabled)')||selectEl.querySelector('.dp-pop-choice:not(:disabled)'))?.focus({preventScroll:true});}else if(monthBtn&&!monthBtn.disabled){state.month=+monthBtn.dataset.dpMonth;state.mode='day';render();(daysEl.querySelector('.on:not(:disabled)')||daysEl.querySelector('.today:not(:disabled)')||daysEl.querySelector('.dp-pop-day:not(:disabled)'))?.focus({preventScroll:true});}};
   pop.addEventListener('click',ev=>ev.stopPropagation());
   const vh=(window.visualViewport&&visualViewport.height)||innerHeight;
   if(pop.getBoundingClientRect().bottom>vh-8)pop.classList.add('up');
