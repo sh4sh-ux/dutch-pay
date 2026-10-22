@@ -1472,8 +1472,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.37';
-const BUILD_TIME='2026-10-22 23:10';
+const APP_VERSION='v6.38';
+const BUILD_TIME='2026-10-22 23:25';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2259,7 +2259,7 @@ function _dpSet(inp,value){
 function _dpIso(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 function _dpOpen(inp){
   if(!inp||inp.type!=='date'||inp.disabled||inp.readOnly)return;
-  if(_dpPicker&&_dpPicker.inp===inp)return;
+  if(_dpPicker&&_dpPicker.inp===inp){_dpClose(true);return;}
   _dpClose();if(typeof _dismissPops==='function')_dismissPops();
   const wrap=inp.closest('.dp-wrap');if(!wrap)return;
   const now=new Date(),match=String(inp.value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
