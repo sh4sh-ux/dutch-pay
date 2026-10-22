@@ -985,6 +985,9 @@ svg{display:block;flex-shrink:0;}
 .dp-pop-btn.today{margin-left:auto;color:var(--blue);}
 .dp-pop-btn:disabled{opacity:.35;cursor:not-allowed;background:none;}
 @media(hover:none),(pointer:coarse){
+  /* iOS가 투명 date input의 네이티브 달력을 먼저 열지 못하게 하고,
+     탭은 .dp-wrap이 받아 앱 달력 하나만 연다. */
+  .dp-inp[type="date"]{pointer-events:none;}
   .dp-pop.mobile{position:fixed;z-index:651;top:50%;right:16px;bottom:auto;left:16px;width:auto;max-width:420px;margin:0 auto;transform:translateY(-50%);}
   .dp-pop.mobile.up{top:50%;bottom:auto;}
   .dp-pop-backdrop{position:fixed;z-index:650;inset:0;background:rgba(0,0,0,.42);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
@@ -1346,7 +1349,7 @@ svg{display:block;flex-shrink:0;}
     </div>
     <div class="left-controls">
       <div style="margin-bottom:14px;">
-        <div class="dp-wrap" onclick="_dpPick(this)"><div class="dp-txt" id="meetingDateDisp"></div><input type="date" id="meetingDateInp" class="dp-inp" aria-label="정산 일자" onclick="_dpInputClick(this,event)" onchange="updateMeetingDate(this.value);_dpSync(this)"/></div>
+        <div class="dp-wrap" onclick="_dpPick(this)"><div class="dp-txt" id="meetingDateDisp"></div><input type="date" id="meetingDateInp" class="dp-inp" data-app-date aria-label="정산 일자" onclick="_dpInputClick(this,event)" onchange="updateMeetingDate(this.value);_dpSync(this)"/></div>
       </div>
       <div class="people-wrap">
         <div class="sec-label-row">
@@ -1472,8 +1475,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.38';
-const BUILD_TIME='2026-10-22 23:25';
+const APP_VERSION='v6.39';
+const BUILD_TIME='2026-10-22 23:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2258,7 +2261,7 @@ function _dpSet(inp,value){
 }
 function _dpIso(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 function _dpOpen(inp){
-  if(!inp||inp.type!=='date'||inp.disabled||inp.readOnly)return;
+  if(!inp||!inp.hasAttribute('data-app-date')||inp.disabled||inp.readOnly)return;
   if(_dpPicker&&_dpPicker.inp===inp){_dpClose(true);return;}
   _dpClose();if(typeof _dismissPops==='function')_dismissPops();
   const wrap=inp.closest('.dp-wrap');if(!wrap)return;
@@ -2311,18 +2314,18 @@ function _dpOpen(inp){
 }
 function _dpInputClick(inp,event){
   event.stopPropagation();event.preventDefault();
-  if(inp.type==='date')_dpOpen(inp);
+  if(inp.hasAttribute('data-app-date'))_dpOpen(inp);
 }
-function _dpPick(wrap){const inp=wrap.querySelector('.dp-inp');if(!inp)return;if(inp.type==='date')_dpOpen(inp);else _dpNative(inp);}
+function _dpPick(wrap){const inp=wrap.querySelector('.dp-inp');if(!inp)return;if(inp.hasAttribute('data-app-date'))_dpOpen(inp);else _dpNative(inp);}
 document.addEventListener('click',event=>{if(_dpPicker&&!_dpPicker.pop.contains(event.target)&&!_dpPicker.wrap.contains(event.target))_dpClose(false);},true);
 document.addEventListener('keydown',event=>{
   if(event.key==='Escape'&&_dpPicker){event.preventDefault();_dpClose(true);return;}
-  const inp=event.target;if(inp?.type!=='date'||!inp.classList.contains('dp-inp'))return;
+  const inp=event.target;if(!inp?.hasAttribute?.('data-app-date')||!inp.classList.contains('dp-inp'))return;
   if(event.key==='Enter'||event.key===' '||event.key==='ArrowDown'){event.preventDefault();_dpOpen(inp);}
 },true);
 addEventListener('resize',()=>_dpClose(false));
 function _dpUpdate(dispId,iso){const el=document.getElementById(dispId);if(el)el.textContent=fmtDate(iso);}
-function _dpHtml(iso,onChangeCode,wrapCls,minVal){const fa=ea(iso||'');const min=minVal?` min="${ea(minVal)}"`:'' ;return `<div class="dp-wrap${wrapCls?' '+wrapCls:''}" onclick="_dpPick(this)"><div class="dp-txt">${e(fmtDate(iso||''))}</div><input type="date" class="dp-inp" value="${fa}"${min} aria-label="날짜" onclick="_dpInputClick(this,event)" onchange="${onChangeCode};_dpSync(this)"/></div>`;}
+function _dpHtml(iso,onChangeCode,wrapCls,minVal){const fa=ea(iso||''),type=_dpDesktopMq.matches?'date':'hidden';const min=minVal?` min="${ea(minVal)}"`:'' ;return `<div class="dp-wrap${wrapCls?' '+wrapCls:''}" onclick="_dpPick(this)"><div class="dp-txt">${e(fmtDate(iso||''))}</div><input type="${type}" class="dp-inp" data-app-date value="${fa}"${min} aria-label="날짜" onclick="_dpInputClick(this,event)" onchange="${onChangeCode};_dpSync(this)"/></div>`;}
 function _dtpFmt(iso){if(!iso)return'';const[d,t]=(iso||'').split('T');if(!d)return'';const[y,m,day]=d.split('-');const time=t?t.slice(0,5):'';return`${y}.${m}.${day}${time?' '+time:''}`;}
 function _dtpSync(inp){const txt=inp.previousElementSibling;if(!txt||!txt.classList.contains('dp-txt'))return;const v=inp.value;txt.textContent=v?_dtpFmt(v):'날짜·시간 선택';txt.classList.toggle('dp-ph',!v);}
 function _dtpRowConfirm(btn,fn){const inp=btn.closest('.pay-panel-row').querySelector('.dp-inp');if(inp&&inp.value)fn(inp.value);}
