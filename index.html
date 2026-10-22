@@ -985,10 +985,9 @@ svg{display:block;flex-shrink:0;}
 .dp-pop-btn.today{margin-left:auto;color:var(--blue);}
 .dp-pop-btn:disabled{opacity:.35;cursor:not-allowed;background:none;}
 @media(hover:none),(pointer:coarse){
-  .dp-pop{display:none!important;}
-  /* 모바일은 실제 input의 기본 탭으로 OS 날짜 다이얼을 연다. */
-  .dp-inp[type="date"]{-webkit-appearance:auto;appearance:auto;background:none!important;padding:0!important;}
-  .dp-inp[type="date"]::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer;}
+  .dp-pop.mobile{position:fixed;z-index:651;top:50%;right:16px;bottom:auto;left:16px;width:auto;max-width:420px;margin:0 auto;transform:translateY(-50%);}
+  .dp-pop.mobile.up{top:50%;bottom:auto;}
+  .dp-pop-backdrop{position:fixed;z-index:650;inset:0;background:rgba(0,0,0,.42);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
 }
 /* ── 모바일 FAB ── */
 .mob-fab{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;border:none;border-radius:28px;padding:14px 28px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;box-shadow:0 4px 20px rgba(67,85,232,.35);z-index:50;white-space:nowrap;display:none;transition:opacity .15s;}
@@ -1473,8 +1472,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.36';
-const BUILD_TIME='2026-10-22 22:45';
+const APP_VERSION='v6.37';
+const BUILD_TIME='2026-10-22 23:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2250,7 +2249,7 @@ const _dpDesktopMq=matchMedia('(hover:hover) and (pointer:fine)');
 let _dpPicker=null;
 function _dpNative(inp){try{inp.showPicker();}catch(e){inp.focus();}}
 function _dpClose(focus){
-  if(!_dpPicker)return;const{pop,wrap,inp,controls}=_dpPicker;_dpPicker=null;pop.remove();wrap.classList.remove('dp-open');controls?.classList.remove('date-picker-open');
+  if(!_dpPicker)return;const{pop,backdrop,wrap,inp,controls}=_dpPicker;_dpPicker=null;pop.remove();backdrop?.remove();wrap.classList.remove('dp-open');controls?.classList.remove('date-picker-open');
   if(focus)try{inp.focus({preventScroll:true});}catch(e){}
 }
 function _dpSet(inp,value){
@@ -2292,7 +2291,11 @@ function _dpOpen(inp){
       return `<button class="dp-pop-day${iso===today?' today':''}${on?' on':''}" type="button" data-dp-value="${iso}" aria-label="${state.month+1}월 ${d}일" aria-pressed="${on}"${ok?'':' disabled'}>${d}</button>`;}).join('');
     daysEl.innerHTML=blanks+days;
   };
-  render();wrap.appendChild(pop);wrap.classList.add('dp-open');const controls=wrap.closest('.left-controls');controls?.classList.add('date-picker-open');_dpPicker={pop,wrap,inp,controls};
+  render();
+  const mobile=!_dpDesktopMq.matches;let backdrop=null;
+  if(mobile){backdrop=document.createElement('div');backdrop.className='dp-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');}
+  else wrap.appendChild(pop);
+  wrap.classList.add('dp-open');const controls=wrap.closest('.left-controls');controls?.classList.add('date-picker-open');_dpPicker={pop,backdrop,wrap,inp,controls};
   title.onclick=()=>{if(state.mode!=='year'){state.mode='year';state.yearStart=state.year-5;render();selectEl.querySelector('.on')?.focus({preventScroll:true});}};
   pop.querySelector('[data-dp-prev]').onclick=()=>{if(state.mode==='year')state.yearStart-=12;else if(state.mode==='month')state.year--;else if(--state.month<0){state.month=11;state.year--;}render();};
   pop.querySelector('[data-dp-next]').onclick=()=>{if(state.mode==='year')state.yearStart+=12;else if(state.mode==='month')state.year++;else if(++state.month>11){state.month=0;state.year++;}render();};
@@ -2303,19 +2306,18 @@ function _dpOpen(inp){
   selectEl.onclick=ev=>{const yearBtn=ev.target.closest('[data-dp-year]'),monthBtn=ev.target.closest('[data-dp-month]');if(yearBtn&&!yearBtn.disabled){state.year=+yearBtn.dataset.dpYear;state.mode='month';render();(selectEl.querySelector('.on:not(:disabled)')||selectEl.querySelector('.dp-pop-choice:not(:disabled)'))?.focus({preventScroll:true});}else if(monthBtn&&!monthBtn.disabled){state.month=+monthBtn.dataset.dpMonth;state.mode='day';render();(daysEl.querySelector('.on:not(:disabled)')||daysEl.querySelector('.today:not(:disabled)')||daysEl.querySelector('.dp-pop-day:not(:disabled)'))?.focus({preventScroll:true});}};
   pop.addEventListener('click',ev=>ev.stopPropagation());
   const vh=(window.visualViewport&&visualViewport.height)||innerHeight;
-  if(pop.getBoundingClientRect().bottom>vh-8)pop.classList.add('up');
+  if(!mobile&&pop.getBoundingClientRect().bottom>vh-8)pop.classList.add('up');
   (pop.querySelector('.dp-pop-day.on')||pop.querySelector('.dp-pop-day.today:not(:disabled)')||pop.querySelector('.dp-pop-day:not(:disabled)'))?.focus({preventScroll:true});
 }
 function _dpInputClick(inp,event){
-  event.stopPropagation();
-  if(inp.type==='date'&&_dpDesktopMq.matches){event.preventDefault();_dpOpen(inp);}
-  // 터치 기기는 preventDefault/showPicker 없이 iOS·Android의 기본 클릭을 그대로 사용한다.
+  event.stopPropagation();event.preventDefault();
+  if(inp.type==='date')_dpOpen(inp);
 }
-function _dpPick(wrap){const inp=wrap.querySelector('.dp-inp');if(!inp)return;if(inp.type==='date'&&_dpDesktopMq.matches)_dpOpen(inp);else _dpNative(inp);}
+function _dpPick(wrap){const inp=wrap.querySelector('.dp-inp');if(!inp)return;if(inp.type==='date')_dpOpen(inp);else _dpNative(inp);}
 document.addEventListener('click',event=>{if(_dpPicker&&!_dpPicker.pop.contains(event.target)&&!_dpPicker.wrap.contains(event.target))_dpClose(false);},true);
 document.addEventListener('keydown',event=>{
   if(event.key==='Escape'&&_dpPicker){event.preventDefault();_dpClose(true);return;}
-  const inp=event.target;if(!_dpDesktopMq.matches||inp?.type!=='date'||!inp.classList.contains('dp-inp'))return;
+  const inp=event.target;if(inp?.type!=='date'||!inp.classList.contains('dp-inp'))return;
   if(event.key==='Enter'||event.key===' '||event.key==='ArrowDown'){event.preventDefault();_dpOpen(inp);}
 },true);
 addEventListener('resize',()=>_dpClose(false));
