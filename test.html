@@ -736,6 +736,50 @@ suite('TC19: 순서 변경 후 공유 푸터 [v6.31 회귀]', () => {
   });
 });
 
+suite('TC20: 영수증 DB 전송 중복 방지 [v6.40]', () => {
+  const imported=(groupId,itemId,sourceId,updatedAt,amount=54000)=>({
+    id:groupId,name:'온유약국',nameAuto:false,createdAt:'2026-10-21T06:00:00Z',updatedAt,
+    receiptSourceId:sourceId,receiptSourceIds:[sourceId],
+    data:{people:['조상현','박지연'],items:[{id:itemId,receiptSourceId:sourceId,name:'온유약국',amount,payer:'조상현',members:['조상현','박지연'],watchers:[],isTreat:false,receiptText:'약 | 1 | 54000 | 54000'}],idc:itemId,settleDateStart:'2026-10-21',settleDateEnd:null,itemSort:'default',itemSearch:'',payments:{}}
+  });
+  test('같은 원본 영수증 그룹 두 개를 한 그룹·한 지출로 합침', () => {
+    const result=APP._deduplicateReceiptGroups([
+      imported('g-phone',1,'receipt-1','2026-10-21T06:01:00Z'),
+      imported('g-pc',7,'receipt-1','2026-10-21T06:02:00Z')
+    ],'g-phone',{});
+    expect(result.groups.length).toBe(1);
+    expect(result.groups[0].data.items.length).toBe(1);
+    expect(result.groups[0].data.items[0].receiptSourceId).toBe('receipt-1');
+    expect(result.removedIds.length).toBe(1);
+    if(!result.deletedGroups[result.removedIds[0]])throw new Error('중복 그룹 삭제 표식 누락');
+  });
+  test('여러 기기에서 같은 봉투를 받아도 새 그룹 ID가 동일함', () => {
+    const a=APP._receiptImportGroupId(['receipt-b','receipt-a']);
+    const b=APP._receiptImportGroupId(['receipt-a','receipt-b','receipt-a']);
+    expect(a).toBe(b);
+  });
+  test('내용이 같은 직접 입력 그룹은 자동 삭제하지 않음', () => {
+    const manual=id=>({id,name:'직접 입력',updatedAt:'2026-10-21T06:00:00Z',data:{people:['A'],items:[{id:1,name:'식사',amount:10000,payer:'A',members:['A']}],payments:{}}});
+    const result=APP._deduplicateReceiptGroups([manual('manual-1'),manual('manual-2')],'manual-1',{});
+    expect(result.groups.length).toBe(2);
+    expect(result.removedIds.length).toBe(0);
+  });
+  test('중복 그룹 안의 정상적인 동일 직접 지출 개수는 보존', () => {
+    const a=imported('g-a',1,'receipt-1','2026-10-21T06:01:00Z'),b=imported('g-b',9,'receipt-1','2026-10-21T06:02:00Z');
+    const manual={id:3,name:'주차',amount:5000,payer:'조상현',members:['조상현','박지연']};
+    a.data.items.push({...manual},{...manual,id:4});b.data.items.push({...manual,id:10},{...manual,id:11});
+    const result=APP._deduplicateReceiptGroups([a,b],'g-a',{});
+    expect(result.groups[0].data.items.filter(item=>!item.receiptSourceId).length).toBe(2);
+  });
+  test('예전 단건 전송도 그룹 sourceId로 지출 중복을 식별', () => {
+    const a=imported('g-old-a',1,'receipt-old','2026-10-21T06:01:00Z'),b=imported('g-old-b',2,'receipt-old','2026-10-21T06:02:00Z');
+    delete a.data.items[0].receiptSourceId;delete b.data.items[0].receiptSourceId;
+    const result=APP._deduplicateReceiptGroups([a,b],'g-old-a',{});
+    expect(result.groups[0].data.items.length).toBe(1);
+    expect(result.groups[0].data.items[0].receiptSourceId).toBe('receipt-old');
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────
