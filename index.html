@@ -1475,8 +1475,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.40';
-const BUILD_TIME='2026-10-23 06:40';
+const APP_VERSION='v6.41';
+const BUILD_TIME='2026-10-23 08:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4052,8 +4052,12 @@ function saveToHistory(){
   const{paid,owes}=computeShares();
   const txns=calcTxns(paid,owes);
   const g=getCurrentGroup();
+  const sourceGroupId=g&&g.id?String(g.id):'';
   const record={
-    id:'h'+Date.now()+Math.floor(Math.random()*1000),
+    // 같은 정산 그룹은 PC·모바일에서 동시에 저장해도 같은 기록 ID를 쓴다.
+    // Dropbox가 기기별 임의 ID를 서로 다른 기록으로 보존하던 중복의 근본 원인을 막는다.
+    id:sourceGroupId?_historyRecordIdForGroup(sourceGroupId):'h'+Date.now()+Math.floor(Math.random()*1000),
+    sourceGroupId,
     savedAt:new Date().toISOString(),
     groupName:g?g.name:'',
     dateStart:settleDateStart,
@@ -4085,7 +4089,7 @@ function saveToHistory(){
       if(_fixedMutationBlocked(_loadedHistId)){_loadedHistId=null;return null;}
       const editIdx=arr.findIndex(r=>r.id===_loadedHistId);
       if(editIdx>=0){
-        arr[editIdx]={...arr[editIdx],...record,id:_loadedHistId};
+        arr[editIdx]={...arr[editIdx],...record,id:_loadedHistId,sourceGroupId:arr[editIdx].sourceGroupId||record.sourceGroupId};
       }else{
         arr.unshift(record);
       }
@@ -4093,10 +4097,11 @@ function saveToHistory(){
       _loadedHistId=null;
       toast('기록이 수정됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
     }else{
-      const dupIdx=arr.findIndex(r=>_histFingerprint(r)===_histFingerprint(record));
+      // 새 형식은 원본 그룹 ID로, 예전 기록은 정확한 정산 지문으로 찾아 갱신한다.
+      const dupIdx=arr.findIndex(r=>(sourceGroupId&&r.sourceGroupId===sourceGroupId)||(!r.sourceGroupId&&_histFingerprint(r)===_histFingerprint(record)));
       if(dupIdx>=0&&!_isHistoryFixed(arr[dupIdx].id)){
         record.items=_mergeHistoryReceiptDetails(arr[dupIdx].items,record.items);
-        arr[dupIdx]={...arr[dupIdx],people:record.people,items:record.items,total:record.total,payments:record.payments,txns:record.txns,savedAt:record.savedAt};
+        arr[dupIdx]={...arr[dupIdx],sourceGroupId:arr[dupIdx].sourceGroupId||sourceGroupId,people:record.people,items:record.items,total:record.total,payments:record.payments,txns:record.txns,savedAt:record.savedAt};
         record.id=arr[dupIdx].id;
         if(!saveHistory(arr))return null;
         toast('기록이 업데이트됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
@@ -4131,8 +4136,10 @@ function _updateArchivedReceipts({preserveReceiptUrl=true}={}){
     const raw=localStorage.getItem(HISTORY_KEY);const arr=raw?JSON.parse(raw):[];
     if(!arr.length)return false;
     const cur={dateStart:settleDateStart,dateEnd:settleDateEnd,people:[...people],items};
+    const sourceGroupId=getCurrentGroup()?.id||'';
     let idx=-1;
     if(_loadedHistId)idx=arr.findIndex(r=>r.id===_loadedHistId);
+    if(idx<0&&sourceGroupId)idx=arr.findIndex(r=>r.sourceGroupId===sourceGroupId);
     if(idx<0)idx=arr.findIndex(r=>_histFingerprint(r)===_histFingerprint(cur));
     if(idx<0)return false; // 보관함에 없으면 아무것도 안 함
     if(_isHistoryFixed(arr[idx].id))return false;
@@ -4242,9 +4249,35 @@ function _saveDelId(id,force=false){try{if(!force&&_isHistoryFixed(id))return;co
 function _mergeDelIds(remoteIds){try{const s=_loadDelIds();(remoteIds||[]).forEach(id=>s.add(id));localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));return s;}catch(e){return _loadDelIds();}}
 function _histFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|'),(r.items||[]).map(i=>`${i.name||''}|${+i.amount||0}|${i.payer||''}|${i.isTreat?1:0}|${(i.members||[]).slice().sort().join('~')}|${(i.watchers||[]).slice().sort().join('~')}|${i.rounderOverride||''}`).sort().join(',')].join('§');}
 function _histSoftFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|')].join('§');}
-function _dedupHistory(arr){const map=new Map();arr.forEach((r,idx)=>{const key=r&&r.id!=null?'id:'+String(r.id):'legacy:'+idx;const ex=map.get(key);if(!ex){map.set(key,r);}else{const isNewer=(r.savedAt||'')>(ex.savedAt||'');const winner=isNewer?r:ex,loser=isNewer?ex:r;map.set(key,{...winner,payments:{...(loser.payments||{}),...(winner.payments||{})}});}});return Array.from(map.values());}
-function saveHistory(arr){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(arr)));return true;}catch(e){toast(_storageErrorMessage(e,'기록 저장'),{type:'error',duration:5000});return false;}}
-function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const deduped=_dedupHistory(arr);const removed=arr.length-deduped.length;if(removed>0){localStorage.setItem(HISTORY_KEY,JSON.stringify(deduped));setTimeout(()=>toast(`중복 기록 ${removed}건 자동 삭제됐어요`,{type:'info'}),400);}}catch(e){}}
+function _historyRecordIdForGroup(groupId){return'hg_'+_dataHash(['history',String(groupId)]);}
+function _mergeHistoryDuplicate(a,b){
+  const aFixed=_isHistoryFixed(a?.id),bFixed=_isHistoryFixed(b?.id);
+  const winner=aFixed&&!bFixed?a:bFixed&&!aFixed?b:((b?.savedAt||'')>(a?.savedAt||'')?b:a);
+  const loser=winner===a?b:a;
+  return{...loser,...winner,id:winner.id,sourceGroupId:winner.sourceGroupId||loser.sourceGroupId||'',items:_mergeHistoryReceiptDetails(loser.items,winner.items),payments:{...(loser.payments||{}),...(winner.payments||{})}};
+}
+function _dedupHistoryDetailed(arr){
+  const out=[],removedIds=[];
+  (Array.isArray(arr)?arr:[]).forEach((r,idx)=>{
+    if(!r)return;
+    const rid=r.id==null?'':String(r.id),source=r.sourceGroupId?String(r.sourceGroupId):'';
+    let match=rid?out.findIndex(x=>String(x.id)===rid):-1;
+    if(match<0&&source)match=out.findIndex(x=>String(x.sourceGroupId||'')===source);
+    // v6.40 이하 기록은 sourceGroupId가 없다. 완전한 정산 지문이 같은 예전 기록만 정리한다.
+    if(match<0&&!source)match=out.findIndex(x=>!x.sourceGroupId&&_histFingerprint(x)===_histFingerprint(r));
+    if(match<0){out.push(r);return;}
+    const ex=out[match],sameId=rid&&String(ex.id)===rid;
+    // 서로 다른 잠금 원본은 자동 삭제하지 않는다.
+    if(!sameId&&_isHistoryFixed(ex.id)&&_isHistoryFixed(r.id)){out.push(r);return;}
+    const merged=_mergeHistoryDuplicate(ex,r);out[match]=merged;
+    const removed=merged.id===ex.id?r.id:ex.id;
+    if(!sameId&&removed!=null&&!_isHistoryFixed(removed))removedIds.push(String(removed));
+  });
+  return{records:out.sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||'')),removedIds:[...new Set(removedIds)]};
+}
+function _dedupHistory(arr){return _dedupHistoryDetailed(arr).records;}
+function saveHistory(arr){try{const cleaned=_dedupHistoryDetailed(arr);cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));return true;}catch(e){toast(_storageErrorMessage(e,'기록 저장'),{type:'error',duration:5000});return false;}}
+function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const cleaned=_dedupHistoryDetailed(arr),removed=arr.length-cleaned.records.length;if(removed>0){cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));setTimeout(()=>toast(`중복 기록 ${removed}건을 하나로 정리했어요`,{type:'success',duration:4200}),400);}}catch(e){}}
 function _migrateHistoryGroupNames(){try{const arr=loadHistory();let changed=false;arr.forEach(r=>{const correct=(r.people||[]).join(', ');if(correct&&r.groupName!==correct){r.groupName=correct;changed=true;}});if(changed)saveHistory(arr);}catch(e){}}
 
 async function deleteHistoryRecord(id,event){
@@ -4905,6 +4938,8 @@ function _saveHistFromResult(){saveToHistory();renderAll();}
 function _currentHistoryRecord(){
   const total=items.reduce((s,it)=>s+(+it.amount||0),0);if(!total)return null;
   const record={dateStart:settleDateStart,dateEnd:settleDateEnd,people:[...people],items:JSON.parse(JSON.stringify(items))};
+  const sourceGroupId=getCurrentGroup()?.id||'';
+  if(sourceGroupId){const sourced=loadHistory().find(r=>r.sourceGroupId===sourceGroupId);if(sourced)return sourced;}
   const fp=_histFingerprint(record),matches=loadHistory().filter(r=>_histFingerprint(r)===fp);
   return matches.find(r=>_historyContentSignature(r)===_currentContentSignature())||matches[0]||null;
 }
@@ -5243,6 +5278,7 @@ loadState();
 const _receiptGroupRepairResult=_repairDuplicateReceiptGroups();
 const _receiptDbImportResult=_consumeReceiptDbTransfer();
 _migrateHistoryGroupNames();
+_deduplicateHistoryOnStartup();
 renderAll();
 try{_verifyAndRepairFixedHistory().then(changed=>{if(changed)renderAll();}).catch(()=>{});}catch(e){}
 // 영수증 사진을 localStorage→IndexedDB로 이전(저장공간 확보). 비동기·1회, 실패해도 앱 동작엔 지장 없음
