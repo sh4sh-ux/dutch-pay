@@ -1475,8 +1475,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.39';
-const BUILD_TIME='2026-10-22 23:40';
+const APP_VERSION='v6.40';
+const BUILD_TIME='2026-10-23 06:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2038,6 +2038,10 @@ async function syncFromDropbox(){
   }catch(e){}finally{_syncFromRunning=false;}
 }
 async function _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted){
+  const repaired=_deduplicateReceiptGroups(mergedGroups,currentGroupId,mergedDeleted);
+  mergedGroups=repaired.groups;mergedDeleted=repaired.deletedGroups;
+  if(repaired.currentGroupId)currentGroupId=repaired.currentGroupId;
+  repaired.removedIds.forEach(id=>delete _syncSnapshots[id]);
   // 병합 전 현재 상태 스냅샷
   const _prevGroupHash=getCurrentGroup()?_groupHash(getCurrentGroup()):null;
   const _prevGroupCount=groups.length;
@@ -2119,6 +2123,71 @@ function saveState(){
 }
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if((d.version===2||d.version===3)&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;deletedGroups=d.deletedGroups||{};currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);groups.forEach(g=>{_syncSnapshots[g.id]=JSON.stringify(g.data);});if(!localStorage.getItem('dutchpay_couple')){for(const grp of groups){const c=(grp.data?.couples||[])[0];if(c?.length){_coupleNames=c;localStorage.setItem('dutchpay_couple',JSON.stringify(c));break;}}}}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
 
+// 영수증 DB 전송은 PC·모바일이 같은 Dropbox 봉투를 동시에 읽을 수 있다. 예전에는 각 기기가
+// 서로 다른 그룹 id를 만들어 Dropbox 병합 뒤 같은 sourceId가 여러 그룹에 남았다. sourceId는
+// 영수증의 영구 식별자이므로 이 값이 겹치는 그룹만 안전하게 하나로 합친다(직접 입력 그룹은 제외).
+function _receiptSourceIdsOfGroup(group){
+  return[...new Set([group?.receiptSourceId,...(group?.receiptSourceIds||[]),...(group?.data?.items||[]).map(item=>item?.receiptSourceId)].map(v=>String(v||'').trim()).filter(Boolean))];
+}
+function _receiptImportGroupId(sourceIds){return'gr_'+_dataHash([...new Set(sourceIds.map(String))].sort());}
+function _deduplicateReceiptGroups(input,currentId,tombstones,at){
+  const list=Array.isArray(input)?input.slice():[];
+  const parent=list.map((_,i)=>i),find=i=>parent[i]===i?i:(parent[i]=find(parent[i]));
+  const union=(a,b)=>{a=find(a);b=find(b);if(a!==b)parent[b]=a;};
+  const owner=new Map();
+  list.forEach((group,i)=>_receiptSourceIdsOfGroup(group).forEach(sourceId=>{if(owner.has(sourceId))union(i,owner.get(sourceId));else owner.set(sourceId,i);}));
+  const components=new Map();list.forEach((group,i)=>{const root=find(i);if(!components.has(root))components.set(root,[]);components.get(root).push(group);});
+  const mergedByRoot=new Map(),removedIds=[],removedToCanonical=new Map();
+  components.forEach((component,root)=>{
+    if(component.length<2)return;
+    const ordered=component.slice().sort((a,b)=>String(a.updatedAt||a.createdAt||'').localeCompare(String(b.updatedAt||b.createdAt||''))||String(a.id).localeCompare(String(b.id)));
+    const latest=ordered[ordered.length-1];
+    const canonicalId=component.map(g=>String(g.id)).sort()[0];
+    const people=[],payments={},items=[],sourcePos=new Map(),manualMax=new Map();
+    ordered.forEach(group=>{
+      (group.data?.people||[]).forEach(person=>{const name=String(person||'').trim();if(name&&!people.includes(name))people.push(name);});
+      Object.assign(payments,group.data?.payments||{});
+      const groupItems=group.data?.items||[],groupSources=_receiptSourceIdsOfGroup(group),manualCounts=new Map();
+      groupItems.forEach(item=>{
+        const sourceId=String(item?.receiptSourceId||(groupItems.length===1&&groupSources.length===1?groupSources[0]:'')).trim();
+        if(sourceId){
+          if(sourcePos.has(sourceId)){const pos=sourcePos.get(sourceId),previous=items[pos];items[pos]={...previous,...item,receiptSourceId:sourceId,receiptUrl:item.receiptUrl||previous.receiptUrl||''};}
+          else{sourcePos.set(sourceId,items.length);items.push({...item,receiptSourceId:sourceId});}
+          return;
+        }
+        const copy={...item};delete copy.id;
+        const key=JSON.stringify(copy),count=(manualCounts.get(key)||0)+1;manualCounts.set(key,count);
+        if(count>(manualMax.get(key)||0)){manualMax.set(key,count);items.push({...item});}
+      });
+    });
+    const usedIds=new Set();let nextId=Math.max(0,...items.map(item=>Number(item.id)||0));
+    items.forEach(item=>{let id=Number(item.id)||0;if(id<1||usedIds.has(id))id=++nextId;item.id=id;usedIds.add(id);});
+    const dates=ordered.flatMap(group=>[group.data?.settleDateStart,group.data?.settleDateEnd]).filter(Boolean).sort();
+    const sourceIds=items.map(item=>String(item.receiptSourceId||'')).filter((v,i,a)=>v&&a.indexOf(v)===i);
+    const merged={...latest,id:canonicalId,receiptSourceId:sourceIds.length===1?sourceIds[0]:null,receiptSourceIds:sourceIds,
+      createdAt:ordered.map(g=>g.createdAt).filter(Boolean).sort()[0]||latest.createdAt,
+      updatedAt:ordered.map(g=>g.updatedAt||g.createdAt).filter(Boolean).sort().at(-1)||latest.updatedAt,
+      data:{...(latest.data||{}),people,items,idc:Math.max(0,...items.map(item=>Number(item.id)||0)),
+        settleDateStart:dates[0]||latest.data?.settleDateStart,settleDateEnd:dates.length>1&&dates.at(-1)!==dates[0]?dates.at(-1):null,payments}};
+    mergedByRoot.set(root,merged);
+    component.forEach(group=>{if(String(group.id)!==canonicalId){removedIds.push(String(group.id));removedToCanonical.set(String(group.id),canonicalId);}});
+  });
+  const emitted=new Set(),result=[];
+  list.forEach((group,i)=>{const root=find(i),merged=mergedByRoot.get(root);if(!merged){result.push(group);return;}if(!emitted.has(root)){emitted.add(root);result.push(merged);}});
+  const deleted={...(tombstones||{})},deletedAt=at||new Date().toISOString();removedIds.forEach(id=>{deleted[id]=deleted[id]||deletedAt;});
+  return{groups:result,currentGroupId:removedToCanonical.get(String(currentId))||currentId,deletedGroups:deleted,removedIds};
+}
+function _repairDuplicateReceiptGroups(persist=true){
+  const repaired=_deduplicateReceiptGroups(groups,currentGroupId,deletedGroups);
+  if(!repaired.removedIds.length)return repaired;
+  groups=repaired.groups;currentGroupId=repaired.currentGroupId;deletedGroups=repaired.deletedGroups;
+  repaired.removedIds.forEach(id=>delete _syncSnapshots[id]);
+  const group=getCurrentGroup()||groups[0];if(group){currentGroupId=group.id;loadGroupData(group);}
+  groups.forEach(group=>{_syncSnapshots[group.id]=JSON.stringify(group.data||{});});
+  if(persist)_persistMainState();
+  return repaired;
+}
+
 // Receipt DB가 남긴 일회성 전송 묶음을 시작 시 한 번만, 전부 병합한다.
 // 주 저장소와 분리된 봉투를 사용해 여러 건 중 마지막 건만 남거나 Dropbox 시작 동기화에
 // 덮어써지는 문제를 막는다. 저장에 성공한 뒤에만 봉투를 삭제하므로 중간 실패도 복구된다.
@@ -2160,7 +2229,7 @@ function _mergeReceiptEnvelope(envelope){
     });
     const existing=existingIndex>=0?groups[existingIndex]:null;
     if(existing&&!baseHashes[existing.id])baseHashes[existing.id]=_groupHash(existing);
-    let groupId=existing?.id||_newGroupId();
+    let groupId=existing?.id||_receiptImportGroupId(sourceIds);
     while(!existing&&groups.some(g=>g.id===groupId))groupId=_newGroupId();
 
     const people=(existing?.data?.people||[]).slice();
@@ -2198,9 +2267,13 @@ function _mergeReceiptEnvelope(envelope){
       data:{people,items:finalItems,idc:Math.max(0,...finalItems.map(item=>Number(item.id)||0)),settleDateStart:dates[0]||new Date().toISOString().slice(0,10),settleDateEnd:dates.length&&dates.at(-1)!==dates[0]?dates.at(-1):null,itemSort:'default',itemSearch:'',payments:existing?.data?.payments||{}}
     };
     if(existing)groups[existingIndex]=group;else groups.push(group);
+    const repaired=_deduplicateReceiptGroups(groups,groupId,deletedGroups,now);
+    groups=repaired.groups;groupId=repaired.currentGroupId;deletedGroups=repaired.deletedGroups;
+    repaired.removedIds.forEach(id=>{delete _syncSnapshots[id];delete baseHashes[id];});
+    const savedGroup=groups.find(value=>value.id===groupId)||group;
     delete deletedGroups[groupId];
-    _syncSnapshots[groupId]=JSON.stringify(group.data);
-    currentGroupId=groupId;loadGroupData(group);
+    _syncSnapshots[groupId]=JSON.stringify(savedGroup.data);
+    currentGroupId=groupId;loadGroupData(savedGroup);
     localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:now,groups,currentGroupId,deletedGroups}));
     _saveSyncedHashes(baseHashes);
     return{count:entries.length,created:existing?0:entries.length,updated:existing?entries.length:0};
@@ -5167,6 +5240,7 @@ async function shareHistoryImage(id){
 
 _applyDarkMode();
 loadState();
+const _receiptGroupRepairResult=_repairDuplicateReceiptGroups();
 const _receiptDbImportResult=_consumeReceiptDbTransfer();
 _migrateHistoryGroupNames();
 renderAll();
@@ -5177,6 +5251,8 @@ try{_restoreReceiptUploadQueue().then(()=>_flushReceiptUploads());_flushReceiptD
 if(_receiptDbImportResult){
   const detail=_receiptDbImportResult.updated?` · 업데이트 ${_receiptDbImportResult.updated}건`:'';
   toast(`영수증 ${_receiptDbImportResult.count}건을 모두 가져왔어요${detail}`,{type:'success',duration:4200});
+}else if(_receiptGroupRepairResult.removedIds.length){
+  toast(`중복 정산 ${_receiptGroupRepairResult.removedIds.length}건을 하나로 정리했어요`,{type:'success',duration:4200});
 }
 // 영수증 DB 전송 파라미터(?from=receipt-db&batch=…)는 가져오기가 끝나면 역할이 없다.
 // 주소창에 남겨두면 북마크·공유 시 의미 없는 batch id가 따라가므로 정리한다.
