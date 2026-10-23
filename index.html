@@ -1475,8 +1475,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.41';
-const BUILD_TIME='2026-10-23 08:10';
+const APP_VERSION='v6.42';
+const BUILD_TIME='2026-10-24 00:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4097,8 +4097,15 @@ function saveToHistory(){
       _loadedHistId=null;
       toast('기록이 수정됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
     }else{
-      // 새 형식은 원본 그룹 ID로, 예전 기록은 정확한 정산 지문으로 찾아 갱신한다.
-      const dupIdx=arr.findIndex(r=>(sourceGroupId&&r.sourceGroupId===sourceGroupId)||(!r.sourceGroupId&&_histFingerprint(r)===_histFingerprint(record)));
+      // 원본 그룹 ID가 다르더라도 정산 내용이 완전히 같으면 같은 기록으로 갱신한다.
+      // 과거 다중 기기 동기화가 같은 정산을 서로 다른 그룹 ID로 만든 경우도 여기서 막는다.
+      const recordFp=_histFingerprint(record);
+      const dupIdx=arr.findIndex(r=>(sourceGroupId&&r.sourceGroupId===sourceGroupId)||_histFingerprint(r)===recordFp);
+      if(dupIdx>=0&&_isHistoryFixed(arr[dupIdx].id)&&_sameHistoryContent(arr[dupIdx],record)){
+        record.id=arr[dupIdx].id;
+        toast('같은 기록이 이미 보관함에 있어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+        return arr[dupIdx];
+      }
       if(dupIdx>=0&&!_isHistoryFixed(arr[dupIdx].id)){
         record.items=_mergeHistoryReceiptDetails(arr[dupIdx].items,record.items);
         arr[dupIdx]={...arr[dupIdx],sourceGroupId:arr[dupIdx].sourceGroupId||sourceGroupId,people:record.people,items:record.items,total:record.total,payments:record.payments,txns:record.txns,savedAt:record.savedAt};
@@ -4263,8 +4270,9 @@ function _dedupHistoryDetailed(arr){
     const rid=r.id==null?'':String(r.id),source=r.sourceGroupId?String(r.sourceGroupId):'';
     let match=rid?out.findIndex(x=>String(x.id)===rid):-1;
     if(match<0&&source)match=out.findIndex(x=>String(x.sourceGroupId||'')===source);
-    // v6.40 이하 기록은 sourceGroupId가 없다. 완전한 정산 지문이 같은 예전 기록만 정리한다.
-    if(match<0&&!source)match=out.findIndex(x=>!x.sourceGroupId&&_histFingerprint(x)===_histFingerprint(r));
+    // 과거 다중 기기 동기화는 같은 정산에도 서로 다른 sourceGroupId를 만들었다.
+    // 원본 ID와 무관하게 완전한 정산 지문이 같으면 중복으로 정리한다.
+    if(match<0){const fp=_histFingerprint(r);match=out.findIndex(x=>_histFingerprint(x)===fp);}
     if(match<0){out.push(r);return;}
     const ex=out[match],sameId=rid&&String(ex.id)===rid;
     // 서로 다른 잠금 원본은 자동 삭제하지 않는다.

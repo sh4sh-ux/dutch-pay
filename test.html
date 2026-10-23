@@ -558,9 +558,14 @@ suite('TC14: 데이터 무결성 안전장치 [v6.41 회귀]', () => {
     const b={...JSON.parse(JSON.stringify(base)),id:'h2',savedAt:'2026-09-05T02:00:00Z'};
     const out=APP._dedupHistoryDetailed([a,b]);expect(out.records.length).toBe(1);expect(out.records[0].id).toBe('h2');expect(out.removedIds).toEqual(['h1']);
   });
-  test('내용이 같아도 원본 그룹이 다르면 별도 기록으로 유지', () => {
+  test('내용이 같으면 원본 그룹이 달라도 과거 중복으로 정리', () => {
     const a={...JSON.parse(JSON.stringify(base)),id:'h1',sourceGroupId:'g1',savedAt:'2026-09-05T01:00:00Z'};
     const b={...JSON.parse(JSON.stringify(base)),id:'h2',sourceGroupId:'g2',savedAt:'2026-09-05T02:00:00Z'};
+    const out=APP._dedupHistoryDetailed([a,b]);expect(out.records.length).toBe(1);expect(out.records[0].id).toBe('h2');expect(out.removedIds).toEqual(['h1']);
+  });
+  test('원본 그룹이 다르고 지출 내용도 다르면 별도 기록으로 유지', () => {
+    const a={...JSON.parse(JSON.stringify(base)),id:'h1',sourceGroupId:'g1',savedAt:'2026-09-05T01:00:00Z'};
+    const b={...JSON.parse(JSON.stringify(base)),id:'h2',sourceGroupId:'g2',savedAt:'2026-09-05T02:00:00Z'};b.items[0].amount=31000;
     expect(APP._dedupHistory([a,b]).length).toBe(2);
   });
   test('같은 원본 그룹은 기기별 ID가 달라도 하나로 병합', () => {
