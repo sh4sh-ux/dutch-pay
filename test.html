@@ -547,16 +547,30 @@ suite('TC13: 사용자 카테고리 SVG [v5.25 회귀]', () => {
   });
 });
 
-suite('TC14: 데이터 무결성 안전장치 [v5.96 회귀]', () => {
+suite('TC14: 데이터 무결성 안전장치 [v6.41 회귀]', () => {
   const base={dateStart:'2026-09-05',dateEnd:null,people:['A','B','C'],items:[{id:1,name:'식사',amount:30000,payer:'A',members:['A','B'],watchers:[],isTreat:false}]};
   test('분담 참여자가 다르면 기록 지문도 다름', () => {
     const changed=JSON.parse(JSON.stringify(base));changed.items[0].members=['A','C'];
     if(APP._histFingerprint(base)===APP._histFingerprint(changed))throw new Error('참여자 차이를 구분하지 못함');
   });
-  test('내용이 같아도 기록 ID가 다르면 삭제하지 않음', () => {
+  test('예전 형식의 동일 정산은 ID가 달라도 하나로 정리', () => {
     const a={...JSON.parse(JSON.stringify(base)),id:'h1',savedAt:'2026-09-05T01:00:00Z'};
     const b={...JSON.parse(JSON.stringify(base)),id:'h2',savedAt:'2026-09-05T02:00:00Z'};
+    const out=APP._dedupHistoryDetailed([a,b]);expect(out.records.length).toBe(1);expect(out.records[0].id).toBe('h2');expect(out.removedIds).toEqual(['h1']);
+  });
+  test('내용이 같아도 원본 그룹이 다르면 별도 기록으로 유지', () => {
+    const a={...JSON.parse(JSON.stringify(base)),id:'h1',sourceGroupId:'g1',savedAt:'2026-09-05T01:00:00Z'};
+    const b={...JSON.parse(JSON.stringify(base)),id:'h2',sourceGroupId:'g2',savedAt:'2026-09-05T02:00:00Z'};
     expect(APP._dedupHistory([a,b]).length).toBe(2);
+  });
+  test('같은 원본 그룹은 기기별 ID가 달라도 하나로 병합', () => {
+    const a={...JSON.parse(JSON.stringify(base)),id:'h1',sourceGroupId:'g1',savedAt:'2026-09-05T01:00:00Z',payments:{a:{done:true}}};
+    const b={...JSON.parse(JSON.stringify(base)),id:'h2',sourceGroupId:'g1',savedAt:'2026-09-05T02:00:00Z',payments:{b:{done:true}}};
+    const out=APP._dedupHistoryDetailed([a,b]);expect(out.records.length).toBe(1);expect(Object.keys(out.records[0].payments).sort()).toEqual(['a','b']);expect(out.removedIds).toEqual(['h1']);
+  });
+  test('같은 그룹의 기록 ID는 PC·모바일에서 항상 동일', () => {
+    expect(APP._historyRecordIdForGroup('g-2026-10-21')).toBe(APP._historyRecordIdForGroup('g-2026-10-21'));
+    if(APP._historyRecordIdForGroup('g1')===APP._historyRecordIdForGroup('g2'))throw new Error('서로 다른 그룹 ID가 충돌함');
   });
   test('같은 기록 ID만 안전하게 병합', () => {
     const a={...JSON.parse(JSON.stringify(base)),id:'h1',savedAt:'2026-09-05T01:00:00Z',payments:{a:{done:true}}};
