@@ -910,13 +910,14 @@ svg{display:block;flex-shrink:0;}
 /* 데스크탑: 전체화면 대신 앱 큰창과 같은 크기의 중앙 카드로 표시 (v5.64) */
 .hist-backdrop{display:none;}
 @media(min-width:701px){
-  .hist-page{inset:0;margin:auto;width:min(calc(100vw - 64px),1484px);height:calc(100vh - 60px);border-radius:22px;border:1px solid var(--sep);overflow:hidden;opacity:0;pointer-events:none;transform:translateY(24px);box-shadow:0 24px 70px rgba(0,0,0,.35);transition:transform .34s cubic-bezier(.32,.72,0,1),opacity .28s ease;}
+  .hist-page{inset:0;margin:auto;width:min(calc(100vw - 32px),1000px);height:calc(100vh - 60px);border-radius:22px;border:1px solid var(--sep);overflow:hidden;opacity:0;pointer-events:none;transform:translateY(24px);box-shadow:0 24px 70px rgba(0,0,0,.35);transition:transform .34s cubic-bezier(.32,.72,0,1),opacity .28s ease;}
   .hist-page.open{transform:translateY(0);opacity:1;pointer-events:auto;}
   .hist-page-nav{padding-top:18px;}
   /* 바깥 딤 배경 — 클릭하면 닫힘(빠른 복귀). 카드(z-index 300)보다 아래 (v5.66) */
   .hist-backdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:299;opacity:0;pointer-events:none;transition:opacity .28s ease;}
   .hist-backdrop.open{opacity:1;pointer-events:auto;}
 }
+@media(min-width:1100px){.hist-page{width:66.6667vw;max-width:1200px;}}
 .hist-page-nav{background:var(--card);border-bottom:1px solid var(--sep);padding-top:max(env(safe-area-inset-top,0px),44px);flex-shrink:0;}
 .hist-page-nav-row{display:flex;align-items:center;height:44px;padding:0 8px 0 4px;position:relative;}
 .hist-back-btn{display:flex;align-items:center;gap:6px;color:var(--blue);background:none;border:none;font-family:inherit;cursor:pointer;padding:4px 10px;-webkit-tap-highlight-color:transparent;z-index:1;flex-shrink:0;border-radius:8px;}
@@ -1482,7 +1483,7 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.44';
+const APP_VERSION='v6.45';
 const BUILD_TIME='2026-10-24 11:55';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -1860,10 +1861,10 @@ async function _dbxFetch(url,options={},timeoutMs=20000){
   catch(error){if(error?.name==='AbortError')throw new Error('Dropbox 응답 시간이 초과됐어요');throw error;}
   finally{clearTimeout(timer);}
 }
-async function _dbxRpc(token,ep,body){
+async function _dbxRpc(token,ep,body,timeoutMs=20000){
   return _dbxFetch('https://api.dropboxapi.com/2/'+ep,{method:'POST',
     headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
-    body:JSON.stringify(body)});   // 본문은 UTF-8 — 한글 그대로 보내도 된다 (헤더만 ASCII 제약)
+    body:JSON.stringify(body)},timeoutMs);   // 본문은 UTF-8 — 한글 그대로 보내도 된다 (헤더만 ASCII 제약)
 }
 async function _dbxEnsureFolder(token,path){let res=await _dbxRpc(token,'files/create_folder_v2',{path});if(res.status===401){token=await _dbxRefreshToken();if(!token)return null;res=await _dbxRpc(token,'files/create_folder_v2',{path});}return(res.ok||res.status===409)?token:null;}
 async function _dbxExists(token,path){ try{ return (await _dbxRpc(token,'files/get_metadata',{path})).ok; }catch(e){ return false; } }
@@ -1902,16 +1903,16 @@ async function _dbxRefreshToken(){
   if(!refresh||!appKey)return null;
   try{const res=await _dbxFetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh,client_id:appKey})});const data=await res.json();if(data.access_token){localStorage.setItem('dutchpay_dbx_token',data.access_token);return data.access_token;}return null;}catch(e){return null;}
 }
-async function _dbxUpload(token,path,content){
+async function _dbxUpload(token,path,content,timeoutMs=20000){
   const arg=JSON.stringify({path,mode:'overwrite',autorename:false,mute:true}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
-  const res=await _dbxFetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':arg},body:content});
-  if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxUpload(t,path,content);}
+  const res=await _dbxFetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':arg},body:content},timeoutMs);
+  if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxUpload(t,path,content,timeoutMs);}
   return res.ok;
 }
-async function _dbxDownload(token,path){
+async function _dbxDownload(token,path,timeoutMs=20000){
   const arg=JSON.stringify({path}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
-  const res=await _dbxFetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
-  if(res.status===409)return null;if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownload(t,path);return null;}if(!res.ok)return null;
+  const res=await _dbxFetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}},timeoutMs);
+  if(res.status===409)return null;if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownload(t,path,timeoutMs);return null;}if(!res.ok)return null;
   try{return JSON.parse(await res.text());}catch(e){return null;}
 }
 let _dbxMainRev='';
@@ -4619,6 +4620,7 @@ function _updateHDbxBadge(){
 function _updateHSyncInfo(){
   const el=document.getElementById('hSyncInfo');if(!el)return;
   if(_hSyncState==='syncing'){el.textContent='↻ 동기화 중…';el.style.color='var(--label3)';return;}
+  if(_hSyncState==='delayed'){el.textContent='↻ 동기화가 지연되고 있어요…';el.style.color='var(--label3)';return;}
   if(_hSyncState==='error'){el.textContent='⚠ 동기화 실패 · 아래 Dropbox에서 다시 시도해주세요';el.style.color='var(--red)';return;}
   const last=localStorage.getItem(DBX_H_LASTSYNC);
   if(!last){el.textContent='';return;}
@@ -4716,35 +4718,47 @@ function hDbxDisconnect(){
   if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
 }
 
-let _hSyncing=false,_hSyncState='';
+let _hSyncing=false,_hSyncState='',_hSyncDelayTimer=null;
 async function _syncFixedArchives(token){
+  const requestTimeout=8000;
   let candidates=[];try{candidates=[...await _ensureFixedArchives()];}catch(e){}
-  const remoteDeleted=await _dbxDownload(token,dbxFixedDeletedFile());
+  const [remoteDeleted,manifest]=await Promise.all([
+    _dbxDownload(token,dbxFixedDeletedFile(),requestTimeout),
+    _dbxDownload(token,dbxFixedFile(),requestTimeout)
+  ]);
   const deleted=_mergeFixedDeletedIds(Array.isArray(remoteDeleted)?remoteDeleted:[]);
-  const manifest=await _dbxDownload(token,dbxFixedFile());
   if(Array.isArray(manifest))candidates.push(...manifest);
-  // 매 FIX마다 만든 개별 원본도 훑어 manifest가 손상되거나 옛 기기에서 덮여도 다시 조립한다.
-  try{
-    let res=await _dbxRpc(token,'files/list_folder',{path:dbxFixedDir()});
-    while(res.ok){const data=await res.json();for(const ent of(data.entries||[])){if(ent['.tag']==='file'&&/\.json$/i.test(ent.name)){const path=ent.path_display||ent.path_lower,one=await _dbxDownload(token,path);if(one&&deleted.has(String(one.recordId))){await _dbxRpc(token,'files/delete_v2',{path});continue;}if(one)candidates.push(one);}}if(!data.has_more)break;res=await _dbxRpc(token,'files/list_folder/continue',{cursor:data.cursor});}
+  // 정상 manifest가 있으면 개별 원본 전체를 매번 다시 내려받지 않는다. manifest가 없거나
+  // 손상됐을 때만 개별 파일을 훑어 복구한다. 기록 수만큼 요청하던 동기화 지연을 막는다.
+  if(!Array.isArray(manifest))try{
+    let res=await _dbxRpc(token,'files/list_folder',{path:dbxFixedDir()},requestTimeout);
+    while(res.ok){const data=await res.json();for(const ent of(data.entries||[])){if(ent['.tag']==='file'&&/\.json$/i.test(ent.name)){const path=ent.path_display||ent.path_lower,one=await _dbxDownload(token,path,requestTimeout);if(one&&deleted.has(String(one.recordId))){await _dbxRpc(token,'files/delete_v2',{path},requestTimeout);continue;}if(one)candidates.push(one);}}if(!data.has_more)break;res=await _dbxRpc(token,'files/list_folder/continue',{cursor:data.cursor},requestTimeout);}
   }catch(e){}
   const valid=[];
   for(const f of candidates){if(!f||!f.fixId||!f.recordId||deleted.has(String(f.recordId))||!f.payload||f.guard!==_fixedGuard(f.payload))continue;if(f.sha256&&await _hSha256b64url(_stableJson(f.payload))!==f.sha256)continue;valid.push(f);}
   const merged=await _saveFixedArchives(valid);
-  await _dbxRpc(token,'files/create_folder_v2',{path:dbxFixedDir()});
-  if(!await _dbxUpload(token,dbxFixedDeletedFile(),JSON.stringify([...deleted],null,2)))throw new Error('잠금 삭제 목록 업로드 실패');
-  if(!await _dbxUpload(token,dbxFixedFile(),JSON.stringify(merged,null,2)))throw new Error('잠금 목록 업로드 실패');
-  for(const f of merged){const safe=String(f.fixId).replace(/[^a-zA-Z0-9_-]/g,'_');if(!await _dbxUpload(token,dbxFixedDir()+'/'+safe+'.json',JSON.stringify(f,null,2)))throw new Error('잠금 원본 업로드 실패');}
+  await _dbxRpc(token,'files/create_folder_v2',{path:dbxFixedDir()},requestTimeout);
+  const remoteById=new Map((Array.isArray(manifest)?manifest:[]).filter(Boolean).map(f=>[String(f.fixId),f]));
+  const changed=merged.filter(f=>{const r=remoteById.get(String(f.fixId));return!r||r.guard!==f.guard||String(r.sha256||'')!==String(f.sha256||'');});
+  const uploads=[
+    _dbxUpload(token,dbxFixedDeletedFile(),JSON.stringify([...deleted],null,2),requestTimeout).then(ok=>{if(!ok)throw new Error('잠금 삭제 목록 업로드 실패');}),
+    _dbxUpload(token,dbxFixedFile(),JSON.stringify(merged,null,2),requestTimeout).then(ok=>{if(!ok)throw new Error('잠금 목록 업로드 실패');}),
+    ...changed.map(f=>{const safe=String(f.fixId).replace(/[^a-zA-Z0-9_-]/g,'_');return _dbxUpload(token,dbxFixedDir()+'/'+safe+'.json',JSON.stringify(f,null,2),requestTimeout).then(ok=>{if(!ok)throw new Error('잠금 원본 업로드 실패');});})
+  ];
+  await Promise.all(uploads);
   await _verifyAndRepairFixedHistory();return merged;
 }
 async function hSyncDropbox(uploadOnly=false){
   const token=hDbxGetToken();if(!token)return;
   if(_hSyncing)return;_hSyncing=true;_hSyncState='syncing';_updateHSyncInfo();
+  clearTimeout(_hSyncDelayTimer);_hSyncDelayTimer=setTimeout(()=>{if(_hSyncing&&_hSyncState==='syncing'){_hSyncState='delayed';_updateHSyncInfo();}},6000);
   try{
-    await _syncFixedArchives(token);
+    const [,raw]=await Promise.all([
+      _syncFixedArchives(token),
+      uploadOnly?Promise.resolve(null):_dbxDownload(token,dbxHistFile(),8000)
+    ]);
     const local=loadHistory();
     if(!uploadOnly){
-      const raw=await _dbxDownload(token,dbxHistFile());
       if(raw){
         const remoteRecs=Array.isArray(raw)?raw:(raw.records||[]);
         const delIds=_mergeDelIds(Array.isArray(raw)?[]:(raw.deletedIds||[]));
@@ -4755,15 +4769,16 @@ async function hSyncDropbox(uploadOnly=false){
       }
     }
     const toUpload={records:loadHistory(),deletedIds:[..._loadDelIds()]};
-    if(!await _dbxUpload(dbxGetToken(),dbxHistFile(),JSON.stringify(toUpload,null,2)))throw new Error('기록 보관함 업로드에 실패했어요');
+    if(!await _dbxUpload(dbxGetToken(),dbxHistFile(),JSON.stringify(toUpload,null,2),8000))throw new Error('기록 보관함 업로드에 실패했어요');
     localStorage.setItem(DBX_H_LASTSYNC,new Date().toISOString());
     _hSyncState='';
     if(_histDrawerOpen){_refreshHistDrawer();}
     else{if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}}
   }catch(err){_hSyncState='error';_updateHSyncInfo();toast('동기화 실패: '+err.message,{type:'error'});}
   finally{
+    clearTimeout(_hSyncDelayTimer);_hSyncDelayTimer=null;
     _hSyncing=false;
-    if(_hSyncState==='syncing'){_hSyncState='error';_updateHSyncInfo();}
+    if(_hSyncState==='syncing'||_hSyncState==='delayed'){_hSyncState='error';_updateHSyncInfo();}
   }
 }
 
