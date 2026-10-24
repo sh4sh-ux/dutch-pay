@@ -871,6 +871,13 @@ svg{display:block;flex-shrink:0;}
 .hist-search{width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--sep2);border-radius:10px;background:var(--card);color:var(--label);outline:none;font-family:inherit;box-sizing:border-box;}
 .hist-search:focus{border-color:var(--blue);}
 .sync-info{font-size:12px;color:var(--label3);text-align:center;margin-top:14px;padding-bottom:4px;}
+.hist-dedup-note{display:flex;align-items:center;gap:10px;margin:10px 0 4px;padding:11px 12px;border:1px solid color-mix(in srgb,var(--blue) 28%,var(--sep));border-radius:11px;background:var(--blue-bg);color:var(--label2);font-size:12px;line-height:1.45;}
+.hist-dedup-note strong{color:var(--blue-txt);}
+.hist-dedup-copy{flex:1;min-width:0;}
+.hist-dedup-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto;}
+.hist-dedup-btn{border:0;background:transparent;color:var(--blue);font:inherit;font-size:12px;font-weight:700;padding:7px 8px;border-radius:8px;cursor:pointer;white-space:nowrap;}
+.hist-dedup-btn:hover{background:color-mix(in srgb,var(--blue) 10%,transparent);}
+.hist-dedup-btn.dismiss{color:var(--label3);}
 /* Dropbox panel */
 .dbx-panel{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;margin-bottom:16px;}
 .dbx-panel-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none;}
@@ -1380,7 +1387,7 @@ svg{display:block;flex-shrink:0;}
         <span class="foot-val" id="dTotal">0원</span>
       </div>
       <button class="reset-settle-btn" onclick="resetCurrentSettlement()">↺ 이번 정산 초기화</button>
-      <div id="dbxSyncBadge" style="font-size:11px;color:var(--label3);text-align:right;margin-top:5px;min-height:14px"></div>
+      <button id="dbxSyncBadge" type="button" aria-label="Dropbox 동기화 상태" onclick="retryMainSync()" style="display:block;width:100%;border:0;background:transparent;padding:0;font:inherit;font-size:11px;color:var(--label3);text-align:right;margin-top:5px;min-height:14px;white-space:nowrap;cursor:pointer"></button>
     </div>
   </div>
   <div class="right">
@@ -1475,8 +1482,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.42';
-const BUILD_TIME='2026-10-24 00:00';
+const APP_VERSION='v6.43';
+const BUILD_TIME='2026-10-24 11:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1933,7 +1940,7 @@ async function _dbxDownloadBlob(token,path){
 }
 function _blobToDataUrl(blob){return new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>res('');r.readAsDataURL(blob);});}
 function _dataUrlToBlob(d){try{const c=String(d).indexOf(',');const head=String(d).slice(0,c);const body=String(d).slice(c+1);const mime=(head.match(/data:([^;]+)/)||[])[1]||'image/jpeg';const bin=atob(body);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});}catch(e){return null;}}
-let _syncTimer=null,_syncing=false,_syncFromRunning=false,_syncPending=false,_lastFgSync=0,_attachInProgress=false;
+let _syncTimer=null,_syncing=false,_syncFromRunning=false,_syncPending=false,_lastFgSync=0,_attachInProgress=false,_mainSyncState='';
 function _scheduleSyncToDropbox(){
   if(!dbxGetToken())return;
   _syncPending=true;
@@ -1965,7 +1972,7 @@ try{
 }catch(e){}
 async function syncToDropbox(expectedRev=_dbxMainRev){
   if(_syncing||!dbxGetToken())return;
-  _syncing=true;
+  _syncing=true;_mainSyncState='syncing';_updateSyncBadge();
   try{
     syncCurrentToGroup();
     await _flushReceiptUploads();
@@ -1976,16 +1983,17 @@ async function syncToDropbox(expectedRev=_dbxMainRev){
       localStorage.setItem(DBX_LASTSYNC_MAIN,new Date().toISOString());
       const hashes={};groups.forEach(g=>{hashes[g.id]=_groupHash(g);});
       _saveSyncedHashes(hashes);
+      _mainSyncState='';
       _updateSyncBadge();
     }else if(result.conflict){
       // 다운로드와 업로드 사이 다른 기기가 저장했다. 무조건 덮어쓰지 말고 최신본을 다시 병합한다.
       setTimeout(()=>syncFromDropbox(),0);
-    }
-  }catch(e){}finally{_syncing=false;}
+    }else{_mainSyncState='error';_updateSyncBadge();}
+  }catch(e){_mainSyncState='error';_updateSyncBadge();}finally{_syncing=false;}
 }
 async function syncFromDropbox(){
   const token=dbxGetToken();if(!token)return;
-  if(_syncFromRunning)return;_syncFromRunning=true;
+  if(_syncFromRunning)return;_syncFromRunning=true;_mainSyncState='syncing';_updateSyncBadge();
   try{
     const downloaded=await _dbxDownloadMain(token);
     const remote=downloaded.data;
@@ -2026,16 +2034,17 @@ async function syncFromDropbox(){
     const filtered=mergedGroups.filter(g=>!mergedDeleted[g.id]);
 
     if(conflicts.length){
-      if(!await _autoBackup('Dropbox 충돌 감지'))return;
+      if(!await _autoBackup('Dropbox 충돌 감지')){_mainSyncState='error';_updateSyncBadge();return;}
+      _mainSyncState='';_updateSyncBadge();
       _showSyncConflictUI(conflicts,filtered,remote.currentGroupId,mergedDeleted);
       return;
     }
 
     const changed=JSON.stringify(filtered)!==JSON.stringify(groups)||JSON.stringify(mergedDeleted)!==JSON.stringify(deletedGroups);
-    if(changed&&!await _autoBackup('Dropbox 병합 전'))return;
+    if(changed&&!await _autoBackup('Dropbox 병합 전')){_mainSyncState='error';_updateSyncBadge();return;}
     await _applySyncMerge(filtered,remote.currentGroupId,mergedDeleted);
     if(changed)toast('Dropbox에서 최신 내용을 병합했어요',{type:'success'});
-  }catch(e){}finally{_syncFromRunning=false;}
+  }catch(e){_mainSyncState='error';_updateSyncBadge();}finally{_syncFromRunning=false;}
 }
 async function _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted){
   const repaired=_deduplicateReceiptGroups(mergedGroups,currentGroupId,mergedDeleted);
@@ -2092,11 +2101,20 @@ async function _scConfirm(){
   toast('병합 완료 — Dropbox에 업로드됐어요',{type:'success'});
 }
 
+function _relativeSyncLabel(iso){
+  const ms=Date.now()-new Date(iso).getTime();if(!Number.isFinite(ms))return'동기화됨';
+  const min=Math.max(0,Math.round(ms/60000));
+  if(min<1)return'방금 동기화';if(min<60)return`${min}분 전 동기화`;if(min<1440)return`${Math.round(min/60)}시간 전 동기화`;
+  return new Date(iso).toLocaleDateString('ko-KR',{month:'short',day:'numeric'})+' 동기화';
+}
+function retryMainSync(){if(!dbxGetToken())return;_mainSyncState='syncing';_updateSyncBadge();syncFromDropbox();}
 function _updateSyncBadge(){
   const el=document.getElementById('dbxSyncBadge');if(!el)return;
   const last=localStorage.getItem(DBX_LASTSYNC_MAIN);
   if(!last||!dbxGetToken()){el.textContent='';return;}
-  try{const d=new Date(last);el.textContent=`☁ Dropbox ${d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 동기화`;}catch(e){}
+  if(_mainSyncState==='syncing'){el.textContent='↻ 동기화 중…';el.style.color='var(--label3)';return;}
+  if(_mainSyncState==='error'){el.textContent='⚠ 동기화 실패 · 눌러서 재시도';el.style.color='var(--red)';return;}
+  try{el.textContent='● '+_relativeSyncLabel(last);el.style.color='var(--green)';}catch(e){}
 }
 
 function _persistMainState(){localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:new Date().toISOString(),groups,currentGroupId,deletedGroups}));}
@@ -2610,7 +2628,7 @@ function _refreshHistDrawer(){
   const recs=loadHistory();
   const cnt=document.getElementById('histDrCnt');if(cnt)cnt.textContent=recs.length?`${recs.length}건`:'';
   const content=document.getElementById('histDrContent');if(!content)return;
-  content.innerHTML=`<div class="sync-info" id="hSyncInfo"></div><div id="histDrList">${_histDrListHtml(recs)}</div>`;
+  content.innerHTML=`<div class="sync-info" id="hSyncInfo"></div>${_historyDedupNoticeHtml()}<div id="histDrList">${_histDrListHtml(recs)}</div>`;
   _updateHSyncInfo();
 }
 function _histMonthNavHtml(allRecs,dispRecs){
@@ -4159,6 +4177,7 @@ function _updateArchivedReceipts({preserveReceiptUrl=true}={}){
 
 // ── 기록 보관함 (SPA) ──
 const DBX_H_LASTSYNC='dutchpay_dbx_lastsync';
+const HISTORY_DEDUP_AUDIT_KEY='dutchpay_history_dedup_audit_v1';
 // 기록 보관함 파일 — 경로는 dbxHistFile()이 DBX_DIR 기준으로 만든다
 const svgArrowH='<svg width="13" height="13" viewBox="0 0 24 24"><line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M13 6 L22 12 L13 18 Z" fill="currentColor"/></svg>';
 
@@ -4225,6 +4244,41 @@ function _fixedArchiveFor(recordId){if(_loadFixedDeletedIds().has(String(recordI
 function _isHistoryFixed(recordId){return!!_fixedArchiveFor(recordId);}
 function _refreshHistoryLockSurfaces(){if(_histDrawerOpen){_refreshHistDrawer();return;}renderAll(true);}
 function _removeDelId(id){try{const s=_loadDelIds();s.delete(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
+function _loadHistoryDedupAudit(){try{const a=JSON.parse(localStorage.getItem(HISTORY_DEDUP_AUDIT_KEY)||'null');return a&&Array.isArray(a.removedRecords)&&a.removedRecords.length?a:null;}catch(e){return null;}}
+function _recordHistoryDedup(cleaned){
+  if(!cleaned||!cleaned.removedRecords?.length)return;
+  try{
+    const previous=_loadHistoryDedupAudit(),records=[...(previous?.removedRecords||[]),...cleaned.removedRecords],byId=new Map();
+    records.forEach(r=>{if(r&&r.id!=null)byId.set(String(r.id),JSON.parse(JSON.stringify(r)));});
+    const kept=[...(previous?.keptIds||[]),...(cleaned.keptIds||[])];
+    localStorage.setItem(HISTORY_DEDUP_AUDIT_KEY,JSON.stringify({at:new Date().toISOString(),removedRecords:[...byId.values()],keptIds:[...new Set(kept.map(String))]}));
+  }catch(e){}
+}
+function _historyDedupNoticeHtml(){
+  const a=_loadHistoryDedupAudit();if(!a)return'';
+  const n=a.removedRecords.length;
+  return`<div class="hist-dedup-note" role="status"><div class="hist-dedup-copy"><strong>중복 기록 ${n}건을 정리했어요.</strong><br>최신 기록만 유지했으며 필요하면 다시 복원할 수 있어요.</div><div class="hist-dedup-actions"><button class="hist-dedup-btn" onclick="restoreLastHistoryDedup()">되돌리기</button><button class="hist-dedup-btn dismiss" aria-label="중복 정리 알림 닫기" onclick="dismissHistoryDedupNotice()">닫기</button></div></div>`;
+}
+function _refreshHistoryAfterDedupAction(){
+  if(_histDrawerOpen){_refreshHistDrawer();return;}
+  if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
+  if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
+}
+function dismissHistoryDedupNotice(){localStorage.removeItem(HISTORY_DEDUP_AUDIT_KEY);_refreshHistoryAfterDedupAction();}
+function restoreLastHistoryDedup(){
+  const audit=_loadHistoryDedupAudit();if(!audit)return;
+  try{
+    const current=loadHistory(),ids=new Set(current.map(r=>String(r.id)));
+    const restored=audit.removedRecords.filter(r=>r&&r.id!=null&&!ids.has(String(r.id))).map(r=>({...r,dedupKeepSeparate:true}));
+    restored.forEach(r=>_removeDelId(String(r.id)));
+    const all=[...current,...restored].sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));
+    localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(all)));
+    localStorage.removeItem(HISTORY_DEDUP_AUDIT_KEY);
+    _refreshHistoryAfterDedupAction();
+    toast(restored.length?`중복 정리 전 기록 ${restored.length}건을 복원했어요`:'복원할 기록이 없어요',{type:restored.length?'success':'info',duration:4200});
+    if(restored.length&&hDbxGetToken())hSyncDropbox(true);
+  }catch(e){toast(_storageErrorMessage(e,'중복 기록 복원'),{type:'error',duration:5000});}
+}
 function _enforceFixedHistory(arr){
   const out=Array.isArray(arr)?[...arr]:[],byId=new Map(out.map((r,i)=>[r.id,i]));
   const applied=new Set();loadFixedArchives().forEach(f=>{if(applied.has(f.recordId))return;applied.add(f.recordId);const copy=JSON.parse(JSON.stringify(f.payload));const idx=byId.get(f.recordId);if(idx===undefined){byId.set(f.recordId,out.length);out.push(copy);}else{out[idx]=copy;}_removeDelId(f.recordId);});
@@ -4264,28 +4318,29 @@ function _mergeHistoryDuplicate(a,b){
   return{...loser,...winner,id:winner.id,sourceGroupId:winner.sourceGroupId||loser.sourceGroupId||'',items:_mergeHistoryReceiptDetails(loser.items,winner.items),payments:{...(loser.payments||{}),...(winner.payments||{})}};
 }
 function _dedupHistoryDetailed(arr){
-  const out=[],removedIds=[];
+  const out=[],removedIds=[],removedRecords=[],keptIds=[];
   (Array.isArray(arr)?arr:[]).forEach((r,idx)=>{
     if(!r)return;
     const rid=r.id==null?'':String(r.id),source=r.sourceGroupId?String(r.sourceGroupId):'';
     let match=rid?out.findIndex(x=>String(x.id)===rid):-1;
-    if(match<0&&source)match=out.findIndex(x=>String(x.sourceGroupId||'')===source);
+    if(match<0&&source&&!r.dedupKeepSeparate)match=out.findIndex(x=>!x.dedupKeepSeparate&&String(x.sourceGroupId||'')===source);
     // 과거 다중 기기 동기화는 같은 정산에도 서로 다른 sourceGroupId를 만들었다.
     // 원본 ID와 무관하게 완전한 정산 지문이 같으면 중복으로 정리한다.
-    if(match<0){const fp=_histFingerprint(r);match=out.findIndex(x=>_histFingerprint(x)===fp);}
+    if(match<0&&!r.dedupKeepSeparate){const fp=_histFingerprint(r);match=out.findIndex(x=>!x.dedupKeepSeparate&&_histFingerprint(x)===fp);}
     if(match<0){out.push(r);return;}
     const ex=out[match],sameId=rid&&String(ex.id)===rid;
     // 서로 다른 잠금 원본은 자동 삭제하지 않는다.
     if(!sameId&&_isHistoryFixed(ex.id)&&_isHistoryFixed(r.id)){out.push(r);return;}
     const merged=_mergeHistoryDuplicate(ex,r);out[match]=merged;
-    const removed=merged.id===ex.id?r.id:ex.id;
-    if(!sameId&&removed!=null&&!_isHistoryFixed(removed))removedIds.push(String(removed));
+    const removedRecord=merged.id===ex.id?r:ex,removed=removedRecord&&removedRecord.id;
+    if(!sameId&&removed!=null&&!_isHistoryFixed(removed)){removedIds.push(String(removed));removedRecords.push(removedRecord);keptIds.push(String(merged.id));}
   });
-  return{records:out.sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||'')),removedIds:[...new Set(removedIds)]};
+  const unique=[];const seen=new Set();removedRecords.forEach(r=>{const id=String(r.id);if(!seen.has(id)){seen.add(id);unique.push(r);}});
+  return{records:out.sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||'')),removedIds:[...new Set(removedIds)],removedRecords:unique,keptIds:[...new Set(keptIds)]};
 }
 function _dedupHistory(arr){return _dedupHistoryDetailed(arr).records;}
-function saveHistory(arr){try{const cleaned=_dedupHistoryDetailed(arr);cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));return true;}catch(e){toast(_storageErrorMessage(e,'기록 저장'),{type:'error',duration:5000});return false;}}
-function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const cleaned=_dedupHistoryDetailed(arr),removed=arr.length-cleaned.records.length;if(removed>0){cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));setTimeout(()=>toast(`중복 기록 ${removed}건을 하나로 정리했어요`,{type:'success',duration:4200}),400);}}catch(e){}}
+function saveHistory(arr){try{const cleaned=_dedupHistoryDetailed(arr);_recordHistoryDedup(cleaned);cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));return true;}catch(e){toast(_storageErrorMessage(e,'기록 저장'),{type:'error',duration:5000});return false;}}
+function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const cleaned=_dedupHistoryDetailed(arr),removed=arr.length-cleaned.records.length;if(removed>0){_recordHistoryDedup(cleaned);cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));setTimeout(()=>toast(`중복 기록 ${removed}건을 하나로 정리했어요`,{type:'success',duration:4200}),400);}}catch(e){}}
 function _migrateHistoryGroupNames(){try{const arr=loadHistory();let changed=false;arr.forEach(r=>{const correct=(r.people||[]).join(', ');if(correct&&r.groupName!==correct){r.groupName=correct;changed=true;}});if(changed)saveHistory(arr);}catch(e){}}
 
 async function deleteHistoryRecord(id,event){
@@ -4434,7 +4489,7 @@ function _buildRecordCardHtml(r){
 
 function _buildHistoryInnerHtml(){
   const records=loadHistory();
-  let html=`<div class="sync-info" id="hSyncInfo"></div>`;
+  let html=`<div class="sync-info" id="hSyncInfo"></div>${_historyDedupNoticeHtml()}`;
   if(!records.length){
     html+=`<div class="empty" style="padding:60px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>⋯ 메뉴에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
   }else{
@@ -4553,9 +4608,11 @@ function _updateHDbxBadge(){
 
 function _updateHSyncInfo(){
   const el=document.getElementById('hSyncInfo');if(!el)return;
+  if(_hSyncState==='syncing'){el.textContent='↻ 동기화 중…';el.style.color='var(--label3)';return;}
+  if(_hSyncState==='error'){el.textContent='⚠ 동기화 실패 · 아래 Dropbox에서 다시 시도해주세요';el.style.color='var(--red)';return;}
   const last=localStorage.getItem(DBX_H_LASTSYNC);
   if(!last){el.textContent='';return;}
-  try{const d=new Date(last);el.textContent=`마지막 동기화 ${d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}`;}catch(e2){}
+  try{el.textContent='● '+_relativeSyncLabel(last);el.style.color='var(--green)';}catch(e2){}
 }
 
 let _hPanelOpen=false;
@@ -4649,7 +4706,7 @@ function hDbxDisconnect(){
   if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
 }
 
-let _hSyncing=false;
+let _hSyncing=false,_hSyncState='';
 async function _syncFixedArchives(token){
   let candidates=[];try{candidates=[...await _ensureFixedArchives()];}catch(e){}
   const remoteDeleted=await _dbxDownload(token,dbxFixedDeletedFile());
@@ -4672,7 +4729,7 @@ async function _syncFixedArchives(token){
 }
 async function hSyncDropbox(uploadOnly=false){
   const token=hDbxGetToken();if(!token)return;
-  if(_hSyncing)return;_hSyncing=true;
+  if(_hSyncing)return;_hSyncing=true;_hSyncState='syncing';_updateHSyncInfo();
   try{
     await _syncFixedArchives(token);
     const local=loadHistory();
@@ -4690,9 +4747,10 @@ async function hSyncDropbox(uploadOnly=false){
     const toUpload={records:loadHistory(),deletedIds:[..._loadDelIds()]};
     await _dbxUpload(dbxGetToken(),dbxHistFile(),JSON.stringify(toUpload,null,2));
     localStorage.setItem(DBX_H_LASTSYNC,new Date().toISOString());
+    _hSyncState='';
     if(_histDrawerOpen){_refreshHistDrawer();}
     else{if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}}
-  }catch(err){toast('동기화 실패: '+err.message,{type:'error'});}
+  }catch(err){_hSyncState='error';_updateHSyncInfo();toast('동기화 실패: '+err.message,{type:'error'});}
   finally{_hSyncing=false;}
 }
 
