@@ -1482,8 +1482,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.43';
-const BUILD_TIME='2026-10-24 11:30';
+const APP_VERSION='v6.44';
+const BUILD_TIME='2026-10-24 11:55';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1854,8 +1854,14 @@ const dbxSettleDir=()=>DBX_DIR+'/정산내역';
 const dbxDetailDir=()=>DBX_DIR+'/상세내역';
 
 /* 저장 위치 확인·이전 — 부팅 때 한 번. 원본은 그대로 두고 복사만 한다. */
+async function _dbxFetch(url,options={},timeoutMs=20000){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
+  try{return await fetch(url,{...options,signal:controller.signal});}
+  catch(error){if(error?.name==='AbortError')throw new Error('Dropbox 응답 시간이 초과됐어요');throw error;}
+  finally{clearTimeout(timer);}
+}
 async function _dbxRpc(token,ep,body){
-  return fetch('https://api.dropboxapi.com/2/'+ep,{method:'POST',
+  return _dbxFetch('https://api.dropboxapi.com/2/'+ep,{method:'POST',
     headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
     body:JSON.stringify(body)});   // 본문은 UTF-8 — 한글 그대로 보내도 된다 (헤더만 ASCII 제약)
 }
@@ -1894,17 +1900,17 @@ async function _dbxRefreshToken(){
   const refresh=localStorage.getItem('dutchpay_dbx_refresh');
   const appKey=localStorage.getItem('dutchpay_dbx_appkey');
   if(!refresh||!appKey)return null;
-  try{const res=await fetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh,client_id:appKey})});const data=await res.json();if(data.access_token){localStorage.setItem('dutchpay_dbx_token',data.access_token);return data.access_token;}return null;}catch(e){return null;}
+  try{const res=await _dbxFetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh,client_id:appKey})});const data=await res.json();if(data.access_token){localStorage.setItem('dutchpay_dbx_token',data.access_token);return data.access_token;}return null;}catch(e){return null;}
 }
 async function _dbxUpload(token,path,content){
   const arg=JSON.stringify({path,mode:'overwrite',autorename:false,mute:true}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
-  const res=await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':arg},body:content});
+  const res=await _dbxFetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':arg},body:content});
   if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxUpload(t,path,content);}
   return res.ok;
 }
 async function _dbxDownload(token,path){
   const arg=JSON.stringify({path}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
-  const res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
+  const res=await _dbxFetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
   if(res.status===409)return null;if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownload(t,path);return null;}if(!res.ok)return null;
   try{return JSON.parse(await res.text());}catch(e){return null;}
 }
@@ -1912,7 +1918,7 @@ let _dbxMainRev='';
 async function _dbxDownloadMain(token){
   const path=dbxMainFile();
   const arg=JSON.stringify({path}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
-  const res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
+  const res=await _dbxFetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
   if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownloadMain(t);return{data:null,rev:''};}
   if(res.status===409)return{data:null,rev:''};
   if(!res.ok)throw new Error(`Dropbox download ${res.status}`);
@@ -1923,7 +1929,7 @@ async function _dbxDownloadMain(token){
 async function _dbxUploadMain(token,content,expectedRev){
   const mode=expectedRev?{'.tag':'update',update:expectedRev}:'add';
   const arg=JSON.stringify({path:dbxMainFile(),mode,autorename:false,mute:true}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
-  const res=await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':arg},body:content});
+  const res=await _dbxFetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':arg},body:content});
   if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxUploadMain(t,content,expectedRev);return{ok:false,conflict:false,rev:''};}
   if(res.status===409)return{ok:false,conflict:true,rev:''};
   if(!res.ok)return{ok:false,conflict:false,rev:''};
@@ -1933,7 +1939,7 @@ async function _dbxUploadMain(token,content,expectedRev){
 // 이미지 등 바이너리 파일을 Blob으로 다운로드 (영수증 사진 다른 기기 복원용, v5.60)
 async function _dbxDownloadBlob(token,path){
   const arg=JSON.stringify({path}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
-  const res=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
+  const res=await _dbxFetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
   if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxDownloadBlob(t,path);return null;}
   if(!res.ok)return null;
   try{return await res.blob();}catch(e){return null;}
@@ -2044,7 +2050,11 @@ async function syncFromDropbox(){
     if(changed&&!await _autoBackup('Dropbox 병합 전')){_mainSyncState='error';_updateSyncBadge();return;}
     await _applySyncMerge(filtered,remote.currentGroupId,mergedDeleted);
     if(changed)toast('Dropbox에서 최신 내용을 병합했어요',{type:'success'});
-  }catch(e){_mainSyncState='error';_updateSyncBadge();}finally{_syncFromRunning=false;}
+  }catch(e){_mainSyncState='error';_updateSyncBadge();}finally{
+    _syncFromRunning=false;
+    // 겹쳐 시작된 업로드가 이미 끝났는데 pull 쪽의 '동기화 중' 상태만 남는 경쟁 조건 방지.
+    if(_mainSyncState==='syncing'&&!_syncing){_mainSyncState='';_updateSyncBadge();}
+  }
 }
 async function _applySyncMerge(mergedGroups,remoteCurrentId,mergedDeleted){
   const repaired=_deduplicateReceiptGroups(mergedGroups,currentGroupId,mergedDeleted);
@@ -4745,13 +4755,16 @@ async function hSyncDropbox(uploadOnly=false){
       }
     }
     const toUpload={records:loadHistory(),deletedIds:[..._loadDelIds()]};
-    await _dbxUpload(dbxGetToken(),dbxHistFile(),JSON.stringify(toUpload,null,2));
+    if(!await _dbxUpload(dbxGetToken(),dbxHistFile(),JSON.stringify(toUpload,null,2)))throw new Error('기록 보관함 업로드에 실패했어요');
     localStorage.setItem(DBX_H_LASTSYNC,new Date().toISOString());
     _hSyncState='';
     if(_histDrawerOpen){_refreshHistDrawer();}
     else{if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}}
   }catch(err){_hSyncState='error';_updateHSyncInfo();toast('동기화 실패: '+err.message,{type:'error'});}
-  finally{_hSyncing=false;}
+  finally{
+    _hSyncing=false;
+    if(_hSyncState==='syncing'){_hSyncState='error';_updateHSyncInfo();}
+  }
 }
 
 async function _hSha256b64url(str){const data=new TextEncoder().encode(str);const hash=await crypto.subtle.digest('SHA-256',data);return btoa(String.fromCharCode(...new Uint8Array(hash))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
