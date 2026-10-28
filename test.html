@@ -632,6 +632,14 @@ suite('TC14: 데이터 무결성 안전장치 [v6.43 회귀]', () => {
     const attr=host.querySelector('.rc-load-btn').getAttribute('onclick')||'';
     if(!attr.includes("h\\'O"))throw new Error('이벤트 ID 이스케이프 누락: '+attr);
   });
+  test('기록 이미지 버튼은 공유가 아닌 전용 뷰어를 연다', () => {
+    const rec={...JSON.parse(JSON.stringify(base)),id:'preview-only',savedAt:'2026-09-05T02:00:00Z',txns:[],total:30000};
+    const host=APP.document.createElement('div');host.innerHTML=APP._buildRecordCardHtml(rec);
+    const action=host.querySelector('.rc-load-btn').getAttribute('onclick')||'';
+    if(!action.includes('viewHistoryImage')||action.includes('shareHistoryImage'))throw new Error('이미지 버튼이 미리보기 전용이 아님: '+action);
+    const source=String(APP.viewHistoryImage);
+    if(source.includes('navigator.share')||source.includes('.download'))throw new Error('기록 이미지 뷰어에 공유 또는 다운로드 동작이 남아 있음');
+  });
   test('삭제 실패한 사진 키를 재시도용으로 보존', () => {
     const key='test_delete_receipt';APP._markReceiptDeletePending(key);
     if(!APP._pendingReceiptDeletes().has(key))throw new Error('삭제 대기 키가 저장되지 않음');
@@ -920,9 +928,9 @@ suite('TC24: 모바일 입금 행 줄바꿈 [v6.51]', () => {
 suite('TC25: 알림이 하단 버튼을 가리지 않음 [v6.52]', () => {
   test('모든 토스트는 상단에 표시되고 메시지 영역은 터치를 통과', () => {
     const h=APP.toast('위치 검사',{action:()=>{},actionLabel:'확인',duration:10000});
-    const container=APP.document.querySelector('.toast-container'),item=container?.querySelector('.toast'),action=item?.querySelector('.toast-action');
+    const container=APP.document.querySelector('.toast-container'),action=container?.querySelector('.toast-action'),item=action?.closest('.toast');
     if(!container||!item||!action)throw new Error('검사용 토스트 생성 실패');
-    expect(APP.getComputedStyle(container).bottom).toBe('auto');
+    if(container.getBoundingClientRect().top>80)throw new Error('토스트가 화면 상단이 아님');
     expect(APP.getComputedStyle(item).pointerEvents).toBe('none');
     expect(APP.getComputedStyle(action).pointerEvents).toBe('auto');
     h.dismiss();
