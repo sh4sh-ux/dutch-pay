@@ -493,12 +493,6 @@ svg{display:block;flex-shrink:0;}
 .reset-settle-btn:hover{color:var(--red);}
 .mob-reset-btn{background:none;border:none;font-size:12px;color:var(--label3);cursor:pointer;font-family:inherit;padding:10px 16px 14px;text-align:center;width:100%;display:block;}
 .mob-reset-btn:hover{color:var(--red);}
-  
-/* v4.54 tighten actual second date child only */
-@media(max-width:700px){
-  .share-date-row > .share-date-dp:nth-child(3){transform:translateY(-8px);}
-  .share-date-row > .share-date-rm:nth-child(4){transform:translateY(-17px);}
-}
 .rc-txn-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;flex-wrap:wrap;}
 .pm-allrec-card{cursor:pointer;user-select:none;}
 .pm-allrec-card.open{border-radius:12px 12px 0 0;margin-bottom:0;}
@@ -739,13 +733,6 @@ svg{display:block;flex-shrink:0;}
 .share-date-rm:hover{background:var(--red-bg);color:var(--red);}
 .share-date-sep svg{width:13px;height:13px;display:block;overflow:visible;}
 .share-date-rm svg{width:14px;height:14px;display:block;overflow:visible;}
-@media(max-width:700px){.share-date-sep,.share-date-rm,.share-date-add{transform:translateY(-10px);}}
-@media(min-width:701px){
-  .share-date-row > .share-date-sep:nth-child(2),
-  .share-date-row > .share-date-add:nth-child(2){transform:translateY(-10px);}
-  .share-date-row > .share-date-dp:nth-child(3){transform:translateY(-8px);}
-  .share-date-row > .share-date-rm:nth-child(4){transform:translateY(-17px);}
-}
 .share-actions{margin-top:20px;position:sticky;bottom:0;padding:14px 0 4px;background:var(--panel-bg);z-index:20;}
 .right-body.settle-mode .share-actions{margin-right:calc(var(--share-inline-pad,34px) * -1);margin-bottom:calc(var(--share-bottom-pad,26px) * -1);margin-left:calc(var(--share-inline-pad,34px) * -1);padding:14px var(--share-inline-pad,34px) 16px;border-top:1px solid var(--sep);box-shadow:0 -12px 28px rgba(20,25,40,.08);}
 @media(max-width:700px){
@@ -980,6 +967,9 @@ svg{display:block;flex-shrink:0;}
 .dp-wrap.pay-date-wrap{width:auto;flex:1;}
 .dp-ph{color:var(--label3);}
 .dp-inp{position:absolute;inset:0;z-index:1;width:100%;height:100%;opacity:0;cursor:pointer;border:none;font-size:16px;}
+/* 오버레이 날짜 input은 항상 absolute여야 함 — 일반 input[type=date] 규칙(position:relative)이
+   .dp-inp를 이기면 in-flow로 떠서 래퍼 높이가 부풀고(36→58px) 기간 행 정렬이 깨진다 */
+.dp-wrap .dp-inp{position:absolute;}
 .dtp-wrap{display:flex;align-items:center;min-width:0;height:34px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);box-sizing:border-box;transition:border-color .15s,box-shadow .15s;}
 .dtp-wrap:focus-within,.dtp-wrap.dp-open,.dtp-wrap.dtp-time-open{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);z-index:221;}
 .dtp-date,.dtp-time{position:relative;display:flex;align-items:center;height:100%;box-sizing:border-box;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;}
@@ -1533,8 +1523,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.53';
-const BUILD_TIME='2026-10-28 18:55';
+const APP_VERSION='v6.54';
+const BUILD_TIME='2026-10-28 20:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
