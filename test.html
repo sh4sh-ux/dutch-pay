@@ -888,6 +888,19 @@ suite('TC22: 입금 기록·잠금 상태 일치 [v6.48]', () => {
   });
 });
 
+suite('TC23: 입금 달력 팝업 레이아웃 [v6.49]', () => {
+  test('데스크탑 달력은 편집 행 전체가 아닌 360px 이하 고정 폭', () => {
+    const card=APP.document.createElement('div');card.className='txn-card';card.style.width='1000px';
+    card.innerHTML=`<div class="txn-item"><div class="pay-panel">${APP._dtpHtml('2026-10-28T11:11','','pay-date-wrap')}</div></div>`;
+    APP.document.body.appendChild(card);APP._dpOpen(card.querySelector('.dtp-date-inp'));
+    const pop=card.querySelector('.dp-pop');if(!pop)throw new Error('달력이 열리지 않음');
+    const width=parseFloat(APP.getComputedStyle(pop).width);if(width>361)throw new Error('달력 너비가 '+width+'px로 확장됨');
+    expect(APP.getComputedStyle(card).overflow).toBe('visible');
+    expect(pop.querySelectorAll('.dp-pop-day').length).toBe(31);
+    APP._dpClose(false);card.remove();
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────
