@@ -971,7 +971,10 @@ svg{display:block;flex-shrink:0;}
 .dtp-date.dp-ph,.dtp-time.dp-ph{color:var(--label3);}
 .dtp-time::before{content:'';width:1px;height:16px;margin-right:10px;background:var(--sep);}
 .dtp-date>.dtp-part-inp,.dtp-time>.dtp-part-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
-.dtp-wrap>.dp-pop{top:calc(100% + 8px);}
+.dtp-wrap>.dp-pop,.dtp-wrap>.time-pop{top:calc(100% + 8px);right:auto;width:min(360px,calc(100vw - 48px));}
+/* 입금 편집 카드는 평소 라운드를 위해 overflow:hidden을 쓰지만 달력까지 잘라서는 안 된다. */
+.txn-card:has(.dtp-wrap.dp-open),.txn-card:has(.dtp-wrap.dtp-time-open){overflow:visible;}
+.txn-item:has(.dtp-wrap.dp-open),.txn-item:has(.dtp-wrap.dtp-time-open),.pay-panel:has(.dtp-wrap.dp-open),.pay-panel:has(.dtp-wrap.dtp-time-open){position:relative;z-index:223;}
 .time-pop{position:absolute;z-index:222;top:calc(100% + 8px);left:-1px;right:-1px;padding:14px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.16);cursor:default;box-sizing:border-box;}
 .time-pop.up{top:auto;bottom:calc(100% + 8px);}
 .time-pop-head{display:flex;align-items:center;justify-content:center;min-height:40px;margin:-14px -14px 10px;padding:3px 12px;border-bottom:1px solid var(--sep);}
@@ -1515,8 +1518,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.48';
-const BUILD_TIME='2026-10-28 17:30';
+const APP_VERSION='v6.49';
+const BUILD_TIME='2026-10-28 17:55';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
