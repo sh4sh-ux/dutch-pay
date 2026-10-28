@@ -868,6 +868,26 @@ suite('TC21: 입금일시 앱 내부 선택기 [v6.47]', () => {
   });
 });
 
+suite('TC22: 입금 기록·잠금 상태 일치 [v6.48]', () => {
+  test('초과 입금 표시에는 실수령액·일시·금융기관이 모두 포함됨', () => {
+    const d=APP._paymentDisplay({done:true,amount:260000,timestamp:'2026-10-28T11:11',account:'우리은행'},246500);
+    expect(d.diff).toBe(13500);
+    expect(d.status).toBe('+13,500원 초과');
+    expect(d.metaText).toBe('실수령 260,000원 · 2026.10.28 11:11 · 우리은행');
+  });
+  test('입금 완료 행은 공통 배지에 초과액과 입금 메타정보를 함께 표시', () => {
+    const html=APP._paymentBadgeHtml({done:true,amount:260000,timestamp:'2026-10-28T11:11',account:'우리은행'},246500);
+    ['+13,500원 초과','실수령 260,000원','2026.10.28 11:11','우리은행'].forEach(v=>{if(!html.includes(v))throw new Error(v+' 누락');});
+  });
+  test('잠긴 원본과 변경본은 서로 다른 기록 ID로 보존', () => {
+    const src=APP.saveToHistory.toString();
+    ['hv_','dedupKeepSeparate','previousRecordId'].forEach(v=>{if(!src.includes(v))throw new Error('잠금 버전 분리 로직 누락: '+v);});
+  });
+  test('현재 입금 변경은 보관 기록 동기화 경로를 호출', () => {
+    ['pmToggleDone','pmUpdateAmt','pmUpdate'].forEach(name=>{if(!APP[name].toString().includes('_syncCurrentPaymentsToHistory'))throw new Error(name+' 동기화 누락');});
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────
