@@ -910,6 +910,13 @@ suite('TC23: 입금 달력·시간 팝업 레이아웃 [v6.50]', () => {
   });
 });
 
+suite('TC24: 모바일 입금 행 줄바꿈 [v6.51]', () => {
+  test('이름·금액·메타정보가 서로 다른 그리드 영역을 사용', () => {
+    const css=[...APP.document.styleSheets].flatMap(sheet=>{try{return[...sheet.cssRules].map(rule=>rule.cssText);}catch(e){return[];}}).join('\n');
+    ['.pm-card .txn-row.expandable','.pm-card .txn-pmeta','grid-template-columns','white-space: nowrap'].forEach(v=>{if(!css.includes(v))throw new Error('모바일 입금 행 규칙 누락: '+v);});
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────
