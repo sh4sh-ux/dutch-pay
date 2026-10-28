@@ -834,6 +834,40 @@ suite('TC20: 영수증 DB 전송 중복 방지 [v6.40]', () => {
   });
 });
 
+suite('TC21: 입금일시 앱 내부 선택기 [v6.47]', () => {
+  const mount = iso => {
+    const host=APP.document.createElement('div');
+    host.innerHTML=APP._dtpHtml(iso,'','pay-date-wrap');
+    APP.document.body.appendChild(host);
+    return host;
+  };
+  test('브라우저 datetime-local 없이 날짜·시간을 분리 표시', () => {
+    const host=mount('2026-10-28T11:42');
+    if(host.querySelector('input[type="datetime-local"]'))throw new Error('브라우저 기본 datetime-local이 남아 있음');
+    expect(host.querySelector('.dtp-date span').textContent).toBe('2026.10.28');
+    expect(host.querySelector('.dtp-time span').textContent).toBe('11:42');
+    expect(host.querySelector('.dtp-value').value).toBe('2026-10-28T11:42');
+    host.remove();
+  });
+  test('날짜와 시간을 바꾸면 기존 저장 형식으로 결합', () => {
+    const host=mount('');
+    const date=host.querySelector('.dtp-date-inp'),time=host.querySelector('.dtp-time-inp');
+    date.value='2026-10-28';APP._dtpPartsChanged(date);
+    time.value='19:05';APP._dtpPartsChanged(time);
+    expect(host.querySelector('.dtp-value').value).toBe('2026-10-28T19:05');
+    host.remove();
+  });
+  test('시간을 누르면 24시간 앱 선택기가 열림', () => {
+    const host=mount('2026-10-28T11:42'),time=host.querySelector('.dtp-time-inp');
+    APP._dtpTimeOpen(time);
+    const pop=APP.document.querySelector('.time-pop');
+    if(!pop)throw new Error('시간 선택기가 열리지 않음');
+    expect(pop.querySelectorAll('[data-time-hour]').length).toBe(24);
+    expect(pop.querySelectorAll('[data-time-minute]').length).toBe(60);
+    APP._dtpTimeClose(false);host.remove();
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────

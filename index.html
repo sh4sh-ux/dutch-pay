@@ -335,8 +335,6 @@ svg{display:block;flex-shrink:0;}
 .pay-toggle-lbl.on{color:var(--green);font-weight:600;}
 .pay-inp{flex:1;border:1px solid var(--sep2);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;color:var(--label);background:var(--card);outline:none;min-width:0;text-align:left;}
 .pay-inp:focus{border-color:var(--blue);}
-.pay-inp[type="datetime-local"]::-webkit-date-and-time-value{text-align:left;}
-.pay-inp[type="datetime-local"]::-webkit-datetime-edit{text-align:left;padding:0;}
 .pay-inp.err{border-color:var(--red);}
 .pay-unit{font-size:13px;color:var(--label3);flex-shrink:0;}
 .pay-diff-badge{font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px;flex-shrink:0;white-space:nowrap;}
@@ -965,6 +963,36 @@ svg{display:block;flex-shrink:0;}
 .dp-wrap.pay-date-wrap{width:auto;flex:1;}
 .dp-ph{color:var(--label3);}
 .dp-inp{position:absolute;inset:0;z-index:1;width:100%;height:100%;opacity:0;cursor:pointer;border:none;font-size:16px;}
+.dtp-wrap{display:flex;align-items:center;min-width:0;height:34px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);box-sizing:border-box;transition:border-color .15s,box-shadow .15s;}
+.dtp-wrap:focus-within,.dtp-wrap.dp-open,.dtp-wrap.dtp-time-open{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);z-index:221;}
+.dtp-date,.dtp-time{position:relative;display:flex;align-items:center;height:100%;box-sizing:border-box;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.dtp-date{flex:1 1 auto;min-width:0;padding:0 10px;color:var(--label);font-size:13px;}
+.dtp-time{flex:0 0 auto;padding:0 10px;color:var(--label2);font-size:13px;}
+.dtp-date.dp-ph,.dtp-time.dp-ph{color:var(--label3);}
+.dtp-time::before{content:'';width:1px;height:16px;margin-right:10px;background:var(--sep);}
+.dtp-date>.dtp-part-inp,.dtp-time>.dtp-part-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
+.dtp-wrap>.dp-pop{top:calc(100% + 8px);}
+.time-pop{position:absolute;z-index:222;top:calc(100% + 8px);left:-1px;right:-1px;padding:14px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.16);cursor:default;box-sizing:border-box;}
+.time-pop.up{top:auto;bottom:calc(100% + 8px);}
+.time-pop-head{display:flex;align-items:center;justify-content:center;min-height:40px;margin:-14px -14px 10px;padding:3px 12px;border-bottom:1px solid var(--sep);}
+.time-pop-title{font-size:13px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
+.time-pop-fields{display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:start;gap:12px;padding:2px 4px 0;}
+.time-pop-field{display:flex;min-width:0;flex-direction:column;gap:2px;font-size:11px;font-weight:600;color:var(--label3);}
+.time-pop-field>span{padding:0 8px 5px;}
+.time-pop-list{height:216px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;user-select:none;-webkit-user-select:none;padding:0 4px;scrollbar-width:none;}
+.time-pop-list::-webkit-scrollbar{display:none;}
+.time-pop-option{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:36px;border:0;border-radius:8px;background:transparent;color:var(--label);font:inherit;font-size:14px;font-weight:400;font-variant-numeric:tabular-nums;cursor:pointer;}
+.time-pop-option:hover{background:var(--fill);}
+.time-pop-option.on{background:var(--blue-bg);color:var(--blue);font-weight:600;}
+.time-pop-option[data-time-minute].on{background:transparent;}
+.time-pop-option[data-time-minute].on::after{content:'✓';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--blue);font-weight:750;}
+.time-pop-option:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
+.time-pop-colon{align-self:stretch;position:relative;width:1px;margin-top:22px;background:var(--sep);}
+.time-pop-colon::after{content:':';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:4px;background:var(--card);color:var(--label3);font-size:14px;font-weight:700;}
+.time-pop-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:12px;}
+.time-pop-btn{height:34px;padding:0 3px;border:0;border-radius:8px;background:transparent;color:var(--label2);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;}
+.time-pop-btn:hover{background:var(--fill);color:var(--label);}
+.time-pop-btn.done{background:var(--blue);color:#fff;}
 .dp-pop{position:absolute;z-index:220;top:calc(100% + 8px);left:-1px;right:-1px;padding:0 10px 10px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.16);cursor:default;box-sizing:border-box;}
 .dp-pop.up{top:auto;bottom:calc(100% + 8px);}
 .dp-pop-head{display:grid;grid-template-columns:34px 1fr 34px;align-items:center;margin:0 -10px 7px;padding:7px 8px;border-bottom:1px solid var(--sep);}
@@ -999,6 +1027,10 @@ svg{display:block;flex-shrink:0;}
   .dp-pop.mobile{position:fixed;z-index:651;top:50%;right:16px;bottom:auto;left:16px;width:auto;max-width:420px;margin:0 auto;transform:translateY(-50%);}
   .dp-pop.mobile.up{top:50%;bottom:auto;}
   .dp-pop-backdrop{position:fixed;z-index:650;inset:0;background:rgba(0,0,0,.42);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
+  .dtp-part-inp{pointer-events:none;}
+  .time-pop.mobile{position:fixed;z-index:651;top:50%;right:16px;bottom:auto;left:16px;width:auto;max-width:420px;margin:0 auto;transform:translateY(-50%);}
+  .time-pop.mobile.up{top:50%;bottom:auto;}
+  .time-pop-backdrop{position:fixed;z-index:650;inset:0;background:rgba(0,0,0,.42);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
 }
 /* ── 모바일 FAB ── */
 .mob-fab{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;border:none;border-radius:28px;padding:14px 28px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;box-shadow:0 4px 20px rgba(67,85,232,.35);z-index:50;white-space:nowrap;display:none;transition:opacity .15s;}
@@ -1483,8 +1515,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.46';
-const BUILD_TIME='2026-10-28 10:30';
+const APP_VERSION='v6.47';
+const BUILD_TIME='2026-10-28 11:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2365,7 +2397,7 @@ function _dpIso(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).p
 function _dpOpen(inp){
   if(!inp||!inp.hasAttribute('data-app-date')||inp.disabled||inp.readOnly)return;
   if(_dpPicker&&_dpPicker.inp===inp){_dpClose(true);return;}
-  _dpClose();if(typeof _dismissPops==='function')_dismissPops();
+  _dpClose();_dtpTimeClose(false);if(typeof _dismissPops==='function')_dismissPops();
   const wrap=inp.closest('.dp-wrap');if(!wrap)return;
   const now=new Date(),match=String(inp.value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
   const picked=match?new Date(+match[1],+match[2]-1,+match[3]):now;
@@ -2425,13 +2457,33 @@ document.addEventListener('keydown',event=>{
   const inp=event.target;if(!inp?.hasAttribute?.('data-app-date')||!inp.classList.contains('dp-inp'))return;
   if(event.key==='Enter'||event.key===' '||event.key==='ArrowDown'){event.preventDefault();_dpOpen(inp);}
 },true);
-addEventListener('resize',()=>_dpClose(false));
+addEventListener('resize',()=>{_dpClose(false);_dtpTimeClose(false);});
 function _dpUpdate(dispId,iso){const el=document.getElementById(dispId);if(el)el.textContent=fmtDate(iso);}
 function _dpHtml(iso,onChangeCode,wrapCls,minVal){const fa=ea(iso||''),type=_dpDesktopMq.matches?'date':'hidden';const min=minVal?` min="${ea(minVal)}"`:'' ;return `<div class="dp-wrap${wrapCls?' '+wrapCls:''}" onclick="_dpPick(this)"><div class="dp-txt">${e(fmtDate(iso||''))}</div><input type="${type}" class="dp-inp" data-app-date value="${fa}"${min} aria-label="날짜" onclick="_dpInputClick(this,event)" onchange="${onChangeCode};_dpSync(this)"/></div>`;}
 function _dtpFmt(iso){if(!iso)return'';const[d,t]=(iso||'').split('T');if(!d)return'';const[y,m,day]=d.split('-');const time=t?t.slice(0,5):'';return`${y}.${m}.${day}${time?' '+time:''}`;}
-function _dtpSync(inp){const txt=inp.previousElementSibling;if(!txt||!txt.classList.contains('dp-txt'))return;const v=inp.value;txt.textContent=v?_dtpFmt(v):'날짜·시간 선택';txt.classList.toggle('dp-ph',!v);}
-function _dtpRowConfirm(btn,fn){const inp=btn.closest('.pay-panel-row').querySelector('.dp-inp');if(inp&&inp.value)fn(inp.value);}
-function _dtpHtml(iso,onChangeCode,wrapCls){const fa=ea(iso||'');const disp=iso?_dtpFmt(iso):'날짜·시간 선택';const ph=!iso;const onch=onChangeCode?`${onChangeCode};_dtpSync(this)`:`_dtpSync(this)`;return`<div class="dp-wrap${wrapCls?' '+wrapCls:''}" onclick="_dpPick(this)"><div class="dp-txt${ph?' dp-ph':''}">${e(disp)}</div><input type="datetime-local" class="dp-inp" value="${fa}" onclick="event.stopPropagation();try{this.showPicker();}catch(e){this.focus();}" onchange="${onch}"/></div>`;}
+function _dtpParts(iso){const m=String(iso||'').match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);return m?{date:m[1],time:m[2]}:{date:'',time:''};}
+function _dtpSync(root){if(!root)return;const value=root.querySelector('.dtp-value')?.value||'',parts=_dtpParts(value),date=root.querySelector('.dtp-date'),time=root.querySelector('.dtp-time'),dateInp=root.querySelector('.dtp-date-inp'),timeInp=root.querySelector('.dtp-time-inp');if(dateInp&&dateInp.value!==parts.date)dateInp.value=parts.date;if(timeInp&&timeInp.value!==parts.time)timeInp.value=parts.time;if(date){date.querySelector('span').textContent=parts.date?fmtDate(parts.date):'날짜 선택';date.classList.toggle('dp-ph',!parts.date);}if(time){time.querySelector('span').textContent=parts.time||'+ 시간';time.classList.toggle('dp-ph',!parts.time);}}
+function _dtpPartsChanged(inp){const root=inp.closest('.dtp-wrap');if(!root)return;const date=root.querySelector('.dtp-date-inp')?.value||'',time=root.querySelector('.dtp-time-inp')?.value||'',value=root.querySelector('.dtp-value');if(value){value.value=date&&time?`${date}T${time}`:'';value.dispatchEvent(new Event('input',{bubbles:true}));value.dispatchEvent(new Event('change',{bubbles:true}));}const dateBox=root.querySelector('.dtp-date'),timeBox=root.querySelector('.dtp-time');if(dateBox){dateBox.querySelector('span').textContent=date?fmtDate(date):'날짜 선택';dateBox.classList.toggle('dp-ph',!date);}if(timeBox){timeBox.querySelector('span').textContent=time||'+ 시간';timeBox.classList.toggle('dp-ph',!time);}}
+function _dtpSetValue(root,iso){if(!root)return;const value=root.querySelector('.dtp-value');if(value)value.value=iso||'';_dtpSync(root);}
+function _dtpRowConfirm(btn,fn){const inp=btn.closest('.pay-panel-row').querySelector('.dtp-value');if(inp&&inp.value)fn(inp.value);}
+function _dtpHtml(iso,onChangeCode,wrapCls){const fa=ea(iso||''),parts=_dtpParts(iso),onch=onChangeCode?` onchange="${onChangeCode}"`:'';return`<div class="dp-wrap dtp-wrap${wrapCls?' '+wrapCls:''}"><input type="hidden" class="dtp-value" value="${fa}"${onch}/><div class="dtp-date${parts.date?'':' dp-ph'}" onclick="_dpInputClick(this.querySelector('.dtp-date-inp'),event)"><span>${parts.date?e(fmtDate(parts.date)):'날짜 선택'}</span><input type="date" class="dp-inp dtp-part-inp dtp-date-inp" data-app-date value="${ea(parts.date)}" aria-label="입금 날짜" onclick="_dpInputClick(this,event)" onchange="_dtpPartsChanged(this)"/></div><div class="dtp-time${parts.time?'':' dp-ph'}" onclick="_dtpTimeInputClick(this.querySelector('.dtp-time-inp'),event)"><span>${parts.time?e(parts.time):'+ 시간'}</span><input type="time" class="dtp-part-inp dtp-time-inp" value="${ea(parts.time)}" aria-label="입금 시간" onclick="_dtpTimeInputClick(this,event)"/></div></div>`;}
+let _dtpTimePicker=null;
+function _dtpTimeClose(focus){if(!_dtpTimePicker)return;const{pop,backdrop,root,inp}=_dtpTimePicker;_dtpTimePicker=null;pop.remove();backdrop?.remove();root.classList.remove('dtp-time-open');if(focus)try{inp.focus({preventScroll:true});}catch(e){}}
+function _dtpTimeInputClick(inp,event){event?.stopPropagation();event?.preventDefault();_dtpTimeOpen(inp);}
+function _dtpTimeOpen(inp){
+  if(!inp||inp.disabled||inp.readOnly)return;if(_dtpTimePicker&&_dtpTimePicker.inp===inp){_dtpTimeClose(true);return;}_dtpTimeClose();_dpClose();
+  const root=inp.closest('.dtp-wrap');if(!root)return;const now=new Date(),parts=String(inp.value||'').split(':'),hour=/^\d{2}$/.test(parts[0])?+parts[0]:now.getHours(),minute=/^\d{2}$/.test(parts[1])?+parts[1]:now.getMinutes();
+  const options=(n,selected,kind)=>Array.from({length:n},(_,i)=>{const value=String(i).padStart(2,'0'),on=i===selected;return`<button type="button" class="time-pop-option${on?' on':''}" role="option" aria-selected="${on}" data-time-${kind}="${value}">${value}</button>`;}).join('');
+  const pop=document.createElement('div');pop.className='time-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','시간 선택');pop.innerHTML=`<div class="time-pop-head"><div class="time-pop-title">시간 선택 · 24시간</div></div><div class="time-pop-fields"><div class="time-pop-field"><span>시</span><div class="time-pop-list" role="listbox" aria-label="시">${options(24,hour,'hour')}</div></div><span class="time-pop-colon" aria-hidden="true"></span><div class="time-pop-field"><span>분</span><div class="time-pop-list" role="listbox" aria-label="분">${options(60,minute,'minute')}</div></div></div><div class="time-pop-actions"><button type="button" class="time-pop-btn" data-time-now>현재</button><button type="button" class="time-pop-btn" data-time-clear>지우기</button><button type="button" class="time-pop-btn done" data-time-done>완료</button></div>`;
+  const mobile=!_dpDesktopMq.matches;let backdrop=null;if(mobile){backdrop=document.createElement('div');backdrop.className='time-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');}else root.appendChild(pop);root.classList.add('dtp-time-open');_dtpTimePicker={pop,backdrop,root,inp};
+  let draftHour=String(hour).padStart(2,'0'),draftMinute=String(minute).padStart(2,'0');const hourList=pop.querySelector('[aria-label="시"]'),minuteList=pop.querySelector('[aria-label="분"]');
+  const select=(kind,value,center=false)=>{const list=kind==='hour'?hourList:minuteList,data=kind==='hour'?'timeHour':'timeMinute';if(kind==='hour')draftHour=value;else draftMinute=value;list.querySelectorAll('.time-pop-option').forEach(btn=>{const on=btn.dataset[data]===value;btn.classList.toggle('on',on);btn.setAttribute('aria-selected',String(on));});const on=list.querySelector('.time-pop-option.on');if(center&&on)list.scrollTop=Math.max(0,on.offsetTop-(list.clientHeight-on.offsetHeight)/2);};
+  [hourList,minuteList].forEach((list,index)=>list.addEventListener('click',event=>{const btn=event.target.closest('.time-pop-option');if(btn)select(index?'minute':'hour',index?btn.dataset.timeMinute:btn.dataset.timeHour);}));
+  const commit=()=>{inp.value=`${draftHour}:${draftMinute}`;_dtpPartsChanged(inp);};pop.querySelector('[data-time-now]').onclick=()=>{const d=new Date();select('hour',String(d.getHours()).padStart(2,'0'),true);select('minute',String(d.getMinutes()).padStart(2,'0'),true);};pop.querySelector('[data-time-clear]').onclick=()=>{inp.value='';_dtpPartsChanged(inp);_dtpTimeClose(true);};pop.querySelector('[data-time-done]').onclick=()=>{commit();_dtpTimeClose(true);};pop.addEventListener('click',event=>event.stopPropagation());
+  if(!mobile&&pop.getBoundingClientRect().bottom>((visualViewport&&visualViewport.height)||innerHeight)-8)pop.classList.add('up');select('hour',draftHour,true);select('minute',draftMinute,true);if(!mobile)hourList.querySelector('.on')?.focus({preventScroll:true});
+}
+document.addEventListener('click',event=>{if(_dtpTimePicker&&!_dtpTimePicker.pop.contains(event.target)&&!_dtpTimePicker.root.contains(event.target))_dtpTimeClose(false);},true);
+document.addEventListener('keydown',event=>{const inp=event.target;if(!inp?.classList?.contains('dtp-time-inp'))return;if(event.key==='Enter'||event.key===' '||event.key==='ArrowDown'){event.preventDefault();_dtpTimeOpen(inp);}else if(event.key==='Escape')_dtpTimeClose(true);},true);
 function getSettleDateStr(){const s=fmtDate(settleDateStart);if(settleDateEnd&&settleDateEnd!==settleDateStart)return `${s} ~ ${fmtDate(settleDateEnd)}`;return s;}
 function updateSettleDate(which,val){if(which==='start')settleDateStart=val||new Date().toISOString().slice(0,10);else settleDateEnd=val||null;if(settleDateEnd&&settleDateEnd<settleDateStart){const t=settleDateEnd;settleDateEnd=settleDateStart;settleDateStart=t;}saveState();renderDesktopRight();renderMobileBody();}
 function addSettleEndDate(){settleDateEnd=settleDateStart;saveState();renderDesktopRight();renderMobileBody();}
@@ -2918,7 +2970,7 @@ function pmSetNow(key){
   const now=new Date();
   const local=new Date(now-now.getTimezoneOffset()*60000).toISOString().slice(0,16);
   const item=document.querySelector(`.txn-item[data-pm-key="${CSS.escape(key)}"]`);
-  if(item){const inp=item.querySelector('input[type="datetime-local"]');if(inp){inp.value=local;_dtpSync(inp);}}
+  if(item)_dtpSetValue(item.querySelector('.dtp-wrap'),local);
   pmUpdate(key,'timestamp',local);
 }
 
@@ -3380,7 +3432,7 @@ function histPmSetNow(recId,txnKey){
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
   rec.payments[txnKey].timestamp=local;saveHistory(allRec);
   const card=document.querySelector(`.pm-record-card[data-rec-id="${CSS.escape(recId)}"]`);
-  if(card){const inp=card.querySelector('.pm-hist-edit-panel input[type="datetime-local"]');if(inp){inp.value=local;_dtpSync(inp);}}
+  if(card)_dtpSetValue(card.querySelector('.pm-hist-edit-panel .dtp-wrap'),local);
 }
 
 function _cleanStalePayments(txns){const validKeys=new Set(txns.map(t=>`${t.from}|${t.to}`));let changed=false;Object.keys(payments).forEach(k=>{if(!validKeys.has(k)){delete payments[k];changed=true;}});if(changed)syncCurrentToGroup();}
@@ -4436,7 +4488,7 @@ function rcTxnSetNow(recId,txnKey){
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
   rec.payments[txnKey].timestamp=ts;saveHistory(allRec);_patchHistResults();
   const panel=document.querySelector(`.rc-txn-edit-panel[data-rec-id="${CSS.escape(recId)}"][data-txn-key="${CSS.escape(txnKey)}"]`);
-  if(panel){const inp=panel.querySelector('input[type="datetime-local"]');if(inp){inp.value=ts;_dtpSync(inp);}}
+  if(panel)_dtpSetValue(panel.querySelector('.dtp-wrap'),ts);
 }
 function _closeRcTxnPanel(recId,txnKey){
   document.querySelectorAll('.rc-txn-edit-panel').forEach(p=>p.remove());
