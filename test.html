@@ -462,6 +462,16 @@ suite('TC11: 영수증 상세표 합계 표시 [v5.06 회귀]', () => {
     expect(f.val).toBe('20,000');
     if (f.neg) throw new Error('양수인데 rc-neg 적용됨');
   });
+  test('할인 행은 품목명·단가·금액만 빨강 처리', () => {
+    const d = document.createElement('div');
+    d.innerHTML = APP._receiptTableHtml({ receiptText: '할인 | 1 | -21000 | -21000' }, 'discount');
+    const cells = [...d.querySelectorAll('tbody td')];
+    expect(cells.length).toBe(4);
+    if (!cells[0].classList.contains('rc-neg')) throw new Error('할인 품목명이 빨강이 아님');
+    if (cells[1].classList.contains('rc-neg')) throw new Error('할인 수량까지 빨강 처리됨');
+    if (!cells[2].classList.contains('rc-neg')) throw new Error('할인 단가가 빨강이 아님');
+    if (!cells[3].classList.contains('rc-neg')) throw new Error('할인 금액이 빨강이 아님');
+  });
   test('증정품은 합계에서 제외', () => {
     const f = foot('상품 | 1 | 10000 | 10000\n사은품 | 1 | 0 | 증정');
     if (!f) throw new Error('합계 행 없음');
