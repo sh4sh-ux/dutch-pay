@@ -722,7 +722,7 @@ svg{display:block;flex-shrink:0;}
 @media(max-width:480px){.rcpt-viewer-close{top:-44px;right:0;}}
 .detail-amt{font-size:15px;font-weight:700;flex-shrink:0;min-width:88px;text-align:right;font-variant-numeric:tabular-nums;}
 .pay-ic{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.share-date-row{margin-bottom:5px;display:grid;grid-template-columns:minmax(0,1fr) 60px;column-gap:8px;row-gap:0;align-items:center;}
+.share-date-row{margin-bottom:5px;display:grid;grid-template-columns:minmax(0,1fr) 60px;column-gap:8px;row-gap:7px;align-items:center;}
 .share-date-inp{font-size:13px;padding:6px 10px;border:1px solid var(--sep2);border-radius:8px;background-color:var(--card);color:var(--label);font-family:inherit;outline:none;cursor:pointer;flex:1;min-width:0;}
 .share-date-inp:hover{border-color:var(--label3);}
 .share-date-inp:focus{border-color:var(--blue);}
@@ -1523,8 +1523,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.54';
-const BUILD_TIME='2026-10-28 20:10';
+const APP_VERSION='v6.55';
+const BUILD_TIME='2026-10-28 20:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
