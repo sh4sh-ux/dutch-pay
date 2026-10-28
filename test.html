@@ -917,6 +917,18 @@ suite('TC24: 모바일 입금 행 줄바꿈 [v6.51]', () => {
   });
 });
 
+suite('TC25: 알림이 하단 버튼을 가리지 않음 [v6.52]', () => {
+  test('모든 토스트는 상단에 표시되고 메시지 영역은 터치를 통과', () => {
+    const h=APP.toast('위치 검사',{action:()=>{},actionLabel:'확인',duration:10000});
+    const container=APP.document.querySelector('.toast-container'),item=container?.querySelector('.toast'),action=item?.querySelector('.toast-action');
+    if(!container||!item||!action)throw new Error('검사용 토스트 생성 실패');
+    expect(APP.getComputedStyle(container).bottom).toBe('auto');
+    expect(APP.getComputedStyle(item).pointerEvents).toBe('none');
+    expect(APP.getComputedStyle(action).pointerEvents).toBe('auto');
+    h.dismiss();
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────
