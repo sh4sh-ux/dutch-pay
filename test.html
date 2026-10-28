@@ -888,16 +888,25 @@ suite('TC22: 입금 기록·잠금 상태 일치 [v6.48]', () => {
   });
 });
 
-suite('TC23: 입금 달력 팝업 레이아웃 [v6.49]', () => {
-  test('데스크탑 달력은 편집 행 전체가 아닌 360px 이하 고정 폭', () => {
+suite('TC23: 입금 달력·시간 팝업 레이아웃 [v6.50]', () => {
+  test('달력은 카드 밖 전용 레이어에 표시되고 카드 곡선은 유지', () => {
     const card=APP.document.createElement('div');card.className='txn-card';card.style.width='1000px';
     card.innerHTML=`<div class="txn-item"><div class="pay-panel">${APP._dtpHtml('2026-10-28T11:11','','pay-date-wrap')}</div></div>`;
     APP.document.body.appendChild(card);APP._dpOpen(card.querySelector('.dtp-date-inp'));
-    const pop=card.querySelector('.dp-pop');if(!pop)throw new Error('달력이 열리지 않음');
+    const pop=APP.document.body.querySelector('.dp-pop.desktop-portal');if(!pop)throw new Error('전용 레이어 달력이 열리지 않음');
     const width=parseFloat(APP.getComputedStyle(pop).width);if(width>361)throw new Error('달력 너비가 '+width+'px로 확장됨');
-    expect(APP.getComputedStyle(card).overflow).toBe('visible');
+    expect(APP.getComputedStyle(card).overflow).toBe('hidden');
     expect(pop.querySelectorAll('.dp-pop-day').length).toBe(31);
     APP._dpClose(false);card.remove();
+  });
+  test('시간 선택창도 카드 밖 전용 레이어를 사용', () => {
+    const card=APP.document.createElement('div');card.className='txn-card';
+    card.innerHTML=APP._dtpHtml('2026-10-28T11:11','','pay-date-wrap');APP.document.body.appendChild(card);
+    APP._dtpTimeOpen(card.querySelector('.dtp-time-inp'));
+    const pop=APP.document.body.querySelector('.time-pop.desktop-portal');if(!pop)throw new Error('전용 레이어 시간 선택창이 열리지 않음');
+    const width=parseFloat(APP.getComputedStyle(pop).width);if(width>361)throw new Error('시간 선택창 너비가 '+width+'px로 확장됨');
+    expect(APP.getComputedStyle(card).overflow).toBe('hidden');
+    APP._dtpTimeClose(false);card.remove();
   });
 });
 

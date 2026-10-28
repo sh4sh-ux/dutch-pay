@@ -972,9 +972,7 @@ svg{display:block;flex-shrink:0;}
 .dtp-time::before{content:'';width:1px;height:16px;margin-right:10px;background:var(--sep);}
 .dtp-date>.dtp-part-inp,.dtp-time>.dtp-part-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
 .dtp-wrap>.dp-pop,.dtp-wrap>.time-pop{top:calc(100% + 8px);right:auto;width:min(360px,calc(100vw - 48px));}
-/* 입금 편집 카드는 평소 라운드를 위해 overflow:hidden을 쓰지만 달력까지 잘라서는 안 된다. */
-.txn-card:has(.dtp-wrap.dp-open),.txn-card:has(.dtp-wrap.dtp-time-open){overflow:visible;}
-.txn-item:has(.dtp-wrap.dp-open),.txn-item:has(.dtp-wrap.dtp-time-open),.pay-panel:has(.dtp-wrap.dp-open),.pay-panel:has(.dtp-wrap.dtp-time-open){position:relative;z-index:223;}
+.dp-pop.desktop-portal,.time-pop.desktop-portal{position:fixed;z-index:651;right:auto;bottom:auto;width:min(360px,calc(100vw - 16px));}
 .time-pop{position:absolute;z-index:222;top:calc(100% + 8px);left:-1px;right:-1px;padding:14px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.16);cursor:default;box-sizing:border-box;}
 .time-pop.up{top:auto;bottom:calc(100% + 8px);}
 .time-pop-head{display:flex;align-items:center;justify-content:center;min-height:40px;margin:-14px -14px 10px;padding:3px 12px;border-bottom:1px solid var(--sep);}
@@ -1518,8 +1516,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.49';
-const BUILD_TIME='2026-10-28 17:55';
+const APP_VERSION='v6.50';
+const BUILD_TIME='2026-10-28 18:15';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2397,6 +2395,17 @@ function _dpSet(inp,value){
   inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));
 }
 function _dpIso(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
+function _placeDesktopPicker(pop,anchor){
+  pop.classList.add('desktop-portal');document.body.appendChild(pop);
+  const gap=8,pad=8,vw=document.documentElement.clientWidth||innerWidth,vh=(window.visualViewport&&visualViewport.height)||innerHeight;
+  const rect=anchor.getBoundingClientRect(),width=Math.min(360,vw-pad*2);
+  pop.style.width=width+'px';
+  const height=pop.offsetHeight,left=Math.min(Math.max(pad,rect.left),Math.max(pad,vw-width-pad));
+  let top=rect.bottom+gap;
+  if(top+height>vh-pad)top=rect.top-height-gap;
+  top=Math.max(pad,Math.min(top,vh-height-pad));
+  pop.style.left=left+'px';pop.style.top=top+'px';
+}
 function _dpOpen(inp){
   if(!inp||!inp.hasAttribute('data-app-date')||inp.disabled||inp.readOnly)return;
   if(_dpPicker&&_dpPicker.inp===inp){_dpClose(true);return;}
@@ -2434,7 +2443,7 @@ function _dpOpen(inp){
   render();
   const mobile=!_dpDesktopMq.matches;let backdrop=null;
   if(mobile){backdrop=document.createElement('div');backdrop.className='dp-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');}
-  else wrap.appendChild(pop);
+  else _placeDesktopPicker(pop,wrap);
   wrap.classList.add('dp-open');const controls=wrap.closest('.left-controls');controls?.classList.add('date-picker-open');_dpPicker={pop,backdrop,wrap,inp,controls};
   title.onclick=()=>{if(state.mode!=='year'){state.mode='year';state.yearStart=state.year-5;render();selectEl.querySelector('.on')?.focus({preventScroll:true});}};
   pop.querySelector('[data-dp-prev]').onclick=()=>{if(state.mode==='year')state.yearStart-=12;else if(state.mode==='month')state.year--;else if(--state.month<0){state.month=11;state.year--;}render();};
@@ -2445,8 +2454,6 @@ function _dpOpen(inp){
   daysEl.onclick=ev=>{const b=ev.target.closest('[data-dp-value]');if(!b||b.disabled)return;_dpSet(inp,b.dataset.dpValue);_dpClose(true);};
   selectEl.onclick=ev=>{const yearBtn=ev.target.closest('[data-dp-year]'),monthBtn=ev.target.closest('[data-dp-month]');if(yearBtn&&!yearBtn.disabled){state.year=+yearBtn.dataset.dpYear;state.mode='month';render();(selectEl.querySelector('.on:not(:disabled)')||selectEl.querySelector('.dp-pop-choice:not(:disabled)'))?.focus({preventScroll:true});}else if(monthBtn&&!monthBtn.disabled){state.month=+monthBtn.dataset.dpMonth;state.mode='day';render();(daysEl.querySelector('.on:not(:disabled)')||daysEl.querySelector('.today:not(:disabled)')||daysEl.querySelector('.dp-pop-day:not(:disabled)'))?.focus({preventScroll:true});}};
   pop.addEventListener('click',ev=>ev.stopPropagation());
-  const vh=(window.visualViewport&&visualViewport.height)||innerHeight;
-  if(!mobile&&pop.getBoundingClientRect().bottom>vh-8)pop.classList.add('up');
   (pop.querySelector('.dp-pop-day.on')||pop.querySelector('.dp-pop-day.today:not(:disabled)')||pop.querySelector('.dp-pop-day:not(:disabled)'))?.focus({preventScroll:true});
 }
 function _dpInputClick(inp,event){
@@ -2478,12 +2485,12 @@ function _dtpTimeOpen(inp){
   const root=inp.closest('.dtp-wrap');if(!root)return;const now=new Date(),parts=String(inp.value||'').split(':'),hour=/^\d{2}$/.test(parts[0])?+parts[0]:now.getHours(),minute=/^\d{2}$/.test(parts[1])?+parts[1]:now.getMinutes();
   const options=(n,selected,kind)=>Array.from({length:n},(_,i)=>{const value=String(i).padStart(2,'0'),on=i===selected;return`<button type="button" class="time-pop-option${on?' on':''}" role="option" aria-selected="${on}" data-time-${kind}="${value}">${value}</button>`;}).join('');
   const pop=document.createElement('div');pop.className='time-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','시간 선택');pop.innerHTML=`<div class="time-pop-head"><div class="time-pop-title">시간 선택 · 24시간</div></div><div class="time-pop-fields"><div class="time-pop-field"><span>시</span><div class="time-pop-list" role="listbox" aria-label="시">${options(24,hour,'hour')}</div></div><span class="time-pop-colon" aria-hidden="true"></span><div class="time-pop-field"><span>분</span><div class="time-pop-list" role="listbox" aria-label="분">${options(60,minute,'minute')}</div></div></div><div class="time-pop-actions"><button type="button" class="time-pop-btn" data-time-now>현재</button><button type="button" class="time-pop-btn" data-time-clear>지우기</button><button type="button" class="time-pop-btn done" data-time-done>완료</button></div>`;
-  const mobile=!_dpDesktopMq.matches;let backdrop=null;if(mobile){backdrop=document.createElement('div');backdrop.className='time-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');}else root.appendChild(pop);root.classList.add('dtp-time-open');_dtpTimePicker={pop,backdrop,root,inp};
+  const mobile=!_dpDesktopMq.matches;let backdrop=null;if(mobile){backdrop=document.createElement('div');backdrop.className='time-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');}else _placeDesktopPicker(pop,root);root.classList.add('dtp-time-open');_dtpTimePicker={pop,backdrop,root,inp};
   let draftHour=String(hour).padStart(2,'0'),draftMinute=String(minute).padStart(2,'0');const hourList=pop.querySelector('[aria-label="시"]'),minuteList=pop.querySelector('[aria-label="분"]');
   const select=(kind,value,center=false)=>{const list=kind==='hour'?hourList:minuteList,data=kind==='hour'?'timeHour':'timeMinute';if(kind==='hour')draftHour=value;else draftMinute=value;list.querySelectorAll('.time-pop-option').forEach(btn=>{const on=btn.dataset[data]===value;btn.classList.toggle('on',on);btn.setAttribute('aria-selected',String(on));});const on=list.querySelector('.time-pop-option.on');if(center&&on)list.scrollTop=Math.max(0,on.offsetTop-(list.clientHeight-on.offsetHeight)/2);};
   [hourList,minuteList].forEach((list,index)=>list.addEventListener('click',event=>{const btn=event.target.closest('.time-pop-option');if(btn)select(index?'minute':'hour',index?btn.dataset.timeMinute:btn.dataset.timeHour);}));
   const commit=()=>{inp.value=`${draftHour}:${draftMinute}`;_dtpPartsChanged(inp);};pop.querySelector('[data-time-now]').onclick=()=>{const d=new Date();select('hour',String(d.getHours()).padStart(2,'0'),true);select('minute',String(d.getMinutes()).padStart(2,'0'),true);};pop.querySelector('[data-time-clear]').onclick=()=>{inp.value='';_dtpPartsChanged(inp);_dtpTimeClose(true);};pop.querySelector('[data-time-done]').onclick=()=>{commit();_dtpTimeClose(true);};pop.addEventListener('click',event=>event.stopPropagation());
-  if(!mobile&&pop.getBoundingClientRect().bottom>((visualViewport&&visualViewport.height)||innerHeight)-8)pop.classList.add('up');select('hour',draftHour,true);select('minute',draftMinute,true);if(!mobile)hourList.querySelector('.on')?.focus({preventScroll:true});
+  select('hour',draftHour,true);select('minute',draftMinute,true);if(!mobile)hourList.querySelector('.on')?.focus({preventScroll:true});
 }
 document.addEventListener('click',event=>{if(_dtpTimePicker&&!_dtpTimePicker.pop.contains(event.target)&&!_dtpTimePicker.root.contains(event.target))_dtpTimeClose(false);},true);
 document.addEventListener('keydown',event=>{const inp=event.target;if(!inp?.classList?.contains('dtp-time-inp'))return;if(event.key==='Enter'||event.key===' '||event.key==='ArrowDown'){event.preventDefault();_dtpTimeOpen(inp);}else if(event.key==='Escape')_dtpTimeClose(true);},true);
