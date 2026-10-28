@@ -780,6 +780,9 @@ svg{display:block;flex-shrink:0;}
 .share-fallback-btn{display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid var(--sep2);border-radius:10px;background:var(--fill);color:var(--label);font-size:13px;font-weight:600;text-decoration:none;}
 .share-fallback-btn.primary{border-color:var(--blue);background:var(--blue);color:#fff;}
 .share-fallback-close{width:100%;margin-top:8px;padding:10px;border:0;background:transparent;color:var(--label2);font-size:13px;}
+.history-image-viewer{position:fixed;inset:0;z-index:700;display:flex;align-items:center;justify-content:center;padding:max(18px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(18px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));background:rgba(0,0,0,.94);}
+.history-image-viewer img{display:block;max-width:100%;max-height:100%;object-fit:contain;background:#fff;box-shadow:0 18px 60px rgba(0,0,0,.35);}
+.history-image-viewer-close{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:1;width:44px;height:44px;border:1px solid rgba(255,255,255,.24);border-radius:50%;background:rgba(20,20,22,.72);color:#fff;font-size:28px;font-weight:300;line-height:40px;text-align:center;}
 .share-hist-btn{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:12px;font-size:14px;font-weight:600;background:var(--fill);color:var(--label);cursor:pointer;transition:background .12s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
 .share-hist-btn:hover{background:var(--fill2);}
 .notice{font-size:11px;color:var(--label3);text-align:center;margin-top:12px;line-height:1.6;}
@@ -1530,7 +1533,7 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.52';
+const APP_VERSION='v6.53';
 const BUILD_TIME='2026-10-28 18:55';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -4614,7 +4617,7 @@ function _buildRecordCardHtml(r){
     <div class="rc-foot">
       <span class="rc-saved-at">${savedAtStr} 저장 · ${(r.people||[]).length}명</span>
       <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
-        <button class="rc-load-btn" onclick="shareHistoryImage('${jsa(r.id)}')">이미지</button>
+        <button class="rc-load-btn" onclick="viewHistoryImage('${jsa(r.id)}')">이미지</button>
         ${fixed?`<button class="rc-load-btn rc-edit-btn" title="암호 입력 후 수정" onclick="unlockHistoryForEdit('${jsa(r.id)}')">수정</button><span class="rc-fix-btn fixed" title="잠긴 기록">${LOCK_CLOSED_SVG}잠김</span><button class="rc-del-btn" title="암호 입력 후 삭제" onclick="deleteHistoryRecord('${jsa(r.id)}',event)">삭제</button>`:`<button class="rc-load-btn rc-edit-btn" onclick="loadHistoryForEdit('${jsa(r.id)}')">수정</button><button class="rc-fix-btn" onclick="fixHistoryRecord('${jsa(r.id)}')">${LOCK_OPEN_SVG}잠금</button><button class="rc-del-btn" onclick="deleteHistoryRecord('${jsa(r.id)}',event)">삭제</button>`}
       </div>
     </div>
@@ -5477,17 +5480,29 @@ async function shareHistoryItemImage(recordId,itemId){
   const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));if(!blob){toast('상세 이미지 생성에 실패했어요',{type:'error'});return;}const safe=String(it.name||'상세내역').replace(/[\\/:*?"<>|]/g,'_'),date=(rec.dateStart||'').replace(/-/g,'');const filename=`상세내역_${date}_${safe}.png`,file=new File([blob],filename,{type:'image/png'});if(_canShareFiles({files:[file]})){try{await navigator.share({files:[file]});return;}catch(e){if(e?.name==='AbortError')return;}}_downloadShareBlob(blob,filename);toast('상세 이미지를 저장했어요',{type:'success'});
 }
 
-async function shareHistoryImage(id){
+function closeHistoryImageViewer(){
+  const viewer=document.querySelector('.history-image-viewer');
+  if(!viewer)return;
+  const url=viewer.dataset.objectUrl;
+  viewer.remove();
+  if(url)URL.revokeObjectURL(url);
+}
+async function viewHistoryImage(id){
   const rec=loadHistory().find(r=>r.id===id);if(!rec){toast('기록을 찾을 수 없어요',{type:'error'});return;}
   toast('이미지 생성 중…',{type:'info'});
   try{
     const canvas=await generateHistoryCanvas(rec);
     const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob){toast('이미지 생성에 실패했어요',{type:'error'});return;}
-    const date=(rec.dateStart||'').replace(/-/g,'')||new Date().toISOString().slice(0,10).replace(/-/g,'');
-    const filename=`정산내역_${date}.png`;const file=new File([blob],filename,{type:'image/png'});
-    if(navigator.share){try{await navigator.share({files:[file]});return;}catch(e2){if(e2&&e2.name==='AbortError')return;}}
-    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.download=filename;a.href=url;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);
-  }catch(err){toast('이미지 저장에 실패했어요',{type:'error'});}
+    closeHistoryImageViewer();
+    const url=URL.createObjectURL(blob),viewer=document.createElement('div');
+    viewer.className='history-image-viewer';viewer.dataset.objectUrl=url;
+    viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','기록 이미지');
+    viewer.innerHTML='<button class="history-image-viewer-close" type="button" aria-label="닫기">×</button><img alt="보관된 정산 기록 이미지">';
+    viewer.querySelector('img').src=url;
+    viewer.querySelector('button').onclick=closeHistoryImageViewer;
+    viewer.addEventListener('click',event=>{if(event.target===viewer)closeHistoryImageViewer();});
+    document.body.appendChild(viewer);
+  }catch(err){toast('이미지를 열지 못했어요',{type:'error'});}
 }
 
 
@@ -5536,7 +5551,7 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
 // 앱이 스스로 얕아지면(X로 오버레이 닫기 등) 남는 항목을 조용히 1개 정리한다.
 // popstate 안에서는 절대 pushState 하지 않는다(안드로이드 이중 전환 깜빡임 방지).
 (()=>{
-  const OVL='.rcpt-viewer,.mob-sheet.open,.hist-page.open,#histDr.open,.pm-payer-modal-bg,'
+  const OVL='.history-image-viewer,.rcpt-viewer,.mob-sheet.open,.hist-page.open,#histDr.open,.pm-payer-modal-bg,'
           +'.sc-overlay,.couple-ov,.share-fallback,.data-pop,.group-pop,.icon-pop,.rounder-pop,.pop-backdrop';
   const isMob=()=>matchMedia('(max-width:700px)').matches;
   const curTab=()=>isMob()?(typeof mTab!=='undefined'?mTab:'input'):(typeof dTab!=='undefined'?dTab:'input');
@@ -5546,6 +5561,7 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
   const sig=()=>({tab:curTab(),ov:ovCount(),se:searchActive()?1:0});
   const eq=(a,b)=>a.tab===b.tab&&a.ov===b.ov&&a.se===b.se;
   function closeTop(){
+    if(document.querySelector('.history-image-viewer')){closeHistoryImageViewer();return true;}
     const rv=document.querySelector('.rcpt-viewer');
     if(rv){const c=rv.querySelector('.rcpt-viewer-close');c?c.click():rv.remove();return true;}
     if(document.querySelector('.mob-sheet.open')){if(typeof closeSheet==='function')closeSheet();return true;}
@@ -5593,7 +5609,7 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
   if(!('ontouchstart' in window))return;
   const shell=document.querySelector('.mobile-shell');if(!shell)return;
   // 시트·드로어·모달·팝오버가 떠 있으면 당겨서 새로고침을 막는다.
-  const BLOCK='.mob-sheet.open,.hist-page.open,#histDr.open,.pm-payer-modal-bg,'
+  const BLOCK='.history-image-viewer,.mob-sheet.open,.hist-page.open,#histDr.open,.pm-payer-modal-bg,'
              +'.sc-overlay,.couple-ov,.share-fallback,.data-pop,.icon-pop,.group-pop,.rounder-pop';
   const TH=70,MAX=104;                    // 발동 임계값 / 최대 당김
   let y0=0,pulling=false,dist=0,busy=false;
