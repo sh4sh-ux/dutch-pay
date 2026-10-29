@@ -1543,8 +1543,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.70';
-const BUILD_TIME='2026-10-29 22:10';
+const APP_VERSION='v6.71';
+const BUILD_TIME='2026-10-29 22:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5200,8 +5200,8 @@ async function generateSettleCanvas(){
     y+=NOTICE_H-44;
   }
   // 푸터 — DUTCH PAY 버전을 하단 여백(FOOTER_H) 정중앙에 배치. 모든 생성 이미지 공통 규칙
-  ctx.fillStyle=C.muted;setFont(20,300);ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,y+FOOTER_H/2);
+  ctx.fillStyle=C.muted;setFont(18,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='2px';
+  ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,y+FOOTER_H/2);ctx.letterSpacing='0px';
   return canvas;
 }
 
@@ -5551,8 +5551,8 @@ async function generateHistoryCanvas(rec){
   }
   y+=txnCardH;
   // 푸터 — 버전을 하단 여백(FOOTER_H+BOTTOM_PAD) 정중앙에 배치. 모든 생성 이미지 공통 규칙
-  ctx.fillStyle=C.muted;setFont(20,300);ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,y+(FOOTER_H+BOTTOM_PAD)/2);
+  ctx.fillStyle=C.muted;setFont(18,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='2px';
+  ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,y+(FOOTER_H+BOTTOM_PAD)/2);ctx.letterSpacing='0px';
   return canvas;
 }
 
