@@ -1540,8 +1540,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.65';
-const BUILD_TIME='2026-10-29 17:40';
+const APP_VERSION='v6.66';
+const BUILD_TIME='2026-10-29 18:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4254,8 +4254,15 @@ function saveToHistory(){
         record.id=arr[dupIdx].id;
         if(!saveHistory(arr))return null;
         toast('기록이 업데이트됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+      }else if(dupIdx>=0&&_isHistoryFixed(arr[dupIdx].id)&&_histFingerprint(arr[dupIdx])===recordFp){
+        // 같은 정산의 잠긴 기록 — 입금만 달라진 경우(지문 동일) 새 버전으로 쪼개지 않고
+        // 잠긴 기록의 입금 현황(payments)만 제자리 병합 갱신한다. (v6.66: 잠금+입금갱신 중복 생성 수정)
+        arr[dupIdx]={...arr[dupIdx],payments:{...(arr[dupIdx].payments||{}),...record.payments},savedAt:record.savedAt};
+        record.id=arr[dupIdx].id;
+        if(!saveHistory(arr))return null;
+        toast('잠긴 기록의 입금 현황을 갱신했어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
       }else{
-        // 잠긴 원본 또는 날짜·참여자만 같은 다른 정산은 덮어쓰지 않고 새 기록으로 남긴다.
+        // 잠긴 원본인데 정산 내용(항목)이 바뀜, 또는 날짜·참여자만 같은 다른 정산은 덮어쓰지 않고 새 기록으로 남긴다.
         if(dupIdx>=0&&_isHistoryFixed(arr[dupIdx].id)){
           record.id='hv_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8);
           record.dedupKeepSeparate=true;
@@ -4468,6 +4475,59 @@ function _dedupHistoryDetailed(arr){
 function _dedupHistory(arr){return _dedupHistoryDetailed(arr).records;}
 function saveHistory(arr){try{const cleaned=_dedupHistoryDetailed(arr);_recordHistoryDedup(cleaned);cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));return true;}catch(e){toast(_storageErrorMessage(e,'기록 저장'),{type:'error',duration:5000});return false;}}
 function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const cleaned=_dedupHistoryDetailed(arr),removed=arr.length-cleaned.records.length;if(removed>0){_recordHistoryDedup(cleaned);cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));setTimeout(()=>toast(`중복 기록 ${removed}건을 하나로 정리했어요`,{type:'success',duration:4200}),400);}}catch(e){}}
+// 같은 정산(지문 완전 동일 = 날짜·참여자·항목 전부 같고 입금만 다름)의 중복 기록 정리 계획을 세운다. 순수 함수.
+// v6.65 이하: 잠긴 정산에 입금을 갱신하면 saveToHistory가 새 'hv_' 버전으로 쪼개 중복이 쌓였다(사용자 신고).
+// 지문이 같으면 같은 정산이라 입금(payments)만 합쳐 보존하므로 데이터 손실이 없다. 잠긴 기록을 keeper로 우선한다.
+function _planSameSettlementMerge(arr,isFixed){
+  isFixed=isFixed||(()=>false);
+  const groups=new Map();
+  (arr||[]).forEach(r=>{if(!r||r.id==null)return;const fp=_histFingerprint(r);if(!groups.has(fp))groups.set(fp,[]);groups.get(fp).push(r);});
+  const plan=[];
+  for(const recs of groups.values()){
+    if(recs.length<2)continue;
+    const fixedRecs=recs.filter(r=>isFixed(r.id));
+    const pool=fixedRecs.length?fixedRecs:recs;
+    const keeper=pool.slice().sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''))[0];
+    const payments={};
+    recs.slice().sort((a,b)=>(a.savedAt||'').localeCompare(b.savedAt||'')).forEach(r=>Object.assign(payments,r.payments||{}));
+    const removeIds=recs.filter(r=>String(r.id)!==String(keeper.id)).map(r=>({id:r.id,fixed:isFixed(r.id),record:r}));
+    if(removeIds.length)plan.push({keepId:keeper.id,payments,removeIds});
+  }
+  return plan;
+}
+async function _cleanupSameSettlementDuplicates(){
+  try{
+    const arr=loadHistory();if(arr.length<2)return false;
+    const plan=_planSameSettlementMerge(arr,id=>_isHistoryFixed(id));
+    if(!plan.length)return false;
+    let removed=0;
+    for(const grp of plan){
+      for(const rm of grp.removeIds){
+        const id=rm.id;
+        if(rm.fixed){
+          // 잠긴 중복은 삭제 전 안전백업 + 잠금 원본(fixed) 정리 — deleteHistoryRecord와 동일한 안전 순서
+          try{
+            const fixedEntries=loadFixedArchives().filter(f=>String(f.recordId)===String(id));
+            await _safeStorePut('backups','dedup-'+Date.now()+'-'+id,{deletedAt:new Date().toISOString(),record:JSON.parse(JSON.stringify(rm.record)),fixedEntries:JSON.parse(JSON.stringify(fixedEntries))});
+            _markFixedDeletedId(id);
+            for(const f of fixedEntries)await _safeStoreDelete('fixed',f.fixId);
+            const remaining=loadFixedArchives().filter(f=>String(f.recordId)!==String(id));
+            const compact=remaining.map(f=>({schemaVersion:f.schemaVersion||1,fixId:f.fixId,recordId:f.recordId,fixedAt:f.fixedAt||'',guard:f.guard,sha256:f.sha256||'',pinHash:f.pinHash||'',pinSalt:f.pinSalt||''}));
+            localStorage.setItem(FIXED_HISTORY_KEY,JSON.stringify(compact));_fixedArchivesCache=remaining;
+          }catch(e){continue;}
+        }
+        _saveDelId(id,true);removed++;
+      }
+    }
+    const removeSet=new Set();plan.forEach(g=>g.removeIds.forEach(r=>removeSet.add(String(r.id))));
+    const keepPay=new Map();plan.forEach(g=>keepPay.set(String(g.keepId),g.payments));
+    let hist=loadHistory().filter(r=>r&&!removeSet.has(String(r.id)));
+    hist=hist.map(r=>keepPay.has(String(r.id))?{...r,payments:{...(r.payments||{}),...keepPay.get(String(r.id))}}:r);
+    saveHistory(hist);
+    if(removed>0){setTimeout(()=>toast(`같은 정산의 중복 기록 ${removed}건을 하나로 정리했어요`,{type:'success',duration:4200}),600);if(hDbxGetToken())hSyncDropbox(true);}
+    return removed>0;
+  }catch(e){return false;}
+}
 function _migrateHistoryGroupNames(){try{const arr=loadHistory();let changed=false;arr.forEach(r=>{const correct=(r.people||[]).join(', ');if(correct&&r.groupName!==correct){r.groupName=correct;changed=true;}});if(changed)saveHistory(arr);}catch(e){}}
 
 async function deleteHistoryRecord(id,event){
@@ -5497,6 +5557,7 @@ const _receiptGroupRepairResult=_repairDuplicateReceiptGroups();
 const _receiptDbImportResult=_consumeReceiptDbTransfer();
 _migrateHistoryGroupNames();
 _deduplicateHistoryOnStartup();
+try{_cleanupSameSettlementDuplicates().then(changed=>{if(changed)renderAll();}).catch(()=>{});}catch(e){}
 _syncCurrentPaymentsToHistory(false);
 renderAll();
 try{_verifyAndRepairFixedHistory().then(changed=>{if(changed)renderAll();}).catch(()=>{});}catch(e){}
