@@ -912,6 +912,33 @@ suite('TC22: 입금 기록·잠금 상태 일치 [v6.48]', () => {
   });
 });
 
+suite('TC22d: 같은 정산(지문 동일) 중복 정리 [v6.66]', () => {
+  const P=['이영환','조상현'];
+  const mk=(id,pay,savedAt,amt1)=>({id,savedAt,dateStart:'2026-10-27',dateEnd:null,people:P.slice(),total:108000,
+    items:[{name:'기운',amount:amt1===undefined?82000:amt1,payer:'조상현',isTreat:false,members:P.slice(),watchers:[],rounderOverride:null},
+           {name:'교자',amount:26000,payer:'조상현',isTreat:true,members:P.slice(),watchers:[],rounderOverride:null}],
+    payments:pay});
+  test('지문 동일(입금만 다름) 중복은 잠긴 기록을 keeper로 묶고 payments 병합', () => {
+    const a=mk('hg_x',{'이영환|조상현':{done:true,amount:54000}},'2026-10-28T03:00');
+    const b=mk('hv_1',{'이영환|조상현':{done:true,amount:54000,account:'우리은행'}},'2026-10-29T01:00');
+    const plan=APP._planSameSettlementMerge([a,b],id=>id==='hg_x');
+    expect(plan.length).toBe(1);
+    expect(plan[0].keepId).toBe('hg_x');
+    expect(plan[0].removeIds.map(r=>r.id).join(',')).toBe('hv_1');
+    expect(plan[0].payments['이영환|조상현'].account).toBe('우리은행');
+  });
+  test('항목이 다르면(지문 다름) 합치지 않는다', () => {
+    const a=mk('hg_x',{},'2026-10-28T03:00');
+    const b=mk('hv_1',{},'2026-10-29T01:00',99000);
+    const plan=APP._planSameSettlementMerge([a,b],()=>false);
+    expect(plan.length).toBe(0);
+  });
+  test('잠금+입금갱신 중복 생성 차단 — saveToHistory가 잠긴 동일 지문은 입금만 제자리 갱신', () => {
+    const src=APP.saveToHistory.toString();
+    if(!src.includes('_histFingerprint(arr[dupIdx])===recordFp'))throw new Error('잠긴 동일 지문 제자리 갱신 분기 누락');
+  });
+});
+
 suite('TC23: 입금 달력·시간 팝업 레이아웃 [v6.50]', () => {
   test('달력은 카드 밖 전용 레이어에 표시되고 카드 곡선은 유지', () => {
     const card=APP.document.createElement('div');card.className='txn-card';card.style.width='1000px';
