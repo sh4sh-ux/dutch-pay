@@ -811,7 +811,9 @@ svg{display:block;flex-shrink:0;}
 .hmn-arr:hover{border-color:var(--blue);background:var(--blue-bg);color:var(--blue);}
 .hmn-arr:active{transform:scale(.9);}
 .hmn-arr:disabled{opacity:.32;pointer-events:none;}
-.hmn-label{min-width:92px;text-align:center;font-size:14px;font-weight:600;color:var(--label);letter-spacing:-.2px;}
+.hmn-label{min-width:92px;font-size:14px;font-weight:600;color:var(--label);letter-spacing:-.2px;background:none;border:0;font-family:inherit;cursor:pointer;padding:5px 9px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:background .14s,color .14s;-webkit-tap-highlight-color:transparent;}
+.hmn-label:hover{background:var(--fill);color:var(--blue);}
+.hmn-label svg{width:13px;height:13px;display:block;opacity:.75;flex-shrink:0;}
 .hmn-all{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600;color:var(--label2);background:var(--fill);border:1px solid var(--sep2);cursor:pointer;padding:4px 10px;border-radius:20px;font-family:inherit;flex-shrink:0;}
 .hmn-all.on{background:var(--blue);color:#fff;border-color:var(--blue);}
 .hmn-stat{padding:0 2px 10px;font-size:12px;color:var(--label3);font-variant-numeric:tabular-nums;text-align:right;}
@@ -968,7 +970,7 @@ svg{display:block;flex-shrink:0;}
 .hist-dr-sinp-wrap{position:sticky;top:0;z-index:2;background:var(--bg);padding:10px 0 4px;overflow:hidden;}
 .hist-dr-sinp{width:100%;background:var(--fill);border:none;border-radius:10px;padding:9px 12px 9px 34px;font-size:14px;color:var(--label);font-family:inherit;outline:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center;}
 .hist-dr-sinp::placeholder{color:var(--label3);}
-.hist-dr-sinp:focus{box-shadow:inset 0 0 0 2px var(--blue);}
+.hist-dr-sinp:focus{box-shadow:inset 0 0 0 1px var(--blue);background-color:var(--card);}
 .hist-dr-sinp::-webkit-search-cancel-button,.hist-dr-sinp::-webkit-search-decoration{-webkit-appearance:none;display:none;}
 .hist-dr-body{overflow-y:auto;flex:1;padding:0 16px 40px;}
 .sinp-rel{position:relative;display:flex;align-items:center;width:100%;}
@@ -1540,8 +1542,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.68';
-const BUILD_TIME='2026-10-29 20:45';
+const APP_VERSION='v6.69';
+const BUILD_TIME='2026-10-29 21:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2376,11 +2378,12 @@ function updateMeetingDate(val){settleDateStart=val||_todayYMD();_dpUpdate('meet
 function fmtDate(iso){if(!iso)return '';const[y,m,d]=iso.split('-');return `${y}.${m}.${d}`;}
 function _dpSync(inp){const txt=inp.previousElementSibling;if(txt&&txt.classList.contains('dp-txt'))txt.textContent=fmtDate(inp.value);}
 const _dpDesktopMq=matchMedia('(hover:hover) and (pointer:fine)');
-let _dpPicker=null;
+let _dpPicker=null,_dpTransientHost=null;
 function _dpNative(inp){try{inp.showPicker();}catch(e){inp.focus();}}
 function _dpClose(focus){
   if(!_dpPicker)return;const{pop,backdrop,wrap,inp,controls}=_dpPicker;_dpPicker=null;pop.remove();backdrop?.remove();wrap.classList.remove('dp-open');controls?.classList.remove('date-picker-open');
   if(focus)try{inp.focus({preventScroll:true});}catch(e){}
+  if(_dpTransientHost){_dpTransientHost.remove();_dpTransientHost=null;}
 }
 function _dpSet(inp,value){
   if(inp.value===value)return;inp.value=value;_dpSync(inp);
@@ -2706,7 +2709,8 @@ function _histMonthNavHtml(allRecs,dispRecs){
   const lbl=_histMonthAllMode?'전체 기록':`${_histMonthYear}년 ${_histMonthMonth}월`;
   const _chevL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
   const _chevR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
-  const nav=`<div class="hmn-header"><button class="hmn-arr" aria-label="이전 달" onclick="_histMonthPrev()"${_histMonthAllMode?' disabled':''}>${_chevL}</button><span class="hmn-label">${lbl}</span><button class="hmn-arr" aria-label="다음 달" onclick="_histMonthNext()"${(_histMonthAllMode||atMax)?' disabled':''}>${_chevR}</button><button class="hmn-all${_histMonthAllMode?' on':''}" onclick="_histMonthToggleAll()">전체</button></div>`;
+  const _calIco='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+  const nav=`<div class="hmn-header"><button class="hmn-arr" aria-label="이전 달" onclick="_histMonthPrev()"${_histMonthAllMode?' disabled':''}>${_chevL}</button><button class="hmn-label" type="button" aria-label="달력에서 월 선택" onclick="_histMonthPickOpen(this)">${lbl}${_calIco}</button><button class="hmn-arr" aria-label="다음 달" onclick="_histMonthNext()"${(_histMonthAllMode||atMax)?' disabled':''}>${_chevR}</button><button class="hmn-all${_histMonthAllMode?' on':''}" onclick="_histMonthToggleAll()">전체</button></div>`;
   let statHtml;
   if(_historySearch.trim()&&dispRecs.length){
     const q=_historySearch.trim().toLowerCase();
@@ -2744,6 +2748,23 @@ function _histMonthNext(){
 function _histMonthToggleAll(){
   _histMonthAllMode=!_histMonthAllMode;
   if(!_histMonthAllMode){const now=new Date();_histMonthYear=now.getFullYear();_histMonthMonth=now.getMonth()+1;}
+  _refreshHistMonthView();
+}
+// 전체기록/월 라벨을 누르면 앱 달력을 열어 원하는 월로 바로 이동(사용자 요청). 달력은 숨은 날짜 입력에 붙여 재사용.
+function _histMonthPickOpen(anchorEl){
+  if(_dpTransientHost){_dpClose(false);return;} // 열려 있으면 토글로 닫기
+  const r=anchorEl.getBoundingClientRect();
+  const host=document.createElement('div');host.className='dp-wrap hist-month-pick-host';
+  host.style.cssText=`position:fixed;left:${Math.round(r.left)}px;top:${Math.round(r.top)}px;width:${Math.round(Math.max(r.width,140))}px;height:${Math.round(r.height)}px;opacity:0;pointer-events:none;`;
+  const cur=_histMonthAllMode?'':`${_histMonthYear}-${String(_histMonthMonth).padStart(2,'0')}-01`;
+  host.innerHTML=`<input type="hidden" class="dp-inp" data-app-date value="${cur}" aria-label="월 선택" onchange="_histMonthFromPick(this.value)"/>`;
+  document.body.appendChild(host);
+  _dpOpen(host.querySelector('.dp-inp')); // _dpOpen 내부가 _dpClose()를 먼저 부르므로 host 등록은 그 뒤에
+  _dpTransientHost=host;
+}
+function _histMonthFromPick(val){
+  const m=String(val||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return;
+  _histMonthAllMode=false;_histMonthYear=+m[1];_histMonthMonth=+m[2];
   _refreshHistMonthView();
 }
 function _refreshHistMonthView(){
