@@ -1540,8 +1540,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.67';
-const BUILD_TIME='2026-10-29 19:20';
+const APP_VERSION='v6.68';
+const BUILD_TIME='2026-10-29 20:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1554,7 +1554,7 @@ const OWNER_NAME='조상현'; // 내 이름이 소유자명이면 5탭 잠금 �
 let _myName=localStorage.getItem('dutchpay_my_name')||'';
 let _coupleNames=(()=>{try{return JSON.parse(localStorage.getItem('dutchpay_couple')||'[]');}catch(e){return[];}})();
 let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_myName===OWNER_NAME;
-let _historySearch='';
+let _historySearch='';let _histSearchTypedAt=0;
 let _historySort='newest';
 let _histSettleMode=false;
 let _histDrawerOpen=false,_loadedHistId=null,_editingFixedSourceId=null;
@@ -2391,8 +2391,12 @@ function _placeDesktopPicker(pop,anchor,matchAnchorWidth){
   pop.classList.add('desktop-portal');document.body.appendChild(pop);
   const gap=8,pad=8,vw=document.documentElement.clientWidth||innerWidth,vh=(window.visualViewport&&visualViewport.height)||innerHeight;
   const rect=anchor.getBoundingClientRect();
-  // 달력은 입력칸(앵커)과 같은 너비로 맞춘다(최소 280·최대 480px). 입금일시(dtp)·시간 선택기는 기존 360px 상한.
-  const width=matchAnchorWidth?Math.round(Math.max(280,Math.min(rect.width,480,vw-pad*2))):Math.min(360,vw-pad*2);
+  // 달력 너비: 모든 달력을 왼쪽 패널 정산일자 입력칸과 같은 너비로 통일(사용자 요청) — 공유 탭처럼
+  // 입력칸이 넓어도 달력은 커지지 않게 기준 너비를 쓴다. 참조가 없으면 앵커 너비(최소 280).
+  let refW=rect.width;
+  if(matchAnchorWidth){const ref=document.getElementById('meetingDateInp'),rw=ref&&ref.closest('.dp-wrap');if(rw){const w=rw.getBoundingClientRect().width;if(w>0)refW=w;}}
+  // 입금일시(dtp)·시간 선택기는 기존 360px 상한.
+  const width=matchAnchorWidth?Math.round(Math.max(280,Math.min(refW,vw-pad*2))):Math.min(360,vw-pad*2);
   pop.style.width=width+'px';
   const height=pop.offsetHeight,left=Math.min(Math.max(pad,rect.left),Math.max(pad,vw-width-pad));
   let top=rect.bottom+gap;
@@ -4717,7 +4721,7 @@ function _clrHistDr(){const i=document.getElementById('histDrSinp');if(i){i.valu
 function _clrPmSearch(){_pmSearchInput('');const r=document.querySelector('.pm-search');if(r){r.value='';_chkClear(r);}}
 function _clrHistSearch(){const i=document.querySelector('.hist-search');if(i){i.value='';_chkClear(i);updateHistorySearch('');}}
 function updateHistorySearch(val){
-  _historySearch=val;
+  _historySearch=val;_histSearchTypedAt=Date.now();
   if(_histDrawerOpen){_refreshHistDrList();return;}
   const el=document.getElementById('historyRecordList');
   if(!el)return;
@@ -5174,7 +5178,7 @@ async function generateSettleCanvas(){
     y+=NOTICE_H-44;
   }
   // 푸터 — DUTCH PAY 버전을 하단 여백(FOOTER_H) 정중앙에 배치. 모든 생성 이미지 공통 규칙
-  ctx.fillStyle=C.muted;setFont(24,400);ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle=C.muted;setFont(20,300);ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,y+FOOTER_H/2);
   return canvas;
 }
@@ -5525,7 +5529,7 @@ async function generateHistoryCanvas(rec){
   }
   y+=txnCardH;
   // 푸터 — 버전을 하단 여백(FOOTER_H+BOTTOM_PAD) 정중앙에 배치. 모든 생성 이미지 공통 규칙
-  ctx.fillStyle=C.muted;setFont(24,400);ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle=C.muted;setFont(20,300);ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,y+(FOOTER_H+BOTTOM_PAD)/2);
   return canvas;
 }
@@ -5594,7 +5598,7 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
     btn._navTipTimer=setTimeout(()=>btn.classList.remove('show-nav-tip'),1200);
   });
 });
-(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;const _hdb=document.getElementById('histDrBody');if(_hdb)_hdb.addEventListener('scroll',()=>{const si=document.getElementById('histDrSinp');if(si&&si===document.activeElement)si.blur();},{passive:true});})();
+(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;const _hdb=document.getElementById('histDrBody');if(_hdb)_hdb.addEventListener('scroll',()=>{const si=document.getElementById('histDrSinp');if(si&&si===document.activeElement){if(Date.now()-_histSearchTypedAt<800)return;si.blur();}},{passive:true});})();
 // ── 앱 내 뒤로가기 (브라우저·안드로이드 back) ─────────────────────────────
 // SPA라 back 버튼이 열린 오버레이/탭을 닫지 않고 페이지 자체(앱)를 벗어나 버린다.
 // [근본 방식] 클릭을 보고 "추측"하지 않는다. 실제 화면 상태(현재 탭·열린 오버레이 수·검색 여부)를
