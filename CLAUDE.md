@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v6.55** (2026-10-28) — 작업 브랜치
+**v6.56** (2026-10-29) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v6.56 | **한국 시간 새벽(00:00~09:00)에 새 정산 날짜가 어제로 들어가던 버그 수정 + 호출처 없는 함수 12개 정리**(전체 점검) — 새 정산 시작 날짜·새 그룹·복제·불러오기·기록 불러오기·공유 파일명 등 13곳이 UTC 기준 `new Date().toISOString().slice(0,10)`이라 00:30에 `2026-10-28`(어제)이 됐다 → 로컬 `_todayYMD()`로 통일, `test.html`에 TC0b 추가(앱의 Date를 로컬 00:30으로 바꿔 확인). 지운 함수: `showGroupManager`(정산 그룹 선택 창 — 화면에서 여는 버튼이 없고 사용자는 기록 보관함으로 운영), `clearAll`·`clearAllItems`·`getSettleDateStr`·`personCardHtml`·`setItemSort`·`shareHistoryItemImage`·`loadHistoryAsGroup`·`toggleHDbxPanel`·`_showAutoBackupList`·`_histSoftFingerprint`·`_removeFixedDeletedId`(정의만 있고 호출 없음 — 전체 검색 확인). 그룹 데이터 구조·`switchGroup` 등 내부 함수는 그대로. |
 | v6.55 | **공유 탭 기간 행 날짜칸 사이 여백 추가**(사용자: 두 일자가 너무 붙어 답답함) — `.share-date-row`의 `row-gap:0`→**7px**. 기간 모드에서 시작/종료 날짜칸(2행 그리드) 사이에 7px 간격이 생겨 안정적으로 보임. `~`/`×`는 각 행 중앙 정렬 그대로 유지(align-items:center). 아울러 **코덱스 작업(~v6.53) 중 꼬인 부분 점검**: v6.54의 `.dp-wrap .dp-inp{position:absolute}` 수정이 공유 기간뿐 아니라 앱의 **모든 날짜 피커**(입력 탭 정산일자·수금 탭 날짜시간 dtp)를 함께 복구했음을 확인(line 91 `input[type=date]{position:relative}`가 세 곳 모두 래퍼를 부풀렸던 것). 헤드리스 스모크(입력/정산/공유/수금 전 탭·앱 달력·dtp·기록저장·월별통계·데스크탑 경로) 9스텝 전부 에러 0, 날짜칸 간격 7px·피커 래퍼 높이 정상(meeting 36·dtp 34), 계산 137/137 |
 | v6.54 | **공유 탭 기간(날짜) 행 정렬 깨짐 수정**(사용자: 코덱스 작업 후 기간 버튼이 전부 이상함) — 근본 원인: 일반 규칙 `input[type="date"]{position:relative}`(line 91, 명시도 0,1,1)이 오버레이 입력 `.dp-inp{position:absolute}`(0,1,0)를 이겨, 데스크탑 렌더(`_dpDesktopMq` 매칭 시 `type=date`)에서 입력이 in-flow(네이티브 22px)로 떠 `.dp-wrap.share-date-dp` 래퍼 높이가 36→**58px**로 부풀고 보이는 날짜 박스(.dp-txt 36px)가 위로 쏠려 `~`·`+기간`·`×` 컨트롤이 중앙에서 11px 어긋남. **수정**: (1) `.dp-wrap .dp-inp{position:absolute}`(0,2,0) 추가로 오버레이 입력을 항상 absolute 고정 → 래퍼가 항상 36px. (2) 옛 translateY 픽셀 핵 3블록(v4.54 잔재, `.share-date-sep/add/rm/dp`에 -8/-10/-17px) 전부 제거 — grid `align-items:center`로 36px 셀에 36px 컨트롤이 자연 정렬. 표시 전용·계산 무관. 헤드리스: type=date·type=hidden(실모바일) 양쪽 래퍼 36px·시작/종료 날짜 박스 중앙 vs `~`/`×` 중앙 Δ=0.0, 계산 137/137 |
 | v6.53 | **기록보관함 이미지를 보기 전용으로 분리** — 기록 카드의 `이미지`는 더 이상 운영체제 공유창을 열거나 파일 전송을 시도하지 않는다. 해당 기록으로 생성한 이미지만 전체 화면 뷰어에 표시하며 닫기·배경 탭·브라우저 뒤로가기로 돌아온다. 전송 기능은 정산 화면에만 둔다. |

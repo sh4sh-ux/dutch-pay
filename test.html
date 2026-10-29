@@ -144,6 +144,22 @@ suite('TC0: 버전 동기화', () => {
   });
 });
 
+// 한국 시간 00:00~09:00에 '오늘'이 UTC 기준 어제로 들어가던 버그(v6.56). 앱의 Date를 한국 시간 새벽 00:30으로 바꿔 확인한다.
+suite('TC0b: 오늘 날짜(로컬)', () => {
+  let got = null, err = null;
+  try {
+    const Real = APP.Date;
+    APP.Date = class extends Real { constructor(...a) { if (a.length) super(...a); else super(2026, 9, 29, 0, 30, 0); } };
+    got = APP._todayYMD();
+    APP.Date = Real;
+  } catch(e) { err = e.message; }
+  test('새벽 00:30(로컬)의 오늘은 같은 날짜(UTC로 어제가 되지 않음)', () => {
+    if (err) throw new Error(err);
+    if (got !== '2026-10-29') throw new Error(`2026-10-29여야 하는데 ${got}`);
+    return got;
+  });
+});
+
 
 suite('TC1: 균등 분배 (나누어 떨어짐)', () => {
   setup(['A','B','C'], [{ name:'저녁', amount:30000, payer:'A' }]);
