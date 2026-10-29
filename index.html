@@ -1526,8 +1526,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.62';
-const BUILD_TIME='2026-10-29 14:35';
+const APP_VERSION='v6.63';
+const BUILD_TIME='2026-10-29 15:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5291,9 +5291,10 @@ async function generateHistoryCanvas(rec){
   const total=rec.total!=null?rec.total:(rec.items||[]).reduce((s,it)=>s+(+it.amount||0),0);
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
   const txnCardH=txns.length?txns.length*TXN_ROW_H:EMPTY_CARD_H;
+  const hasTxns=txns.length>0;const sendCardH=hasTxns?txns.length*TXN_ROW_H:0;
   const iconMap=new Map();
   for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#4355E8'));}catch(e){iconMap.set(svg,null);}}}
-  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+itemCardH+SECTION_GAP+SECTION_LABEL_H+txnCardH+FOOTER_H+BOTTOM_PAD;
+  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+itemCardH+SECTION_GAP+(hasTxns?SECTION_LABEL_H+sendCardH+SECTION_GAP:0)+SECTION_LABEL_H+txnCardH+FOOTER_H+BOTTOM_PAD;
   const canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;const ctx=canvas.getContext('2d');ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,W*2,H*2);ctx.scale(2,2);
   const setFont=(s,w)=>{ctx.font=`${w||'normal'} ${s}px ${FF}`;};
   const drawCard=(x,y,w,h)=>{ctx.save();ctx.shadowColor='rgba(20,25,40,.25)';ctx.shadowBlur=32;ctx.shadowOffsetY=8;ctx.fillStyle=C.card;roundRectPath(ctx,x,y,w,h,28);ctx.fill();ctx.restore();};
@@ -5361,7 +5362,32 @@ async function generateHistoryCanvas(rec){
     });
   }
   y+=itemCardH+SECTION_GAP;
-  // 입금 내역 (내 기준: 받은 돈)
+  // 송금 (청구액: 각자 보내야 할 금액) — 입금 내역이 있을 때 그 위에 함께 표기
+  if(hasTxns){
+    y=drawSectionLabel('송금',y);
+    drawCard(cardX,y,cardW,sendCardH);
+    txns.forEach((t,i)=>{
+      const ry=y+i*TXN_ROW_H+TXN_ROW_H/2;
+      const amtTxt=fmt(t.amt)+'원';
+      ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
+      const amtX=cardX+cardW-38;const amtW=ctx.measureText(amtTxt).width;ctx.fillText(amtTxt,amtX,ry);
+      const leftX=cardX+38;
+      setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
+      const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry);
+      const fw=ctx.measureText(fromTxt).width;
+      const AGAP=20,AH=9,AL=36,headW=AH*1.8;
+      const AX=leftX+fw+AGAP,AEX=AX+AL;
+      ctx.strokeStyle=C.text;ctx.lineWidth=2.5;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
+      ctx.fillStyle=C.text;ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
+      const toStartX=AEX+AGAP;const maxToW=amtX-amtW-30-toStartX;
+      setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
+      ctx.fillText(truncateCanvasText(ctx,t.to||'',Math.max(maxToW,40)),toStartX,ry);
+      if(i<txns.length-1)drawDivider(y+(i+1)*TXN_ROW_H);
+    });
+    y+=sendCardH+SECTION_GAP;
+  }
+  // 입금 내역 (내 기준: 실제 입금된 금액)
   y=drawSectionLabel('입금 내역',y);
   drawCard(cardX,y,cardW,txnCardH);
   if(!txns.length){
@@ -5382,7 +5408,7 @@ async function generateHistoryCanvas(rec){
       const badgeFg=pm.done?(diff<0?C.red:C.green):C.muted;
       setFont(22,600);const btw=ctx.measureText(badgeTxt).width;
       const bph=16,bpv=7,bH=22+bpv*2,bW=btw+bph*2;
-      const amtTxt=fmt(billing)+'원';
+      const amtTxt=fmt(pm.done?received:billing)+'원';
       ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
       const amtX=cardX+cardW-38;const amtW=ctx.measureText(amtTxt).width;ctx.fillText(amtTxt,amtX,ry);
       const leftX=cardX+38;
