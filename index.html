@@ -1526,8 +1526,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.59';
-const BUILD_TIME='2026-10-29 12:40';
+const APP_VERSION='v6.60';
+const BUILD_TIME='2026-10-29 13:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5044,7 +5044,7 @@ async function generateSettleCanvas(){
       const ws=(it.watchers||[]).filter(w=>!mems.includes(w));
       const memsDisplay=it.isTreat?[...mems,...ws]:[...mems,...ws.map(w=>w+'(깍두기)')];
       const payerText=`${it.payer||'결제자 미정'} 결제`;
-      const treatBadgeTxt='🎉 ';
+      const treatBadgeTxt='🎉 한턱 쏨 🎉';
       setFont(20,400);const pm=ctx.measureText(payerText);
       const pillTW=pm.width;const pillW=pillTW+pillPadX*2,pillH=20+pillPadY*2;
       setFont(20,600);const tbW=it.isTreat?ctx.measureText(treatBadgeTxt).width+12:0;
@@ -5341,7 +5341,7 @@ async function generateHistoryCanvas(rec){
       const ws=(it.watchers||[]).filter(w=>!mems.includes(w));
       const memsDisplay=it.isTreat?[...mems,...ws]:[...mems,...ws.map(w=>w+'(깍두기)')];
       const payerTxt=`${it.payer||'결제자 미정'} 결제`;
-      const treatTxt='🎉 ';
+      const treatTxt='🎉 한턱 쏨 🎉';
       setFont(20,400);const pmw=ctx.measureText(payerTxt).width;
       const ppx=14,ppy=6,pillW=pmw+ppx*2,pillH=20+ppy*2;
       setFont(20,600);const tbW=it.isTreat?ctx.measureText(treatTxt).width+12:0;
