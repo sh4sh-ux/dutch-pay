@@ -711,9 +711,12 @@ svg{display:block;flex-shrink:0;}
 .rcpt-viewer.on{opacity:1;pointer-events:auto;}
 .rcpt-viewer-inner{position:relative;max-width:100%;max-height:100%;display:flex;align-items:center;justify-content:center;transform:scale(.96);transition:transform .18s ease;}
 .rcpt-viewer.on .rcpt-viewer-inner{transform:scale(1);}
-.rcpt-viewer-img{max-width:100%;max-height:82vh;border-radius:12px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none;cursor:zoom-in;transition:transform .2s ease;touch-action:none;will-change:transform;user-select:none;-webkit-user-select:none;}
+.rcpt-viewer-img{max-width:100%;max-height:82vh;border-radius:12px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none;cursor:zoom-in;touch-action:none;user-select:none;-webkit-user-select:none;}
 .rcpt-viewer-img.ready{display:block;}
-.rcpt-viewer-close{position:absolute;top:-46px;right:-2px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;border:none;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:2;}
+.rcpt-viewer-close{position:absolute;top:-46px;right:-2px;width:38px;height:38px;border-radius:50%;background:rgba(28,28,30,.78);box-shadow:0 0 0 1px rgba(255,255,255,.28);color:#fff;border:none;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:2;}
+.imgzoom-ctl{position:absolute;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:3;display:flex;gap:6px;}
+.imgzoom-ctl button{min-width:44px;height:38px;padding:0 12px;border-radius:19px;border:none;background:rgba(28,28,30,.78);box-shadow:0 0 0 1px rgba(255,255,255,.28);color:#fff;font-size:17px;font-weight:600;cursor:pointer;font-family:inherit;}
+.rcpt-viewer-close{z-index:3;}
 .rcpt-viewer-close:hover{background:rgba(255,255,255,.28);}
 .rcpt-viewer-spin{width:38px;height:38px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:rcptspin .8s linear infinite;}
 @keyframes rcptspin{to{transform:rotate(360deg);}}
@@ -1523,7 +1526,7 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.56';
+const APP_VERSION='v6.57';
 const BUILD_TIME='2026-10-28 20:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -4016,6 +4019,39 @@ async function openArchivedReceiptViewer(historyId,itemId,ev){
   let src='';try{src=await _resolveReceiptSrc(it);}catch(e){src='';}
   v.setSrc(src);
 }
+// v6.57 — 영수증 사진 확대(영수증 앱 v5.38과 같은 동작): 핀치·더블탭·휠·−/+ 버튼·이동(경계 제한)·바깥 탭 닫기
+function _bindImgZoom(ov,img,close){
+  const MAX=6;let s=1,x=0,y=0;const pts=new Map();let pinch=null,down=null,lastTap=null;
+  img.style.touchAction='none';img.style.userSelect='none';img.style.webkitUserSelect='none';img.draggable=false;ov.style.touchAction='none';
+  const ctl=document.createElement('div');ctl.className='imgzoom-ctl';
+  ctl.innerHTML='<button type="button" data-z="out" aria-label="축소">−</button><button type="button" data-z="reset" aria-label="원래 크기">100%</button><button type="button" data-z="in" aria-label="확대">+</button>';
+  ov.appendChild(ctl);const pct=ctl.querySelector('[data-z=reset]');
+  const clamp=()=>{const mx=Math.max(0,(img.offsetWidth*s-ov.clientWidth)/2),my=Math.max(0,(img.offsetHeight*s-ov.clientHeight)/2);x=Math.max(-mx,Math.min(mx,x));y=Math.max(-my,Math.min(my,y));};
+  const apply=anim=>{img.style.transition=anim?'transform .18s ease':'none';img.style.transform=`translate(${x}px,${y}px) scale(${s})`;img.style.cursor=s>1.01?'grab':'zoom-in';pct.textContent=Math.round(s*100)+'%';};
+  const zoomAt=(ns,px,py,anim)=>{ns=Math.max(1,Math.min(MAX,ns));if(ns<1.02)ns=1;const k=ns/s,cx=px-ov.clientWidth/2,cy=py-ov.clientHeight/2;x=cx-k*(cx-x);y=cy-k*(cy-y);s=ns;if(s===1){x=0;y=0;}clamp();apply(anim);};
+  const mid=()=>[ov.clientWidth/2,ov.clientHeight/2];
+  ctl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();const [mx,my]=mid(),z=b.dataset.z;if(z==='in')zoomAt(s*1.5,mx,my,true);else if(z==='out')zoomAt(s/1.5,mx,my,true);else zoomAt(1,mx,my,true);});
+  ctl.addEventListener('pointerdown',e=>e.stopPropagation());
+  ov.addEventListener('pointerdown',e=>{if(e.target.closest('button,a'))return;try{ov.setPointerCapture(e.pointerId);}catch(_){}
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===1){down={x:e.clientX,y:e.clientY,ox:x,oy:y,onImg:e.target===img,moved:false};}
+    else if(pts.size===2){const[a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),s:s};down&&(down.moved=true);}});
+  ov.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size>=2&&pinch&&pinch.d>0){const[a,b]=[...pts.values()];zoomAt(pinch.s*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,(a.x+b.x)/2,(a.y+b.y)/2,false);}
+    else if(pts.size===1&&down){if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)down.moved=true;if(s>1.01&&down.moved){x=down.ox+(e.clientX-down.x);y=down.oy+(e.clientY-down.y);clamp();apply(false);}}});
+  const end=e=>{if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);if(pts.size<2)pinch=null;
+    if(pts.size===0&&down){const d=down;down=null;
+      if(!d.moved){
+        if(d.onImg){const t=Date.now();if(lastTap&&t-lastTap.t<300&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<30){lastTap=null;zoomAt(s>1.01?1:2.5,e.clientX,e.clientY,true);}else lastTap={t,x:e.clientX,y:e.clientY};}
+        else if(s<=1.01&&e.type==='pointerup')close();}
+      else if(s<1.02)zoomAt(1,0,0,true);}};
+  ov.addEventListener('pointerup',end);ov.addEventListener('pointercancel',end);
+  ov.addEventListener('wheel',e=>{e.preventDefault();zoomAt(s*Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0018)),e.clientX,e.clientY,false);},{passive:false});
+  const onKey=e=>{if(!ov.isConnected){document.removeEventListener('keydown',onKey);return;}const [mx,my]=mid();
+    if(e.key==='+'||e.key==='=')zoomAt(s*1.5,mx,my,true);else if(e.key==='-')zoomAt(s/1.5,mx,my,true);else if(e.key==='0')zoomAt(1,mx,my,true);};
+  document.addEventListener('keydown',onKey);
+  apply(false);
+}
 function _showReceiptViewer(name){
   document.querySelector('.rcpt-viewer')?.remove();
   const ov=document.createElement('div');ov.className='rcpt-viewer';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-label',(name||'영수증')+' 보기');
@@ -4031,19 +4067,7 @@ function _showReceiptViewer(name){
     img.src=src;
   }
   ov.querySelector('.rcpt-viewer-close').onclick=close;
-  ov.addEventListener('click',e=>{if(e.target===ov)close();});
-  // 확대(탭/더블탭·휠·핀치) + 이동(드래그/한손가락 이동)
-  let scale=1,tx=0,ty=0,sx=0,sy=0, px=0,py=0,moved=false,pinchD=0,pinchS=1;
-  const pts=new Map();
-  const _dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-  const _clamp=()=>{const mx=(img.clientWidth*(scale-1))/2+40,my=(img.clientHeight*(scale-1))/2+40;tx=Math.max(-mx,Math.min(mx,tx));ty=Math.max(-my,Math.min(my,ty));};
-  const _apply=anim=>{img.style.transition=anim?'transform .2s ease':'none';img.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;img.style.cursor=scale>1?'grab':'zoom-in';};
-  const _reset=()=>{scale=1;tx=0;ty=0;_apply(true);};
-  img.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{img.setPointerCapture(e.pointerId);}catch(_){}pts.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=false;if(pts.size===1){px=e.clientX;py=e.clientY;sx=tx;sy=ty;}else if(pts.size===2){const[a,b]=[...pts.values()];pinchD=_dist(a,b);pinchS=scale;}});
-  img.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size>=2){const[a,b]=[...pts.values()];if(pinchD>0){scale=Math.max(1,Math.min(5,pinchS*_dist(a,b)/pinchD));_clamp();_apply(false);moved=true;}}else if(scale>1){tx=sx+(e.clientX-px);ty=sy+(e.clientY-py);_clamp();_apply(false);moved=true;}});
-  const _end=e=>{pts.delete(e.pointerId);if(pts.size<2)pinchD=0;if(pts.size===0){if(!moved){if(scale>1)_reset();else{scale=2.4;_apply(true);}}else if(scale<=1.02)_reset();}};
-  img.addEventListener('pointerup',_end);img.addEventListener('pointercancel',_end);
-  img.addEventListener('wheel',e=>{e.preventDefault();scale=Math.max(1,Math.min(5,scale*(e.deltaY<0?1.15:0.87)));if(scale<=1){tx=0;ty=0;}_clamp();_apply(false);},{passive:false});
+  _bindImgZoom(ov,img,close);
   document.addEventListener('keydown',onKey);
   document.body.appendChild(ov);
   requestAnimationFrame(()=>ov.classList.add('on'));
@@ -5416,8 +5440,8 @@ async function viewHistoryImage(id){
     viewer.innerHTML='<button class="history-image-viewer-close" type="button" aria-label="닫기">×</button><img alt="보관된 정산 기록 이미지">';
     viewer.querySelector('img').src=url;
     viewer.querySelector('button').onclick=closeHistoryImageViewer;
-    viewer.addEventListener('click',event=>{if(event.target===viewer)closeHistoryImageViewer();});
     document.body.appendChild(viewer);
+    _bindImgZoom(viewer,viewer.querySelector('img'),closeHistoryImageViewer);
   }catch(err){toast('이미지를 열지 못했어요',{type:'error'});}
 }
 
