@@ -711,9 +711,12 @@ svg{display:block;flex-shrink:0;}
 .rcpt-viewer.on{opacity:1;pointer-events:auto;}
 .rcpt-viewer-inner{position:relative;max-width:100%;max-height:100%;display:flex;align-items:center;justify-content:center;transform:scale(.96);transition:transform .18s ease;}
 .rcpt-viewer.on .rcpt-viewer-inner{transform:scale(1);}
-.rcpt-viewer-img{max-width:100%;max-height:82vh;border-radius:12px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none;cursor:zoom-in;transition:transform .2s ease;touch-action:none;will-change:transform;user-select:none;-webkit-user-select:none;}
+.rcpt-viewer-img{max-width:100%;max-height:82vh;border-radius:12px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none;cursor:zoom-in;touch-action:none;user-select:none;-webkit-user-select:none;}
 .rcpt-viewer-img.ready{display:block;}
-.rcpt-viewer-close{position:absolute;top:-46px;right:-2px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;border:none;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:2;}
+.rcpt-viewer-close{position:absolute;top:-46px;right:-2px;width:38px;height:38px;border-radius:50%;background:rgba(28,28,30,.78);box-shadow:0 0 0 1px rgba(255,255,255,.28);color:#fff;border:none;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:2;}
+.imgzoom-ctl{position:absolute;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:3;display:flex;gap:6px;}
+.imgzoom-ctl button{min-width:44px;height:38px;padding:0 12px;border-radius:19px;border:none;background:rgba(28,28,30,.78);box-shadow:0 0 0 1px rgba(255,255,255,.28);color:#fff;font-size:17px;font-weight:600;cursor:pointer;font-family:inherit;}
+.rcpt-viewer-close{z-index:3;}
 .rcpt-viewer-close:hover{background:rgba(255,255,255,.28);}
 .rcpt-viewer-spin{width:38px;height:38px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:rcptspin .8s linear infinite;}
 @keyframes rcptspin{to{transform:rotate(360deg);}}
@@ -1523,7 +1526,7 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.55';
+const APP_VERSION='v6.57';
 const BUILD_TIME='2026-10-28 20:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
@@ -1544,7 +1547,9 @@ let _histDrawerOpen=false,_loadedHistId=null,_editingFixedSourceId=null;
 let _histMonthYear=new Date().getFullYear(),_histMonthMonth=new Date().getMonth()+1,_histMonthAllMode=true;
 let dTab='input',mTab='input';
 let itemSort='default',itemSearch='';
-let settleDateStart=new Date().toISOString().slice(0,10),settleDateEnd=null;
+// v6.56 — '오늘'은 UTC가 아니라 한국(로컬) 날짜로. toISOString().slice(0,10)은 한국 시간 00:00~09:00에 어제가 된다.
+function _todayYMD(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+let settleDateStart=_todayYMD(),settleDateEnd=null;
 let groups=[],currentGroupId=null;
 let deletedGroups={};
 const _syncSnapshots={};
@@ -1555,33 +1560,21 @@ function _groupHash(g){return _dataHash({name:g.name,nameAuto:g.nameAuto,data:g.
 function _loadSyncedHashes(){try{return JSON.parse(localStorage.getItem(SYNC_HASHES_KEY)||'{}')||{};}catch(e){return {};}}
 function _saveSyncedHashes(h){try{localStorage.setItem(SYNC_HASHES_KEY,JSON.stringify(h));}catch(e){}}
 
-function _emptyGroupData(){return{people:[],items:[],idc:0,settleDateStart:new Date().toISOString().slice(0,10),settleDateEnd:null,itemSort:'default',itemSearch:'',payments:{}};}
+function _emptyGroupData(){return{people:[],items:[],idc:0,settleDateStart:_todayYMD(),settleDateEnd:null,itemSort:'default',itemSearch:'',payments:{}};}
 function _autoGroupName(p){return(!p||!p.length)?'모임명 또는 참여자':p.join(', ');}
 function _updateAutoNameIfNeeded(){const g=getCurrentGroup();if(!g||!g.nameAuto)return;g.name=_autoGroupName(people);}
 function _newGroupId(){return 'g'+Date.now()+Math.floor(Math.random()*1000);}
 function getCurrentGroup(){return groups.find(g=>g.id===currentGroupId);}
 function syncCurrentToGroup(){const g=getCurrentGroup();if(!g)return;if(!g.createdAt)g.createdAt=new Date().toISOString();const nextData={people:people.slice(),items:JSON.parse(JSON.stringify(items)),idc,settleDateStart,settleDateEnd,itemSort,itemSearch,payments:JSON.parse(JSON.stringify(payments))};const nextStr=JSON.stringify(nextData);if(nextStr!==_syncSnapshots[g.id]){g.updatedAt=new Date().toISOString();_syncSnapshots[g.id]=nextStr;}g.data=nextData;}
-function loadGroupData(g){people=(g.data.people||[]).slice();items=JSON.parse(JSON.stringify(g.data.items||[]));idc=g.data.idc||0;settleDateStart=g.data.settleDateStart||new Date().toISOString().slice(0,10);settleDateEnd=g.data.settleDateEnd!==undefined?g.data.settleDateEnd:null;itemSort=g.data.itemSort||'default';itemSearch=g.data.itemSearch||'';payments=JSON.parse(JSON.stringify(g.data.payments||{}));selectedId=null;}
+function loadGroupData(g){people=(g.data.people||[]).slice();items=JSON.parse(JSON.stringify(g.data.items||[]));idc=g.data.idc||0;settleDateStart=g.data.settleDateStart||_todayYMD();settleDateEnd=g.data.settleDateEnd!==undefined?g.data.settleDateEnd:null;itemSort=g.data.itemSort||'default';itemSearch=g.data.itemSearch||'';payments=JSON.parse(JSON.stringify(g.data.payments||{}));selectedId=null;}
 function switchGroup(id){if(id===currentGroupId)return;syncCurrentToGroup();currentGroupId=id;const g=getCurrentGroup();if(g)loadGroupData(g);_loadedHistId=null;_editingFixedSourceId=null;renderAll();}
 function createGroup(name){const id=_newGroupId();syncCurrentToGroup();const trimmed=(name||'').trim();const isAuto=!trimmed;const now=new Date().toISOString();groups.push({id,name:trimmed||_autoGroupName([]),nameAuto:isAuto,createdAt:now,updatedAt:now,data:_emptyGroupData()});currentGroupId=id;loadGroupData(groups[groups.length-1]);renderAll();toast(trimmed?`'${trimmed}' 그룹 생성됨`:'새 그룹이 생성됐어요',{type:'success'});}
 function renameGroup(id,newName){const g=groups.find(g=>g.id===id);if(!g)return;const trimmed=(newName||'').trim();if(!trimmed)return;g.name=trimmed;g.nameAuto=false;g.updatedAt=new Date().toISOString();saveState();renderAll();}
-function duplicateGroup(id){const g=groups.find(g=>g.id===id);if(!g)return;syncCurrentToGroup();const newId=_newGroupId();const ng={id:newId,name:g.name+' (복사)',nameAuto:false,data:{people:(g.data.people||[]).slice(),items:[],idc:0,settleDateStart:new Date().toISOString().slice(0,10),settleDateEnd:null,itemSort:'default',itemSearch:''}};groups.push(ng);currentGroupId=newId;loadGroupData(ng);renderAll();toast(`'${ng.name}' 생성됨`,{type:'success'});}
+function duplicateGroup(id){const g=groups.find(g=>g.id===id);if(!g)return;syncCurrentToGroup();const newId=_newGroupId();const ng={id:newId,name:g.name+' (복사)',nameAuto:false,data:{people:(g.data.people||[]).slice(),items:[],idc:0,settleDateStart:_todayYMD(),settleDateEnd:null,itemSort:'default',itemSearch:''}};groups.push(ng);currentGroupId=newId;loadGroupData(ng);renderAll();toast(`'${ng.name}' 생성됨`,{type:'success'});}
 function deleteGroup(id){if(groups.length<=1){toast('마지막 그룹은 삭제할 수 없어요',{type:'error'});return;}const idx=groups.findIndex(g=>g.id===id);if(idx<0)return;if(!confirm(`'${groups[idx].name}' 그룹을 삭제할까요?`))return;const snap={group:JSON.parse(JSON.stringify(groups[idx])),idx,wasCurrent:id===currentGroupId};groups.splice(idx,1);deletedGroups[id]=new Date().toISOString();delete _syncSnapshots[id];if(snap.wasCurrent){currentGroupId=groups[0].id;loadGroupData(groups[0]);}renderAll();toast(`'${snap.group.name}' 그룹 삭제됨`,{action:()=>{delete deletedGroups[snap.group.id];groups.splice(snap.idx,0,snap.group);if(snap.wasCurrent){syncCurrentToGroup();currentGroupId=snap.group.id;loadGroupData(snap.group);}renderAll();},actionLabel:'되돌리기'});}
 
 function _groupSummary(g){const isCurrent=g.id===currentGroupId;const data=isCurrent?{people,items,settleDateStart,settleDateEnd}:g.data||{};const peopleArr=data.people||[];const itemsArr=data.items||[];const total=itemsArr.reduce((s,it)=>s+(+it.amount||0),0);let dateText='';if(data.settleDateStart){const fmtD=(iso)=>iso?iso.slice(5).replace('-','.'):'';if(data.settleDateEnd&&data.settleDateEnd!==data.settleDateStart){dateText=fmtD(data.settleDateStart)+'~'+fmtD(data.settleDateEnd);}else{dateText=data.settleDateStart.slice(2).replace(/-/g,'.');}}return{total,totalText:total?fmt(total)+'원':'—',peopleText:peopleArr.length?peopleArr.join(' · '):'참여자 없음',peopleCount:peopleArr.length,dateText};}
 
-function showGroupManager(anchorEl,ev){
-  if(ev){ev.stopPropagation();ev.preventDefault();}
-  document.querySelectorAll('.icon-pop,.rounder-pop,.group-pop,.data-pop,.pop-backdrop').forEach(el=>el.remove());
-  const pop=document.createElement('div');pop.className='group-pop';
-  const ordered=[...groups].sort((a,b)=>{const ad=a.data?.settleDateStart||a.updatedAt||'',bd=b.data?.settleDateStart||b.updatedAt||'';return bd.localeCompare(ad)||(b.updatedAt||'').localeCompare(a.updatedAt||'');});
-  const cardsHtml=ordered.map(g=>{const s=_groupSummary(g);const on=g.id===currentGroupId;const search=[g.name,s.peopleText,s.dateText,g.data?.settleDateStart||''].join(' ').toLowerCase();return `<div class="group-card${on?' on':''}" data-group-search="${e(search)}"><button class="group-card-main" data-action="switch" data-id="${e(g.id)}"><span class="group-card-dot"></span><span class="group-card-info"><span class="group-card-name">${e(g.name)}</span><span class="group-card-meta"><span class="group-card-people">${e(s.peopleText)}</span>${s.dateText?`<span class="group-card-date">${e(s.dateText)}</span>`:''}</span></span><span class="group-card-amt">${s.totalText}</span></button><button class="group-card-more" data-action="more" data-id="${e(g.id)}" aria-label="더보기">⋯</button></div>`;}).join('');
-  pop.innerHTML=`<div class="group-pop-hd"><span>정산 그룹</span><span>${groups.length}개</span></div><input class="group-search" type="search" placeholder="날짜·모임·참여자 검색" aria-label="정산 그룹 검색"><div class="group-list">${cardsHtml}</div><button class="group-add" data-action="add">＋ 새 그룹</button>`;
-  const searchInput=pop.querySelector('.group-search');searchInput.addEventListener('input',()=>{const q=searchInput.value.trim().toLowerCase();pop.querySelectorAll('.group-card').forEach(card=>{card.style.display=!q||(card.dataset.groupSearch||'').includes(q)?'':'none';});});
-  pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action,id=btn.dataset.id;if(action==='switch'){switchGroup(id);pop.remove();}else if(action==='more'){e2.preventDefault();_openGroupMorePop(btn,id,pop);}else if(action==='rename'){const g=groups.find(g=>g.id===id);const newName=prompt('새 이름:',g?g.name:'');if(newName&&newName.trim())renameGroup(id,newName);pop.remove();}else if(action==='delete'){deleteGroup(id);pop.remove();}else if(action==='add'){const name=prompt('새 그룹 이름:','');if(name&&name.trim())createGroup(name.trim());pop.remove();}else if(action==='duplicate'){duplicateGroup(id);pop.remove();}});
-  document.body.appendChild(pop);_positionPopover(pop,anchorEl);
-  setTimeout(()=>{const h=(e3)=>{if(!pop.contains(e3.target)){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};const k=(e3)=>{if(e3.key==='Escape'){pop.remove();document.removeEventListener('click',h);document.removeEventListener('keydown',k);}};document.addEventListener('click',h);document.addEventListener('keydown',k);},0);
-}
 
 function _positionPopover(pop,anchorEl,rightAlign){
   const r=anchorEl.getBoundingClientRect();
@@ -1693,14 +1686,13 @@ function clearCoupleSettings(){
 }
 function refreshGroupSwitcher(){const g=getCurrentGroup();const name=g?g.name:'모임명 또는 참여자';document.querySelectorAll('.group-switcher-name').forEach(el=>{el.textContent=name;});}
 
-function exportData(){syncCurrentToGroup();const payload={version:2,exportedAt:new Date().toISOString(),groups,currentGroupId};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.download=`더치페이_백업_${new Date().toISOString().slice(0,10)}.json`;a.href=url;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);toast('백업 파일이 다운로드됐어요',{type:'success'});}
+function exportData(){syncCurrentToGroup();const payload={version:2,exportedAt:new Date().toISOString(),groups,currentGroupId};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.download=`더치페이_백업_${_todayYMD()}.json`;a.href=url;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);toast('백업 파일이 다운로드됐어요',{type:'success'});}
 
-function exportCurrentGroupCsv(){const g=getCurrentGroup();if(!g){toast('내보낼 데이터가 없어요',{type:'error'});return;}syncCurrentToGroup();if(!items.length){toast('지출이 없는 그룹이에요',{type:'error'});return;}const BOM='﻿';const esc=(s)=>{s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};const lines=[];lines.push(`그룹,${esc(g.name)}`);if(settleDateStart){if(settleDateEnd&&settleDateEnd!==settleDateStart){lines.push(`기간,${settleDateStart} ~ ${settleDateEnd}`);}else{lines.push(`일자,${settleDateStart}`);}}const total=items.reduce((s,it)=>s+(+it.amount||0),0);lines.push(`총 금액,${total}`);lines.push(`참여자,${esc(people.join(', '))}`);lines.push('');lines.push('# 지출 내역');lines.push('번호,지출 이름,금액,결제자,참여자');items.forEach((it,i)=>{const mems=(it.members.length?it.members:people).join(', ');lines.push([i+1,esc(it.name||'(이름 없음)'),+it.amount||0,esc(it.payer||''),esc(mems)].join(','));});lines.push('');const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);if(txns.length){lines.push('# 송금 내역');lines.push('보내는 사람,받는 사람,금액');txns.forEach(t=>{lines.push([esc(t.from),esc(t.to),t.amt].join(','));});lines.push('');}lines.push('# 개인별 정산');lines.push('이름,결제 총액,분담 총액,순액');people.forEach(p=>{const paidP=paid[p]||0,owesP=owes[p]||0,net=paidP-owesP;lines.push([esc(p),paidP,owesP,net].join(','));});const csv=BOM+lines.join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');const safeName=g.name.replace(/[\\\/:*?"<>|]/g,'_');a.download=`더치페이_${safeName}_${new Date().toISOString().slice(0,10)}.csv`;a.href=url;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);toast('엑셀(CSV) 파일이 다운로드됐어요',{type:'success'});}
+function exportCurrentGroupCsv(){const g=getCurrentGroup();if(!g){toast('내보낼 데이터가 없어요',{type:'error'});return;}syncCurrentToGroup();if(!items.length){toast('지출이 없는 그룹이에요',{type:'error'});return;}const BOM='﻿';const esc=(s)=>{s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};const lines=[];lines.push(`그룹,${esc(g.name)}`);if(settleDateStart){if(settleDateEnd&&settleDateEnd!==settleDateStart){lines.push(`기간,${settleDateStart} ~ ${settleDateEnd}`);}else{lines.push(`일자,${settleDateStart}`);}}const total=items.reduce((s,it)=>s+(+it.amount||0),0);lines.push(`총 금액,${total}`);lines.push(`참여자,${esc(people.join(', '))}`);lines.push('');lines.push('# 지출 내역');lines.push('번호,지출 이름,금액,결제자,참여자');items.forEach((it,i)=>{const mems=(it.members.length?it.members:people).join(', ');lines.push([i+1,esc(it.name||'(이름 없음)'),+it.amount||0,esc(it.payer||''),esc(mems)].join(','));});lines.push('');const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);if(txns.length){lines.push('# 송금 내역');lines.push('보내는 사람,받는 사람,금액');txns.forEach(t=>{lines.push([esc(t.from),esc(t.to),t.amt].join(','));});lines.push('');}lines.push('# 개인별 정산');lines.push('이름,결제 총액,분담 총액,순액');people.forEach(p=>{const paidP=paid[p]||0,owesP=owes[p]||0,net=paidP-owesP;lines.push([esc(p),paidP,owesP,net].join(','));});const csv=BOM+lines.join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');const safeName=g.name.replace(/[\\\/:*?"<>|]/g,'_');a.download=`더치페이_${safeName}_${_todayYMD()}.csv`;a.href=url;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);toast('엑셀(CSV) 파일이 다운로드됐어요',{type:'success'});}
 
 
 
 function getDisplayItems(){return items.slice();}
-function setItemSort(v){itemSort=v;renderAll();}
 
 let _toastContainer=null;
 const _activeToasts=new Map();
@@ -1770,27 +1762,6 @@ async function _restoreAutoBackup(idx){
   const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);
   saveState();renderAll();
   toast('자동 백업에서 복원됐어요',{type:'success'});
-}
-async function _showAutoBackupList(){
-  const slots=await _loadAutoBackups();
-  if(!slots.length){toast('저장된 자동 백업이 없어요',{type:'error'});return;}
-  const pop=document.createElement('div');pop.className='data-pop';
-  const rows=slots.map((s,i)=>{
-    const dt=s.savedAt?s.savedAt.slice(0,16).replace('T',' '):'?';
-    const cg=(s.groups||[]).find(g=>g.id===s.currentGroupId)||(s.groups||[])[0];
-    const data=cg&&cg.data||{};
-    const pCount=(data.people||[]).length;
-    const iCount=(data.items||[]).filter(it=>+it.amount!==0).length;
-    const total=(data.items||[]).reduce((sum,it)=>sum+(+it.amount||0),0);
-    const detail=pCount?`${pCount}명 · ${iCount}건 · ${fmt(total)}원`:`${(s.groups||[]).length}개 그룹`;
-    return `<button class="data-pop-btn" data-idx="${i}">${e(s.reason||'자동 백업')}<br><span style="font-size:12px;color:var(--label3)">${dt} · ${detail}</span></button>`;
-  }).join('');
-  pop.innerHTML=`<div class="data-pop-hd">자동 백업 복원</div>${rows}`;
-  pop.addEventListener('click',(ev)=>{ev.stopPropagation();const btn=ev.target.closest('[data-idx]');if(!btn)return;const idx=parseInt(btn.dataset.idx,10);pop.remove();_restoreAutoBackup(idx);});
-  document.body.appendChild(pop);
-  const anchor=document.querySelector('.owner-area-btn')||document.body;
-  _positionPopover(pop,anchor,true);
-  setTimeout(()=>{const h=(ev)=>{if(!pop.contains(ev.target)){pop.remove();document.removeEventListener('click',h);}};document.addEventListener('click',h);},0);
 }
 
 /* ── 옛 위치에서 가져오기 ──────────────────────────────────────────
@@ -2190,7 +2161,7 @@ function saveState(){
     toast(_storageErrorMessage(e,'데이터 저장'),{type:'error'});
   }
 }
-function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if((d.version===2||d.version===3)&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;deletedGroups=d.deletedGroups||{};currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);groups.forEach(g=>{_syncSnapshots[g.id]=JSON.stringify(g.data);});if(!localStorage.getItem('dutchpay_couple')){for(const grp of groups){const c=(grp.data?.couples||[])[0];if(c?.length){_coupleNames=c;localStorage.setItem('dutchpay_couple',JSON.stringify(c));break;}}}}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
+function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);return;}const d=JSON.parse(raw);if((d.version===2||d.version===3)&&Array.isArray(d.groups)&&d.groups.length){groups=d.groups;deletedGroups=d.deletedGroups||{};currentGroupId=d.currentGroupId||groups[0].id;const g=getCurrentGroup()||groups[0];currentGroupId=g.id;loadGroupData(g);groups.forEach(g=>{_syncSnapshots[g.id]=JSON.stringify(g.data);});if(!localStorage.getItem('dutchpay_couple')){for(const grp of groups){const c=(grp.data?.couples||[])[0];if(c?.length){_coupleNames=c;localStorage.setItem('dutchpay_couple',JSON.stringify(c));break;}}}}else{const id=_newGroupId();const v1People=Array.isArray(d.people)?d.people:[];groups=[{id,name:v1People.length?_autoGroupName(v1People):'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:{people:v1People,items:Array.isArray(d.items)?d.items:[],idc:typeof d.idc==='number'?d.idc:0,settleDateStart:d.settleDateStart||_todayYMD(),settleDateEnd:d.settleDateEnd!==undefined?d.settleDateEnd:null,itemSort:'default',itemSearch:''}}];currentGroupId=id;loadGroupData(groups[0]);}}catch(e){const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:new Date().toISOString(),data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);}}
 
 // 영수증 DB 전송은 PC·모바일이 같은 Dropbox 봉투를 동시에 읽을 수 있다. 예전에는 각 기기가
 // 서로 다른 그룹 id를 만들어 Dropbox 병합 뒤 같은 sourceId가 여러 그룹에 남았다. sourceId는
@@ -2333,7 +2304,7 @@ function _mergeReceiptEnvelope(envelope){
       ...(existing||{}),id:groupId,receiptSourceId:finalSourceIds.length===1?finalSourceIds[0]:null,receiptSourceIds:finalSourceIds,
       name:finalItems.length===1?firstName:`${firstName} 외 ${finalItems.length-1}건`,nameAuto:false,
       createdAt:existing?.createdAt||now,updatedAt:now,
-      data:{people,items:finalItems,idc:Math.max(0,...finalItems.map(item=>Number(item.id)||0)),settleDateStart:dates[0]||new Date().toISOString().slice(0,10),settleDateEnd:dates.length&&dates.at(-1)!==dates[0]?dates.at(-1):null,itemSort:'default',itemSearch:'',payments:existing?.data?.payments||{}}
+      data:{people,items:finalItems,idc:Math.max(0,...finalItems.map(item=>Number(item.id)||0)),settleDateStart:dates[0]||_todayYMD(),settleDateEnd:dates.length&&dates.at(-1)!==dates[0]?dates.at(-1):null,itemSort:'default',itemSearch:'',payments:existing?.data?.payments||{}}
     };
     if(existing)groups[existingIndex]=group;else groups.push(group);
     const repaired=_deduplicateReceiptGroups(groups,groupId,deletedGroups,now);
@@ -2385,9 +2356,9 @@ async function pullReceiptDbInbox(){
   }catch(e){}finally{_rbPulling=false;}
 }
 async function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!await _autoBackup('전체 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const now=new Date().toISOString();groups.forEach(g=>{deletedGroups[g.id]=now;});const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:now,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
-async function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!await _autoBackup('이번 정산 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}people=[];items=[];payments={};idc=0;settleDateStart=new Date().toISOString().slice(0,10);settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
+async function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!await _autoBackup('이번 정산 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}people=[];items=[];payments={};idc=0;settleDateStart=_todayYMD();settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
 
-function updateMeetingDate(val){settleDateStart=val||new Date().toISOString().slice(0,10);_dpUpdate('meetingDateDisp',settleDateStart);saveState();}
+function updateMeetingDate(val){settleDateStart=val||_todayYMD();_dpUpdate('meetingDateDisp',settleDateStart);saveState();}
 function fmtDate(iso){if(!iso)return '';const[y,m,d]=iso.split('-');return `${y}.${m}.${d}`;}
 function _dpSync(inp){const txt=inp.previousElementSibling;if(txt&&txt.classList.contains('dp-txt'))txt.textContent=fmtDate(inp.value);}
 const _dpDesktopMq=matchMedia('(hover:hover) and (pointer:fine)');
@@ -2501,8 +2472,7 @@ function _dtpTimeOpen(inp){
 }
 document.addEventListener('click',event=>{if(_dtpTimePicker&&!_dtpTimePicker.pop.contains(event.target)&&!_dtpTimePicker.root.contains(event.target))_dtpTimeClose(false);},true);
 document.addEventListener('keydown',event=>{const inp=event.target;if(!inp?.classList?.contains('dtp-time-inp'))return;if(event.key==='Enter'||event.key===' '||event.key==='ArrowDown'){event.preventDefault();_dtpTimeOpen(inp);}else if(event.key==='Escape')_dtpTimeClose(true);},true);
-function getSettleDateStr(){const s=fmtDate(settleDateStart);if(settleDateEnd&&settleDateEnd!==settleDateStart)return `${s} ~ ${fmtDate(settleDateEnd)}`;return s;}
-function updateSettleDate(which,val){if(which==='start')settleDateStart=val||new Date().toISOString().slice(0,10);else settleDateEnd=val||null;if(settleDateEnd&&settleDateEnd<settleDateStart){const t=settleDateEnd;settleDateEnd=settleDateStart;settleDateStart=t;}saveState();renderDesktopRight();renderMobileBody();}
+function updateSettleDate(which,val){if(which==='start')settleDateStart=val||_todayYMD();else settleDateEnd=val||null;if(settleDateEnd&&settleDateEnd<settleDateStart){const t=settleDateEnd;settleDateEnd=settleDateStart;settleDateStart=t;}saveState();renderDesktopRight();renderMobileBody();}
 function addSettleEndDate(){settleDateEnd=settleDateStart;saveState();renderDesktopRight();renderMobileBody();}
 function clearSettleEndDate(){settleDateEnd=null;saveState();renderDesktopRight();renderMobileBody();}
 
@@ -2552,9 +2522,7 @@ function addOneName(raw){const n=raw.trim();if(!n||people.includes(n))return;peo
 
 function removePerson(name){const idx=people.indexOf(name);if(idx<0)return;const snap={name,idx,items:items.map(it=>({id:it.id,members:[...it.members],watchers:[...(it.watchers||[])],payer:it.payer,rounderOverride:it.rounderOverride}))};people=people.filter(p=>p!==name);items.forEach(it=>{it.members=it.members.filter(m=>m!==name);it.watchers=(it.watchers||[]).filter(w=>w!==name);if(it.payer===name)it.payer=people[0]||'';if(it.rounderOverride===name)it.rounderOverride=null;});_updateAutoNameIfNeeded();renderAll();toast(`'${name}' 삭제됨`,{action:()=>{people.splice(snap.idx,0,snap.name);snap.items.forEach(s=>{const it=items.find(i=>i.id===s.id);if(it){it.members=s.members;it.watchers=s.watchers;it.payer=s.payer;it.rounderOverride=s.rounderOverride;}});_updateAutoNameIfNeeded();renderAll();},actionLabel:'되돌리기'});}
 
-function clearAll(){if(!people.length)return;if(!confirm('참여자를 전체 삭제할까요?'))return;const snap={people:[...people],items:items.map(it=>({id:it.id,members:[...it.members],payer:it.payer}))};people=[];items.forEach(it=>{it.members=[];it.payer='';});selectedId=null;_updateAutoNameIfNeeded();renderAll();toast('참여자 전체 삭제됨',{action:()=>{people=snap.people;snap.items.forEach(s=>{const it=items.find(i=>i.id===s.id);if(it){it.members=s.members;it.payer=s.payer;}});_updateAutoNameIfNeeded();renderAll();},actionLabel:'되돌리기'});}
 
-function clearAllItems(){if(!items.length)return;if(!confirm('지출을 전체 삭제할까요?'))return;const snap={items:JSON.parse(JSON.stringify(items)),idc};items=[];idc=0;selectedId=null;closeSheet();renderAll();toast(`지출 ${snap.items.length}개 삭제됨`,{action:()=>{items=snap.items;idc=snap.idc;renderAll();},actionLabel:'되돌리기'});}
 
 function setRounderOverride(itemId,value){const it=items.find(i=>i.id===itemId);if(!it)return;it.rounderOverride=value||null;saveState();renderAll();}
 function setIconOverride(itemId,key){const it=items.find(i=>i.id===itemId);if(!it)return;it.iconOverride=key||null;saveState();renderAll();}
@@ -3859,7 +3827,6 @@ function _settlementSanity(paid,owes,txns){
   }catch(e){return null;}
 }
 
-function personCardHtml(p,paid,owes,details){const bd=details[p]||[],owed=owes[p]||0,ppaid=paid[p]||0,net=ppaid-owed;const netTxt=net>0?`+${fmt(net)}원 받을 예정`:net<0?`${fmt(-net)}원 낼 예정`:'정산 완료';const netCls=net>0?'pos':net<0?'neg':'zero';const rows=bd.map(b=>`<div class="bd-row"><span class="bd-name"><span class="bd-name-txt">${e(b.name)}</span>${b.extra?'<span class="bd-ex-tag">+1원</span>':''}</span><span class="bd-ptag">${e(b.payer)} 결제</span><span class="bd-share">${fmt(b.share)}원</span></div>`).join('');return `<div class="pcard"><div class="phd"><div class="avatar">${e(p.slice(0,1))}</div><div class="pname-col"><div class="pname">${e(p)}</div><div class="pnet ${netCls}">${netTxt}</div></div><div class="ptotal">${fmt(owed)}원</div></div>${rows}<div class="bd-row" style="background:var(--fill2)"><span class="bd-name" style="color:var(--label3)"><span class="bd-name-txt">실제 결제</span></span><span class="bd-share">${fmt(ppaid)}원</span></div></div>`;}
 
 function renderResultView(eyeId,titleId,subId,bodyId){
   const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);const vc=items.filter(it=>+it.amount!==0).length;
@@ -4052,6 +4019,39 @@ async function openArchivedReceiptViewer(historyId,itemId,ev){
   let src='';try{src=await _resolveReceiptSrc(it);}catch(e){src='';}
   v.setSrc(src);
 }
+// v6.57 — 영수증 사진 확대(영수증 앱 v5.38과 같은 동작): 핀치·더블탭·휠·−/+ 버튼·이동(경계 제한)·바깥 탭 닫기
+function _bindImgZoom(ov,img,close){
+  const MAX=6;let s=1,x=0,y=0;const pts=new Map();let pinch=null,down=null,lastTap=null;
+  img.style.touchAction='none';img.style.userSelect='none';img.style.webkitUserSelect='none';img.draggable=false;ov.style.touchAction='none';
+  const ctl=document.createElement('div');ctl.className='imgzoom-ctl';
+  ctl.innerHTML='<button type="button" data-z="out" aria-label="축소">−</button><button type="button" data-z="reset" aria-label="원래 크기">100%</button><button type="button" data-z="in" aria-label="확대">+</button>';
+  ov.appendChild(ctl);const pct=ctl.querySelector('[data-z=reset]');
+  const clamp=()=>{const mx=Math.max(0,(img.offsetWidth*s-ov.clientWidth)/2),my=Math.max(0,(img.offsetHeight*s-ov.clientHeight)/2);x=Math.max(-mx,Math.min(mx,x));y=Math.max(-my,Math.min(my,y));};
+  const apply=anim=>{img.style.transition=anim?'transform .18s ease':'none';img.style.transform=`translate(${x}px,${y}px) scale(${s})`;img.style.cursor=s>1.01?'grab':'zoom-in';pct.textContent=Math.round(s*100)+'%';};
+  const zoomAt=(ns,px,py,anim)=>{ns=Math.max(1,Math.min(MAX,ns));if(ns<1.02)ns=1;const k=ns/s,cx=px-ov.clientWidth/2,cy=py-ov.clientHeight/2;x=cx-k*(cx-x);y=cy-k*(cy-y);s=ns;if(s===1){x=0;y=0;}clamp();apply(anim);};
+  const mid=()=>[ov.clientWidth/2,ov.clientHeight/2];
+  ctl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();const [mx,my]=mid(),z=b.dataset.z;if(z==='in')zoomAt(s*1.5,mx,my,true);else if(z==='out')zoomAt(s/1.5,mx,my,true);else zoomAt(1,mx,my,true);});
+  ctl.addEventListener('pointerdown',e=>e.stopPropagation());
+  ov.addEventListener('pointerdown',e=>{if(e.target.closest('button,a'))return;try{ov.setPointerCapture(e.pointerId);}catch(_){}
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===1){down={x:e.clientX,y:e.clientY,ox:x,oy:y,onImg:e.target===img,moved:false};}
+    else if(pts.size===2){const[a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),s:s};down&&(down.moved=true);}});
+  ov.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size>=2&&pinch&&pinch.d>0){const[a,b]=[...pts.values()];zoomAt(pinch.s*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,(a.x+b.x)/2,(a.y+b.y)/2,false);}
+    else if(pts.size===1&&down){if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)down.moved=true;if(s>1.01&&down.moved){x=down.ox+(e.clientX-down.x);y=down.oy+(e.clientY-down.y);clamp();apply(false);}}});
+  const end=e=>{if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);if(pts.size<2)pinch=null;
+    if(pts.size===0&&down){const d=down;down=null;
+      if(!d.moved){
+        if(d.onImg){const t=Date.now();if(lastTap&&t-lastTap.t<300&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<30){lastTap=null;zoomAt(s>1.01?1:2.5,e.clientX,e.clientY,true);}else lastTap={t,x:e.clientX,y:e.clientY};}
+        else if(s<=1.01&&e.type==='pointerup')close();}
+      else if(s<1.02)zoomAt(1,0,0,true);}};
+  ov.addEventListener('pointerup',end);ov.addEventListener('pointercancel',end);
+  ov.addEventListener('wheel',e=>{e.preventDefault();zoomAt(s*Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0018)),e.clientX,e.clientY,false);},{passive:false});
+  const onKey=e=>{if(!ov.isConnected){document.removeEventListener('keydown',onKey);return;}const [mx,my]=mid();
+    if(e.key==='+'||e.key==='=')zoomAt(s*1.5,mx,my,true);else if(e.key==='-')zoomAt(s/1.5,mx,my,true);else if(e.key==='0')zoomAt(1,mx,my,true);};
+  document.addEventListener('keydown',onKey);
+  apply(false);
+}
 function _showReceiptViewer(name){
   document.querySelector('.rcpt-viewer')?.remove();
   const ov=document.createElement('div');ov.className='rcpt-viewer';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-label',(name||'영수증')+' 보기');
@@ -4067,19 +4067,7 @@ function _showReceiptViewer(name){
     img.src=src;
   }
   ov.querySelector('.rcpt-viewer-close').onclick=close;
-  ov.addEventListener('click',e=>{if(e.target===ov)close();});
-  // 확대(탭/더블탭·휠·핀치) + 이동(드래그/한손가락 이동)
-  let scale=1,tx=0,ty=0,sx=0,sy=0, px=0,py=0,moved=false,pinchD=0,pinchS=1;
-  const pts=new Map();
-  const _dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-  const _clamp=()=>{const mx=(img.clientWidth*(scale-1))/2+40,my=(img.clientHeight*(scale-1))/2+40;tx=Math.max(-mx,Math.min(mx,tx));ty=Math.max(-my,Math.min(my,ty));};
-  const _apply=anim=>{img.style.transition=anim?'transform .2s ease':'none';img.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;img.style.cursor=scale>1?'grab':'zoom-in';};
-  const _reset=()=>{scale=1;tx=0;ty=0;_apply(true);};
-  img.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{img.setPointerCapture(e.pointerId);}catch(_){}pts.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=false;if(pts.size===1){px=e.clientX;py=e.clientY;sx=tx;sy=ty;}else if(pts.size===2){const[a,b]=[...pts.values()];pinchD=_dist(a,b);pinchS=scale;}});
-  img.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size>=2){const[a,b]=[...pts.values()];if(pinchD>0){scale=Math.max(1,Math.min(5,pinchS*_dist(a,b)/pinchD));_clamp();_apply(false);moved=true;}}else if(scale>1){tx=sx+(e.clientX-px);ty=sy+(e.clientY-py);_clamp();_apply(false);moved=true;}});
-  const _end=e=>{pts.delete(e.pointerId);if(pts.size<2)pinchD=0;if(pts.size===0){if(!moved){if(scale>1)_reset();else{scale=2.4;_apply(true);}}else if(scale<=1.02)_reset();}};
-  img.addEventListener('pointerup',_end);img.addEventListener('pointercancel',_end);
-  img.addEventListener('wheel',e=>{e.preventDefault();scale=Math.max(1,Math.min(5,scale*(e.deltaY<0?1.15:0.87)));if(scale<=1){tx=0;ty=0;}_clamp();_apply(false);},{passive:false});
+  _bindImgZoom(ov,img,close);
   document.addEventListener('keydown',onKey);
   document.body.appendChild(ov);
   requestAnimationFrame(()=>ov.classList.add('on'));
@@ -4346,7 +4334,6 @@ function _validFixedEntry(x){return!!(x&&x.fixId&&x.recordId&&x.payload&&x.guard
 function _loadFixedDeletedIds(){try{return new Set(JSON.parse(localStorage.getItem(FIXED_DELETED_KEY)||'[]'));}catch(e){return new Set();}}
 function _mergeFixedDeletedIds(ids){const s=_loadFixedDeletedIds();(ids||[]).forEach(id=>{if(id)s.add(String(id));});localStorage.setItem(FIXED_DELETED_KEY,JSON.stringify([...s]));return s;}
 function _markFixedDeletedId(id){return _mergeFixedDeletedIds([id]);}
-function _removeFixedDeletedId(id){const s=_loadFixedDeletedIds();s.delete(String(id));localStorage.setItem(FIXED_DELETED_KEY,JSON.stringify([...s]));}
 function _loadFixedArchivesRaw(){try{const v=JSON.parse(localStorage.getItem(FIXED_HISTORY_KEY)||'[]');return Array.isArray(v)?v:[];}catch(e){return[];}}
 function _loadFixedManifest(){return _loadFixedArchivesRaw().filter(x=>x&&x.fixId&&x.recordId&&x.guard).map(x=>({schemaVersion:x.schemaVersion||1,fixId:x.fixId,recordId:x.recordId,fixedAt:x.fixedAt||'',guard:x.guard,sha256:x.sha256||'',pinHash:x.pinHash||'',pinSalt:x.pinSalt||''}));}
 let _fixedArchivesCache=null,_fixedHydratePromise=null;
@@ -4436,7 +4423,6 @@ function _loadDelIds(){try{return new Set(JSON.parse(localStorage.getItem(HISTOR
 function _saveDelId(id,force=false){try{if(!force&&_isHistoryFixed(id))return;const s=_loadDelIds();s.add(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
 function _mergeDelIds(remoteIds){try{const s=_loadDelIds();(remoteIds||[]).forEach(id=>s.add(id));localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));return s;}catch(e){return _loadDelIds();}}
 function _histFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|'),(r.items||[]).map(i=>`${i.name||''}|${+i.amount||0}|${i.payer||''}|${i.isTreat?1:0}|${(i.members||[]).slice().sort().join('~')}|${(i.watchers||[]).slice().sort().join('~')}|${i.rounderOverride||''}`).sort().join(',')].join('§');}
-function _histSoftFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|')].join('§');}
 function _historyRecordIdForGroup(groupId){return'hg_'+_dataHash(['history',String(groupId)]);}
 function _mergeHistoryDuplicate(a,b){
   const aFixed=_isHistoryFixed(a?.id),bFixed=_isHistoryFixed(b?.id);
@@ -4664,27 +4650,6 @@ function updateHistorySearch(val){
     ?filtered.map(_buildRecordCardHtml).join('')
     :`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">${noMsg}</p></div>`;
 }
-function loadHistoryAsGroup(id){
-  const records=loadHistory();
-  const r=records.find(rec=>rec.id===id);
-  if(!r)return;
-  const displayName=(r.people||[]).join(', ')||r.groupName||'정산 기록';
-  if(!confirm(`'${displayName}' 기록을 새 그룹으로 불러올까요?\n참여자와 지출 내역이 복사됩니다.`))return;
-  closeHistDrawer();closeSheet();
-  syncCurrentToGroup();
-  let newIdc=0;
-  const newItems=(r.items||[]).map(it=>({id:++newIdc,name:it.name||'',amount:it.amount||0,payer:it.payer||'',members:[...(it.members||[])],watchers:[...(it.watchers||[])],isTreat:it.isTreat||false,rounderOverride:it.rounderOverride||null,iconOverride:it.iconOverride||null,receiptText:it.receiptText||'',receiptUrl:it.receiptUrl||''}));
-  const newId=_newGroupId();
-  const _cleanPm=v=>{const amt=(v.amount!==null&&v.amount!==undefined&&v.amount!==''&&!isNaN(+v.amount))?+v.amount:null;return{done:!!v.done,amount:amt,timestamp:v.timestamp||'',account:v.account||'',memo:v.memo||''};};
-  const cleanPayments={};Object.entries(r.payments||{}).forEach(([k,v])=>{cleanPayments[k]=_cleanPm(v);});
-  const newGroup={id:newId,name:displayName,nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||new Date().toISOString().slice(0,10),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:'',payments:cleanPayments}};
-  groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);_loadedHistId=null;_editingFixedSourceId=null;
-  if(r.coupleNames?.length){_coupleNames=r.coupleNames.slice();localStorage.setItem('dutchpay_couple',JSON.stringify(_coupleNames));}
-  saveState();
-  if(window.innerWidth<700){mTab='input';_syncShellNav('input');renderMobileBody();window.scrollTo(0,0);}
-  else{dTab='input';_syncShellNav('input');renderAll();}
-  toast(`'${newGroup.name}' 그룹으로 불러왔어요`,{type:'success'});
-}
 function loadHistoryForEdit(id,fromFixed=false){
   if(!fromFixed&&_fixedMutationBlocked(id))return;
   const records=loadHistory();
@@ -4698,7 +4663,7 @@ function loadHistoryForEdit(id,fromFixed=false){
   const newId=_newGroupId();
   const _cleanPm=v=>{const amt=(v.amount!==null&&v.amount!==undefined&&v.amount!==''&&!isNaN(+v.amount))?+v.amount:null;return{done:!!v.done,amount:amt,timestamp:v.timestamp||'',account:v.account||'',memo:v.memo||''};};
   const cleanPayments={};Object.entries(r.payments||{}).forEach(([k,v])=>{cleanPayments[k]=_cleanPm(v);});
-  const newGroup={id:newId,name:displayName,nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||new Date().toISOString().slice(0,10),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:'',payments:cleanPayments}};
+  const newGroup={id:newId,name:displayName,nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||_todayYMD(),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:'',payments:cleanPayments}};
   groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);_loadedHistId=fromFixed?null:id;_editingFixedSourceId=fromFixed?id:null;
   if(r.coupleNames?.length){_coupleNames=r.coupleNames.slice();localStorage.setItem('dutchpay_couple',JSON.stringify(_coupleNames));}
   saveState();
@@ -4744,12 +4709,6 @@ function _updateHSyncInfo(){
 }
 
 let _hPanelOpen=false;
-function toggleHDbxPanel(){
-  _hPanelOpen=!_hPanelOpen;
-  const panel=document.getElementById('hDbxPanel');if(!panel)return;
-  if(_hPanelOpen){panel.style.display='block';_renderHDbxPanel();}
-  else{panel.style.display='none';}
-}
 
 function _renderHDbxPanel(){
   const panel=document.getElementById('hDbxPanel');if(!panel)return;
@@ -5309,7 +5268,7 @@ async function shareSettleImage(){
   _setShareBusy(true);
   try{
     const canvas=await generateSettleCanvas();const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob){toast('이미지 생성에 실패했어요',{type:'error'});return;}
-    const date=new Date().toISOString().slice(0,10);const filename=`정산_${date}.png`;const file=new File([blob],filename,{type:'image/png'});const shareData={files:[file]};
+    const date=_todayYMD();const filename=`정산_${date}.png`;const file=new File([blob],filename,{type:'image/png'});const shareData={files:[file]};
     const canNativeShare=!inApp&&_canShareFiles(shareData);
     if(canNativeShare){try{await navigator.share(shareData);_afterShare();return;}catch(err){if(err?.name==='AbortError')return;console.warn('Native image share failed',err);}}
     if(window.matchMedia('(max-width:700px)').matches){_openShareFallback(blob,file,filename);toast('이미지를 준비했어요. 공유 버튼을 다시 눌러주세요.',{type:'success'});return;}
@@ -5460,15 +5419,6 @@ async function generateHistoryCanvas(rec){
   return canvas;
 }
 
-async function shareHistoryItemImage(recordId,itemId){
-  const rec=loadHistory().find(r=>String(r.id)===String(recordId)),it=rec&&(rec.items||[]).find(x=>String(x.id)===String(itemId));if(!rec||!it){toast('상세내역을 찾을 수 없어요',{type:'error'});return;}
-  const lines=parseReceiptLines(it.receiptText||''),audit=_receiptAudit(it,lines),W=SHARE_IMG_W,rowH=66,H=410+Math.max(1,lines.length)*rowH;const canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;const ctx=canvas.getContext('2d');ctx.scale(2,2);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);const font=(s,w=400)=>ctx.font=`${w} ${s}px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Arial,sans-serif`;
-  ctx.fillStyle='#111';font(42,700);ctx.fillText(truncateCanvasText(ctx,it.name||'매장 상세내역',W-70),34,70);ctx.fillStyle='#8e8e93';font(22,500);ctx.fillText((rec.dateStart||'')+' · '+(it.payer||'결제자 미정')+' 결제',34,110);const mems=it.members&&it.members.length?it.members:(rec.people||[]),ws=(it.watchers||[]).filter(w=>!mems.includes(w));ctx.fillText(truncateCanvasText(ctx,[...mems,...ws.map(w=>w+'(깍두기)')].join(', '),W-68),34,145);
-  const xs=[34,430,555,686],headY=205;ctx.fillStyle='#f4f5f8';ctx.fillRect(24,headY-38,W-48,56);ctx.fillStyle='#666';font(21,600);['품목명','수량','단가','금액'].forEach((t,i)=>{ctx.textAlign=i?'right':'left';ctx.fillText(t,xs[i],headY);});
-  font(22,400);lines.forEach((r,i)=>{const y=headY+58+i*rowH;if(audit.badRows.has(i)){ctx.fillStyle='#fff0ef';ctx.fillRect(24,y-36,W-48,rowH);}const _u=_receiptNum(r.unitPrice),_a=_receiptNum(r.amount),neg=_a!==null&&_a<0;ctx.fillStyle=neg?'#d92d20':'#222';ctx.textAlign='left';ctx.fillText(truncateCanvasText(ctx,r.name,350),34,y);ctx.fillStyle='#222';ctx.textAlign='right';ctx.fillText(r.qty||'',xs[1],y);ctx.fillStyle=neg?'#d92d20':'#222';ctx.fillText(_u!==null?fmt(_u):(r.unitPrice||''),xs[2],y);ctx.fillText(_a!==null?fmt(_a):(r.amount||''),xs[3],y);ctx.strokeStyle='#ececf0';ctx.beginPath();ctx.moveTo(24,y+24);ctx.lineTo(W-24,y+24);ctx.stroke();});
-  const footY=headY+75+Math.max(1,lines.length)*rowH;ctx.fillStyle='#111';font(26,700);ctx.textAlign='left';ctx.fillText('합계',34,footY);ctx.textAlign='right';ctx.fillText(fmt(audit.total)+'원',686,footY);ctx.fillStyle=audit.status==='ok'?'#16843b':audit.status==='bad'?'#d92d20':'#665000';font(22,700);ctx.textAlign='left';ctx.fillText((audit.status==='ok'?'✓ ':'')+audit.label,100,footY);ctx.fillStyle='#666';ctx.textAlign='right';ctx.fillText('매장 결제금액 '+fmt(+it.amount||0)+'원',686,footY+48);ctx.fillStyle='#a0a0a6';font(18,500);ctx.textAlign='center';ctx.fillText('더치페이 '+APP_VERSION,W/2,H-28);
-  const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));if(!blob){toast('상세 이미지 생성에 실패했어요',{type:'error'});return;}const safe=String(it.name||'상세내역').replace(/[\\/:*?"<>|]/g,'_'),date=(rec.dateStart||'').replace(/-/g,'');const filename=`상세내역_${date}_${safe}.png`,file=new File([blob],filename,{type:'image/png'});if(_canShareFiles({files:[file]})){try{await navigator.share({files:[file]});return;}catch(e){if(e?.name==='AbortError')return;}}_downloadShareBlob(blob,filename);toast('상세 이미지를 저장했어요',{type:'success'});
-}
 
 function closeHistoryImageViewer(){
   const viewer=document.querySelector('.history-image-viewer');
@@ -5490,8 +5440,8 @@ async function viewHistoryImage(id){
     viewer.innerHTML='<button class="history-image-viewer-close" type="button" aria-label="닫기">×</button><img alt="보관된 정산 기록 이미지">';
     viewer.querySelector('img').src=url;
     viewer.querySelector('button').onclick=closeHistoryImageViewer;
-    viewer.addEventListener('click',event=>{if(event.target===viewer)closeHistoryImageViewer();});
     document.body.appendChild(viewer);
+    _bindImgZoom(viewer,viewer.querySelector('img'),closeHistoryImageViewer);
   }catch(err){toast('이미지를 열지 못했어요',{type:'error'});}
 }
 
