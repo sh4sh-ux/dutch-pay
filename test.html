@@ -985,6 +985,27 @@ suite('TC23b: 기록 날짜 검색 포맷·달력 너비 [v6.67]', () => {
   });
 });
 
+suite('TC23c: 기록 월 라벨 달력 선택 [v6.69]', () => {
+  test('_histMonthFromPick이 선택 날짜의 월로 이동(그 달만 필터)', () => {
+    const mk=(id,ds)=>({id,savedAt:ds+'T10:00',dateStart:ds,dateEnd:null,people:['조상현'],total:1000,items:[],txns:[],payments:{}});
+    const recs=[mk('a','2026-03-10'),mk('b','2026-05-20')];
+    APP._histMonthFromPick('2026-03-10');           // 2026년 3월로 이동(전체기록 해제)
+    const filtered=APP._filterHistoryRecords(recs,'');
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].id).toBe('a');                // 3월 기록만
+    APP._histMonthToggleAll();                        // 전체기록 모드로 복구(후속 테스트 보호)
+  });
+  test('월 라벨 클릭 시 달력과 숨은 호스트가 열리고 닫을 때 정리됨', () => {
+    const btn=APP.document.createElement('button');btn.className='hmn-label';btn.style.cssText='position:fixed;left:40px;top:40px;width:100px;height:30px';APP.document.body.appendChild(btn);
+    APP._histMonthPickOpen(btn);
+    if(!APP.document.querySelector('.dp-pop'))throw new Error('달력이 열리지 않음');
+    if(!APP.document.querySelector('.hist-month-pick-host'))throw new Error('숨은 호스트 없음');
+    APP._dpClose(false);
+    if(APP.document.querySelector('.hist-month-pick-host'))throw new Error('닫은 뒤 호스트가 남음');
+    btn.remove();
+  });
+});
+
 suite('TC24: 모바일 입금 행 줄바꿈 [v6.51]', () => {
   test('이름·금액·메타정보가 서로 다른 그리드 영역을 사용', () => {
     const css=[...APP.document.styleSheets].flatMap(sheet=>{try{return[...sheet.cssRules].map(rule=>rule.cssText);}catch(e){return[];}}).join('\n');
