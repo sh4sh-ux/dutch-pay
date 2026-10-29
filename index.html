@@ -1526,8 +1526,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.60';
-const BUILD_TIME='2026-10-29 13:05';
+const APP_VERSION='v6.61';
+const BUILD_TIME='2026-10-29 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5403,10 +5403,10 @@ async function generateHistoryCanvas(rec){
       ctx.fillStyle=badgeBg;roundRectPath(ctx,bX,ry-bH/2,bW,bH,bH/2);ctx.fill();
       setFont(22,600);ctx.fillStyle=badgeFg;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(badgeTxt,bX+bph,ry);
       if(pm.done&&(pm.timestamp||pm.account)){
-        // 입금확인: 은행 + 몇시몇분만 표시 (실수령액은 뺌, 날짜는 상단에 이미 있어 생략) — 사용자 요청
+        // 입금확인: 날짜+시간(전체) 먼저, 은행 뒤 — v6.27 포맷 복원(실수령액은 뺀 채). 날짜가 앞이라 좁으면 은행이 잘리고 날짜는 보존
         const metaParts=[];
+        if(pm.timestamp){const[dd,tt]=(pm.timestamp||'').split('T');if(dd){const[y2,m2,d2]=dd.split('-');const tm=tt?tt.slice(0,5):'';metaParts.push(`${y2.slice(2)}.${m2}.${d2}${tm?' '+tm:''}`);}};
         if(pm.account)metaParts.push(pm.account);
-        if(pm.timestamp){const[dd,tt]=(pm.timestamp||'').split('T');const tm=tt?tt.slice(0,5):'';if(tm)metaParts.push(tm);else if(dd){const[y2,m2,d2]=dd.split('-');metaParts.push(`${y2.slice(2)}.${m2}.${d2}`);}};
         if(metaParts.length){const metaX=bX+bW+14;const maxMetaW=amtX-amtW-30-metaX;if(maxMetaW>30){setFont(22,400);ctx.fillStyle=C.muted;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(truncateCanvasText(ctx,metaParts.join(' · '),maxMetaW),metaX,ry);}}
       }
       if(i<txns.length-1)drawDivider(y+(i+1)*TXN_ROW_H);
