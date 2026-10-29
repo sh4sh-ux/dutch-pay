@@ -976,10 +976,11 @@ suite('TC23b: 기록 날짜 검색 포맷·달력 너비 [v6.67]', () => {
     expect(APP._filterHistoryRecords([rec],'0915').length).toBe(0);
     expect(APP._filterHistoryRecords([rec],'박지연').length).toBe(0);
   });
-  test('데스크탑 달력은 입력칸 너비에 맞추고(최소 280) 입금일시(dtp)는 360 상한 유지', () => {
+  test('데스크탑 달력은 왼쪽 패널 정산일자 너비로 통일(앵커 폭 무관)·입금일시(dtp)는 360 상한', () => {
     const mk=(w,cls)=>{const a=APP.document.createElement('div');a.className='dp-wrap'+(cls?' '+cls:'');a.style.cssText='position:fixed;left:20px;top:20px;width:'+w+'px;height:36px';APP.document.body.appendChild(a);const pop=APP.document.createElement('div');pop.className='dp-pop';pop.innerHTML='<div class="dp-pop-days"></div>';APP._placeDesktopPicker(pop,a,!a.classList.contains('dtp-wrap'));const got=Math.round(pop.getBoundingClientRect().width);pop.remove();a.remove();return got;};
-    expect(mk(355,'')).toBe(355);        // 왼쪽 패널 정산일자 — 입력칸과 동일
-    expect(mk(180,'')).toBe(280);        // 좁은 입력칸 — 최소 280
+    const wide=mk(900,''),narrow=mk(180,'');
+    expect(wide).toBe(narrow);           // 공유 탭처럼 입력칸이 넓어도 왼쪽 패널 기준 동일 너비
+    if(wide<280||wide>480)throw new Error('달력 너비 범위 벗어남: '+wide);
     if(mk(900,'dtp-wrap')>361)throw new Error('입금일시 달력이 상한을 넘음');
   });
 });
