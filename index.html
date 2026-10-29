@@ -338,6 +338,18 @@ svg{display:block;flex-shrink:0;}
   .rc-txn-left .pm-record-account{flex-basis:100%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .rc-txn-people{white-space:nowrap;}
 }
+@media(min-width:701px){
+  .pm-card .txn-row.expandable{display:grid;grid-template-columns:20px minmax(0,1fr) auto 14px;grid-template-rows:auto auto;align-items:center;column-gap:14px;row-gap:3px;padding:14px 22px;}
+  .pm-card .txn-status-ic{grid-column:1;grid-row:1;}
+  .pm-card .txn-people{grid-column:2;grid-row:1;display:flex;min-width:0;gap:12px;white-space:nowrap;overflow:hidden;align-items:center;}
+  .pm-card .txn-from,.pm-card .txn-to{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pm-card .txn-arr{flex:0 0 auto;}
+  .pm-card .txn-right{display:contents;}
+  .pm-card .txn-amt{grid-column:3;grid-row:1;white-space:nowrap;}
+  .pm-card .txn-pmeta{grid-column:2/4;grid-row:2;min-width:0;margin:1px 0 0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pm-card .txn-sdiff{display:none;}
+  .pm-card .txn-chev{grid-column:4;grid-row:1/3;margin-left:0;align-self:center;}
+}
 .pay-panel{background:var(--fill);border-top:1px solid var(--sep);padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
 .pay-panel-row{display:flex;align-items:center;gap:8px;}
 .pay-panel-lbl{font-size:12px;font-weight:500;color:var(--label3);width:52px;flex-shrink:0;}
@@ -357,7 +369,8 @@ svg{display:block;flex-shrink:0;}
 .pay-diff-badge.zero{background:var(--fill);color:var(--label3);}
 .pay-sel{flex:1;border:1px solid var(--sep2);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;color:var(--label);background:var(--card);outline:none;cursor:pointer;min-width:0;}
 .pay-sel:focus{border-color:var(--blue);}
-.pay-now-btn{background:var(--fill2);color:var(--label2);border:none;border-radius:7px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0;}
+.pay-now-btn{background:var(--card);color:var(--label);border:1px solid var(--sep2);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0;transition:border-color .12s,color .12s;}
+.pay-now-btn:hover{border-color:var(--blue);color:var(--blue);}
 .pay-summary{margin-top:8px;background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:0 2px 10px rgba(20,25,40,.07);}
 .pay-summary-title{font-size:12px;font-weight:600;color:var(--label3);padding:12px 18px 4px;}
 .pay-summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px 18px;border-bottom:1px solid var(--sep);}
@@ -772,7 +785,8 @@ svg{display:block;flex-shrink:0;}
 .share-fallback-close{width:100%;margin-top:8px;padding:10px;border:0;background:transparent;color:var(--label2);font-size:13px;}
 .history-image-viewer{position:fixed;inset:0;z-index:700;display:flex;align-items:center;justify-content:center;padding:max(18px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(18px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));background:rgba(0,0,0,.94);}
 .history-image-viewer img{display:block;max-width:100%;max-height:100%;object-fit:contain;background:#fff;box-shadow:0 18px 60px rgba(0,0,0,.35);}
-.history-image-viewer-close{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:1;width:44px;height:44px;border:1px solid rgba(255,255,255,.24);border-radius:50%;background:rgba(20,20,22,.72);color:#fff;font-size:26px;font-weight:300;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box;cursor:pointer;}
+.history-image-viewer-close{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:1;width:44px;height:44px;border:1px solid rgba(255,255,255,.24);border-radius:50%;background:rgba(20,20,22,.72);color:#fff;line-height:0;padding:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box;cursor:pointer;}
+.history-image-viewer-close svg{width:20px;height:20px;display:block;}
 .share-hist-btn{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:12px;font-size:14px;font-weight:600;background:var(--fill);color:var(--label);cursor:pointer;transition:background .12s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
 .share-hist-btn:hover{background:var(--fill2);}
 .notice{font-size:11px;color:var(--label3);text-align:center;margin-top:12px;line-height:1.6;}
@@ -1526,8 +1540,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.63';
-const BUILD_TIME='2026-10-29 15:30';
+const APP_VERSION='v6.64';
+const BUILD_TIME='2026-10-29 16:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2759,8 +2773,8 @@ function _paymentDisplay(pm,billing,{owner=true}={}){
   const status=pm.done?(diff>0?`+${fmt(diff)}원 초과`:diff<0?`-${fmt(-diff)}원 부족`:(owner?'입금완료':'송금완료')):(owner?'미입금':'미확인');
   const meta=[];
   if(pm.done&&diff!==0)meta.push(`실수령 ${fmt(received)}원`);
-  if(pm.done&&pm.timestamp)meta.push(_dtpFmt(pm.timestamp));
   if(pm.done&&pm.account)meta.push(pm.account);
+  if(pm.done&&pm.timestamp)meta.push(_dtpFmt(pm.timestamp));
   return{received,diff,status,meta,metaText:meta.join(' · ')};
 }
 function _paymentBadgeHtml(pm,billing,{owner=true}={}){
@@ -5322,6 +5336,31 @@ async function generateHistoryCanvas(rec){
   ctx.fillStyle=C.muted;setFont(28,500);ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText(`총 ${people.length}명 · 인당 평균 ${fmt(perPerson)}원`,W/2,y+188);
   y+=TOTAL_CARD_H+SECTION_GAP;
+  // 청구 내역 (각자 보내야 할 금액) — 입금이 있을 때 총액 바로 아래에 표기
+  if(hasTxns){
+    y=drawSectionLabel('청구 내역',y);
+    drawCard(cardX,y,cardW,sendCardH);
+    txns.forEach((t,i)=>{
+      const ry=y+i*TXN_ROW_H+TXN_ROW_H/2;
+      const amtTxt=fmt(t.amt)+'원';
+      ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
+      const amtX=cardX+cardW-38;const amtW=ctx.measureText(amtTxt).width;ctx.fillText(amtTxt,amtX,ry);
+      const leftX=cardX+38;
+      setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
+      const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry);
+      const fw=ctx.measureText(fromTxt).width;
+      const AGAP=20,AH=9,AL=36,headW=AH*1.8;
+      const AX=leftX+fw+AGAP,AEX=AX+AL;
+      ctx.strokeStyle=C.text;ctx.lineWidth=2.5;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
+      ctx.fillStyle=C.text;ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
+      const toStartX=AEX+AGAP;const maxToW=amtX-amtW-30-toStartX;
+      setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
+      ctx.fillText(truncateCanvasText(ctx,t.to||'',Math.max(maxToW,40)),toStartX,ry);
+      if(i<txns.length-1)drawDivider(y+(i+1)*TXN_ROW_H);
+    });
+    y+=sendCardH+SECTION_GAP;
+  }
   // 지출 내역
   y=drawSectionLabel('지출 내역',y);
   drawCard(cardX,y,cardW,itemCardH);
@@ -5362,31 +5401,6 @@ async function generateHistoryCanvas(rec){
     });
   }
   y+=itemCardH+SECTION_GAP;
-  // 송금 (청구액: 각자 보내야 할 금액) — 입금 내역이 있을 때 그 위에 함께 표기
-  if(hasTxns){
-    y=drawSectionLabel('송금',y);
-    drawCard(cardX,y,cardW,sendCardH);
-    txns.forEach((t,i)=>{
-      const ry=y+i*TXN_ROW_H+TXN_ROW_H/2;
-      const amtTxt=fmt(t.amt)+'원';
-      ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
-      const amtX=cardX+cardW-38;const amtW=ctx.measureText(amtTxt).width;ctx.fillText(amtTxt,amtX,ry);
-      const leftX=cardX+38;
-      setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
-      const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry);
-      const fw=ctx.measureText(fromTxt).width;
-      const AGAP=20,AH=9,AL=36,headW=AH*1.8;
-      const AX=leftX+fw+AGAP,AEX=AX+AL;
-      ctx.strokeStyle=C.text;ctx.lineWidth=2.5;ctx.lineCap='round';
-      ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
-      ctx.fillStyle=C.text;ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
-      const toStartX=AEX+AGAP;const maxToW=amtX-amtW-30-toStartX;
-      setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
-      ctx.fillText(truncateCanvasText(ctx,t.to||'',Math.max(maxToW,40)),toStartX,ry);
-      if(i<txns.length-1)drawDivider(y+(i+1)*TXN_ROW_H);
-    });
-    y+=sendCardH+SECTION_GAP;
-  }
   // 입금 내역 (내 기준: 실제 입금된 금액)
   y=drawSectionLabel('입금 내역',y);
   drawCard(cardX,y,cardW,txnCardH);
@@ -5430,9 +5444,10 @@ async function generateHistoryCanvas(rec){
       setFont(22,600);ctx.fillStyle=badgeFg;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(badgeTxt,bX+bph,ry);
       if(pm.done&&(pm.timestamp||pm.account)){
         // 입금확인: 날짜+시간(전체) 먼저, 은행 뒤 — v6.27 포맷 복원(실수령액은 뺀 채). 날짜가 앞이라 좁으면 은행이 잘리고 날짜는 보존
+        // 금융기관 → 일자 → 시간 순 (사용자 요청)
         const metaParts=[];
-        if(pm.timestamp){const[dd,tt]=(pm.timestamp||'').split('T');if(dd){const[y2,m2,d2]=dd.split('-');const tm=tt?tt.slice(0,5):'';metaParts.push(`${y2.slice(2)}.${m2}.${d2}${tm?' '+tm:''}`);}};
         if(pm.account)metaParts.push(pm.account);
+        if(pm.timestamp){const[dd,tt]=(pm.timestamp||'').split('T');if(dd){const[y2,m2,d2]=dd.split('-');const tm=tt?tt.slice(0,5):'';metaParts.push(`${y2.slice(2)}.${m2}.${d2}${tm?' '+tm:''}`);}};
         if(metaParts.length){const metaX=bX+bW+14;const maxMetaW=amtX-amtW-30-metaX;if(maxMetaW>30){setFont(22,400);ctx.fillStyle=C.muted;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(truncateCanvasText(ctx,metaParts.join(' · '),maxMetaW),metaX,ry);}}
       }
       if(i<txns.length-1)drawDivider(y+(i+1)*TXN_ROW_H);
@@ -5463,7 +5478,7 @@ async function viewHistoryImage(id){
     const url=URL.createObjectURL(blob),viewer=document.createElement('div');
     viewer.className='history-image-viewer';viewer.dataset.objectUrl=url;
     viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','기록 이미지');
-    viewer.innerHTML='<button class="history-image-viewer-close" type="button" aria-label="닫기">×</button><img alt="보관된 정산 기록 이미지">';
+    viewer.innerHTML='<button class="history-image-viewer-close" type="button" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><img alt="보관된 정산 기록 이미지">';
     viewer.querySelector('img').src=url;
     viewer.querySelector('button').onclick=closeHistoryImageViewer;
     document.body.appendChild(viewer);

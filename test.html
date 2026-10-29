@@ -897,7 +897,7 @@ suite('TC22: 입금 기록·잠금 상태 일치 [v6.48]', () => {
     const d=APP._paymentDisplay({done:true,amount:260000,timestamp:'2026-10-28T11:11',account:'우리은행'},246500);
     expect(d.diff).toBe(13500);
     expect(d.status).toBe('+13,500원 초과');
-    expect(d.metaText).toBe('실수령 260,000원 · 2026.10.28 11:11 · 우리은행');
+    expect(d.metaText).toBe('실수령 260,000원 · 우리은행 · 2026.10.28 11:11');
   });
   test('입금 완료 행은 공통 배지에 초과액과 입금 메타정보를 함께 표시', () => {
     const html=APP._paymentBadgeHtml({done:true,amount:260000,timestamp:'2026-10-28T11:11',account:'우리은행'},246500);
