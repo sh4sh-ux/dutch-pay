@@ -772,7 +772,7 @@ svg{display:block;flex-shrink:0;}
 .share-fallback-close{width:100%;margin-top:8px;padding:10px;border:0;background:transparent;color:var(--label2);font-size:13px;}
 .history-image-viewer{position:fixed;inset:0;z-index:700;display:flex;align-items:center;justify-content:center;padding:max(18px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(18px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));background:rgba(0,0,0,.94);}
 .history-image-viewer img{display:block;max-width:100%;max-height:100%;object-fit:contain;background:#fff;box-shadow:0 18px 60px rgba(0,0,0,.35);}
-.history-image-viewer-close{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:1;width:44px;height:44px;border:1px solid rgba(255,255,255,.24);border-radius:50%;background:rgba(20,20,22,.72);color:#fff;font-size:28px;font-weight:300;line-height:40px;text-align:center;}
+.history-image-viewer-close{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:1;width:44px;height:44px;border:1px solid rgba(255,255,255,.24);border-radius:50%;background:rgba(20,20,22,.72);color:#fff;font-size:26px;font-weight:300;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box;cursor:pointer;}
 .share-hist-btn{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:12px;font-size:14px;font-weight:600;background:var(--fill);color:var(--label);cursor:pointer;transition:background .12s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
 .share-hist-btn:hover{background:var(--fill2);}
 .notice{font-size:11px;color:var(--label3);text-align:center;margin-top:12px;line-height:1.6;}
@@ -1526,8 +1526,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.61';
-const BUILD_TIME='2026-10-29 14:00';
+const APP_VERSION='v6.62';
+const BUILD_TIME='2026-10-29 14:35';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
