@@ -367,7 +367,7 @@ svg{display:block;flex-shrink:0;}
 .pay-diff-badge.pos{background:#EDFAF2;color:var(--green);}
 .pay-diff-badge.neg{background:#FFF0EE;color:var(--red);}
 .pay-diff-badge.zero{background:var(--fill);color:var(--label3);}
-.pay-sel{flex:1;border:1px solid var(--sep2);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;color:var(--label);background:var(--card);outline:none;cursor:pointer;min-width:0;}
+.pay-sel{flex:1;border:1px solid var(--sep2);border-radius:8px;padding:6px 32px 6px 10px;font-size:13px;font-family:inherit;color:var(--label);background-color:var(--card);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;background-size:12px;outline:none;cursor:pointer;min-width:0;-webkit-appearance:none;appearance:none;}
 .pay-sel:focus{border-color:var(--blue);}
 .pay-now-btn{background:var(--card);color:var(--label);border:1px solid var(--sep2);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0;transition:border-color .12s,color .12s;}
 .pay-now-btn:hover{border-color:var(--blue);color:var(--blue);}
@@ -1540,8 +1540,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.64';
-const BUILD_TIME='2026-10-29 16:45';
+const APP_VERSION='v6.65';
+const BUILD_TIME='2026-10-29 17:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4936,14 +4936,14 @@ async function generateSettleCanvas(){
   const validItems=items.filter(it=>+it.amount!==0);
   const iconMap=new Map();for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#4355E8'));}catch(e){iconMap.set(svg,null);}}}
   const W=1080,PAD=42,TOP_PAD=56,cardX=PAD,cardW=W-PAD*2;
-  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=245,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78;
+  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=245,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78,FOOTER_H=120;
   const txnGroups=_groupTxnsByRecipient(normalTxns,_myName),DIV_H=3;
   const _multiG=txnGroups.length>1; // 수취인 그룹 2개 이상일 때만 색상 구분선 (v5.73)
   const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+(_multiG?txnGroups.length*DIV_H:0)):EMPTY_CARD_H;
   const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*TXN_ROW_H:0;
   const coupleSection=coupleCardH?(SECTION_GAP+coupleCardH):0;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
-  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+coupleSection+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+BOTTOM_PAD;
+  const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+coupleSection+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+FOOTER_H;
   const canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;const ctx=canvas.getContext('2d');ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,W*2,H*2);ctx.scale(2,2);
   const FF="'system-ui','-apple-system','BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif";
   const setFont=(s,w)=>{ctx.font=`${w||'normal'} ${s}px ${FF}`;};
@@ -5105,7 +5105,11 @@ async function generateSettleCanvas(){
   y+=itemCardH;
   if(hasRounding){
     y+=44;ctx.fillStyle='#C0C0C6';setFont(26,600);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('차액은 결제자에게 우선 부담돼요',W/2,y);
+    y+=NOTICE_H-44;
   }
+  // 푸터 — DUTCH PAY 버전을 하단 여백(FOOTER_H) 정중앙에 배치. 모든 생성 이미지 공통 규칙
+  ctx.fillStyle=C.muted;setFont(24,400);ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,y+FOOTER_H/2);
   return canvas;
 }
 
@@ -5264,7 +5268,7 @@ function generateFullDetailCanvases(rec){
       const drawRows=rows.length?rows:[{name:'상세 품목 없음',qty:'',unitPrice:'',amount:''}];font(17,400);drawRows.forEach((r,i)=>{if(rows.length&&audit.badRows.has(start+i)){ctx.fillStyle='#fff0ef';ctx.fillRect(28,y,664,ROW);}const _u=_receiptNum(r.unitPrice),_a=_receiptNum(r.amount),neg=_a!==null&&_a<0;ctx.fillStyle=neg?'#d92d20':'#222';ctx.textAlign='left';ctx.fillText(truncateCanvasText(ctx,r.name,330),44,y+31);ctx.fillStyle='#222';ctx.textAlign='right';ctx.fillText(r.qty||'',440,y+31);ctx.fillStyle=neg?'#d92d20':'#222';ctx.fillText(_u!==null?fmt(_u):(r.unitPrice||''),560,y+31);font(17,600);ctx.fillText(_a!==null?fmt(_a):(r.amount||''),676,y+31);ctx.strokeStyle='#ececf0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(28,y+ROW);ctx.lineTo(692,y+ROW);ctx.stroke();font(17,400);y+=ROW;});
       if(last){ctx.fillStyle='#111';font(19,700);ctx.textAlign='left';ctx.fillText('합계',44,y+35);const badge=audit.status==='ok'?'✓ 계산 일치':audit.label;ctx.fillStyle=audit.status==='ok'?'#16843b':audit.status==='bad'?'#d92d20':'#777';font(15,700);ctx.fillText(badge,104,y+35);ctx.fillStyle='#111';font(20,700);ctx.textAlign='right';ctx.fillText(fmt(audit.total)+'원',676,y+35);y+=72;}else{ctx.fillStyle='#8e8e93';font(14,600);ctx.textAlign='right';ctx.fillText('다음 페이지에 계속',676,y+24);y+=36;}y+=22;
     }
-    ctx.fillStyle='#a0a0a6';font(14,500);ctx.textAlign='center';ctx.fillText('Dropbox 보관용 상세내역 · '+APP_VERSION,W/2,H-22);return canvas;
+    ctx.fillStyle='#a0a0a6';font(14,500);ctx.textAlign='center';ctx.fillText('DUTCH PAY '+APP_VERSION+' · Dropbox 보관용',W/2,H-22);return canvas;
   });
 }
 
@@ -5453,10 +5457,10 @@ async function generateHistoryCanvas(rec){
       if(i<txns.length-1)drawDivider(y+(i+1)*TXN_ROW_H);
     });
   }
-  y+=txnCardH+32;
-  // 푸터
+  y+=txnCardH;
+  // 푸터 — 버전을 하단 여백(FOOTER_H+BOTTOM_PAD) 정중앙에 배치. 모든 생성 이미지 공통 규칙
   ctx.fillStyle=C.muted;setFont(24,400);ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText(`더치페이 ${APP_VERSION}`,W/2,y+FOOTER_H/2);
+  ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,y+(FOOTER_H+BOTTOM_PAD)/2);
   return canvas;
 }
 

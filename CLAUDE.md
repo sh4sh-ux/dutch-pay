@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v6.64** (2026-10-29) — 작업 브랜치
+**v6.65** (2026-10-29) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v6.65 | **수금 계좌 드롭다운 정렬·화살표 통일 + 모든 생성 이미지 버전 푸터 공통 규칙화**(사용자 요청) — (1) 수금 입금 패널의 `계좌` `<select>`(`.pay-sel`)가 네이티브 렌더라 선택값(우리은행)이 옆 입력칸(실수령액·메모)보다 약 4px 더 안쪽으로 들어가고 화살표도 브라우저 기본이었음 → `appearance:none`+좌측 패딩 10px(입력칸과 동일 정렬)+우측 커스텀 셰브론 SVG(배경 이미지, right 11px)로 통일. (2) 생성 이미지 버전 표기를 **DUTCH PAY vX.XX**로 바꾸고 하단 여백 정중앙에 배치하는 공통 규칙 적용: `generateHistoryCanvas`는 `더치페이`→`DUTCH PAY`·푸터를 FOOTER_H+BOTTOM_PAD(120) 정중앙으로(기존 밑 여백 부족 해소), `generateSettleCanvas`는 버전 푸터가 없었는데 FOOTER_H=120 밴드를 추가해 동일하게 중앙 배치(하단 note 유지), `generateFullDetailCanvases` 하단 푸터도 `DUTCH PAY vX.XX · Dropbox 보관용`으로 통일(헤더는 이미 DUTCH PAY). 모두 표시/CSS·캔버스 전용·계산 무관. 계산 138/138 |
 | v6.64 | **기록 이미지 구역 순서를 정산 이미지처럼 재배치 + 라벨/메타/수금 행·버튼 UI 5종**(사용자 요청) — (1) generateHistoryCanvas 구역 순서를 총 지출금액 → **청구 내역** → 지출 내역 → 입금 내역으로(v6.63은 총액→지출→송금→입금). 송금 구역을 총액 바로 아래로 옮기고 라벨 송금→**청구 내역**(수금 탭의 총 청구액/실수령 용어와 통일). H는 블록 합이라 순서 무관·불변. (2) 기록 이미지 뷰어 ✕ 닫기 글리프를 텍스트 ×→**인라인 SVG X**로 교체(line-height:0, svg 20px) — 폰트 메트릭 탓에 v6.62 flex로도 세로가 미세하게 어긋나던 것을 완전 해소(헤드리스 실측 글리프 중심 dx 0·dy 0). (3) 데스크탑 수금 입금 행(.pm-card .txn-row)에 모바일과 같은 2행 그리드 적용(@media min-width:701px) — 메타(우리은행·일시)를 이름 아래 **좌측정렬**, 화살표(▾)를 전용 열+우측 패딩 22px로 **여백 확보**. (4) 입금일시 확인·지금 버튼(.pay-now-btn) 색을 패널(--fill)과 거의 같던 --fill2→**--card+--sep2 테두리**(hover 파랑)로 바꿔 대비 확보. (5) 입금 메타 순서를 금융기관→일자→시간으로(캔버스·_paymentDisplay HTML 공통, 은행 먼저). 모두 표시/CSS 전용·계산 무관. test.html TC22 메타 순서 기대값 갱신, 계산 138/138 |
 | v6.63 | **기록 이미지(generateHistoryCanvas)에 송금(청구)·입금(실제) 두 구역 분리**(사용자 요청) — 입금이 있을 때(txns>0) 지출 내역 아래에 송금 구역(각자 보내야 할 청구액 t.amt: 이영환→조상현 246,500원) + 입금 내역 구역(실제 입금액: 이영환→조상현 +13,500원 초과 · 날짜·은행 · 260,000원) 두 개로. 입금 행 금액을 billing→실제 입금(pm.done?received:billing)으로 변경(received=pm.amount). 송금 구역은 입금이 있을 때만 추가(txns=0이면 기존대로 입금 내역 한 구역·여유 메시지). H 계산에 송금 블록(SECTION_LABEL+sendCardH+GAP) 조건부 포함. t.amt는 calcTxns 결과·pm.amount는 저장값이라 계산 로직(computeShares/calcTxns) 무변경. 헤드리스: 송금 246,500/입금 260,000 두 구역·초과 배지·높이 정상(완납·미입금·입금없음 3케이스 에러 0·no-txn은 송금구역 생략으로 짧음), 계산 138/138 |
 | v6.62 | **기록 이미지 뷰어 ✕ 닫기 버튼을 원 정중앙에 정렬**(사용자 요청) — `.history-image-viewer-close`가 44px 원인데 `line-height:40px;text-align:center`로만 중앙을 잡아 ✕가 세로로 어긋나 있었음. `display:flex;align-items:center;justify-content:center`+`line-height:1`+`padding:0`+`box-sizing:border-box`로 바꿔 글리프를 원 정중앙에 배치(폰트 크기 28→26px). 헤드리스 실측: 버튼 중심 대비 글리프 dx 0·dy −0.5px(사실상 정중앙), 확대 스크린샷으로 육안 확인. CSS 표시 전용·계산 무관, 계산 138/138 |
