@@ -1540,8 +1540,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.66';
-const BUILD_TIME='2026-10-29 18:30';
+const APP_VERSION='v6.67';
+const BUILD_TIME='2026-10-29 19:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2387,10 +2387,12 @@ function _dpSet(inp,value){
   inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));
 }
 function _dpIso(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
-function _placeDesktopPicker(pop,anchor){
+function _placeDesktopPicker(pop,anchor,matchAnchorWidth){
   pop.classList.add('desktop-portal');document.body.appendChild(pop);
   const gap=8,pad=8,vw=document.documentElement.clientWidth||innerWidth,vh=(window.visualViewport&&visualViewport.height)||innerHeight;
-  const rect=anchor.getBoundingClientRect(),width=Math.min(360,vw-pad*2);
+  const rect=anchor.getBoundingClientRect();
+  // 달력은 입력칸(앵커)과 같은 너비로 맞춘다(최소 280·최대 480px). 입금일시(dtp)·시간 선택기는 기존 360px 상한.
+  const width=matchAnchorWidth?Math.round(Math.max(280,Math.min(rect.width,480,vw-pad*2))):Math.min(360,vw-pad*2);
   pop.style.width=width+'px';
   const height=pop.offsetHeight,left=Math.min(Math.max(pad,rect.left),Math.max(pad,vw-width-pad));
   let top=rect.bottom+gap;
@@ -2435,7 +2437,7 @@ function _dpOpen(inp){
   render();
   const mobile=!_dpDesktopMq.matches;let backdrop=null;
   if(mobile){backdrop=document.createElement('div');backdrop.className='dp-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');}
-  else _placeDesktopPicker(pop,wrap);
+  else _placeDesktopPicker(pop,wrap,!wrap.classList.contains('dtp-wrap'));
   wrap.classList.add('dp-open');const controls=wrap.closest('.left-controls');controls?.classList.add('date-picker-open');_dpPicker={pop,backdrop,wrap,inp,controls};
   title.onclick=()=>{if(state.mode!=='year'){state.mode='year';state.yearStart=state.year-5;render();selectEl.querySelector('.on')?.focus({preventScroll:true});}};
   pop.querySelector('[data-dp-prev]').onclick=()=>{if(state.mode==='year')state.yearStart-=12;else if(state.mode==='month')state.year--;else if(--state.month<0){state.month=11;state.year--;}render();};
@@ -4696,13 +4698,17 @@ function _filterHistoryRecords(records,query){
   if(!_histMonthAllMode){const ym=`${_histMonthYear}-${String(_histMonthMonth).padStart(2,'0')}`;recs=recs.filter(r=>(r.dateStart||'').startsWith(ym)||(r.dateEnd||'').startsWith(ym));}
   if(!query.trim())return recs;
   const q=query.toLowerCase().trim();
-  const fhd=d=>{if(!d)return'';const[y,m,day]=d.split('-');return`${y}년 ${+m}월 ${+day}일`;};
+  // 날짜는 한글 표기뿐 아니라 ISO(2026-10-27)·점 표기(2026.10.27·10.27)·숫자만(20261027·1027) 등
+  // 사용자가 입력하는 어떤 구분자로도 검색되게 한다. (v6.67: '날짜 검색'이 한글 외엔 안 되던 버그)
+  const dateForms=d=>{if(!d)return[];const[y,m,day]=d.split('-');if(!day)return[d];return[d,`${y}.${m}.${day}`,`${+m}.${+day}`,`${y}년 ${+m}월 ${+day}일`,`${+m}월 ${+day}일`];};
+  const qDigits=q.replace(/\D/g,'');
   return recs.filter(r=>{
     if((r.groupName||'').toLowerCase().includes(q))return true;
     if((r.people||[]).some(p=>p.toLowerCase().includes(q)))return true;
     if((r.items||[]).some(it=>(it.name||'').toLowerCase().includes(q)))return true;
-    const dateDisplay=r.dateEnd&&r.dateEnd!==r.dateStart?`${fhd(r.dateStart)} ~ ${fhd(r.dateEnd)}`:fhd(r.dateStart);
-    if(dateDisplay.includes(q))return true;
+    const forms=[...dateForms(r.dateStart),...dateForms(r.dateEnd)].filter(Boolean);
+    if(forms.some(f=>f.toLowerCase().includes(q)))return true;
+    if(qDigits.length>=2){const recDigits=[r.dateStart,r.dateEnd].filter(Boolean).map(d=>d.replace(/\D/g,''));if(recDigits.some(rd=>rd.includes(qDigits)))return true;}
     return false;
   });
 }
