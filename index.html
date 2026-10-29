@@ -1526,8 +1526,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.57';
-const BUILD_TIME='2026-10-28 20:45';
+const APP_VERSION='v6.58';
+const BUILD_TIME='2026-10-29 12:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5377,7 +5377,7 @@ async function generateHistoryCanvas(rec){
       const tkey=`${t.from}|${t.to}`;const pm=pmObj[tkey]||{};
       const billing=t.amt;const _va4=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);const received=pm.done?(_va4?+pm.amount:billing):0;
       const diff=pm.done?received-billing:null;
-      const badgeTxt=pm.done?(diff>0?`✓ + ${fmt(diff)}원 초과`:diff<0?`-${fmt(-diff)}원 부족`:'✓ 입금완료'):(t.to===_myName?'미입금':'미확인');
+      const badgeTxt=pm.done?(diff>0?`+${fmt(diff)}원 초과`:diff<0?`-${fmt(-diff)}원 부족`:'입금완료'):(t.to===_myName?'미입금':'미확인');
       const badgeBg=pm.done?(diff<0?'#FFEEEE':C.greenBg):C.grayBg;
       const badgeFg=pm.done?(diff<0?C.red:C.green):C.muted;
       setFont(22,600);const btw=ctx.measureText(badgeTxt).width;
@@ -5402,12 +5402,12 @@ async function generateHistoryCanvas(rec){
       const bX=toStartX+toW+14;
       ctx.fillStyle=badgeBg;roundRectPath(ctx,bX,ry-bH/2,bW,bH,bH/2);ctx.fill();
       setFont(22,600);ctx.fillStyle=badgeFg;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(badgeTxt,bX+bph,ry);
-      if(pm.done&&(diff!==0||pm.timestamp||pm.account)){
+      if(pm.done&&(pm.timestamp||pm.account)){
+        // 입금확인: 은행 + 몇시몇분만 표시 (실수령액은 뺌, 날짜는 상단에 이미 있어 생략) — 사용자 요청
         const metaParts=[];
-        if(diff!==0)metaParts.push(`실수령 ${fmt(received)}원`);
-        if(pm.timestamp){const[dd,tt]=(pm.timestamp||'').split('T');if(dd){const[y2,m2,d2]=dd.split('-');const tm=tt?tt.slice(0,5):'';metaParts.push(`${y2.slice(2)}.${m2}.${d2}${tm?' '+tm:''}`);}};
         if(pm.account)metaParts.push(pm.account);
-        if(metaParts.length){const metaX=bX+bW+14;const maxMetaW=amtX-amtW-30-metaX;if(maxMetaW>30){setFont(22,400);ctx.fillStyle=C.muted;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(truncateCanvasText(ctx,metaParts.join(' '),maxMetaW),metaX,ry);}}
+        if(pm.timestamp){const[dd,tt]=(pm.timestamp||'').split('T');const tm=tt?tt.slice(0,5):'';if(tm)metaParts.push(tm);else if(dd){const[y2,m2,d2]=dd.split('-');metaParts.push(`${y2.slice(2)}.${m2}.${d2}`);}};
+        if(metaParts.length){const metaX=bX+bW+14;const maxMetaW=amtX-amtW-30-metaX;if(maxMetaW>30){setFont(22,400);ctx.fillStyle=C.muted;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(truncateCanvasText(ctx,metaParts.join(' · '),maxMetaW),metaX,ry);}}
       }
       if(i<txns.length-1)drawDivider(y+(i+1)*TXN_ROW_H);
     });
