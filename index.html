@@ -1545,8 +1545,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.72';
-const BUILD_TIME='2026-10-29 23:20';
+const APP_VERSION='v6.73';
+const BUILD_TIME='2026-10-30 00:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2767,8 +2767,11 @@ function _histMonthPickOpen(anchorEl){
 }
 function _histMonthFromPick(val){
   const m=String(val||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return;
-  _histMonthAllMode=false;_histMonthYear=+m[1];_histMonthMonth=+m[2];
-  _refreshHistMonthView();
+  // 달력에서 고른 '그 날짜'만 보이도록 날짜 검색에 넣는다(월 전체가 아니라 해당 일자). (v6.73)
+  const q=`${m[1]}.${m[2]}.${m[3]}`;            // 2026.10.27 — _filterHistoryRecords가 정확 매칭
+  _histMonthAllMode=true;                        // 월 필터 해제(전체 기록 기준) + 날짜 검색
+  const si=document.getElementById('histDrSinp');if(si){si.value=q;if(typeof _chkClear==='function')_chkClear(si);}
+  updateHistorySearch(q);
 }
 function _refreshHistMonthView(){
   if(_histDrawerOpen){_refreshHistDrList();return;}
