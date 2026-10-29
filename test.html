@@ -961,6 +961,29 @@ suite('TC23: 입금 달력·시간 팝업 레이아웃 [v6.50]', () => {
   });
 });
 
+suite('TC23b: 기록 날짜 검색 포맷·달력 너비 [v6.67]', () => {
+  const P=['이영환','조상현'];
+  const rec={id:'r1',savedAt:'2026-10-27T10:00',dateStart:'2026-10-27',dateEnd:null,people:P,total:82000,
+    items:[{name:'기운',amount:82000,payer:'조상현',isTreat:false,members:P,watchers:[],rounderOverride:null}],txns:[],payments:{}};
+  test('날짜 검색이 ISO·점·슬래시·숫자 포맷 모두 매칭', () => {
+    APP._histMonthAllMode=true;
+    ['2026-10-27','2026.10.27','10.27','10/27','1027','10월','27'].forEach(q=>{
+      if(!APP._filterHistoryRecords([rec],q).length)throw new Error("'"+q+"' 날짜 검색 실패");
+    });
+  });
+  test('무관한 날짜·이름은 매칭되지 않음', () => {
+    APP._histMonthAllMode=true;
+    expect(APP._filterHistoryRecords([rec],'0915').length).toBe(0);
+    expect(APP._filterHistoryRecords([rec],'박지연').length).toBe(0);
+  });
+  test('데스크탑 달력은 입력칸 너비에 맞추고(최소 280) 입금일시(dtp)는 360 상한 유지', () => {
+    const mk=(w,cls)=>{const a=APP.document.createElement('div');a.className='dp-wrap'+(cls?' '+cls:'');a.style.cssText='position:fixed;left:20px;top:20px;width:'+w+'px;height:36px';APP.document.body.appendChild(a);const pop=APP.document.createElement('div');pop.className='dp-pop';pop.innerHTML='<div class="dp-pop-days"></div>';APP._placeDesktopPicker(pop,a,!a.classList.contains('dtp-wrap'));const got=Math.round(pop.getBoundingClientRect().width);pop.remove();a.remove();return got;};
+    expect(mk(355,'')).toBe(355);        // 왼쪽 패널 정산일자 — 입력칸과 동일
+    expect(mk(180,'')).toBe(280);        // 좁은 입력칸 — 최소 280
+    if(mk(900,'dtp-wrap')>361)throw new Error('입금일시 달력이 상한을 넘음');
+  });
+});
+
 suite('TC24: 모바일 입금 행 줄바꿈 [v6.51]', () => {
   test('이름·금액·메타정보가 서로 다른 그리드 영역을 사용', () => {
     const css=[...APP.document.styleSheets].flatMap(sheet=>{try{return[...sheet.cssRules].map(rule=>rule.cssText);}catch(e){return[];}}).join('\n');
