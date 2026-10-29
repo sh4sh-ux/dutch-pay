@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v6.71** (2026-10-29) — 작업 브랜치
+**v6.72** (2026-10-29) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v6.72 | **수금(입금관리) 전체기록 검색창을 기록보관함 검색창과 동일하게**(사용자 요청) — `.pm-search`가 카드 배경+1px 테두리라 포커스 시 전역 `input:focus-visible` 2px 파란 아웃라인이 똑같이 떴음. `.hist-dr-sinp`와 동일 규격으로 통일: 채움 배경(--fill)+테두리 없음+좌측 돋보기 아이콘(padding-left 34px)+포커스 1px 인셋 파랑+흰 배경, `.pm-search:focus-visible{outline:none}`로 전역 아웃라인 제거. 마크업은 이미 `.sinp-rel`+`.sinp-clr`(지우기 버튼) 공통이라 CSS만 교체. 표시 전용·계산 무관, 계산 146/146 |
 | v6.71 | **이미지 DUTCH PAY 버전 푸터 2pt 축소·글자간격 확대**(사용자 요청, 시안 확인 후) — 생성 이미지 푸터를 20px→**18px**(−2pt), 캔버스 `ctx.letterSpacing=2px`로 자간 확대 후 그리고 0px로 복구(generateSettle·generateHistory 공통). letterSpacing 미지원 구형 브라우저는 자간 없이 그대로 렌더(무해). 표시 전용·계산 무관, 계산 146/146 |
 | v6.70 | **기록보관함 검색창 파란 테두리 완전 제거**(사용자: v6.69 후에도 여전함) — 진짜 원인은 v6.69가 고친 `:focus` 인셋 box-shadow가 아니라, 전역 규칙 `input:focus-visible{outline:2px solid blue;outline-offset:2px}`(line 96, v5.70)이 검색창 포커스 시 **바깥쪽 2px 파란 아웃라인**을 그린 것(드로어 열 때 자동 포커스라 더 도드라짐). `.hist-dr-sinp:focus-visible{outline:none}`로 이 검색창만 전역 아웃라인을 눌러, 자체 포커스 표시(1px 인셋+흰 배경)만 남김(명시도 0,2,0 > 전역 0,1,1, 키보드 접근성은 box-shadow로 유지). 헤드리스 실측: outline-style none·box-shadow 1px 인셋만. 표시 전용·계산 무관, 계산 146/146 |
 | v6.69 | **기록보관함 검색창 파란 테두리 정리 + 전체기록/월 라벨 클릭 시 달력으로 월 바로 이동**(사용자 요청, 이전 "검색창 버그"=파란 테두리 지적·"달력 나오게"=라벨 클릭 달력) — (1) `.hist-dr-sinp:focus`의 두꺼운 2px 인셋 파랑 링을 **1px + 포커스 시 배경 흰색(--card)**으로 바꿔 깔끔하게. (2) 월 네비게이션의 좌우 화살표 가운데 라벨(전체 기록 / 2026년 10월)을 `<span>`→**클릭 버튼(달력 아이콘 추가)**으로 바꿔, 누르면 앱 내부 달력을 열어 원하는 날짜 선택 시 그 달로 바로 이동(`_histMonthPickOpen`/`_histMonthFromPick`). 달력은 숨은 날짜 입력(`.dp-wrap.hist-month-pick-host`)에 `_dpOpen`을 붙여 재사용하고, `_dpClose`가 선택·바깥클릭·ESC 어느 경로로 닫혀도 `_dpTransientHost`를 정리. 표시/네비 전용·계산 무관. test.html TC23c 2건 추가(월 이동 필터·달력 열고 닫힘 정리), 계산 146/146 |
