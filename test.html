@@ -986,14 +986,13 @@ suite('TC23b: 기록 날짜 검색 포맷·달력 너비 [v6.67]', () => {
 });
 
 suite('TC23c: 기록 월 라벨 달력 선택 [v6.69]', () => {
-  test('_histMonthFromPick이 선택 날짜의 월로 이동(그 달만 필터)', () => {
+  test('달력에서 고른 날짜는 그 일자만 필터(월 전체 아님)', () => {
     const mk=(id,ds)=>({id,savedAt:ds+'T10:00',dateStart:ds,dateEnd:null,people:['조상현'],total:1000,items:[],txns:[],payments:{}});
-    const recs=[mk('a','2026-03-10'),mk('b','2026-05-20')];
-    APP._histMonthFromPick('2026-03-10');           // 2026년 3월로 이동(전체기록 해제)
-    const filtered=APP._filterHistoryRecords(recs,'');
+    const recs=[mk('a','2026-03-10'),mk('b','2026-03-20'),mk('c','2026-05-10')];
+    APP._histMonthFromPick('2026-03-10');            // 전체기록 기준 + '2026.03.10' 검색 설정
+    const filtered=APP._filterHistoryRecords(recs,'2026.03.10');
     expect(filtered.length).toBe(1);
-    expect(filtered[0].id).toBe('a');                // 3월 기록만
-    APP._histMonthToggleAll();                        // 전체기록 모드로 복구(후속 테스트 보호)
+    expect(filtered[0].id).toBe('a');                 // 3월 10일만 (3월 20일·5월 10일 제외)
   });
   test('월 라벨 클릭 시 달력과 숨은 호스트가 열리고 닫을 때 정리됨', () => {
     const btn=APP.document.createElement('button');btn.className='hmn-label';btn.style.cssText='position:fixed;left:40px;top:40px;width:100px;height:30px';APP.document.body.appendChild(btn);
