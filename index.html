@@ -362,6 +362,8 @@ svg{display:block;flex-shrink:0;}
 .pay-inp{flex:1;border:1px solid var(--sep2);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;color:var(--label);background:var(--card);outline:none;min-width:0;text-align:left;}
 .pay-inp:focus{border-color:var(--blue);}
 .pay-inp.err{border-color:var(--red);}
+/* 입금 패널 입력칸(실수령액·계좌·메모)은 자체 :focus 파란 테두리만 — 전역 focus-visible 아웃라인(line 96)이 겹쳐 파란 선이 이중으로 보이던 것 제거 (v6.76) */
+.pay-inp:focus-visible,.pay-sel:focus-visible{outline:none;}
 .pay-unit{font-size:13px;color:var(--label3);flex-shrink:0;}
 .pay-diff-badge{font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px;flex-shrink:0;white-space:nowrap;}
 .pay-diff-badge.pos{background:#EDFAF2;color:var(--green);}
@@ -1551,8 +1553,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.75';
-const BUILD_TIME='2026-10-30 01:40';
+const APP_VERSION='v6.76';
+const BUILD_TIME='2026-10-30 02:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2453,7 +2455,7 @@ function _dpOpen(inp){
   render();
   const mobile=!_dpDesktopMq.matches;let backdrop=null;
   if(mobile){backdrop=document.createElement('div');backdrop.className='dp-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');}
-  else _placeDesktopPicker(pop,wrap,!wrap.classList.contains('dtp-wrap'));
+  else _placeDesktopPicker(pop,wrap,true);
   wrap.classList.add('dp-open');const controls=wrap.closest('.left-controls');controls?.classList.add('date-picker-open');_dpPicker={pop,backdrop,wrap,inp,controls};
   title.onclick=()=>{if(state.mode!=='year'){state.mode='year';state.yearStart=state.year-5;render();selectEl.querySelector('.on')?.focus({preventScroll:true});}};
   pop.querySelector('[data-dp-prev]').onclick=()=>{if(state.mode==='year')state.yearStart-=12;else if(state.mode==='month')state.year--;else if(--state.month<0){state.month=11;state.year--;}render();};
@@ -2496,7 +2498,7 @@ function _dtpTimeOpen(inp){
   const root=inp.closest('.dtp-wrap');if(!root)return;const now=new Date(),parts=String(inp.value||'').split(':'),hour=/^\d{2}$/.test(parts[0])?+parts[0]:now.getHours(),minute=/^\d{2}$/.test(parts[1])?+parts[1]:now.getMinutes();
   const options=(n,selected,kind)=>Array.from({length:n},(_,i)=>{const value=String(i).padStart(2,'0'),on=i===selected;return`<button type="button" class="time-pop-option${on?' on':''}" role="option" aria-selected="${on}" data-time-${kind}="${value}">${value}</button>`;}).join('');
   const pop=document.createElement('div');pop.className='time-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','시간 선택');pop.innerHTML=`<div class="time-pop-head"><div class="time-pop-title">시간 선택 · 24시간</div></div><div class="time-pop-fields"><div class="time-pop-field"><span>시</span><div class="time-pop-list" role="listbox" aria-label="시">${options(24,hour,'hour')}</div></div><span class="time-pop-colon" aria-hidden="true"></span><div class="time-pop-field"><span>분</span><div class="time-pop-list" role="listbox" aria-label="분">${options(60,minute,'minute')}</div></div></div><div class="time-pop-actions"><button type="button" class="time-pop-btn" data-time-now>현재</button><button type="button" class="time-pop-btn" data-time-clear>지우기</button><button type="button" class="time-pop-btn done" data-time-done>완료</button></div>`;
-  const mobile=!_dpDesktopMq.matches;let backdrop=null;if(mobile){backdrop=document.createElement('div');backdrop.className='time-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');}else _placeDesktopPicker(pop,root);root.classList.add('dtp-time-open');_dtpTimePicker={pop,backdrop,root,inp};
+  const mobile=!_dpDesktopMq.matches;let backdrop=null;if(mobile){backdrop=document.createElement('div');backdrop.className='time-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');}else _placeDesktopPicker(pop,root.querySelector('.dtp-time')||root,true);root.classList.add('dtp-time-open');_dtpTimePicker={pop,backdrop,root,inp};
   let draftHour=String(hour).padStart(2,'0'),draftMinute=String(minute).padStart(2,'0');const hourList=pop.querySelector('[aria-label="시"]'),minuteList=pop.querySelector('[aria-label="분"]');
   const select=(kind,value,center=false)=>{const list=kind==='hour'?hourList:minuteList,data=kind==='hour'?'timeHour':'timeMinute';if(kind==='hour')draftHour=value;else draftMinute=value;list.querySelectorAll('.time-pop-option').forEach(btn=>{const on=btn.dataset[data]===value;btn.classList.toggle('on',on);btn.setAttribute('aria-selected',String(on));});const on=list.querySelector('.time-pop-option.on');if(center&&on)list.scrollTop=Math.max(0,on.offsetTop-(list.clientHeight-on.offsetHeight)/2);};
   [hourList,minuteList].forEach((list,index)=>list.addEventListener('click',event=>{const btn=event.target.closest('.time-pop-option');if(btn)select(index?'minute':'hour',index?btn.dataset.timeMinute:btn.dataset.timeHour);}));
