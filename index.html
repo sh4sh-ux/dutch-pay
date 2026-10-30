@@ -997,18 +997,15 @@ svg{display:block;flex-shrink:0;}
 .dtp-wrap{display:flex;align-items:center;min-width:0;height:34px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);box-sizing:border-box;transition:border-color .15s,box-shadow .15s;}
 .dtp-wrap:focus-within,.dtp-wrap.dp-open,.dtp-wrap.dtp-time-open{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);z-index:221;}
 .dtp-date,.dtp-time{position:relative;display:flex;align-items:center;height:100%;box-sizing:border-box;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;}
-.dtp-date{flex:1 1 auto;min-width:0;padding:0 10px;color:var(--label);font-size:13px;}
-.dtp-time{flex:0 0 auto;padding:0 10px;color:var(--label2);font-size:13px;}
+.dtp-date{flex:1 1 0;min-width:0;padding:0 10px;color:var(--label);font-size:13px;}
+.dtp-time{flex:1 1 0;min-width:0;padding:0 10px;color:var(--label2);font-size:13px;}
 .dtp-date.dp-ph,.dtp-time.dp-ph{color:var(--label3);}
-.dtp-time::before{content:'';width:1px;height:16px;margin-right:10px;background:var(--sep);}
+/* 구분선(|)을 시간 칸 왼쪽 경계(=날짜·시간 반반이면 입력칸 정중앙)에 절대배치 — 흐름에서 빼 칸 폭에 영향 없음 (v6.77) */
+.dtp-time::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:1px;height:16px;background:var(--sep);}
 .dtp-date>.dtp-part-inp,.dtp-time>.dtp-part-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
 .dtp-wrap>.dp-pop,.dtp-wrap>.time-pop{top:calc(100% + 8px);right:auto;width:min(360px,calc(100vw - 48px));}
-/* 입금일시 날짜·시간 칸 너비를 왼쪽 패널 정산일자 입력칸과 같게(--dtp-fieldw, JS 측정). 데스크탑 전용 (v6.74) */
-@media(min-width:701px){
-  .dp-wrap.pay-date-wrap{flex:0 0 auto;width:auto;max-width:100%;}
-  .pay-date-wrap .dtp-date{flex:0 0 var(--dtp-fieldw,300px);}
-  .pay-date-wrap .dtp-time{flex:0 0 var(--dtp-fieldw,300px);}
-}
+/* 입금일시 입력칸은 .pay-date-wrap{flex:1}로 행 전체를 채우고(실수령액·계좌·메모와 동일),
+   날짜·시간 칸은 flex:1 1 0로 정확히 반반 → 가운데 경계에 구분선(|, .dtp-time::before)이 위치 (v6.77) */
 .dp-pop.desktop-portal,.time-pop.desktop-portal{position:fixed;z-index:651;right:auto;bottom:auto;width:min(360px,calc(100vw - 16px));}
 .time-pop{position:absolute;z-index:222;top:calc(100% + 8px);left:-1px;right:-1px;padding:14px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.16);cursor:default;box-sizing:border-box;}
 .time-pop.up{top:auto;bottom:calc(100% + 8px);}
@@ -1553,8 +1550,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.76';
-const BUILD_TIME='2026-10-30 02:20';
+const APP_VERSION='v6.77';
+const BUILD_TIME='2026-10-30 03:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2479,8 +2476,7 @@ document.addEventListener('keydown',event=>{
   const inp=event.target;if(!inp?.hasAttribute?.('data-app-date')||!inp.classList.contains('dp-inp'))return;
   if(event.key==='Enter'||event.key===' '||event.key==='ArrowDown'){event.preventDefault();_dpOpen(inp);}
 },true);
-function _syncDtpFieldWidth(){try{const wrap=document.getElementById('meetingDateInp')?.closest('.dp-wrap');if(!wrap)return;const w=Math.round(wrap.getBoundingClientRect().width);if(w>0)document.documentElement.style.setProperty('--dtp-fieldw',w+'px');}catch(e){}}
-addEventListener('resize',()=>{_dpClose(false);_dtpTimeClose(false);_syncDtpFieldWidth();});
+addEventListener('resize',()=>{_dpClose(false);_dtpTimeClose(false);});
 function _dpUpdate(dispId,iso){const el=document.getElementById(dispId);if(el)el.textContent=fmtDate(iso);}
 function _dpHtml(iso,onChangeCode,wrapCls,minVal){const fa=ea(iso||''),type=_dpDesktopMq.matches?'date':'hidden';const min=minVal?` min="${ea(minVal)}"`:'' ;return `<div class="dp-wrap${wrapCls?' '+wrapCls:''}" onclick="_dpPick(this)"><div class="dp-txt">${e(fmtDate(iso||''))}</div><input type="${type}" class="dp-inp" data-app-date value="${fa}"${min} aria-label="날짜" onclick="_dpInputClick(this,event)" onchange="${onChangeCode};_dpSync(this)"/></div>`;}
 function _dtpFmt(iso){if(!iso)return'';const[d,t]=(iso||'').split('T');if(!d)return'';const[y,m,day]=d.split('-');const time=t?t.slice(0,5):'';return`${y}.${m}.${day}${time?' '+time:''}`;}
@@ -3601,7 +3597,7 @@ function renderAll(skipSave=false){
   const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
   const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
-  _updateMobFab();_syncDtpFieldWidth();if(!skipSave)saveState();
+  _updateMobFab();if(!skipSave)saveState();
 }
 
 function _pillHtml(p){return `<span class="pill">${e(p)}<button class="pill-x" aria-label="${e(p)} 삭제" onclick="event.stopPropagation();removePerson(${ja(p)})">${svgX}</button></span>`;}
