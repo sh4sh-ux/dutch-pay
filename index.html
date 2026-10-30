@@ -529,11 +529,17 @@ svg{display:block;flex-shrink:0;}
 .pm-allrec-card.open{border-radius:12px 12px 0 0;margin-bottom:0;}
 .pm-allrec-chev{font-size:9px;color:var(--label3);margin-left:2px;}
 .pm-allrec-detail{background:var(--detail-bg);border-radius:0 0 12px 12px;margin-bottom:8px;overflow:hidden;}
-.rc-owner-actions{display:flex;gap:8px;padding:8px 14px 14px;}
-.rc-owner-btn{flex:1;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;}
+.rc-owner-actions{display:flex;align-items:stretch;gap:8px;padding:8px 14px 14px;}
+.rc-owner-btn{flex:1;min-width:0;box-sizing:border-box;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;}
 .rc-owner-btn.edit{background:var(--blue);color:#fff;}
 .rc-owner-btn.del{background:var(--red-bg);color:var(--red);}
+.rc-owner-btn.dbx{background:transparent;color:var(--blue);border:1.5px solid var(--blue);}
+.rc-owner-btn.dbx .dbx-short{display:none;}
 .rc-owner-btn:active{opacity:.8;}
+@media(max-width:700px){
+  .rc-owner-btn.dbx .dbx-full{display:none;}
+  .rc-owner-btn.dbx .dbx-short{display:inline;}
+}
 .pm-view-toggle{display:flex;gap:6px;margin:8px 0 10px;}
 .pm-view-btn{flex:1;padding:8px;background:var(--fill);color:var(--label2);border:none;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;}
 .pm-view-btn.on{background:var(--blue);color:var(--bg);}
@@ -1565,8 +1571,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.82';
-const BUILD_TIME='2026-10-30 06:00';
+const APP_VERSION='v6.83';
+const BUILD_TIME='2026-10-30 06:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3206,11 +3212,13 @@ function toggleAllRecCard(recId){
   const rec=loadHistory().find(r=>r.id===recId);if(!rec)return;
   const txns=_myName?(rec.txns||[]).filter(t=>t.to===_myName):(rec.txns||[]);const pmObj=rec.payments||{};
   const detail=document.createElement('div');detail.className='pm-allrec-detail';
-  const dbxBtn=hDbxGetToken()?`<div style="padding:10px 14px 4px"><button class="pm-dbx-btn" style="margin-top:0" onclick="saveHistRecToDropbox('${jsa(recId)}')">☁️ Dropbox에 이미지 저장</button></div>`:'';
   const fixed=_isHistoryFixed(recId);
-  const ownerBtns=_ownerUnlocked?`<div class="rc-owner-actions"><button class="rc-owner-btn edit" onclick="${fixed?`unlockHistoryForEdit('${jsa(recId)}')`:`loadHistoryForEdit('${jsa(recId)}')`}">수정</button>${fixed?`<span class="rc-fix-btn fixed">${LOCK_CLOSED_SVG}잠김</span>`:''}<button class="rc-owner-btn del" onclick="_pmDelRec('${jsa(recId)}',event)">삭제</button></div>`:'';
-  if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>'+dbxBtn+ownerBtns;}
-  else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const owner=t.to===_myName;const badge=_paymentBadgeHtml(pm,t.amt,{owner});const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(recId)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+dbxBtn+ownerBtns;}
+  // 이미지저장·잠김·수정·삭제를 한 줄에(모바일은 Dropbox 라벨 축약) (v6.83)
+  const dbxInline=hDbxGetToken()?`<button class="rc-owner-btn dbx" onclick="saveHistRecToDropbox('${jsa(recId)}')"><span class="dbx-full">☁️ 이미지 저장</span><span class="dbx-short">☁️ 저장</span></button>`:'';
+  const ownerInline=_ownerUnlocked?`${fixed?`<span class="rc-fix-btn fixed">${LOCK_CLOSED_SVG}잠김</span>`:''}<button class="rc-owner-btn edit" onclick="${fixed?`unlockHistoryForEdit('${jsa(recId)}')`:`loadHistoryForEdit('${jsa(recId)}')`}">수정</button><button class="rc-owner-btn del" onclick="_pmDelRec('${jsa(recId)}',event)">삭제</button>`:'';
+  const actions=(dbxInline||ownerInline)?`<div class="rc-owner-actions">${dbxInline}${ownerInline}</div>`:'';
+  if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>'+actions;}
+  else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const owner=t.to===_myName;const badge=_paymentBadgeHtml(pm,t.amt,{owner});const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(recId)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+actions;}
   card.insertAdjacentElement('afterend',detail);
 }
 
