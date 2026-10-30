@@ -375,8 +375,9 @@ svg{display:block;flex-shrink:0;}
 /* 실수령액·입금일시 입력칸 가로폭을 동일하게: 두 행의 꼬리(원+배지 / 확인·지금)를 같은 고정폭 영역으로 묶어 flex:1 입력칸이 같은 열에서 끝나게 함 (데스크탑). 모바일은 display:contents로 기존 흐름 유지 (v6.77) */
 .pay-end{display:contents;}
 @media(min-width:701px){
-  .pay-end{display:flex;align-items:center;gap:8px;flex:0 0 auto;min-width:116px;justify-content:space-between;}
-  .pay-end.pay-end-btns{justify-content:space-between;}
+  .pay-end{display:flex;align-items:center;gap:8px;flex:0 0 auto;min-width:124px;justify-content:space-between;}
+  /* 확인·지금 버튼은 영역을 똑같이 나눠 채워 동일 너비 + 8px 간격(입력칸↔확인 간격과 동일) */
+  .pay-end.pay-end-btns>.pay-now-btn{flex:1 1 0;min-width:0;}
 }
 .pay-now-btn:hover{border-color:var(--blue);color:var(--blue);}
 .pay-summary{margin-top:8px;background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:0 2px 10px rgba(20,25,40,.07);}
@@ -1559,8 +1560,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.78';
-const BUILD_TIME='2026-10-30 03:40';
+const APP_VERSION='v6.79';
+const BUILD_TIME='2026-10-30 04:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
