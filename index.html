@@ -1020,12 +1020,12 @@ svg{display:block;flex-shrink:0;}
 .time-pop{position:absolute;z-index:222;top:calc(100% + 8px);left:-1px;right:-1px;padding:0 10px 10px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.16);cursor:default;box-sizing:border-box;}
 .time-pop.up{top:auto;bottom:calc(100% + 8px);}
 /* 헤더·구분선·푸터를 달력(.dp-pop)과 동일 규격으로 통일 (v6.80) */
-.time-pop-head{display:flex;align-items:center;justify-content:center;min-height:48px;margin:0 -10px 7px;padding:7px 8px;border-bottom:1px solid var(--sep);}
+.time-pop-head{display:flex;align-items:center;justify-content:center;min-height:49px;margin:0 -10px 7px;padding:7px 8px;border-bottom:1px solid var(--sep);}
 .time-pop-title{font-size:13px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
 .time-pop-fields{display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:start;gap:12px;padding:2px 4px 0;}
 .time-pop-field{display:flex;min-width:0;flex-direction:column;gap:2px;font-size:11px;font-weight:600;color:var(--label3);}
 .time-pop-field>span{padding:0 0 5px;text-align:center;}
-.time-pop-list{height:200px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;user-select:none;-webkit-user-select:none;padding:0 4px;scrollbar-width:none;}
+.time-pop-list{height:198px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;user-select:none;-webkit-user-select:none;padding:0 4px;scrollbar-width:none;}
 .time-pop-list::-webkit-scrollbar{display:none;}
 .time-pop-option{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:36px;border:0;border-radius:8px;background:transparent;color:var(--label);font:inherit;font-size:14px;font-weight:400;font-variant-numeric:tabular-nums;cursor:pointer;}
 .time-pop-option:hover{background:var(--fill);}
@@ -1561,8 +1561,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.80';
-const BUILD_TIME='2026-10-30 05:00';
+const APP_VERSION='v6.81';
+const BUILD_TIME='2026-10-30 05:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
