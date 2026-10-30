@@ -1571,8 +1571,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.83';
-const BUILD_TIME='2026-10-30 06:30';
+const APP_VERSION='v6.84';
+const BUILD_TIME='2026-10-30 07:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3187,7 +3187,7 @@ function _pmShowTreatItems(nm,ym){
   document.querySelectorAll('.pm-payer-modal-bg').forEach(el=>el.remove());
   const pfx=`ptrt_m${Date.now()}`;
   const rowsHtml=items.map((it,idx)=>{
-    const memsText=[...it.members||[],...(it.watchers||[])].join(', ');
+    const memsText=[...(it.members||[]),...(it.watchers||[]).map(w=>w+'(깍두기)')].join(', ');
     const uid=`${pfx}_${idx}`;const hasReceipt=!!it.receiptText;
     const rowClick=hasReceipt?` onclick="toggleItemReceipt('${uid}',event)" style="cursor:pointer"`:'';
     const chev=hasReceipt?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';
@@ -3347,7 +3347,7 @@ function _pmHistResultsHtml(){
     const recValCls=c.done?(c.diff<0?' neg':' done-clr'):'';
     const rid=ea(c.rec.id||'');const rkey=ea(c.key||'__attend__');
     const recItems=(c.rec.items||[]).filter(it=>+it.amount!==0);
-    const itemsHtml=recItems.length?`<div class="pm-rec-items"><div class="pm-rec-items-title">지출 내역</div>${recItems.map(it=>{const uid='rcpt_'+(c.rec.id||'')+'_'+(it.id||'');const _mems=(it.members&&it.members.length)?it.members:(c.rec.people||[]);const _ws=(it.watchers||[]).filter(w=>!_mems.includes(w));const memsStr=it.isTreat?[..._mems,..._ws].map(m=>e(m)).join(', '):[..._mems.map(m=>e(m)),..._ws.map(w=>`${e(w)}(깍두기)`)].join(', ');const rowClick=it.receiptText?` onclick="toggleItemReceipt('${uid}',event)" style="cursor:pointer"`:'';const chev=it.receiptText?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';return `<div class="rc-item-row"${rowClick}><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱</span>':''}</div><div class="rc-item-meta">${memsStr}</div></div>${chev}<span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid,c.rec.id)}`;}).join('')}</div>`:'';
+    const itemsHtml=recItems.length?`<div class="pm-rec-items"><div class="pm-rec-items-title">지출 내역</div>${recItems.map(it=>{const uid='rcpt_'+(c.rec.id||'')+'_'+(it.id||'');const _mems=(it.members&&it.members.length)?it.members:(c.rec.people||[]);const _ws=(it.watchers||[]).filter(w=>!_mems.includes(w));const memsStr=[..._mems.map(m=>e(m)),..._ws.map(w=>`${e(w)}(깍두기)`)].join(', ');const rowClick=it.receiptText?` onclick="toggleItemReceipt('${uid}',event)" style="cursor:pointer"`:'';const chev=it.receiptText?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';return `<div class="rc-item-row"${rowClick}><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱</span>':''}</div><div class="rc-item-meta">${memsStr}</div></div>${chev}<span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid,c.rec.id)}`;}).join('')}</div>`:'';
     const bodyHtml=!c.isParticipant&&c.done?`<div class="pm-record-body"><div class="pm-record-row"><span class="pm-record-lbl">실수령액</span><span class="pm-record-val${recValCls}">${fmt(c.received)}원</span></div></div>`:'';
     const footMeta=!c.isParticipant?_paymentDisplay(c.pm,c.billing,{owner:c.isOwnerTxn}).meta:[];
     const footHtml=footMeta.length?`<div class="pm-record-foot"><span class="pm-record-account">${e(footMeta.join(' · '))}</span></div>`:'';
@@ -4231,7 +4231,7 @@ function removeReceipt(itemId){
   _syncFlushNow();
 }
 function toggleTreat(id){const it=items.find(i=>i.id===id);if(!it)return;it.isTreat=!it.isTreat;saveState();renderAll();const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(id);}
-function _itMembersHtml(it){const mems=it.members.length?it.members:people;const ws=(it.watchers||[]).filter(w=>!mems.includes(w));if(it.isTreat)return[...mems,...ws].map(m=>e(m)).join(', ');return[...mems.map(m=>e(m)),...ws.map(w=>`${e(w)}(깍두기)`)].join(', ');}
+function _itMembersHtml(it){const mems=it.members.length?it.members:people;const ws=(it.watchers||[]).filter(w=>!mems.includes(w));return[...mems.map(m=>e(m)),...ws.map(w=>`${e(w)}(깍두기)`)].join(', ');}
 function fmt(n){return Math.round(n).toLocaleString('ko-KR');}
 function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function ea(s){return String(s||'').replace(/"/g,'&quot;');}
@@ -4702,7 +4702,7 @@ function _buildRecordCardHtml(r){
   const itemsHtml=rcItems.length
     ?`<div class="rc-section-title">지출 내역</div>`+rcItems.map(it=>{
         const uid='hist_'+sid+'_'+(it.id||'');
-        const memsArr=(it.members&&it.members.length)?it.members:(r.people||[]);const watchers=(it.watchers||[]).filter(w=>!memsArr.includes(w));const mems=it.isTreat?[...memsArr,...watchers].join(', '):[...memsArr,...watchers.map(w=>w+'(깍두기)')].join(', ');
+        const memsArr=(it.members&&it.members.length)?it.members:(r.people||[]);const watchers=(it.watchers||[]).filter(w=>!memsArr.includes(w));const mems=[...memsArr,...watchers.map(w=>w+'(깍두기)')].join(', ');
         const rowClick=it.receiptText?` onclick="toggleItemReceipt('${uid}',event)" style="cursor:pointer"`:'';const chev=it.receiptText?`<span class="rc-chev" data-rcpt-chev="${uid}">▼</span>`:'';
         return `<div class="rc-item-row"${rowClick}><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱</span>':''}</div><div class="rc-item-meta">${e(mems)}</div></div>${chev}<span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid,r.id)}`;
       }).join(''):'';
@@ -5181,7 +5181,7 @@ async function generateSettleCanvas(){
       // 배지 크기 먼저 측정해서 이름 truncate 폭 계산
       const mems=it.members.length?it.members:people;
       const ws=(it.watchers||[]).filter(w=>!mems.includes(w));
-      const memsDisplay=it.isTreat?[...mems,...ws]:[...mems,...ws.map(w=>w+'(깍두기)')];
+      const memsDisplay=[...mems,...ws.map(w=>w+'(깍두기)')];
       const payerText=`${it.payer||'결제자 미정'} 결제`;
       const treatBadgeTxt='🎉 한턱 쏨 🎉';
       setFont(20,400);const pm=ctx.measureText(payerText);
@@ -5508,7 +5508,7 @@ async function generateHistoryCanvas(rec){
       const nameX=cardX+118,maxW=amtX-amtW-34-nameX;
       const mems=it.members&&it.members.length?it.members:people;
       const ws=(it.watchers||[]).filter(w=>!mems.includes(w));
-      const memsDisplay=it.isTreat?[...mems,...ws]:[...mems,...ws.map(w=>w+'(깍두기)')];
+      const memsDisplay=[...mems,...ws.map(w=>w+'(깍두기)')];
       const payerTxt=`${it.payer||'결제자 미정'} 결제`;
       const treatTxt='🎉 한턱 쏨 🎉';
       setFont(20,400);const pmw=ctx.measureText(payerTxt).width;
