@@ -1586,8 +1586,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.87';
-const BUILD_TIME='2026-10-31 06:40';
+const APP_VERSION='v6.88';
+const BUILD_TIME='2026-10-31 07:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1616,7 +1616,21 @@ const _syncSnapshots={};
 const SYNC_HASHES_KEY='dutchpay_sync_hashes';
 const RECEIPT_DB_TRANSFER_KEY='receipt_db_dutchpay_transfer_v1';
 function _dataHash(data){let h=0;const s=JSON.stringify(data)||'';for(let i=0;i<s.length;i++)h=Math.imul(31,h)+s.charCodeAt(i)|0;return (h>>>0).toString(36);}
-function _groupHash(g){return _dataHash({name:g.name,nameAuto:g.nameAuto,data:g.data});}
+// 정산 '내용'만 추려 해시한다 — 기기마다 다른 값(다음 id 카운터 idc·정렬/검색 UI 상태 itemSort·itemSearch·
+// nameAuto 플래그·객체 키 순서)은 제외해, 사람·금액이 같은데도 동기화 충돌로 뜨던 문제를 막는다 (v6.88).
+// 비교는 _stableJson으로 키 순서 무관. 배열(참여자·항목) 순서는 실제 구조이므로 그대로 둔다.
+function _groupContentForHash(g){
+  const d=(g&&g.data)||{};
+  const items=(d.items||[]).map(it=>({
+    name:it.name||'',amount:+it.amount||0,payer:it.payer||'',
+    members:(it.members||[]).slice(),watchers:(it.watchers||[]).slice(),
+    isTreat:!!it.isTreat,rounderOverride:it.rounderOverride||'',
+    receiptText:it.receiptText||'',receiptUrl:it.receiptUrl||'',
+    noDrink:(it.noDrink||[]).slice(),alcoholOn:(it.alcoholOn||[]).slice(),alcoholOff:(it.alcoholOff||[]).slice()
+  }));
+  return{name:(g&&g.name)||'',people:(d.people||[]).slice(),dateStart:d.settleDateStart||'',dateEnd:d.settleDateEnd||null,items,payments:d.payments||{}};
+}
+function _groupHash(g){const s=_stableJson(_groupContentForHash(g));let h=0;for(let i=0;i<s.length;i++)h=Math.imul(31,h)+s.charCodeAt(i)|0;return (h>>>0).toString(36);}
 function _loadSyncedHashes(){try{return JSON.parse(localStorage.getItem(SYNC_HASHES_KEY)||'{}')||{};}catch(e){return {};}}
 function _saveSyncedHashes(h){try{localStorage.setItem(SYNC_HASHES_KEY,JSON.stringify(h));}catch(e){}}
 
