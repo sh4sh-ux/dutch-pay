@@ -252,7 +252,7 @@ svg{display:block;flex-shrink:0;}
 .treat-toggle{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:10px 14px;font-size:14px;font-family:inherit;background:var(--card);color:var(--label2);cursor:pointer;text-align:left;transition:all .12s;}
 .treat-toggle.on{border-color:#D47000;background:#FFF8EE;color:#D47000;font-weight:600;}
 .treat-badge{font-size:11px;color:#4355E8;font-weight:600;flex-shrink:0;}
-.alc-badge{font-size:11px;color:#C77700;font-weight:600;flex-shrink:0;white-space:nowrap;}
+.alc-badge{font-size:10px;color:#C77700;font-weight:600;flex-shrink:0;white-space:nowrap;}
 .alc-sec{background:var(--fill);border-radius:var(--rs);padding:12px 14px;}
 .alc-lines{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px;}
 .alc-line{border:1px solid var(--sep2);border-radius:16px;padding:5px 11px;font-size:12.5px;font-family:inherit;cursor:pointer;background:var(--card);color:var(--label2);transition:all .12s;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -1602,8 +1602,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.94';
-const BUILD_TIME='2026-10-31 15:05';
+const APP_VERSION='v6.95';
+const BUILD_TIME='2026-10-31 15:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
