@@ -252,7 +252,7 @@ svg{display:block;flex-shrink:0;}
 .treat-toggle{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:10px 14px;font-size:14px;font-family:inherit;background:var(--card);color:var(--label2);cursor:pointer;text-align:left;transition:all .12s;}
 .treat-toggle.on{border-color:#D47000;background:#FFF8EE;color:#D47000;font-weight:600;}
 .treat-badge{font-size:11px;color:#4355E8;font-weight:600;flex-shrink:0;}
-.alc-badge{font-size:11px;color:#C77700;font-weight:600;flex-shrink:0;}
+.alc-badge{font-size:11px;color:#C77700;font-weight:600;flex-shrink:0;white-space:nowrap;}
 .alc-sec{background:var(--fill);border-radius:var(--rs);padding:12px 14px;}
 .alc-lines{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px;}
 .alc-line{border:1px solid var(--sep2);border-radius:16px;padding:5px 11px;font-size:12.5px;font-family:inherit;cursor:pointer;background:var(--card);color:var(--label2);transition:all .12s;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -1590,8 +1590,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.90';
-const BUILD_TIME='2026-10-31 09:20';
+const APP_VERSION='v6.91';
+const BUILD_TIME='2026-10-31 10:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2054,6 +2054,7 @@ function _syncFlushNow(){
 // 뒤로 가면 대기 중 업로드를 즉시 밀어올린다(push). 영수증 대기 업로드도 함께 처리.
 try{
   document.addEventListener('visibilitychange',()=>{
+    if(_ufTimer)_flushUpdateField(); // 입력 디바운스(600ms) 대기분을 먼저 저장 — 포그라운드 동기화가 미저장 편집을 덮어쓰지 않게
     if(!dbxGetToken()||_attachInProgress)return; // 파일 선택기 열려 있는 동안엔 동기화가 끼어들지 않게
     if(document.visibilityState==='visible'){
       const now=Date.now();if(now-_lastFgSync<1500)return;_lastFgSync=now;
@@ -2064,7 +2065,7 @@ try{
       try{_flushReceiptUploads();}catch(e){}
     }
   });
-  window.addEventListener('pagehide',()=>{if(dbxGetToken()&&_syncPending&&!_attachInProgress)_syncFlushNow();});
+  window.addEventListener('pagehide',()=>{if(_ufTimer)_flushUpdateField();if(dbxGetToken()&&_syncPending&&!_attachInProgress)_syncFlushNow();});
 }catch(e){}
 async function syncToDropbox(expectedRev=_dbxMainRev){
   if(_syncing||!dbxGetToken())return;
@@ -2628,7 +2629,7 @@ function removeItem(id){const idx=items.findIndex(it=>it.id===id);if(idx<0)retur
 
 function _syncShellNav(t){document.querySelectorAll('[data-dutch-nav]').forEach(el=>el.classList.toggle('on',el.dataset.dutchNav===t));}
 function switchToInputTab(){if(window.matchMedia('(max-width:700px)').matches){mTab='input';['input','result','settle','history'].forEach(n=>{const el=document.getElementById('mT'+cap(n));if(el)el.className='mob-tab'+(n==='input'?' on':'');});_syncShellNav('input');renderMobileBody();}else{dTab='input';['input','result','settle','history'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n==='input'?' on':'');});_syncShellNav('input');renderDesktopRight();}}
-function _checkAutoDelete(){if(_justAddedId===null)return;const id=_justAddedId;_justAddedId=null;const it=items.find(i=>i.id===id);if(it&&!it.name&&(!it.amount||+it.amount===0)){items=items.filter(i=>i.id!==id);if(selectedId===id)selectedId=null;renderItemLists();refreshMobItems();saveState();}}
+function _checkAutoDelete(){if(_ufTimer)_flushUpdateField();if(_justAddedId===null)return;const id=_justAddedId;_justAddedId=null;const it=items.find(i=>i.id===id);if(it&&!it.name&&(!it.amount||+it.amount===0)){items=items.filter(i=>i.id!==id);if(selectedId===id)selectedId=null;renderItemLists();refreshMobItems();saveState();}}
 function selectItem(id){_checkAutoDelete();selectedId=id;if(dTab!=='input'){dTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('dT'+cap(n)).className='tab'+(n==='input'?' on':'');});_syncShellNav('input');}renderAll();}
 function selectItemMob(id){_checkAutoDelete();selectedId=id;if(mTab!=='input'){mTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n==='input'?' on':'');});_syncShellNav('input');renderMobileBody();}openSheet(id);}
 
@@ -4001,10 +4002,12 @@ function _alcoholSubtotal(it){const lines=parseReceiptLines(it.receiptText||'');
 function _alcoholInfo(it,mems){const nd=(it.noDrink||[]).filter(p=>mems.includes(p));if(!nd.length)return null;const drinkers=mems.filter(p=>!nd.includes(p));if(!drinkers.length)return null;const amt=+it.amount||0;if(amt<=0)return null;let A=_alcoholSubtotal(it);if(!(A>0))return null;A=Math.min(A,amt);return{A,base:amt-A,drinkers,ndSet:new Set(nd)};}
 function _alcActive(it){if(!it)return false;const mems=it.members&&it.members.length?it.members:people;return !!_alcoholInfo(it,mems);}
 // 지출 내역 행에 표시할 '술 제외' 배지 (표시 전용)
-// 한턱(isTreat)은 계산에서 통째로 빠져 술 제외가 의미 없으므로 배지 미표시
+// 술 안 마시는(술값 제외) 참석자 목록 — 한턱(계산서 통째 제외)·비활성이면 빈 배열
+function _alcNoDrinkers(it){if(!it||it.isTreat||!_alcActive(it))return[];const mems=it.members&&it.members.length?it.members:people;return (it.noDrink||[]).filter(p=>mems.includes(p));}
+// 화면 배지 — 금주 아이콘(🍺 위 빨강 원+사선) + 이름, 짧게. 결제 배지 오른쪽(윗줄)에 붙음
 function _alcBadge(it){const t=_alcBadgeText(it);return t?`<span class="alc-badge">${e(t)}</span>`:'';}
-// 캔버스·텍스트 공통 — 술 제외 배지 문구(🍺 OO 제외). 비활성·한턱이면 빈 문자열
-function _alcBadgeText(it){if(!it||it.isTreat||!_alcActive(it))return'';const mems=it.members&&it.members.length?it.members:people;const nd=(it.noDrink||[]).filter(p=>mems.includes(p));return nd.length?('🍺 '+nd.join(', ')+' 제외'):'';}
+// 캔버스용 짧은 문구 — 🚫🍺 이름
+function _alcBadgeText(it){const nd=_alcNoDrinkers(it);return nd.length?('🍺 '+nd.join(', ')+' 제외'):'';}
 // 지출 편집 폼의 '술 품목 제외' 섹션 — 영수증 상세 품목이 있을 때만 표시
 function _alcoholEditorHtml(it){
   const lines=parseReceiptLines(it.receiptText||'');
