@@ -1590,8 +1590,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.91';
-const BUILD_TIME='2026-10-31 10:10';
+const APP_VERSION='v6.92';
+const BUILD_TIME='2026-10-31 11:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5196,11 +5196,11 @@ async function generateSettleCanvas(){
     ctx.textBaseline='middle';ctx.textAlign='center';
     ctx.fillStyle=total<0?C.red:'#1C1C1E';
     const _maxW=cardW-80;
-    ctx.font=`700 68px ${FF}`;
+    ctx.font=`600 68px ${FF}`;
     if(ctx.measureText(totalText).width<=_maxW){
       ctx.fillText(totalText,W/2,totalAmountY);
     }else{
-      ctx.font=`700 54px ${FF}`;
+      ctx.font=`600 54px ${FF}`;
       ctx.fillText(truncateCanvasText(ctx,totalText,_maxW),W/2,totalAmountY);
     }
   }
@@ -5211,7 +5211,7 @@ async function generateSettleCanvas(){
   const drawTxnRow=(t,curY,rowH)=>{
     const ry=curY+rowH/2;
     const amountText=fmt(t.amt)+'원';
-    ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
+    ctx.fillStyle=C.text;setFont(34,700);ctx.textAlign='right';ctx.textBaseline='middle';
     const amountX=cardX+cardW-38,amW=ctx.measureText(amountText).width;
     ctx.fillText(amountText,amountX,ry);
     const leftX=cardX+38,maxLeftW=amountX-amW-34-leftX;
@@ -5269,7 +5269,7 @@ async function generateSettleCanvas(){
       else{ctx.fillStyle=C.blue;ctx.beginPath();ctx.arc(iconX,ry,6,0,Math.PI*2);ctx.fill();}
 
       const amountText=fmt(+it.amount)+'원';
-      ctx.fillStyle=(+it.amount<0)?C.red:C.text;setFont(34,700);ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillStyle=(+it.amount<0)?C.red:C.text;setFont(34,600);ctx.textAlign='right';ctx.textBaseline='middle';
       const amountX=cardX+cardW-38,amountW=ctx.measureText(amountText).width;
       ctx.fillText(amountText,amountX,ry+2);
 
@@ -5570,9 +5570,9 @@ async function generateHistoryCanvas(rec){
   drawCard(cardX,y,cardW,TOTAL_CARD_H);
   const totalText=(total<0?'−':'')+fmt(Math.abs(total))+'원';
   ctx.fillStyle=total<0?C.red:'#1C1C1E';ctx.textBaseline='middle';ctx.textAlign='center';
-  const _maxW=cardW-80;ctx.font=`700 68px ${FF}`;
+  const _maxW=cardW-80;ctx.font=`600 68px ${FF}`;
   if(ctx.measureText(totalText).width<=_maxW){ctx.fillText(totalText,W/2,y+81);}
-  else{ctx.font=`700 54px ${FF}`;ctx.fillText(truncateCanvasText(ctx,totalText,_maxW),W/2,y+81);}
+  else{ctx.font=`600 54px ${FF}`;ctx.fillText(truncateCanvasText(ctx,totalText,_maxW),W/2,y+81);}
   drawDivider(y+140);
   const perPerson=people.length?Math.floor(Math.abs(total)/people.length):0;
   ctx.fillStyle=C.muted;setFont(28,500);ctx.textAlign='center';ctx.textBaseline='middle';
@@ -5585,7 +5585,7 @@ async function generateHistoryCanvas(rec){
     txns.forEach((t,i)=>{
       const ry=y+i*TXN_ROW_H+TXN_ROW_H/2;
       const amtTxt=fmt(t.amt)+'원';
-      ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillStyle=C.text;setFont(34,700);ctx.textAlign='right';ctx.textBaseline='middle';
       const amtX=cardX+cardW-38;const amtW=ctx.measureText(amtTxt).width;ctx.fillText(amtTxt,amtX,ry);
       const leftX=cardX+38;
       setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
@@ -5615,7 +5615,7 @@ async function generateHistoryCanvas(rec){
       const iconImg=iconMap.get(getIconSvg(it));
       if(iconImg){ctx.drawImage(iconImg,iconX-20,ry-20,40,40);}else{ctx.fillStyle=C.blue;ctx.beginPath();ctx.arc(iconX,ry,6,0,Math.PI*2);ctx.fill();}
       const amtTxt=fmt(+it.amount)+'원';
-      ctx.fillStyle=(+it.amount<0)?C.red:C.text;setFont(34,700);ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillStyle=(+it.amount<0)?C.red:C.text;setFont(34,600);ctx.textAlign='right';ctx.textBaseline='middle';
       const amtX=cardX+cardW-38,amtW=ctx.measureText(amtTxt).width;
       ctx.fillText(amtTxt,amtX,ry+2);
       const nameX=cardX+118,maxW=amtX-amtW-34-nameX;
@@ -5671,7 +5671,7 @@ async function generateHistoryCanvas(rec){
       setFont(22,600);const btw=ctx.measureText(badgeTxt).width;
       const bph=16,bpv=7,bH=22+bpv*2,bW=btw+bph*2;
       const amtTxt=fmt(pm.done?received:billing)+'원';
-      ctx.fillStyle=C.text;setFont(34,800);ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillStyle=C.text;setFont(34,700);ctx.textAlign='right';ctx.textBaseline='middle';
       const amtX=cardX+cardW-38;const amtW=ctx.measureText(amtTxt).width;ctx.fillText(amtTxt,amtX,ry);
       const leftX=cardX+38;
       setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
