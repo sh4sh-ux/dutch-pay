@@ -449,6 +449,75 @@ suite('TC10d: 계산 자기점검 — 장부 항상 일치', () => {
   });
 });
 
+// v6.86 — 술 품목 제외: 안 마시는 사람은 술값(영수증 술 품목 합)에서 빠진다 (계산 영향)
+suite('TC24: 술 품목 제외 [v6.86]', () => {
+  // 기본: 30,000원 = 음식 15,000 + 소주 15,000, C가 술 안 마심
+  setup(['A','B','C'], [{name:'회식',amount:30000,payer:'A',
+    receiptText:'감자탕 | 1 | 15000 | 15000\n소주 | 3 | 5000 | 15000', noDrink:['C']}]);
+  (() => {
+    const { owes } = shares(); const t = txns();
+    test('비음주자 C는 음식만 분담(5,000)', () => expect(owes.C).toBe(5000));
+    test('음주자 A·B는 음식+술(각 12,500)', () => { expect(owes.A).toBe(12500); expect(owes.B).toBe(12500); });
+    test('총 분담 === 총액(30,000)', () => expect(owes.A+owes.B+owes.C).toBe(30000));
+    test('송금: C→A 5,000 · B→A 12,500', () => {
+      const s = txnStr(t);
+      if (!/C→A 5,000/.test(s) || !/B→A 12,500/.test(s)) throw new Error(s);
+      return s;
+    });
+    test('수지 균형(불변식)', () => { assertBalanced(3); return true; });
+  })();
+
+  // 키워드 자동 인식
+  test('자동 인식 — 카스 10,000만 술 합계', () =>
+    expect(APP._alcoholSubtotal({receiptText:'감자탕 | 1 | 20000 | 20000\n카스 | 2 | 5000 | 10000\n사이다 | 1 | 3000 | 3000'})).toBe(10000));
+  test('자동 인식 — 술 없는 영수증은 0', () =>
+    expect(APP._alcoholSubtotal({receiptText:'감자탕 | 1 | 20000 | 20000\n공기밥 | 2 | 1000 | 2000'})).toBe(0));
+
+  // 수동 토글: off는 자동 술을 빼고, on은 비키워드 품목을 술로
+  test('수동 off — 소주를 술에서 제외', () =>
+    expect(APP._alcoholSubtotal({receiptText:'소주 | 1 | 4000 | 4000', alcoholOff:['소주']})).toBe(0));
+  test('수동 on — 비키워드 품목도 술로', () =>
+    expect(APP._alcoholSubtotal({receiptText:'특제주 | 1 | 7000 | 7000', alcoholOn:['특제주']})).toBe(7000));
+
+  // 전원이 비음주면 적용 안 함(정상 분할)
+  setup(['A','B'], [{name:'술집',amount:20000,payer:'A',
+    receiptText:'안주 | 1 | 10000 | 10000\n맥주 | 2 | 5000 | 10000', noDrink:['A','B']}]);
+  test('전원 비음주 → 정상 분할(각 10,000)', () => {
+    const { owes } = shares(); expect(owes.A).toBe(10000); expect(owes.B).toBe(10000);
+  });
+
+  // 영수증 상세가 없으면 noDrink가 있어도 무효(정상 분할)
+  setup(['A','B','C'], [{name:'택시',amount:30000,payer:'A', noDrink:['C']}]);
+  test('영수증 없음 → noDrink 무효(C도 10,000)', () => {
+    const { owes } = shares(); expect(owes.C).toBe(10000);
+  });
+
+  // 술 합이 금액을 넘으면 금액으로 캡(음식분 0)
+  setup(['A','B','C'], [{name:'술만',amount:30000,payer:'A',
+    receiptText:'소주 | 10 | 5000 | 50000', noDrink:['C']}]);
+  test('술>금액이면 캡 — C 0원, A·B 각 15,000', () => {
+    const { owes } = shares();
+    expect(owes.C).toBe(0); expect(owes.A).toBe(15000); expect(owes.B).toBe(15000);
+    expect(owes.A+owes.B+owes.C).toBe(30000);
+  });
+
+  // 반올림: 음식 1,000 + 소주 9,000, C 비음주 → 차액은 결제자(A) 우선
+  setup(['A','B','C'], [{name:'혼합',amount:10000,payer:'A',
+    receiptText:'사이다 | 1 | 1000 | 1000\n소주 | 1 | 9000 | 9000', noDrink:['C']}]);
+  test('반올림 — C 333, 총액 10,000 유지', () => {
+    const { owes } = shares();
+    expect(owes.C).toBe(333);
+    expect(owes.A+owes.B+owes.C).toBe(10000);
+    if (!(owes.C < owes.A)) throw new Error('비음주자가 더 많이 냄');
+  });
+  test('반올림 — 자기점검·수지 균형 통과', () => {
+    const { paid, owes } = shares(); const t = txns();
+    const warn = APP._settlementSanity(paid, owes, t);
+    if (warn) throw new Error('불일치: '+warn.join(' / '));
+    assertBalanced(3); return true;
+  });
+});
+
 // v5.06 회귀 — 영수증 상세표 합계 행
 suite('TC11: 영수증 상세표 합계 표시 [v5.06 회귀]', () => {
   const foot = (rt) => {
