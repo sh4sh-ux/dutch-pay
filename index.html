@@ -2672,6 +2672,23 @@ function renderSheetBody(id){const it=items.find(i=>i.id===id);if(!it)return;con
 function dSetTab(t){_checkAutoDelete();dTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n===t?' on':'');});_syncShellNav(t);renderDesktopRight();}
 function mSetTab(t){_checkAutoDelete();mTab=t;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('mT'+cap(n));if(el)el.className='mob-tab'+(n===t?' on':'');});_syncShellNav(t);renderMobileBody();_updateMobFab();}
 function goToHistory(){openHistDrawer();}
+// 데스크탑에선 기록 보관함을 가운데 창이 아니라 오른쪽 패널(.right) 영역에 맞춰 띄운다 (v6.97)
+// 왼쪽 패널·레일은 백드롭으로 딤되어 맥락만 보이고(클릭 시 닫힘), 오른쪽만 보관함이 된다.
+const _HIST_POS_KEYS=['left','top','width','height','right','bottom','margin','borderRadius'];
+function _histPlaceDesktop(){
+  const dr=document.getElementById('histDr');if(!dr)return;
+  const mobile=window.matchMedia('(max-width:700px)').matches;
+  const right=document.querySelector('.desktop-app .right');
+  if(mobile||!right){_HIST_POS_KEYS.forEach(k=>dr.style[k]='');return;}
+  const r=right.getBoundingClientRect();
+  dr.style.left=Math.round(r.left)+'px';
+  dr.style.top=Math.round(r.top)+'px';
+  dr.style.width=Math.round(r.width)+'px';
+  dr.style.height=Math.round(r.height)+'px';
+  dr.style.right='auto';dr.style.bottom='auto';dr.style.margin='0';
+  dr.style.borderRadius='0 22px 22px 0'; // 셸 오른쪽 라운드(22px)와 맞추고 왼쪽(구분선)은 각지게
+}
+function _histResizeHandler(){if(_histDrawerOpen)_histPlaceDesktop();}
 function openHistDrawer(){
   _histDrawerOpen=true;
   _histMonthAllMode=true; // 기록 보관함은 열 때 항상 '전체 기록' 기준으로 표시 (v5.64)
@@ -2681,15 +2698,18 @@ function openHistDrawer(){
   const dr=document.getElementById('histDr');
   document.getElementById('histBackdrop')?.classList.add('open');
   dr.style.transform='';
+  _histPlaceDesktop();
   dr.classList.add('open');
   const onEnd=()=>{dr.removeEventListener('transitionend',onEnd);if(dr.classList.contains('open'))dr.style.transform='none';};
   dr.addEventListener('transitionend',onEnd);
   document.addEventListener('keydown',_histEscHandler);
+  window.addEventListener('resize',_histResizeHandler);
 }
 function _histEscHandler(e){if(e.key==='Escape'&&_histDrawerOpen)closeHistDrawer();}
 function closeHistDrawer(){
   _histDrawerOpen=false;
   document.removeEventListener('keydown',_histEscHandler);
+  window.removeEventListener('resize',_histResizeHandler);
   document.getElementById('histBackdrop')?.classList.remove('open');
   const dr=document.getElementById('histDr');
   dr.style.transform='';
