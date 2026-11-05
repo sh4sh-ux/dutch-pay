@@ -418,7 +418,7 @@ svg{display:block;flex-shrink:0;}
 .pay-now-btn:hover{border-color:var(--blue);color:var(--blue);}
 .pay-summary{margin-top:8px;background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:0 1px 2px rgba(20,25,40,.05),0 5px 14px rgba(20,25,40,.08);}
 .pay-summary-title{font-size:12px;font-weight:600;color:var(--label3);padding:12px 18px 4px;}
-.pay-summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px 18px;border-bottom:1px solid var(--sep);}
+.pay-summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid var(--sep);}
 .pay-summary-row:last-child{border-bottom:none;}
 .pay-summary-lbl{font-size:13px;color:var(--label2);}
 .pay-summary-val{font-size:14px;font-weight:700;}
@@ -1660,8 +1660,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.19';
-const BUILD_TIME='2026-11-06 09:10';
+const APP_VERSION='v7.20';
+const BUILD_TIME='2026-11-06 09:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
