@@ -158,6 +158,10 @@ svg{display:block;flex-shrink:0;}
 .app-label{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;}
 .app-version{font-weight:400;letter-spacing:0;opacity:.7;text-transform:none;margin-left:4px;}
 .app-title{font-size:24px;font-weight:700;letter-spacing:-.5px;line-height:1.15;margin-bottom:18px;}
+/* Ⓑ 사인오프 태그라인 — 더치페이 옆 절반 크기·옅은색, 베이스라인 정렬 (v7.05) */
+.app-title-row{display:flex;align-items:baseline;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.app-title-row .app-title{margin-bottom:0;}
+.app-tagline{font-size:13px;font-weight:400;color:var(--label3);letter-spacing:0;white-space:nowrap;}
 .tab-row{display:flex;gap:2px;background:var(--fill);border-radius:10px;padding:3px;margin-bottom:20px;}
 .tab{flex:1;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--label2);padding:6px 0;border-radius:8px;cursor:pointer;transition:all .15s;}
 .tab.on{background:var(--card);color:var(--label);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08);}
@@ -1505,7 +1509,7 @@ svg{display:block;flex-shrink:0;}
   <div class="left" id="dLeft">
     <div class="left-top">
       <div class="app-label" id="dOwnerLabel" onclick="_ownerAreaClick(this,event)" style="user-select:none;-webkit-tap-highlight-color:transparent;cursor:default">Dutch Pay <span id="appVersionD" style="font-size:10px;font-weight:600;letter-spacing:.2px;text-transform:none;line-height:1.4;font-variant-numeric:tabular-nums;padding:1px 2px;border:1px solid transparent;border-radius:4px"></span></div>
-      <div class="app-title" onclick="dSetTab('input')" style="cursor:pointer">더치페이</div>
+      <div class="app-title-row"><span class="app-title" onclick="dSetTab('input')" style="cursor:pointer">더치페이</span><span class="app-tagline">Let's split it.</span></div>
       <div style="margin-bottom:14px"></div>
       <div class="tab-row">
         <button class="tab on" id="dTInput" onclick="dSetTab('input')">입력</button>
@@ -1645,8 +1649,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.04';
-const BUILD_TIME='2026-11-05 19:05';
+const APP_VERSION='v7.05';
+const BUILD_TIME='2026-11-05 19:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
