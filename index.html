@@ -359,10 +359,10 @@ svg{display:block;flex-shrink:0;}
   .pm-card .txn-from,.pm-card .txn-to{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .pm-card .txn-arr{flex:0 0 auto;}
   .pm-card .txn-right{display:contents;}
-  .pm-card .txn-amt{grid-column:3;grid-row:1;white-space:nowrap;}
+  .pm-card .txn-amt{grid-column:3/5;grid-row:1;white-space:nowrap;justify-self:end;}
   .pm-card .txn-pmeta{grid-column:2/4;grid-row:2;min-width:0;margin:0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .pm-card .txn-sdiff{display:none;}
-  .pm-card .txn-chev{grid-column:4;grid-row:2;margin-left:0;align-self:center;justify-self:center;}
+  .pm-card .txn-chev{grid-column:4;grid-row:2;margin-left:0;align-self:center;justify-self:end;}
   .rc-txn-left .pm-record-account{flex-basis:100%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .rc-txn-people{white-space:nowrap;}
 }
@@ -373,10 +373,10 @@ svg{display:block;flex-shrink:0;}
   .pm-card .txn-from,.pm-card .txn-to{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .pm-card .txn-arr{flex:0 0 auto;}
   .pm-card .txn-right{display:contents;}
-  .pm-card .txn-amt{grid-column:3;grid-row:1;white-space:nowrap;}
+  .pm-card .txn-amt{grid-column:3/5;grid-row:1;white-space:nowrap;justify-self:end;}
   .pm-card .txn-pmeta{grid-column:2/4;grid-row:2;min-width:0;margin:1px 0 0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .pm-card .txn-sdiff{display:none;}
-  .pm-card .txn-chev{grid-column:4;grid-row:2;margin-left:0;align-self:center;justify-self:center;}
+  .pm-card .txn-chev{grid-column:4;grid-row:2;margin-left:0;align-self:center;justify-self:end;}
 }
 .pay-panel{background:var(--fill);border-top:1px solid var(--sep);padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
 .pay-panel-row{display:flex;align-items:center;gap:8px;}
@@ -1659,8 +1659,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.15';
-const BUILD_TIME='2026-11-06 07:20';
+const APP_VERSION='v7.16';
+const BUILD_TIME='2026-11-06 07:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;

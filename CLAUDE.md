@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v7.15** (2026-11-06) — 작업 브랜치
+**v7.16** (2026-11-06) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v7.16 | **수금 입금 내역 금액 우측 끝을 화살표와 정렬**(v7.15 후속, 사용자: 금액도 우측 정렬) — v7.15에서 `.txn-chev`를 둘째 줄 **별도 col4(우측 끝)**에 뒀더니, 금액(`.txn-amt` col3)은 col4 폭(14px)+gap만큼 안쪽에 머물러 화살표보다 왼쪽에 끝남 → `.pm-card .txn-amt`를 `grid-column:3`→**`3/5`**(화살표 컬럼까지 확장)+`justify-self:end`로 **그리드 우측 끝에 정렬**, `.txn-chev`도 `justify-self:center`→`end`. 메타(`grid-column:2/4`)는 그대로라 폭 유지·화살표(col4)와 미충돌. 헤드리스 실측: 금액 우측 1415 = 화살표 우측 1415(delta 0). 데스크탑·모바일 공통. 표시 전용·계산 무관, 계산 170/170 |
 | v7.15 | **행 펼침 화살표를 채워진 삼각형 글리프 `▾`로 통일(우측·둘째 줄)**(사용자 결정, v7.14 방향 재확정) — 사용자가 질문에 "채워진 삼각형으로 통일, 우측 정렬"로 답 → 행 단위 펼침 화살표를 **텍스트 글리프 `▾`**로 통일(v6.93·v7.14의 SVG 셰브론 역방향). (1) `.rc-chev`(지출내역·기록보관함·수금 전체기록 상세·결제/한턱 모달 8곳)·`.txn-chev`(수금 입금 내역 1곳)의 인라인 SVG(`M6 9l6 6 6-6`)를 일괄 `▾`로 치환(9곳). CSS에서 `svg` 하위 규칙 제거하고 `font-size:11px;line-height:1`+inline-flex 중앙정렬(옛 9px `▼` '삐뚤어 보임' 방지). (2) **위치**: `.pm-card .txn-chev`를 `grid-row:1/3;align-self:center`(세로 중앙)→`grid-row:2;align-self:center;justify-self:center`로 **둘째 줄 우측**에 배치(기록보관함 `.rc-chev`가 이미 bottom-right라 동일 규칙). 펼침 시 회전(`.open{rotate180}`)·카드헤더 `▼/▲`(`.rc-chevron`·`.pm-record-chev`·`.pm-allrec-chev`, 이미 채워진 삼각형)은 유지. 헤드리스: txn-chev `▾`·grid-row 2·svg 0, 전체 인라인 SVG 셰브론 제거 확인. 표시 전용·계산 무관, 계산 170/170 |
 | v7.14 | **수금 입금 내역 행 화살표를 SVG 셰브론으로 통일**(사용자: 다른 창과 통일감있게) — 수금 '이번 정산'·전체기록 입금 내역 행(`_txnRowsOwnerHtml`)의 접기 화살표가 텍스트 글리프 `▾`라, 앱 전반(지출 내역·기록보관함 등 `.rc-chev`)의 SVG 셰브론(`M6 9l6 6 6-6`·stroke 2.4)과 달라 보였음 → `.txn-chev` 내용을 동일 SVG로 교체, CSS를 `.rc-chev`와 동일 규격(`display:inline-flex;align-items/justify-content:center`·`svg 11×11`·색 `--label3`)으로 맞춤. 열림 회전(`.txn-chev.open{rotate180}`)·그리드 배치(`.pm-card .txn-chev`)는 기존 유지. 헤드리스: svg 존재·11×11·rgb(176,176,184)로 `.rc-chev`와 일치. 표시 전용·계산 무관, 계산 170/170 |
 | v7.13 | **이미지 뷰어 컨트롤 자동 숨김 시간 3초→1.5초**(사용자 요청) — `_bindImgZoom`의 `showUI` 숨김 타이머 `setTimeout(hideUI,3000→1500)`. 동작 동일, 숨김까지 지연만 단축. 표시 전용·계산 무관, 계산 170/170 |
