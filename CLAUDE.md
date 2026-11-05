@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v6.96** (2026-10-31) — 작업 브랜치
+**v6.97** (2026-11-05) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v6.97 | **데스크탑 기록보관함을 가운데 창이 아니라 오른쪽 패널(`.right`) 영역에 맞춰 열기**(사용자: 가운데 떠서 왼쪽 패널 의미가 없음 → 오른쪽 패널로) — 기존 데스크탑 `.hist-page`는 화면 가운데 큰 카드(inset:0;margin:auto)였음. `_histPlaceDesktop()` 추가: 데스크탑(`matchMedia('(max-width:700px)')` false)에서 `#histDr`를 `.desktop-app .right` 실제 rect(left/top/width/height)에 맞춰 인라인 배치, 오른쪽 모서리만 22px 라운드(왼쪽=구분선 각지게). `openHistDrawer`에서 호출+`resize` 리스너 등록, `closeHistDrawer`에서 리스너 제거, 모바일은 인라인 스타일 클리어(전체화면 유지). 백드롭(z299 전체 딤+클릭 닫기)·열기/닫기/ESC/뒤로가기 로직 전부 미변경 → 왼쪽 패널·레일은 딤되어 맥락으로 보이고 오른쪽만 보관함. 헤드리스: 데스크탑 histDr rect가 .right와 L/T/W/H 완전 일치, 모바일 0/0/vw/vh 전체화면·인라인 없음. 표시 전용·계산 무관, 계산 160/160 |
 | v6.96 | **기록보관함·수금 기록 지출 행을 모바일에서 정산 탭처럼 3줄 + 금액 밑 화살표로**(사용자 요청) — 기록보관함 드로어(`_buildRecordCardHtml`)·수금 전체기록 상세(`pm-rec-items`)의 지출 행(`.rc-item-row`)이 모바일에서도 1줄(상호명+결제+제외 한 줄)+화살표가 금액 왼쪽이라 정산 탭(`.detail-row`)과 달랐음 → 두 빌더 행에 `rc-3line` 모디파이어 추가하고 `@media(max-width:700px)`에서 `.detail-row`와 동일 규칙 적용: `.rc-item-name{flex-basis:100%}`로 ①상호명(전체) ②결제자+제외자(`.rc-item-name-row{flex-wrap:wrap}`) ③참석자(`.rc-item-meta{padding-right:26px}`) 3줄, 금액 우상단(`.rc-item-row.rc-3line>.rc-item-amt{position:absolute;top:8px;right:16px}`)·화살표 우하단(`>.rc-chev{absolute;bottom:8px;right:16px}`). `.rc-3line` 모디파이어라 수금 결제/한턱 모달(`rc-item-row` + pm-last-row, 이름만 있는 행)엔 미적용, 데스크탑(≥701px) 미변경. 헤드리스: 모바일 3줄 좌측정렬 Δ0·금액 top·화살표 bottom·영수증 있는 행만 화살표, 데스크탑 1줄 유지. 표시 전용·계산 무관, 계산 160/160 |
 | v6.95 | **술 제외 배지 글자 크기를 결제 알약과 동일하게(11→10px)**(사용자: 제외는 결제와 똑같이 / 왼쪽 정렬 확인) — `.alc-badge` font-size `11px`→**10px**(색 amber #C77700·굵기 600 유지)로 결제 알약(`.rc-payer-pill`·`.detail-payer` 10px)과 크기 일치(화면 지출내역·기록보관함·수금 상세 공통). 왼쪽 정렬 점검: 모바일 3줄(상호명/결제·제외/참석자)이 모두 왼쪽 84px로 정렬(측정 Δ0), 기록보관함도 상호명·참석자 줄 텍스트가 같은 왼쪽 선에 정렬(배지 때문에 밀리는 문제 없음) — 변경 불필요 확인. 표시 전용·계산 무관, 계산 160/160 |
 | v6.94 | **기록보관함·수금 전체기록 상세 지출 행에 `🍺 OO 제외` 배지 표시**(사용자: 기록보관함에서는 적용이 안됨) — v6.86~v6.93에서 화면 지출내역(`detail-row`)·생성 이미지엔 술 제외 배지가 있었지만, 기록보관함 드로어(`_buildRecordCardHtml`)·수금 전체기록 상세(`pm-rec-items`)의 record 행(`.rc-item-name-row`)엔 결제 알약·한턱 배지만 있고 `_alcBadge`가 없었음 → 두 빌더의 한턱 배지 뒤에 `${_alcBadge(it)}` 추가(공통 anchor `🎉 한턱</span>':''}</div><div class="rc-item-meta">` 2곳 치환). 보관 item은 noDrink·receiptText가 보존돼(v6.86) `_alcBadge`가 그대로 계산·표시. 술 제외 없는 행엔 미표시. 헤드리스: 술 제외 기록 카드에 `🍺 이종현 제외` 1회·비제외 행 미표시 확인. 표시 전용·계산 무관, 계산 160/160 |
