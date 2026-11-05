@@ -1645,8 +1645,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.03';
-const BUILD_TIME='2026-11-05 18:20';
+const APP_VERSION='v7.04';
+const BUILD_TIME='2026-11-05 19:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5427,11 +5427,11 @@ async function generateSettleCanvas(){
     const noteCY=y+30, bottomY=y+NOTICE_H+FOOTER_H, footerCY=Math.round((noteCY+bottomY)/2);
     ctx.fillStyle=C.muted;setFont(20,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0px';
     ctx.fillText('차액은 결제자에게 우선 부담돼요',W/2,noteCY);
-    ctx.fillStyle=C.muted;setFont(18,300);ctx.letterSpacing='2px';
-    ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,footerCY);ctx.letterSpacing='0px';
+    ctx.fillStyle=C.muted;setFont(18,300);ctx.letterSpacing='0.5px';
+    ctx.fillText("Let's split it.",W/2,footerCY);ctx.letterSpacing='0px';
   }else{
-    ctx.fillStyle=C.muted;setFont(18,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='2px';
-    ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,y+FOOTER_H/2);ctx.letterSpacing='0px';
+    ctx.fillStyle=C.muted;setFont(18,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0.5px';
+    ctx.fillText("Let's split it.",W/2,y+FOOTER_H/2);ctx.letterSpacing='0px';
   }
   return canvas;
 }
@@ -5593,7 +5593,7 @@ function generateFullDetailCanvases(rec){
       const drawRows=rows.length?rows:[{name:'상세 품목 없음',qty:'',unitPrice:'',amount:''}];font(17,400);drawRows.forEach((r,i)=>{if(rows.length&&audit.badRows.has(start+i)){ctx.fillStyle='#fff0ef';ctx.fillRect(28,y,664,ROW);}const _u=_receiptNum(r.unitPrice),_a=_receiptNum(r.amount),neg=_a!==null&&_a<0;ctx.fillStyle=neg?'#d92d20':'#222';ctx.textAlign='left';ctx.fillText(truncateCanvasText(ctx,r.name,330),44,y+31);ctx.fillStyle='#222';ctx.textAlign='right';ctx.fillText(r.qty||'',440,y+31);ctx.fillStyle=neg?'#d92d20':'#222';ctx.fillText(_u!==null?fmt(_u):(r.unitPrice||''),560,y+31);font(17,600);ctx.fillText(_a!==null?fmt(_a):(r.amount||''),676,y+31);ctx.strokeStyle='#ececf0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(28,y+ROW);ctx.lineTo(692,y+ROW);ctx.stroke();font(17,400);y+=ROW;});
       if(last){ctx.fillStyle='#111';font(19,700);ctx.textAlign='left';ctx.fillText('합계',44,y+35);const badge=audit.status==='ok'?'✓ 계산 일치':audit.label;ctx.fillStyle=audit.status==='ok'?'#16843b':audit.status==='bad'?'#d92d20':'#777';font(15,700);ctx.fillText(badge,104,y+35);ctx.fillStyle='#111';font(20,700);ctx.textAlign='right';ctx.fillText(fmt(audit.total)+'원',676,y+35);y+=72;}else{ctx.fillStyle='#8e8e93';font(14,600);ctx.textAlign='right';ctx.fillText('다음 페이지에 계속',676,y+24);y+=36;}y+=22;
     }
-    ctx.fillStyle='#a0a0a6';font(14,500);ctx.textAlign='center';ctx.fillText('DUTCH PAY '+APP_VERSION+' · Dropbox 보관용',W/2,H-22);return canvas;
+    ctx.fillStyle='#a0a0a6';font(14,500);ctx.textAlign='center';ctx.fillText("Let's split it. · Dropbox 보관용",W/2,H-22);return canvas;
   });
 }
 
@@ -5786,8 +5786,8 @@ async function generateHistoryCanvas(rec){
   }
   y+=txnCardH;
   // 푸터 — 버전을 하단 여백(FOOTER_H+BOTTOM_PAD) 정중앙에 배치. 모든 생성 이미지 공통 규칙
-  ctx.fillStyle=C.muted;setFont(18,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='2px';
-  ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,y+(FOOTER_H+BOTTOM_PAD)/2);ctx.letterSpacing='0px';
+  ctx.fillStyle=C.muted;setFont(18,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0.5px';
+  ctx.fillText("Let's split it.",W/2,y+(FOOTER_H+BOTTOM_PAD)/2);ctx.letterSpacing='0px';
   return canvas;
 }
 
