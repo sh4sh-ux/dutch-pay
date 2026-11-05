@@ -353,7 +353,7 @@ svg{display:block;flex-shrink:0;}
 .txn-item:last-child{border-bottom:none;}
 .pm-card .txn-row{border-bottom:none;}
 @media(max-width:700px){
-  .pm-card .txn-row.expandable{display:grid;grid-template-columns:20px minmax(0,1fr) auto 10px;grid-template-rows:auto auto;align-items:center;column-gap:10px;row-gap:3px;padding:14px 14px;}
+  .pm-card .txn-row.expandable{display:grid;grid-template-columns:20px minmax(0,1fr) auto 10px;grid-template-rows:auto auto;align-items:center;column-gap:10px;row-gap:3px;padding:14px 18px 14px 14px;}
   .pm-card .txn-status-ic{grid-column:1;grid-row:1;}
   .pm-card .txn-people{grid-column:2;grid-row:1;display:flex;min-width:0;gap:9px;white-space:nowrap;overflow:hidden;}
   .pm-card .txn-from,.pm-card .txn-to{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -367,7 +367,7 @@ svg{display:block;flex-shrink:0;}
   .rc-txn-people{white-space:nowrap;}
 }
 @media(min-width:701px){
-  .pm-card .txn-row.expandable{display:grid;grid-template-columns:20px minmax(0,1fr) auto 14px;grid-template-rows:auto auto;align-items:center;column-gap:14px;row-gap:3px;padding:14px 22px;}
+  .pm-card .txn-row.expandable{display:grid;grid-template-columns:20px minmax(0,1fr) auto 14px;grid-template-rows:auto auto;align-items:center;column-gap:14px;row-gap:3px;padding:14px 18px 14px 22px;}
   .pm-card .txn-status-ic{grid-column:1;grid-row:1;}
   .pm-card .txn-people{grid-column:2;grid-row:1;display:flex;min-width:0;gap:12px;white-space:nowrap;overflow:hidden;align-items:center;}
   .pm-card .txn-from,.pm-card .txn-to{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -418,7 +418,7 @@ svg{display:block;flex-shrink:0;}
 .pay-now-btn:hover{border-color:var(--blue);color:var(--blue);}
 .pay-summary{margin-top:8px;background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:0 1px 2px rgba(20,25,40,.05),0 5px 14px rgba(20,25,40,.08);}
 .pay-summary-title{font-size:12px;font-weight:600;color:var(--label3);padding:12px 18px 4px;}
-.pay-summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid var(--sep);}
+.pay-summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px 18px;border-bottom:1px solid var(--sep);}
 .pay-summary-row:last-child{border-bottom:none;}
 .pay-summary-lbl{font-size:13px;color:var(--label2);}
 .pay-summary-val{font-size:14px;font-weight:700;}
@@ -1660,8 +1660,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.20';
-const BUILD_TIME='2026-11-06 09:40';
+const APP_VERSION='v7.21';
+const BUILD_TIME='2026-11-06 10:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
