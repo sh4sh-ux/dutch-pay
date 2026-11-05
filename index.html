@@ -1657,8 +1657,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.10';
-const BUILD_TIME='2026-11-05 22:35';
+const APP_VERSION='v7.11';
+const BUILD_TIME='2026-11-05 23:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5493,10 +5493,10 @@ async function generateSettleCanvas(){
     const noteCY=y+30, bottomY=y+NOTICE_H+FOOTER_H, footerCY=Math.round((noteCY+bottomY)/2);
     ctx.fillStyle=C.muted;setFont(20,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0px';
     ctx.fillText('차액은 결제자에게 우선 부담돼요',W/2,noteCY);
-    ctx.fillStyle=C.muted;setFont(20,300);ctx.letterSpacing='0.5px';
+    ctx.fillStyle=C.muted;setFont(26,400);ctx.letterSpacing='0.5px';
     ctx.fillText("Let's split it.",W/2,footerCY);ctx.letterSpacing='0px';
   }else{
-    ctx.fillStyle=C.muted;setFont(20,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0.5px';
+    ctx.fillStyle=C.muted;setFont(26,400);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0.5px';
     ctx.fillText("Let's split it.",W/2,y+FOOTER_H/2);ctx.letterSpacing='0px';
   }
   return canvas;
@@ -5852,7 +5852,7 @@ async function generateHistoryCanvas(rec){
   }
   y+=txnCardH;
   // 푸터 — 버전을 하단 여백(FOOTER_H+BOTTOM_PAD) 정중앙에 배치. 모든 생성 이미지 공통 규칙
-  ctx.fillStyle=C.muted;setFont(20,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0.5px';
+  ctx.fillStyle=C.muted;setFont(26,400);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0.5px';
   ctx.fillText("Let's split it.",W/2,y+(FOOTER_H+BOTTOM_PAD)/2);ctx.letterSpacing='0px';
   return canvas;
 }
