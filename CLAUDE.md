@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v7.04** (2026-11-05) — 작업 브랜치
+**v7.05** (2026-11-05) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v7.05 | **왼쪽 헤더에 사인오프 태그라인 추가(Ⓑ안)**(사용자 선택) — 데스크탑 `.left` 헤더 `더치페이`(`.app-title`) 옆에 `Let's split it.`를 **절반 크기(13px)·옅은색(--label3)·베이스라인 정렬**로 붙임. `.app-title`을 `.app-title-row`(flex align-items:baseline gap 8px)로 감싸고 `<span class="app-tagline">` 추가, 제목 margin-bottom은 row로 이전. 눈썹 `DUTCH PAY vX.XX`(브랜드+버전)는 그대로 유지(정보 손실 없음). 헤드리스: 태그라인 13px·rgb(176,176,184)·베이스라인 Δ-1·제목 오른쪽. 표시 전용·계산 무관, 계산 160/160 |
 | v7.04 | **생성 이미지 하단 사인오프를 `DUTCH PAY vX.XX`→`Let's split it.`로 변경**(사용자 결정) — 세 캔버스 푸터 모두 교체: `generateSettleCanvas`(정산, 반올림 유무 2분기)·`generateHistoryCanvas`(기록)·`generateFullDetailCanvases`(Dropbox 상세, `Let's split it. · Dropbox 보관용`). 워드마크용 `letterSpacing 2px`→문장용 `0.5px`로 조정, 색·크기(C.muted #8E8E93·18px)는 유지. 이미지에서 버전 숫자는 빠짐(화면 눈썹·⋯ 메뉴 배지엔 그대로). 화면 왼쪽 헤더 `DUTCH PAY` 눈썹은 사용자 결정 전까지 미변경. 표시 전용·계산 무관, 계산 160/160 |
 | v7.03 | **오른쪽 패널 콘텐츠 시작 위치를 왼쪽 입력칸 높이에 통일 + 정산이미지 안내문구 2pt 확대**(사용자 요청) — (1) **오른쪽 콘텐츠 시작 정렬**: 데스크탑 오른쪽 패널(`.right-body`) 콘텐츠가 왼쪽 날짜/입력 박스(`#meetingDateInp`, 절대 top 193px)보다 8px 낮게(201px) 시작했고, 수금 탭만 `.pm-seg-row` margin-top(14px) 탓에 14px 더 낮았음(215px) → `.right-body` 데스크탑 padTop 26→18px(구분선 아래 18px=왼쪽과 동일), `.right-body>.pm-seg-row{margin-top:0}`로 수금 추가여백 제거. 헤드리스 실측: 입력·정산·공유·수금 **네 탭 모두 firstTopAbs 193**(왼쪽 박스와 정확히 일치). (2) **푸터 안내문구 확대**: `차액은 결제자에게 우선 부담돼요`가 v7.02에서 버전과 같은 18px였는데 작아 보여 → `setFont(18→20,300)`(+2pt). 색은 버전과 동일 `C.muted`(#8E8E93) 유지(헤드리스 픽셀 rgb(142,142,147) 동일 확인), 버전은 18px 그대로. 표시 전용·계산 무관, 계산 160/160 |
 | v7.02 | **기록보관함 레일 활성/헤더 정렬 회귀 수정 + 줌 버튼 대폭 투명 + 정산이미지 푸터 여백 축소**(사용자 지적 다건) — (1) **레일 활성 버그**: `goToHistory()`가 `openHistDrawer()`만 호출하고 레일/하단 '기록' 탭 활성을 안 바꿔, 기록보관함을 열어도 레일이 이전 탭(공유)에 머물렀음. 원인은 `dRailHistory`·`mTHistory`에 `data-dutch-nav`가 없던 것 → 둘에 `data-dutch-nav="history"` 추가 + `openHistDrawer`에 `_syncShellNav('history')`, `closeHistDrawer`에 `_syncShellNav(모바일?mTab:dTab)`로 복원. 헤드리스: 열기 전 settle→열면 history 활성, 닫으면 복원. (2) **헤더 제목 높이 불일치**: `.hist-page-nav`가 `justify-content:center`(세로 중앙)인데 `.right-top`은 상단 정렬이라 제목이 더 아래였음 → `justify-content:flex-start`로 변경해 눈썹 top 28px=우측패널과 동일. (3) **지출 순서/수정/삭제 확인**: `⇅ 순서`·지출 클릭→편집기·`지출 삭제` 모두 정상 동작, 기록보관함 열린 상태에서 지출 클릭 시 드로어 닫히고 편집기 열림 확인(제거된 것 없음). (4) **줌 버튼 더 투명**: `rgba(40,40,44,.26)+blur`→`rgba(22,22,24,.14)`(블러 제거)로 대폭 투명, 글자는 다중 `text-shadow`+흰 테두리로 또렷(흰 영수증 위 거의 비침). (5) **정산 이미지 푸터**(`generateSettleCanvas`): 여백 1/3 축소(`NOTICE_H`78→52·`FOOTER_H`120→80·`noteCY`+44→+30, 간격 77→51px), `차액은…` 문구를 버전과 완전히 같은 색(둘 다 `C.muted` #8E8E93)·같은 크기(20→18px)로 통일(헤드리스 픽셀 샘플 동일 확인). 표시 전용·계산 무관, 계산 160/160 |
