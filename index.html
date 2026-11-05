@@ -1405,7 +1405,8 @@ svg{display:block;flex-shrink:0;}
 .right-foot:empty{display:none;border-top:none;padding:0;}
 .right-foot .share-actions{position:static;margin:0;padding:0;background:none;border-top:none;box-shadow:none;}
 .right-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:28px 34px 21px;}
-.right-body{min-height:0;padding:26px 34px;--share-inline-pad:34px;--share-bottom-pad:26px;}
+.right-body{min-height:0;padding:18px 34px;--share-inline-pad:34px;--share-bottom-pad:26px;}
+.right-body>.pm-seg-row{margin-top:0;} /* 수금 세그먼트 추가 여백 제거 — 모든 탭 콘텐츠 시작을 왼쪽 입력칸(193px) 높이에 통일 (v7.03) */
 .r-title{font-size:24px;letter-spacing:-.6px;line-height:1.2;}
 .expense-editor-card{max-width:920px;padding:20px;background:var(--fill2);border:1px solid var(--sep);border-radius:14px;}
 .expense-editor-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px 14px;}
@@ -1644,8 +1645,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.02';
-const BUILD_TIME='2026-11-05 17:10';
+const APP_VERSION='v7.03';
+const BUILD_TIME='2026-11-05 18:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5424,7 +5425,7 @@ async function generateSettleCanvas(){
   // 안내문구↔DUTCH PAY 간격 = DUTCH PAY↔하단 간격으로 맞춤 (v6.99)
   if(hasRounding){
     const noteCY=y+30, bottomY=y+NOTICE_H+FOOTER_H, footerCY=Math.round((noteCY+bottomY)/2);
-    ctx.fillStyle=C.muted;setFont(18,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0px';
+    ctx.fillStyle=C.muted;setFont(20,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0px';
     ctx.fillText('차액은 결제자에게 우선 부담돼요',W/2,noteCY);
     ctx.fillStyle=C.muted;setFont(18,300);ctx.letterSpacing='2px';
     ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,footerCY);ctx.letterSpacing='0px';
