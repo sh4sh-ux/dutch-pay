@@ -981,6 +981,61 @@ suite('TC22: 입금 기록·잠금 상태 일치 [v6.48]', () => {
   });
 });
 
+suite('TC25: 퉁(waived) — 완전 중립 집계 [v7.06]', () => {
+  test('_paymentDisplay: 퉁은 상태 🤝 퉁·실수령 0·중립', () => {
+    const d=APP._paymentDisplay({waived:true},866);
+    expect(d.status).toBe('🤝 퉁');
+    expect(d.received).toBe(0);
+    expect(d.diff).toBe(0);
+    expect(d.waived).toBe(true);
+    expect(d.metaText).toBe('');
+  });
+  test('_pmEff: 퉁은 청구·수령 0, 정리됨(resolved)', () => {
+    const e=APP._pmEff({waived:true},50000);
+    expect(e.billedEff).toBe(0);
+    expect(e.receivedEff).toBe(0);
+    expect(e.resolved).toBe(true);
+    expect(e.waived).toBe(true);
+    expect(e.done).toBe(false);
+  });
+  test('_pmEff: 입금완료는 청구·수령 정상', () => {
+    const e=APP._pmEff({done:true,amount:50000},50000);
+    expect(e.billedEff).toBe(50000);
+    expect(e.receivedEff).toBe(50000);
+    expect(e.resolved).toBe(true);
+    expect(e.waived).toBe(false);
+  });
+  test('_pmEff: 미입금은 청구만, 미정리', () => {
+    const e=APP._pmEff({},50000);
+    expect(e.billedEff).toBe(50000);
+    expect(e.receivedEff).toBe(0);
+    expect(e.resolved).toBe(false);
+  });
+  test('_pmEff: 퉁+done 동시여도 waived 우선(상호배타)', () => {
+    const e=APP._pmEff({done:true,waived:true,amount:999},50000);
+    expect(e.billedEff).toBe(0);
+    expect(e.receivedEff).toBe(0);
+    expect(e.done).toBe(false);
+  });
+  test('_paymentBadgeHtml: 퉁 배지 🤝 퉁·체크 없음', () => {
+    const html=APP._paymentBadgeHtml({waived:true},866);
+    if(!html.includes('🤝 퉁'))throw new Error('🤝 퉁 누락');
+    if(html.includes('✓'))throw new Error('퉁에 체크가 들어감');
+  });
+  test('퉁 토글 함수 존재(이번 정산·전체기록·드로어)', () => {
+    ['pmToggleWaive','histPmToggleWaive','rcTxnToggleWaive'].forEach(n=>{if(typeof APP[n]!=='function')throw new Error(n+' 없음');});
+  });
+  test('입금완료 토글은 퉁 해제(상호배타)', () => {
+    ['pmToggleDone','histPmToggleDone','rcTxnToggleDone'].forEach(n=>{if(!APP[n].toString().includes('waived'))throw new Error(n+' 퉁 해제 누락');});
+  });
+  test('집계 함수가 _pmEff(완전 중립)를 사용', () => {
+    ['_paySummaryBodyHtml','_pmMonthlyHtml','_pmHistResultsHtml'].forEach(n=>{if(!APP[n].toString().includes('_pmEff'))throw new Error(n+' _pmEff 미사용');});
+  });
+  test('computeShares/calcTxns는 퉁과 무관(정산 계산 불변)', () => {
+    ['computeShares','calcTxns'].forEach(n=>{if(APP[n].toString().includes('waived'))throw new Error(n+'에 waived가 섞임(정산 계산 오염)');});
+  });
+});
+
 suite('TC22d: 같은 정산(지문 동일) 중복 정리 [v6.66]', () => {
   const P=['이영환','조상현'];
   const mk=(id,pay,savedAt,amt1)=>({id,savedAt,dateStart:'2026-10-27',dateEnd:null,people:P.slice(),total:108000,
