@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v7.13** (2026-11-05) — 작업 브랜치
+**v7.14** (2026-11-06) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v7.14 | **수금 입금 내역 행 화살표를 SVG 셰브론으로 통일**(사용자: 다른 창과 통일감있게) — 수금 '이번 정산'·전체기록 입금 내역 행(`_txnRowsOwnerHtml`)의 접기 화살표가 텍스트 글리프 `▾`라, 앱 전반(지출 내역·기록보관함 등 `.rc-chev`)의 SVG 셰브론(`M6 9l6 6 6-6`·stroke 2.4)과 달라 보였음 → `.txn-chev` 내용을 동일 SVG로 교체, CSS를 `.rc-chev`와 동일 규격(`display:inline-flex;align-items/justify-content:center`·`svg 11×11`·색 `--label3`)으로 맞춤. 열림 회전(`.txn-chev.open{rotate180}`)·그리드 배치(`.pm-card .txn-chev`)는 기존 유지. 헤드리스: svg 존재·11×11·rgb(176,176,184)로 `.rc-chev`와 일치. 표시 전용·계산 무관, 계산 170/170 |
 | v7.13 | **이미지 뷰어 컨트롤 자동 숨김 시간 3초→1.5초**(사용자 요청) — `_bindImgZoom`의 `showUI` 숨김 타이머 `setTimeout(hideUI,3000→1500)`. 동작 동일, 숨김까지 지연만 단축. 표시 전용·계산 무관, 계산 170/170 |
 | v7.12 | **이미지 뷰어 컨트롤 자동 숨김(3초 무동작 → 숨김, 움직임/터치 시 복귀)**(사용자 제안) — 영수증·기록 이미지 전체화면 뷰어의 줌 컨트롤(`.imgzoom-ctl`)·닫기 버튼(`.rcpt-viewer-close`/`.history-image-viewer-close`)이 이미지를 가려, 사진 앱처럼 3초 무동작 시 페이드아웃·움직임/터치 시 복귀. 두 뷰어 공용 `_bindImgZoom`에 구현(둘 다 컨트롤이 `ov` 자식): `showUI()`(ui-hidden 제거+3s 타이머 재설정)·`hideUI()`(제스처 중이면 skip, `ov.classList.add('ui-hidden')`), pointermove(hover 포함)·pointerdown·pointerup·wheel·keydown·줌버튼 클릭에서 `showUI()`. **모바일 탭-닫기 충돌 해결**: 숨김 상태의 첫 탭(`down.wasHidden`)은 컨트롤만 복귀하고 닫지 않음(`close()` 조건에 `&&!d.wasHidden`), 보이는 상태 배경 탭은 기존대로 닫기. CSS `.ui-hidden` 시 `opacity:0;pointer-events:none`+`transition:opacity .3s`. 헤드리스: 3.5s 후 숨김·이동 시 복귀·숨김 탭 시 뷰어 유지+복귀·보임 탭 시 닫힘·에러 0. 표시 전용·계산 무관, 계산 170/170 |
 | v7.11 | **생성 이미지 사인오프 `Let's split it.` 추가 확대(20→26px·굵기 300→400)**(사용자: v7.08서 18→20 했는데도 아직 작아 보임) — 생성 이미지는 1080px 캔버스라 총액 68px 대비 20px/300이 상대적으로 작고 얇았음. 헤드리스로 총액(68px) 옆에 20/24/26/28/30px 비교 렌더 후 사용자가 **26px/400** 선택. 세 푸터(`generateSettleCanvas` 반올림/비반올림 2분기·`generateHistoryCanvas`)의 사인오프만 `setFont(20,300)→(26,400)`. 안내문구 `차액은 결제자에게 우선 부담돼요`(20px/300)·전체상세 푸터(14px)는 유지. 실측: FOOTER_H 밴드 내 잘림 없음·안내문구보다 크게. 표시 전용·계산 무관, 계산 170/170 |
