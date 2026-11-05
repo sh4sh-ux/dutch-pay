@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v7.07** (2026-11-05) — 작업 브랜치
+**v7.08** (2026-11-05) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v7.08 | **생성 이미지 사인오프 `Let's split it.` 2pt 확대(18→20px)**(사용자 요청) — 세 캔버스 푸터의 사인오프를 `setFont(18→20,300)`로 키움: `generateSettleCanvas`(정산, 반올림/비반올림 2분기)·`generateHistoryCanvas`(기록). 색(C.muted #8E8E93)·자간(0.5px)·굵기(300)는 유지. 전체상세 이미지의 `Let's split it. · Dropbox 보관용`(14px·밀집 푸터)은 맥락이 달라 미변경. 표시 전용·계산 무관, 계산 170/170 |
 | v7.07 | **퉁 버튼을 입금 토글 바로 옆으로 이동**(사용자: 동선이 너무 멀어서) — v7.06에서 `.pay-waive-btn`이 `margin-left:auto`로 입금 행 **맨 오른쪽 끝**에 붙어 `입금완료` 토글과 거리가 멀었음 → `margin-left:4px`로 바꿔 토글 라벨(`입금완료`/`미입금`) **바로 오른쪽**(행 gap 8px + 4px)에 배치. 입금 패널 3곳(이번 정산·전체기록·기록보관함) 공통 적용(한 CSS 규칙). 헤드리스: `🤝 퉁` 버튼이 `미입금` 라벨 직후에 위치. 표시 전용·계산 무관, 계산 170/170 |
 | v7.06 | **퉁(받을 돈 면제) 기능 추가 — 소액 채무를 "퉁쳐서" 없던 일로**(사용자 요청: "퉁도 부탁해", 확정 스펙=완전 중립·과거 기록까지) — **표시·집계 전용, 계산(computeShares/calcTxns) 무관**. 수금 입금 패널(이번 정산·전체기록·기록보관함 상세 3곳)의 각 입금 행에 토글 오른쪽 `🤝 퉁` 버튼 추가. 퉁 처리하면 그 채무를 **청구·수령·미수·순차액 모두에서 완전 제외**(실수령 0·미입금 아님). 데이터: `payments["from\|to"].waived`(입금완료 `done`과 상호배타 — 하나 켜면 다른 쪽 자동 해제). 공통 헬퍼 `_pmEff(pm,billing)`가 `{waived,done,resolved,billedEff,receivedEff}` 반환(waived면 billedEff=0·receivedEff=0·resolved=true), 모든 집계(`_paySummaryBodyHtml`·`_pmHistResultsHtml`·`_pmMonthlyHtml`·`_checkAllPaidAutoSave`·owner/비owner 통계)가 이를 경유해 퉁이 0 기여. 토글 함수 3쌍(`pmToggleWaive`/`histPmToggleWaive`/`rcTxnToggleWaive`)·행 패치(`_patchPmRow`·`_txnRowsOwnerHtml`·`_rcPatchTxnPanel`)·배지(`_paymentBadgeHtml`·`_paymentDisplay` `🤝 퉁`)·이미지(`generateHistoryCanvas` 입금행 중립 배경+`🤝 퉁`)에 반영. 전원 입금+퉁이면 "모두 정리됨 ✓"(일부 퉁)·"모두 입금완료 ✓"(퉁 없음). CSS `.pay-waive-btn`(알약·on시 반전)·`.pm-badge.waived`·`.txn-status-ic.waived`·`.pm-waived`. test.html TC25 10건 추가(퉁 집계·상호배타·computeShares/calcTxns에 'waived' 미포함 단언), 계산 170/170. 헤드리스 e2e: 소액 퉁+대액 입금완료 → 총청구 33,622·순차액 0·행 🤝 퉁·"모두 정리됨 ✓" |
 | v7.05 | **왼쪽 헤더에 사인오프 태그라인 추가(Ⓑ안)**(사용자 선택) — 데스크탑 `.left` 헤더 `더치페이`(`.app-title`) 옆에 `Let's split it.`를 **절반 크기(13px)·옅은색(--label3)·베이스라인 정렬**로 붙임. `.app-title`을 `.app-title-row`(flex align-items:baseline gap 8px)로 감싸고 `<span class="app-tagline">` 추가, 제목 margin-bottom은 row로 이전. 눈썹 `DUTCH PAY vX.XX`(브랜드+버전)는 그대로 유지(정보 손실 없음). 헤드리스: 태그라인 13px·rgb(176,176,184)·베이스라인 Δ-1·제목 오른쪽. 표시 전용·계산 무관, 계산 160/160 |
