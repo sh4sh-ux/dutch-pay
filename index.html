@@ -788,7 +788,7 @@ svg{display:block;flex-shrink:0;}
 .rcpt-viewer-img.ready{display:block;}
 .rcpt-viewer-close{position:absolute;top:-46px;right:-2px;width:38px;height:38px;border-radius:50%;background:rgba(28,28,30,.78);box-shadow:0 0 0 1px rgba(255,255,255,.28);color:#fff;border:none;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:2;}
 .imgzoom-ctl{position:absolute;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:3;display:flex;gap:6px;}
-.imgzoom-ctl button{height:38px;display:inline-flex;align-items:center;justify-content:center;border:none;background:rgba(40,40,44,.26);-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);box-shadow:0 0 0 1px rgba(255,255,255,.34);color:#fff;font-size:17px;font-weight:600;line-height:1;cursor:pointer;font-family:inherit;text-shadow:0 1px 4px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.7);}
+.imgzoom-ctl button{height:38px;display:inline-flex;align-items:center;justify-content:center;border:none;background:rgba(22,22,24,.14);box-shadow:0 0 0 1px rgba(255,255,255,.4);color:#fff;font-size:17px;font-weight:600;line-height:1;cursor:pointer;font-family:inherit;text-shadow:0 1px 3px rgba(0,0,0,.98),0 0 5px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.9);}
 .imgzoom-ctl button[data-z=out],.imgzoom-ctl button[data-z=in]{width:38px;min-width:38px;padding:0;border-radius:50%;}
 .imgzoom-ctl button[data-z=reset]{min-width:44px;padding:0 14px;border-radius:19px;}
 .rcpt-viewer-close{z-index:3;}
@@ -1013,7 +1013,7 @@ svg{display:block;flex-shrink:0;}
 /* 데스크탑: 기록 보관함을 오른쪽 패널 탭과 동일한 레이아웃으로 — 헤더(144px·좌측 눈썹+제목)·구분선 높이·검색/버튼 34px 인셋 통일, < 더치페이 제거. .hist-page 접두로 뒤따르는 기본 규칙보다 우선 (v6.99) */
 @media(min-width:701px){
   .hist-page{background:var(--panel-bg);}
-  .hist-page .hist-page-nav{position:relative;height:144px;box-sizing:border-box;padding:28px 34px 21px;border-bottom:1px solid var(--sep);background:transparent;display:flex;flex-direction:column;justify-content:center;}
+  .hist-page .hist-page-nav{position:relative;height:144px;box-sizing:border-box;padding:28px 34px 21px;border-bottom:1px solid var(--sep);background:transparent;display:flex;flex-direction:column;justify-content:flex-start;}
   .hist-page .hist-page-nav-row{height:auto;padding:0;display:block;}
   .hist-page .hist-back-btn{display:none;}
   .hist-page .hist-page-eye{display:block;font-size:12px;font-weight:500;color:var(--label3);letter-spacing:.7px;text-transform:uppercase;line-height:1.4;margin-bottom:11px;}
@@ -1491,7 +1491,7 @@ svg{display:block;flex-shrink:0;}
     <button class="app-rail-btn" type="button" data-dutch-nav="settle" data-nav-label="공유" aria-label="공유" onclick="dSetTab('settle')">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
     </button>
-    <button class="app-rail-btn" id="dRailHistory" type="button" data-nav-label="기록 보관함" aria-label="기록 보관함" onclick="goToHistory()" style="display:none">
+    <button class="app-rail-btn" id="dRailHistory" type="button" data-dutch-nav="history" data-nav-label="기록 보관함" aria-label="기록 보관함" onclick="goToHistory()" style="display:none">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
     <button class="app-rail-btn" id="dRailPayment" type="button" data-dutch-nav="payment" data-nav-label="수금" aria-label="수금" onclick="dSetTab('payment')" style="display:none">
@@ -1583,7 +1583,7 @@ svg{display:block;flex-shrink:0;}
     <button class="mob-tab on" id="mTInput" data-dutch-nav="input" onclick="mSetTab('input')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>입력</span></button>
     <button class="mob-tab" id="mTResult" data-dutch-nav="result" onclick="mSetTab('result')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>정산</span></button>
     <button class="mob-tab" id="mTSettle" data-dutch-nav="settle" onclick="mSetTab('settle')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>공유</span></button>
-    <button class="mob-tab" id="mTHistory" aria-label="기록 보관함" onclick="goToHistory()" style="display:none"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>기록</span></button>
+    <button class="mob-tab" id="mTHistory" data-dutch-nav="history" aria-label="기록 보관함" onclick="goToHistory()" style="display:none"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>기록</span></button>
     <button class="mob-tab" id="mTPayment" data-dutch-nav="payment" onclick="mSetTab('payment')" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="9" cy="5.5" rx="5.5" ry="2.25"/><path d="M3.5 5.5v4c0 1.25 2.45 2.25 5.5 2.25 1.1 0 2.1-.13 2.95-.37M3.5 9.5v4c0 1.25 2.45 2.25 5.5 2.25.72 0 1.4-.06 2.02-.17"/><circle cx="16.5" cy="15.5" r="5"/><path d="m13.85 13.25 1.2 4.5 1.45-3.25 1.45 3.25 1.2-4.5M13.7 14.75h5.6M14 16.1h5"/></svg><span>수금</span></button>
   </nav>
   <div class="mob-body" id="mBody"></div>
@@ -1644,8 +1644,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.01';
-const BUILD_TIME='2026-11-05 15:40';
+const APP_VERSION='v7.02';
+const BUILD_TIME='2026-11-05 17:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2733,6 +2733,7 @@ function openHistDrawer(){
   dr.style.transform='';
   _histPlaceDesktop();
   dr.classList.add('open');
+  _syncShellNav('history'); // 기록 보관함을 열면 레일/하단 '기록' 탭을 활성 표시 (v7.02)
   const onEnd=()=>{dr.removeEventListener('transitionend',onEnd);if(dr.classList.contains('open'))dr.style.transform='none';};
   dr.addEventListener('transitionend',onEnd);
   document.addEventListener('keydown',_histEscHandler);
@@ -2743,6 +2744,7 @@ function closeHistDrawer(){
   _histDrawerOpen=false;
   document.removeEventListener('keydown',_histEscHandler);
   window.removeEventListener('resize',_histResizeHandler);
+  _syncShellNav(window.matchMedia('(max-width:700px)').matches?mTab:dTab); // 닫으면 현재 탭으로 레일 활성 복원 (v7.02)
   document.getElementById('histBackdrop')?.classList.remove('open');
   const dr=document.getElementById('histDr');
   dr.style.transform='';
@@ -5244,7 +5246,7 @@ async function generateSettleCanvas(){
   const validItems=items.filter(it=>+it.amount!==0);
   const iconMap=new Map();for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#4355E8'));}catch(e){iconMap.set(svg,null);}}}
   const W=1080,PAD=42,TOP_PAD=56,cardX=PAD,cardW=W-PAD*2;
-  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=245,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=78,FOOTER_H=120;
+  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=245,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=52,FOOTER_H=80;
   const txnGroups=_groupTxnsByRecipient(normalTxns,_myName),DIV_H=3;
   const _multiG=txnGroups.length>1; // 수취인 그룹 2개 이상일 때만 색상 구분선 (v5.73)
   const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+(_multiG?txnGroups.length*DIV_H:0)):EMPTY_CARD_H;
@@ -5421,8 +5423,8 @@ async function generateSettleCanvas(){
   // 안내문구 + 푸터 — 안내문구를 DUTCH PAY와 같은 굵기(300)·조금 작게(20px)·짙게(C.muted),
   // 안내문구↔DUTCH PAY 간격 = DUTCH PAY↔하단 간격으로 맞춤 (v6.99)
   if(hasRounding){
-    const noteCY=y+44, bottomY=y+NOTICE_H+FOOTER_H, footerCY=Math.round((noteCY+bottomY)/2);
-    ctx.fillStyle=C.muted;setFont(20,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0px';
+    const noteCY=y+30, bottomY=y+NOTICE_H+FOOTER_H, footerCY=Math.round((noteCY+bottomY)/2);
+    ctx.fillStyle=C.muted;setFont(18,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0px';
     ctx.fillText('차액은 결제자에게 우선 부담돼요',W/2,noteCY);
     ctx.fillStyle=C.muted;setFont(18,300);ctx.letterSpacing='2px';
     ctx.fillText(`DUTCH PAY ${APP_VERSION}`,W/2,footerCY);ctx.letterSpacing='0px';
