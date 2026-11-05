@@ -803,6 +803,9 @@ svg{display:block;flex-shrink:0;}
 .imgzoom-ctl button{height:38px;display:inline-flex;align-items:center;justify-content:center;border:none;background:rgba(22,22,24,.14);box-shadow:0 0 0 1px rgba(255,255,255,.4);color:#fff;font-size:17px;font-weight:600;line-height:1;cursor:pointer;font-family:inherit;text-shadow:0 1px 1.5px rgba(0,0,0,.7),0 0 1px rgba(0,0,0,.55);}
 .imgzoom-ctl button[data-z=out],.imgzoom-ctl button[data-z=in]{width:38px;min-width:38px;padding:0;border-radius:50%;}
 .imgzoom-ctl button[data-z=reset]{min-width:44px;padding:0 14px;border-radius:19px;}
+/* 이미지 뷰어 컨트롤 자동 숨김(3초 무동작) v7.12 */
+.imgzoom-ctl,.rcpt-viewer-close,.history-image-viewer-close{transition:opacity .3s ease;}
+.rcpt-viewer.ui-hidden .imgzoom-ctl,.rcpt-viewer.ui-hidden .rcpt-viewer-close,.history-image-viewer.ui-hidden .imgzoom-ctl,.history-image-viewer.ui-hidden .history-image-viewer-close{opacity:0;pointer-events:none;}
 .rcpt-viewer-close{z-index:3;}
 .rcpt-viewer-close:hover{background:rgba(255,255,255,.28);}
 .rcpt-viewer-spin{width:38px;height:38px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:rcptspin .8s linear infinite;}
@@ -1657,8 +1660,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.11';
-const BUILD_TIME='2026-11-05 23:00';
+const APP_VERSION='v7.12';
+const BUILD_TIME='2026-11-05 23:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4324,31 +4327,36 @@ function _bindImgZoom(ov,img,close){
   const ctl=document.createElement('div');ctl.className='imgzoom-ctl';
   ctl.innerHTML='<button type="button" data-z="out" aria-label="축소">−</button><button type="button" data-z="reset" aria-label="원래 크기">100%</button><button type="button" data-z="in" aria-label="확대">+</button>';
   ov.appendChild(ctl);const pct=ctl.querySelector('[data-z=reset]');
+  // v7.12 — 컨트롤(줌·닫기) 3초 무동작 시 숨김, 움직임/터치 시 복귀
+  let _uiHidden=false,_uiTimer=null;
+  function hideUI(){if(!ov.isConnected)return;if(pts.size>0){showUI();return;}_uiHidden=true;ov.classList.add('ui-hidden');}
+  function showUI(){_uiHidden=false;ov.classList.remove('ui-hidden');if(_uiTimer)clearTimeout(_uiTimer);_uiTimer=setTimeout(hideUI,3000);}
   const clamp=()=>{const mx=Math.max(0,(img.offsetWidth*s-ov.clientWidth)/2),my=Math.max(0,(img.offsetHeight*s-ov.clientHeight)/2);x=Math.max(-mx,Math.min(mx,x));y=Math.max(-my,Math.min(my,y));};
   const apply=anim=>{img.style.transition=anim?'transform .18s ease':'none';img.style.transform=`translate(${x}px,${y}px) scale(${s})`;img.style.cursor=s>1.01?'grab':'zoom-in';pct.textContent=Math.round(s*100)+'%';};
   const zoomAt=(ns,px,py,anim)=>{ns=Math.max(1,Math.min(MAX,ns));if(ns<1.02)ns=1;const k=ns/s,cx=px-ov.clientWidth/2,cy=py-ov.clientHeight/2;x=cx-k*(cx-x);y=cy-k*(cy-y);s=ns;if(s===1){x=0;y=0;}clamp();apply(anim);};
   const mid=()=>[ov.clientWidth/2,ov.clientHeight/2];
   ctl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();const [mx,my]=mid(),z=b.dataset.z;if(z==='in')zoomAt(s*1.5,mx,my,true);else if(z==='out')zoomAt(s/1.5,mx,my,true);else zoomAt(1,mx,my,true);});
-  ctl.addEventListener('pointerdown',e=>e.stopPropagation());
-  ov.addEventListener('pointerdown',e=>{if(e.target.closest('button,a'))return;try{ov.setPointerCapture(e.pointerId);}catch(_){}
+  ctl.addEventListener('pointerdown',e=>{showUI();e.stopPropagation();});
+  ov.addEventListener('pointerdown',e=>{const _wh=_uiHidden;showUI();if(e.target.closest('button,a'))return;try{ov.setPointerCapture(e.pointerId);}catch(_){}
     pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    if(pts.size===1){down={x:e.clientX,y:e.clientY,ox:x,oy:y,onImg:e.target===img,moved:false};}
+    if(pts.size===1){down={x:e.clientX,y:e.clientY,ox:x,oy:y,onImg:e.target===img,moved:false,wasHidden:_wh};}
     else if(pts.size===2){const[a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),s:s};down&&(down.moved=true);}});
-  ov.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  ov.addEventListener('pointermove',e=>{showUI();if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(pts.size>=2&&pinch&&pinch.d>0){const[a,b]=[...pts.values()];zoomAt(pinch.s*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,(a.x+b.x)/2,(a.y+b.y)/2,false);}
     else if(pts.size===1&&down){if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)down.moved=true;if(s>1.01&&down.moved){x=down.ox+(e.clientX-down.x);y=down.oy+(e.clientY-down.y);clamp();apply(false);}}});
-  const end=e=>{if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);if(pts.size<2)pinch=null;
+  const end=e=>{showUI();if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);if(pts.size<2)pinch=null;
     if(pts.size===0&&down){const d=down;down=null;
       if(!d.moved){
         if(d.onImg){const t=Date.now();if(lastTap&&t-lastTap.t<300&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<30){lastTap=null;zoomAt(s>1.01?1:2.5,e.clientX,e.clientY,true);}else lastTap={t,x:e.clientX,y:e.clientY};}
-        else if(s<=1.01&&e.type==='pointerup')close();}
+        else if(s<=1.01&&e.type==='pointerup'&&!d.wasHidden)close();}
       else if(s<1.02)zoomAt(1,0,0,true);}};
   ov.addEventListener('pointerup',end);ov.addEventListener('pointercancel',end);
-  ov.addEventListener('wheel',e=>{e.preventDefault();zoomAt(s*Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0018)),e.clientX,e.clientY,false);},{passive:false});
-  const onKey=e=>{if(!ov.isConnected){document.removeEventListener('keydown',onKey);return;}const [mx,my]=mid();
+  ov.addEventListener('wheel',e=>{showUI();e.preventDefault();zoomAt(s*Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0018)),e.clientX,e.clientY,false);},{passive:false});
+  const onKey=e=>{if(!ov.isConnected){document.removeEventListener('keydown',onKey);return;}showUI();const [mx,my]=mid();
     if(e.key==='+'||e.key==='=')zoomAt(s*1.5,mx,my,true);else if(e.key==='-')zoomAt(s/1.5,mx,my,true);else if(e.key==='0')zoomAt(1,mx,my,true);};
   document.addEventListener('keydown',onKey);
   apply(false);
+  showUI();
 }
 function _showReceiptViewer(name){
   document.querySelector('.rcpt-viewer')?.remove();
