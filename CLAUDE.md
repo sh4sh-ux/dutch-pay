@@ -24,11 +24,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v7.05** (2026-11-05) — 작업 브랜치
+**v7.06** (2026-11-05) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v7.06 | **퉁(받을 돈 면제) 기능 추가 — 소액 채무를 "퉁쳐서" 없던 일로**(사용자 요청: "퉁도 부탁해", 확정 스펙=완전 중립·과거 기록까지) — **표시·집계 전용, 계산(computeShares/calcTxns) 무관**. 수금 입금 패널(이번 정산·전체기록·기록보관함 상세 3곳)의 각 입금 행에 토글 오른쪽 `🤝 퉁` 버튼 추가. 퉁 처리하면 그 채무를 **청구·수령·미수·순차액 모두에서 완전 제외**(실수령 0·미입금 아님). 데이터: `payments["from\|to"].waived`(입금완료 `done`과 상호배타 — 하나 켜면 다른 쪽 자동 해제). 공통 헬퍼 `_pmEff(pm,billing)`가 `{waived,done,resolved,billedEff,receivedEff}` 반환(waived면 billedEff=0·receivedEff=0·resolved=true), 모든 집계(`_paySummaryBodyHtml`·`_pmHistResultsHtml`·`_pmMonthlyHtml`·`_checkAllPaidAutoSave`·owner/비owner 통계)가 이를 경유해 퉁이 0 기여. 토글 함수 3쌍(`pmToggleWaive`/`histPmToggleWaive`/`rcTxnToggleWaive`)·행 패치(`_patchPmRow`·`_txnRowsOwnerHtml`·`_rcPatchTxnPanel`)·배지(`_paymentBadgeHtml`·`_paymentDisplay` `🤝 퉁`)·이미지(`generateHistoryCanvas` 입금행 중립 배경+`🤝 퉁`)에 반영. 전원 입금+퉁이면 "모두 정리됨 ✓"(일부 퉁)·"모두 입금완료 ✓"(퉁 없음). CSS `.pay-waive-btn`(알약·on시 반전)·`.pm-badge.waived`·`.txn-status-ic.waived`·`.pm-waived`. test.html TC25 10건 추가(퉁 집계·상호배타·computeShares/calcTxns에 'waived' 미포함 단언), 계산 170/170. 헤드리스 e2e: 소액 퉁+대액 입금완료 → 총청구 33,622·순차액 0·행 🤝 퉁·"모두 정리됨 ✓" |
 | v7.05 | **왼쪽 헤더에 사인오프 태그라인 추가(Ⓑ안)**(사용자 선택) — 데스크탑 `.left` 헤더 `더치페이`(`.app-title`) 옆에 `Let's split it.`를 **절반 크기(13px)·옅은색(--label3)·베이스라인 정렬**로 붙임. `.app-title`을 `.app-title-row`(flex align-items:baseline gap 8px)로 감싸고 `<span class="app-tagline">` 추가, 제목 margin-bottom은 row로 이전. 눈썹 `DUTCH PAY vX.XX`(브랜드+버전)는 그대로 유지(정보 손실 없음). 헤드리스: 태그라인 13px·rgb(176,176,184)·베이스라인 Δ-1·제목 오른쪽. 표시 전용·계산 무관, 계산 160/160 |
 | v7.04 | **생성 이미지 하단 사인오프를 `DUTCH PAY vX.XX`→`Let's split it.`로 변경**(사용자 결정) — 세 캔버스 푸터 모두 교체: `generateSettleCanvas`(정산, 반올림 유무 2분기)·`generateHistoryCanvas`(기록)·`generateFullDetailCanvases`(Dropbox 상세, `Let's split it. · Dropbox 보관용`). 워드마크용 `letterSpacing 2px`→문장용 `0.5px`로 조정, 색·크기(C.muted #8E8E93·18px)는 유지. 이미지에서 버전 숫자는 빠짐(화면 눈썹·⋯ 메뉴 배지엔 그대로). 화면 왼쪽 헤더 `DUTCH PAY` 눈썹은 사용자 결정 전까지 미변경. 표시 전용·계산 무관, 계산 160/160 |
 | v7.03 | **오른쪽 패널 콘텐츠 시작 위치를 왼쪽 입력칸 높이에 통일 + 정산이미지 안내문구 2pt 확대**(사용자 요청) — (1) **오른쪽 콘텐츠 시작 정렬**: 데스크탑 오른쪽 패널(`.right-body`) 콘텐츠가 왼쪽 날짜/입력 박스(`#meetingDateInp`, 절대 top 193px)보다 8px 낮게(201px) 시작했고, 수금 탭만 `.pm-seg-row` margin-top(14px) 탓에 14px 더 낮았음(215px) → `.right-body` 데스크탑 padTop 26→18px(구분선 아래 18px=왼쪽과 동일), `.right-body>.pm-seg-row{margin-top:0}`로 수금 추가여백 제거. 헤드리스 실측: 입력·정산·공유·수금 **네 탭 모두 firstTopAbs 193**(왼쪽 박스와 정확히 일치). (2) **푸터 안내문구 확대**: `차액은 결제자에게 우선 부담돼요`가 v7.02에서 버전과 같은 18px였는데 작아 보여 → `setFont(18→20,300)`(+2pt). 색은 버전과 동일 `C.muted`(#8E8E93) 유지(헤드리스 픽셀 rgb(142,142,147) 동일 확인), 버전은 18px 그대로. 표시 전용·계산 무관, 계산 160/160 |
