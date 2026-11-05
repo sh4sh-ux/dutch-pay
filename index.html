@@ -265,10 +265,15 @@ svg{display:block;flex-shrink:0;}
 .alc-note{margin-top:10px;font-size:12px;line-height:1.5;color:#A96B00;}
 .alc-note.alc-mut{color:var(--label3);}
 .alc-note.alc-warn{color:var(--red);}
-.rcpt-fill-btn{width:100%;border:1px solid var(--blue);border-radius:var(--rs);padding:10px 14px;font-size:13px;font-family:inherit;background:var(--blue-bg);color:var(--blue);cursor:pointer;text-align:center;transition:all .12s;}
-.rcpt-fill-btn:hover{background:var(--blue);color:#fff;}
-.rcpt-fill-btn .rcpt-fill-sum{font-weight:700;}
-.rcpt-fill-btn .rcpt-fill-cur{opacity:.75;font-size:12px;}
+/* 영수증 합계 실시간 표시 줄 (v6.98) — 항상 보이고, 금액과 다르면 '금액에 반영' 버튼 */
+.rcpt-sum-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--fill);border-radius:var(--rs);font-size:12.5px;min-width:0;}
+.rcpt-sum-lbl{color:var(--label3);font-weight:600;flex-shrink:0;}
+.rcpt-sum-val{color:var(--label);font-weight:700;font-variant-numeric:tabular-nums;}
+.rcpt-sum-row.match .rcpt-sum-val{color:var(--green);}
+.rcpt-sum-ok{margin-left:auto;color:var(--green);font-weight:700;flex-shrink:0;white-space:nowrap;}
+.rcpt-sum-fill{margin-left:auto;flex-shrink:0;border:none;border-radius:8px;padding:7px 13px;font-size:12px;font-weight:700;font-family:inherit;background:var(--blue);color:#fff;cursor:pointer;white-space:nowrap;transition:opacity .12s;}
+.rcpt-sum-fill:hover{opacity:.88;}
+.rcpt-sum-fill:active{opacity:.7;}
 .del-btn{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:10px;font-size:13px;color:var(--red);background:transparent;margin-top:8px;transition:background .12s;display:flex;align-items:center;justify-content:center;gap:6px;}
 .del-btn:hover{background:var(--red-bg);}
 .confirm-btn{width:100%;border:none;border-radius:var(--rs);padding:12px;font-size:14px;font-weight:600;background:var(--label);color:var(--bg);margin-top:16px;cursor:pointer;transition:opacity .12s;}
@@ -1611,8 +1616,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v6.97';
-const BUILD_TIME='2026-11-05 10:00';
+const APP_VERSION='v6.98';
+const BUILD_TIME='2026-11-05 10:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2456,7 +2461,7 @@ async function pullReceiptDbInbox(){
   }catch(e){}finally{_rbPulling=false;}
 }
 async function resetAllData(){if(!confirm('모든 그룹의 데이터를 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!await _autoBackup('전체 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}if(confirm('초기화 전 JSON 백업 파일을 다운로드할까요?'))exportData();const now=new Date().toISOString();groups.forEach(g=>{deletedGroups[g.id]=now;});const id=_newGroupId();groups=[{id,name:'모임명 또는 참여자',nameAuto:true,createdAt:now,data:_emptyGroupData()}];currentGroupId=id;loadGroupData(groups[0]);saveState();renderAll();toast('초기화됨',{type:'success'});}
-async function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!await _autoBackup('이번 정산 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}people=[];items=[];payments={};idc=0;settleDateStart=_todayYMD();settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
+async function resetCurrentSettlement(){if(!confirm('이번 정산의 참여자·지출·입금 내역을 초기화할까요?\n기록 보관함에 저장된 기록은 유지돼요.'))return;if(!await _autoBackup('이번 정산 초기화 전')){toast('안전 백업이 완료되지 않아 초기화를 중단했어요',{type:'error',duration:5000});return;}people=[];items=[];payments={};idc=0;selectedId=null;_reorderMode=false;closeSheet();settleDateStart=_todayYMD();settleDateEnd=null;saveState();renderAll();toast('이번 정산이 초기화됐어요',{type:'success'});}
 
 function updateMeetingDate(val){settleDateStart=val||_todayYMD();_dpUpdate('meetingDateDisp',settleDateStart);saveState();}
 function fmtDate(iso){if(!iso)return '';const[y,m,d]=iso.split('-');return `${y}.${m}.${d}`;}
@@ -2656,7 +2661,7 @@ function selectItemMob(id){_checkAutoDelete();selectedId=id;if(mTab!=='input'){m
 
 let _ufTimer=null;
 function _flushUpdateField(){clearTimeout(_ufTimer);_ufTimer=null;saveState();}
-function updateField(id,field,val){const it=items.find(i=>i.id===id);if(!it)return;it[field]=val;if(_justAddedId===id&&(field==='name'||field==='amount')&&val)_justAddedId=null;updateTotals();if(field==='name'){document.getElementById('dREye').textContent='지출 편집';document.getElementById('dRTitle').textContent=val||'새 지출';const mst=document.getElementById('mSheetTitle');if(mst)mst.textContent=val||'새 지출';}if(field==='name'||field==='amount'||field==='payer'){renderItemLists();refreshMobItems();}if(field==='receiptText'){document.querySelectorAll('[data-alc-host="'+id+'"]').forEach(h=>{h.innerHTML=_receiptDerivedHtml(it);});}clearTimeout(_ufTimer);_ufTimer=setTimeout(_flushUpdateField,600);}
+function updateField(id,field,val){const it=items.find(i=>i.id===id);if(!it)return;it[field]=val;if(_justAddedId===id&&(field==='name'||field==='amount')&&val)_justAddedId=null;updateTotals();if(field==='name'){document.getElementById('dREye').textContent='지출 편집';document.getElementById('dRTitle').textContent=val||'새 지출';const mst=document.getElementById('mSheetTitle');if(mst)mst.textContent=val||'새 지출';}if(field==='name'||field==='amount'||field==='payer'){renderItemLists();refreshMobItems();}if(field==='receiptText'||field==='amount'){document.querySelectorAll('[data-alc-host="'+id+'"]').forEach(h=>{h.innerHTML=_receiptDerivedHtml(it);});}clearTimeout(_ufTimer);_ufTimer=setTimeout(_flushUpdateField,600);}
 
 function toggleMember(id,name,btn){const it=items.find(i=>i.id===id);if(!it)return;if(!it.watchers)it.watchers=[];const isIn=it.members.includes(name);const isW=it.watchers.includes(name);if(isIn){// 포함 → 깍두기
 if(it.members.length>1)it.members=it.members.filter(m=>m!==name);else return;it.watchers.push(name);}else if(isW){// 깍두기 → 제외
@@ -3807,7 +3812,7 @@ function _syncShareFoot(){
   if(typeof ResizeObserver==='function'){_footRO=new ResizeObserver(apply);_footRO.observe(lf);}
 }
 function renderDesktopRight(){_renderDesktopRightInner();_syncShareFoot();}
-function _renderDesktopRightInner(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='history'){renderHistoryView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='payment'){renderPaymentView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');return;}document.getElementById('dREye').textContent='시작하기';if(!people.length){document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{renderResultView('dREye','dRTitle','dRSub','dRBody');document.getElementById('dRSub').textContent='지출을 선택하면 편집 모드로 전환돼요.';}}
+function _renderDesktopRightInner(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='history'){renderHistoryView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='payment'){renderPaymentView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId&&items.some(i=>i.id===selectedId)){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');return;}if(selectedId)selectedId=null;document.getElementById('dREye').textContent='시작하기';if(!people.length){document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{renderResultView('dREye','dRTitle','dRSub','dRBody');document.getElementById('dRSub').textContent='지출을 선택하면 편집 모드로 전환돼요.';}}
 
 function renderEditor(id,eyeId,titleId,subId,bodyId){
   const it=items.find(i=>i.id===id);if(!it)return;
@@ -4068,15 +4073,22 @@ function _alcoholEditorHtml(it){
   return`<div class="field-g editor-span-2 alc-sec"><div class="field-lbl">🍺 술 품목 제외 <span style="font-size:11px;font-weight:400;text-transform:none;color:var(--label3)">안 마시는 사람은 술값에서 빠져요</span></div><div class="alc-lines">${lineBtns}</div><div class="alc-nd-block"><span class="alc-nd-lbl">술 안 마심</span><div class="alc-nd-chips">${ndBtns}</div></div>${note}</div>`;
 }
 // 영수증 상세 품목 합으로 금액(총액)을 채우는 버튼 — 합과 현재 금액이 다를 때만 노출 (v6.89)
-function _receiptFillBtnHtml(it){
+// 영수증 합계를 항상 실시간으로 보여 주고, 금액과 다르면 '금액에 반영' 버튼을 띄운다 (v6.98)
+// 기존엔 다를 때만 버튼이 나와 타이핑 중 나왔다 안 했다 해서 혼란 → 합계 줄은 상시 표시(값만 live 변경)
+function _receiptSummaryHtml(it){
   const lines=parseReceiptLines(it.receiptText||'');
   if(!lines.length)return'';
-  const audit=_receiptAudit(it,lines);const sum=Math.round(audit.total||0),cur=Math.round(+it.amount||0);
-  if(!(sum>0)||sum===cur)return'';
-  return`<div class="field-g editor-span-2"><button type="button" class="rcpt-fill-btn" onclick="fillAmountFromReceipt(${it.id})"><span class="rcpt-fill-sum">합계 ${fmt(sum)}원</span>으로 금액 채우기${cur?` <span class="rcpt-fill-cur">(현재 ${fmt(cur)}원)</span>`:''}</button></div>`;
+  const sum=Math.round(_receiptAudit(it,lines).total||0);
+  if(!(sum>0))return'';
+  const cur=Math.round(+it.amount||0);
+  const match=sum===cur;
+  const action=match
+    ?`<span class="rcpt-sum-ok">✓ 금액과 일치</span>`
+    :`<button type="button" class="rcpt-sum-fill" onclick="fillAmountFromReceipt(${it.id})">금액에 반영</button>`;
+  return`<div class="field-g editor-span-2"><div class="rcpt-sum-row${match?' match':''}"><span class="rcpt-sum-lbl">영수증 합계</span><span class="rcpt-sum-val">${fmt(sum)}원</span>${action}</div></div>`;
 }
-// 영수증 상세 아래 '파생' 영역: 합계 채우기 버튼 + 술 품목 제외 섹션 (품목이 있을 때만) — 입력 즉시 갱신용 한 묶음
-function _receiptDerivedHtml(it){return _receiptFillBtnHtml(it)+_alcoholEditorHtml(it);}
+// 영수증 상세 아래 '파생' 영역: 합계 표시줄 + 술 품목 제외 섹션 (품목이 있을 때만) — 입력 즉시 갱신용 한 묶음
+function _receiptDerivedHtml(it){return _receiptSummaryHtml(it)+_alcoholEditorHtml(it);}
 function fillAmountFromReceipt(id){const it=items.find(i=>i.id===id);if(!it)return;const lines=parseReceiptLines(it.receiptText||'');if(!lines.length)return;const sum=Math.round(_receiptAudit(it,lines).total||0);if(!(sum>0))return;it.amount=sum;saveState();renderAll();const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(id);toast('금액을 '+fmt(sum)+'원으로 채웠어요',{type:'success'});}
 function _receiptAudit(it,lines){let total=0,incomplete=false;const badRows=new Set();for(let i=0;i<lines.length;i++){const r=lines[i];if(/증정|gift/i.test(r.amount))continue;const q=_receiptNum(r.qty),u=_receiptNum(r.unitPrice),a=_receiptNum(r.amount);if(q===null&&u===null){if(a!==null)total+=a;continue;}if(a===null){incomplete=true;badRows.add(i);continue;}total+=a;if(q===null||u===null)incomplete=true;else if(Math.round(q*u)!==Math.round(a))badRows.add(i);}const expense=Math.round(Number(it.amount)||0),diff=Math.round(total)-expense;if(badRows.size||diff)return{status:'bad',label:diff?`차액 ${diff>0?'+':''}${fmt(diff)}원`:'수량×단가 불일치',total,diff,badRows};if(incomplete)return{status:'warn',label:'계산 확인 필요',total,diff,badRows};return{status:'ok',label:'계산 일치',total,diff,badRows};}
 function _receiptTableHtml(it,uid,historyId){const lines=parseReceiptLines(it.receiptText||'');const src=getReceiptSrc(it);if(!lines.length&&!src)return'';const viewer=historyId?`openArchivedReceiptViewer(${ja(historyId)},${ja(it.id)},event)`:`openReceiptViewer(${it.id},event)`;const rcptLink=src?`<button type="button" class="rc-foot-link" onclick="${viewer}" aria-label="${ea(it.name||'')} 영수증 보기">영수증<span class="rc-foot-arrow">›</span></button>`:'';const cols='<colgroup><col><col><col><col></colgroup>';if(!lines.length){return`<div class="rc-receipt-wrap" id="rcpt_${uid}"><table class="rc-receipt-tbl rc-photo-only-tbl">${cols}<tfoot><tr><td></td><td colspan="2" class="rc-foot-cell">${rcptLink}</td><td></td></tr></tfoot></table></div>`;}const audit=_receiptAudit(it,lines);const rows=lines.map((r,i)=>{const isGift=/증정|gift/i.test(r.amount);const n=_receiptNum(r.amount);const neg=!isGift&&n!==null&&n<0;const amt=isGift?'<span class="rc-gift-badge">증정품</span>':(n!==null?fmt(n):e(r.amount));const u=_receiptNum(r.unitPrice);const unitDisp=u!==null?fmt(u):e(r.unitPrice);return`<tr${audit.badRows.has(i)?' class="audit-bad"':''}><td${neg?' class="rc-neg"':''}>${e(r.name)}</td><td class="rc-qty">${e(r.qty)}</td><td class="rc-unit${neg?' rc-neg':''}">${unitDisp}</td><td${neg?' class="rc-neg"':''}>${amt}</td></tr>`;}).join('');const badge=`<span class="receipt-audit ${audit.status}">${audit.status==='ok'?'✓ ':''}${e(audit.label)}</span>`;const foot=`<tfoot><tr><td><span class="rc-foot-summary">합계${badge}</span></td><td colspan="2" class="rc-foot-cell">${rcptLink}</td><td${audit.total<0?' class="rc-neg"':''}>${fmt(audit.total)}</td></tr></tfoot>`;return`<div class="rc-receipt-wrap" id="rcpt_${uid}"><table class="rc-receipt-tbl">${cols}<thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th></tr></thead><tbody>${rows}</tbody>${foot}</table></div>`;}
