@@ -1660,8 +1660,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.12';
-const BUILD_TIME='2026-11-05 23:40';
+const APP_VERSION='v7.13';
+const BUILD_TIME='2026-11-05 23:55';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4330,7 +4330,7 @@ function _bindImgZoom(ov,img,close){
   // v7.12 — 컨트롤(줌·닫기) 3초 무동작 시 숨김, 움직임/터치 시 복귀
   let _uiHidden=false,_uiTimer=null;
   function hideUI(){if(!ov.isConnected)return;if(pts.size>0){showUI();return;}_uiHidden=true;ov.classList.add('ui-hidden');}
-  function showUI(){_uiHidden=false;ov.classList.remove('ui-hidden');if(_uiTimer)clearTimeout(_uiTimer);_uiTimer=setTimeout(hideUI,3000);}
+  function showUI(){_uiHidden=false;ov.classList.remove('ui-hidden');if(_uiTimer)clearTimeout(_uiTimer);_uiTimer=setTimeout(hideUI,1500);}
   const clamp=()=>{const mx=Math.max(0,(img.offsetWidth*s-ov.clientWidth)/2),my=Math.max(0,(img.offsetHeight*s-ov.clientHeight)/2);x=Math.max(-mx,Math.min(mx,x));y=Math.max(-my,Math.min(my,y));};
   const apply=anim=>{img.style.transition=anim?'transform .18s ease':'none';img.style.transform=`translate(${x}px,${y}px) scale(${s})`;img.style.cursor=s>1.01?'grab':'zoom-in';pct.textContent=Math.round(s*100)+'%';};
   const zoomAt=(ns,px,py,anim)=>{ns=Math.max(1,Math.min(MAX,ns));if(ns<1.02)ns=1;const k=ns/s,cx=px-ov.clientWidth/2,cy=py-ov.clientHeight/2;x=cx-k*(cx-x);y=cy-k*(cy-y);s=ns;if(s===1){x=0;y=0;}clamp();apply(anim);};
