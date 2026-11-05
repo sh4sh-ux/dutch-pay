@@ -341,7 +341,8 @@ svg{display:block;flex-shrink:0;}
 .txn-status-ic.done{background:var(--green);border-color:var(--green);}
 .txn-status-ic.diff{background:var(--red);border-color:var(--red);}
 .txn-right{text-align:right;flex-shrink:0;}
-.txn-chev{color:var(--label3);font-size:11px;flex-shrink:0;margin-left:2px;transition:transform .2s;}
+.txn-chev{display:inline-flex;align-items:center;justify-content:center;color:var(--label3);flex-shrink:0;margin-left:2px;transition:transform .2s;}
+.txn-chev svg{width:11px;height:11px;display:block;}
 .txn-chev.open{transform:rotate(180deg);}
 .txn-pmeta{font-size:11px;color:var(--label3);margin-top:1px;}
 .txn-sdiff{font-size:11px;font-weight:500;margin-top:1px;}
@@ -1660,8 +1661,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.13';
-const BUILD_TIME='2026-11-05 23:55';
+const APP_VERSION='v7.14';
+const BUILD_TIME='2026-11-06 00:15';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3272,7 +3273,7 @@ function _txnRowsOwnerHtml(txns){
     const amtCls='txn-amt'+(isGreen?' done-clr':isRed?' neg-clr':'');
     const d=_paymentDisplay(pm,t.amt);const metaParts=waived?['🤝 퉁']:(pm.done?[d.status,...d.meta]:[]);
     const sdiffHtml=(!waived&&diff!==null&&diff!==0)?`<div class="txn-sdiff ${diff>0?'pos':'neg'}">${diff>0?'+':''}${fmt(diff)}원</div>`:'<div class="txn-sdiff"></div>';
-    return `<div class="txn-item" data-pm-key="${ea(key)}"><div class="${rowCls}" onclick="togglePaymentPanel('${jsa(key)}')"><div class="${icCls}">${(pm.done||waived)?svgPayCheck:''}</div><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><div class="txn-right"><div class="${amtCls}">${fmt(t.amt)}원</div><div class="txn-pmeta">${e(metaParts.join(' · '))}</div>${sdiffHtml}</div><span class="txn-chev">▾</span></div></div>`;
+    return `<div class="txn-item" data-pm-key="${ea(key)}"><div class="${rowCls}" onclick="togglePaymentPanel('${jsa(key)}')"><div class="${icCls}">${(pm.done||waived)?svgPayCheck:''}</div><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><div class="txn-right"><div class="${amtCls}">${fmt(t.amt)}원</div><div class="txn-pmeta">${e(metaParts.join(' · '))}</div>${sdiffHtml}</div><span class="txn-chev"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div></div>`;
   }).join('');
 }
 
