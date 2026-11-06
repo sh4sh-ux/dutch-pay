@@ -1660,8 +1660,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.25';
-const BUILD_TIME='2026-11-06 12:45';
+const APP_VERSION='v7.26';
+const BUILD_TIME='2026-11-06 13:15';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5321,12 +5321,12 @@ async function generateSettleCanvas(){
   const validItems=items.filter(it=>+it.amount!==0);
   const iconMap=new Map();for(const it of validItems){const svg=getIconSvg(it);if(!iconMap.has(svg)){try{iconMap.set(svg,await loadIconImage(svg,'#4355E8'));}catch(e){iconMap.set(svg,null);}}}
   const W=1080,PAD=42,TOP_PAD=56,cardX=PAD,cardW=W-PAD*2;
-  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,TOTAL_CARD_H=245,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=52,FOOTER_H=80;
+  const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,COUPLE_GAP=24,TOTAL_CARD_H=245,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=52,FOOTER_H=80;
   const txnGroups=_groupTxnsByRecipient(normalTxns,_myName),DIV_H=3;
   const _multiG=txnGroups.length>1; // 수취인 그룹 2개 이상일 때만 색상 구분선 (v5.73)
   const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+(_multiG?txnGroups.length*DIV_H:0)):EMPTY_CARD_H;
   const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*TXN_ROW_H:0;
-  const coupleSection=coupleCardH?(SECTION_GAP+coupleCardH):0;
+  const coupleSection=coupleCardH?(COUPLE_GAP+coupleCardH):0;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
   const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+coupleSection+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+FOOTER_H;
   const canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;const ctx=canvas.getContext('2d');ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,W*2,H*2);ctx.scale(2,2);
@@ -5403,7 +5403,7 @@ async function generateSettleCanvas(){
   }
   y+=txnCardH;
   if(coupleCardH){
-    y+=SECTION_GAP;
+    y+=COUPLE_GAP;
     drawCard(cardX,y,cardW,coupleCardH);
     coupleTxnRows.forEach((t,ri)=>{
       drawTxnRow(t,y+ri*TXN_ROW_H,TXN_ROW_H);
@@ -5499,7 +5499,7 @@ async function generateSettleCanvas(){
   // 안내문구↔DUTCH PAY 간격 = DUTCH PAY↔하단 간격으로 맞춤 (v6.99)
   if(hasRounding){
     const noteCY=y+30, bottomY=y+NOTICE_H+FOOTER_H, footerCY=Math.round((noteCY+bottomY)/2);
-    ctx.fillStyle=C.muted;setFont(20,300);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0px';
+    ctx.fillStyle=C.muted;setFont(20,400);ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing='0px';
     ctx.fillText('차액은 결제자에게 우선 부담돼요',W/2,noteCY);
     ctx.fillStyle=C.muted;setFont(26,400);ctx.letterSpacing='0.5px';
     ctx.fillText("Let's split it.",W/2,footerCY);ctx.letterSpacing='0px';
