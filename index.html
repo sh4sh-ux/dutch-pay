@@ -847,7 +847,7 @@ svg{display:block;flex-shrink:0;}
 .rcpt-viewer.on .rcpt-viewer-inner{transform:scale(1);}
 .rcpt-viewer-img{max-width:100%;max-height:82vh;border-radius:12px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none;cursor:zoom-in;touch-action:none;user-select:none;-webkit-user-select:none;}
 .rcpt-viewer-img.ready{display:block;}
-.rcpt-viewer-close{position:absolute;top:-46px;right:-2px;width:38px;height:38px;border-radius:50%;background:rgba(28,28,30,.78);box-shadow:0 0 0 1px rgba(255,255,255,.28);color:#fff;border:none;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:2;}
+.rcpt-viewer-close{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));width:44px;height:44px;border-radius:50%;background:rgba(28,28,30,.78);box-shadow:0 0 0 1px rgba(255,255,255,.28);color:#fff;border:none;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:3;}
 .imgzoom-ctl{position:absolute;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:3;display:flex;gap:6px;}
 .imgzoom-ctl button{height:38px;display:inline-flex;align-items:center;justify-content:center;border:none;background:rgba(22,22,24,.14);box-shadow:0 0 0 1px rgba(255,255,255,.4);color:#fff;font-size:17px;font-weight:600;line-height:1;cursor:pointer;font-family:inherit;text-shadow:0 1px 1.5px rgba(0,0,0,.7),0 0 1px rgba(0,0,0,.55);}
 .imgzoom-ctl button[data-z=out],.imgzoom-ctl button[data-z=in]{width:38px;min-width:38px;padding:0;border-radius:50%;}
@@ -861,7 +861,6 @@ svg{display:block;flex-shrink:0;}
 @keyframes rcptspin{to{transform:rotate(360deg);}}
 .rcpt-viewer-open{color:#fff;text-decoration:underline;font-size:14px;}
 .rcpt-viewer-msg{color:rgba(255,255,255,.85);font-size:14px;text-align:center;}
-@media(max-width:480px){.rcpt-viewer-close{top:-44px;right:0;}}
 .detail-amt{font-size:15px;font-weight:700;flex-shrink:0;min-width:88px;text-align:right;font-variant-numeric:tabular-nums;}
 .pay-ic{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .share-date-row{margin-bottom:5px;display:grid;grid-template-columns:minmax(0,1fr) 60px;column-gap:8px;row-gap:7px;align-items:center;}
@@ -1725,8 +1724,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.41';
-const BUILD_TIME='2026-11-06 22:40';
+const APP_VERSION='v7.42';
+const BUILD_TIME='2026-11-06 23:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4511,9 +4510,10 @@ function _bindImgZoom(ov,img,close){
   ctl.innerHTML='<button type="button" data-z="out" aria-label="축소">−</button><button type="button" data-z="reset" aria-label="원래 크기">100%</button><button type="button" data-z="in" aria-label="확대">+</button>';
   ov.appendChild(ctl);const pct=ctl.querySelector('[data-z=reset]');
   // v7.12 — 컨트롤(줌·닫기) 3초 무동작 시 숨김, 움직임/터치 시 복귀
+  // v7.42 — 줌·닫기 컨트롤은 항상 고정 표시(자동 숨김 제거: 확대/축소 때 나타났다 사라지던 문제)
   let _uiHidden=false,_uiTimer=null;
-  function hideUI(){if(!ov.isConnected)return;if(pts.size>0){showUI();return;}_uiHidden=true;ov.classList.add('ui-hidden');}
-  function showUI(){_uiHidden=false;ov.classList.remove('ui-hidden');if(_uiTimer)clearTimeout(_uiTimer);_uiTimer=setTimeout(hideUI,1500);}
+  function hideUI(){}
+  function showUI(){_uiHidden=false;ov.classList.remove('ui-hidden');}
   const clamp=()=>{const mx=Math.max(0,(img.offsetWidth*s-ov.clientWidth)/2),my=Math.max(0,(img.offsetHeight*s-ov.clientHeight)/2);x=Math.max(-mx,Math.min(mx,x));y=Math.max(-my,Math.min(my,y));};
   const apply=anim=>{img.style.transition=anim?'transform .18s ease':'none';img.style.transform=`translate(${x}px,${y}px) scale(${s})`;img.style.cursor=s>1.01?'grab':'zoom-in';pct.textContent=Math.round(s*100)+'%';};
   const zoomAt=(ns,px,py,anim)=>{ns=Math.max(1,Math.min(MAX,ns));if(ns<1.02)ns=1;const k=ns/s,cx=px-ov.clientWidth/2,cy=py-ov.clientHeight/2;x=cx-k*(cx-x);y=cy-k*(cy-y);s=ns;if(s===1){x=0;y=0;}clamp();apply(anim);};
@@ -4544,7 +4544,7 @@ function _bindImgZoom(ov,img,close){
 function _showReceiptViewer(name){
   document.querySelector('.rcpt-viewer')?.remove();
   const ov=document.createElement('div');ov.className='rcpt-viewer';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-label',(name||'영수증')+' 보기');
-  ov.innerHTML=`<div class="rcpt-viewer-inner"><button class="rcpt-viewer-close" type="button" aria-label="닫기">✕</button><div class="rcpt-viewer-spin" aria-hidden="true"></div><img class="rcpt-viewer-img" alt="${ea(name||'영수증')} 영수증"><a class="rcpt-viewer-open" target="_blank" rel="noopener noreferrer" hidden>새 탭에서 열기</a></div>`;
+  ov.innerHTML=`<button class="rcpt-viewer-close" type="button" aria-label="닫기">✕</button><div class="rcpt-viewer-inner"><div class="rcpt-viewer-spin" aria-hidden="true"></div><img class="rcpt-viewer-img" alt="${ea(name||'영수증')} 영수증"><a class="rcpt-viewer-open" target="_blank" rel="noopener noreferrer" hidden>새 탭에서 열기</a></div>`;
   const img=ov.querySelector('.rcpt-viewer-img'),spin=ov.querySelector('.rcpt-viewer-spin'),openLink=ov.querySelector('.rcpt-viewer-open');
   const onKey=e=>{if(e.key==='Escape')close();};
   function close(){ov.classList.remove('on');document.removeEventListener('keydown',onKey);setTimeout(()=>ov.remove(),180);}
