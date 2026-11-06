@@ -1662,8 +1662,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.35';
-const BUILD_TIME='2026-11-06 18:40';
+const APP_VERSION='v7.36';
+const BUILD_TIME='2026-11-06 19:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2064,12 +2064,16 @@ async function _dbxRefreshToken(){
   if(!refresh||!appKey)return null;
   try{const res=await _dbxFetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh,client_id:appKey})});const data=await res.json();if(data.access_token){localStorage.setItem('dutchpay_dbx_token',data.access_token);return data.access_token;}return null;}catch(e){return null;}
 }
+let _dbxLastUploadStatus=0;
 async function _dbxUpload(token,path,content,timeoutMs=20000){
   const arg=JSON.stringify({path,mode:'overwrite',autorename:false,mute:true}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
   const res=await _dbxFetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':arg},body:content},timeoutMs);
   if(res.status===401){const t=await _dbxRefreshToken();if(t)return _dbxUpload(t,path,content,timeoutMs);}
+  _dbxLastUploadStatus=res.status;
+  if(!res.ok){try{_dbxLastUploadBody=(await res.text()||'').slice(0,300);}catch(e){_dbxLastUploadBody='';}}
   return res.ok;
 }
+let _dbxLastUploadBody='';
 async function _dbxDownload(token,path,timeoutMs=20000){
   const arg=JSON.stringify({path}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
   const res=await _dbxFetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}},timeoutMs);
@@ -5298,7 +5302,16 @@ async function hSyncDropbox(uploadOnly=false){
       saveHistory(merged);
     }
     const toUpload={records:loadHistory(),deletedIds:[..._loadDelIds()]};
-    if(!await _dbxUpload(dbxGetToken(),dbxHistFile(),JSON.stringify(toUpload,null,2),12000))throw new Error('기록 보관함 업로드에 실패했어요');
+    if(!await _dbxUpload(dbxGetToken(),dbxHistFile(),JSON.stringify(toUpload,null,2),12000)){
+      const s=_dbxLastUploadStatus,b=_dbxLastUploadBody||'';
+      const insuf=s===507||/insufficient_space|no_write_permission|payment_required|over_quota|team_folder/i.test(b);
+      const msg=insuf?'Dropbox 저장공간이 가득 찼어요 — dropbox.com에서 공간을 비운 뒤 다시 시도해주세요'
+        :s===429?'Dropbox 요청이 잠시 제한됐어요 — 2~3분 뒤 다시 시도해주세요'
+        :s===400?('Dropbox 경로 오류 (코드 400) — '+(b.slice(0,80)))
+        :('기록 보관함 업로드 실패 (코드 '+(s||'?')+')');
+      console.warn('[dutchpay] 기록 업로드 실패 status=',s,'body=',b);
+      throw new Error(msg);
+    }
     localStorage.setItem(DBX_H_LASTSYNC,new Date().toISOString());
     _hSyncState='';
     if(_histDrawerOpen){_refreshHistDrawer();}
