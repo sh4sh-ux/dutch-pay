@@ -1660,8 +1660,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.27';
-const BUILD_TIME='2026-11-06 13:45';
+const APP_VERSION='v7.28';
+const BUILD_TIME='2026-11-06 14:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5325,9 +5325,7 @@ async function generateSettleCanvas(){
   const txnGroups=_groupTxnsByRecipient(normalTxns,_myName),DIV_H=3;
   const _multiG=txnGroups.length>1; // 수취인 그룹 2개 이상일 때만 색상 구분선 (v5.73)
   const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+(_multiG?txnGroups.length*DIV_H:0)):EMPTY_CARD_H;
-  const _coupleBreak=coupleTxnRows.some(t=>t.parts&&t.parts.length===2&&t.parts[0].amt!==t.parts[1].amt);
-  const COUPLE_ROW_H=_coupleBreak?140:TXN_ROW_H;
-  const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*COUPLE_ROW_H:0;
+  const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*TXN_ROW_H:0;
   const coupleSection=coupleCardH?(COUPLE_GAP+coupleCardH):0;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
   const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+coupleSection+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+FOOTER_H;
@@ -5408,18 +5406,25 @@ async function generateSettleCanvas(){
     y+=COUPLE_GAP;
     drawCard(cardX,y,cardW,coupleCardH);
     coupleTxnRows.forEach((t,ri)=>{
-      const rowY=y+ri*COUPLE_ROW_H;
+      const rowY=y+ri*TXN_ROW_H;
+      drawTxnRow(t,rowY,TXN_ROW_H);
       const parts=t.parts||[];
-      const showBreak=parts.length===2&&parts[0].amt!==parts[1].amt;
-      if(showBreak){
-        drawTxnRow(t,rowY,96);
-        const sub=`${parts[0].name} ${fmt(parts[0].amt)}원 · ${parts[1].name} ${fmt(parts[1].amt)}원`;
-        ctx.fillStyle=C.muted;setFont(24,400);ctx.textAlign='left';ctx.textBaseline='middle';ctx.letterSpacing='0px';
-        ctx.fillText(truncateCanvasText(ctx,sub,cardW-76),cardX+38,rowY+118);
-      }else{
-        drawTxnRow(t,rowY,COUPLE_ROW_H);
+      if(parts.length===2&&parts[0].amt!==parts[1].amt){
+        const ry=rowY+TXN_ROW_H/2;
+        setFont(34,700);const amW=ctx.measureText(fmt(t.amt)+'원').width;
+        const clusterRight=cardX+cardW-38-amW-30;
+        setFont(23,500);ctx.letterSpacing='0px';
+        const amtMaxW=Math.max(...parts.map(pp=>ctx.measureText(fmt(pp.amt)+'원').width));
+        const nameMaxW=Math.max(...parts.map(pp=>ctx.measureText(pp.name).width));
+        const nameLeft=clusterRight-amtMaxW-18-nameMaxW;
+        ctx.fillStyle=C.muted;ctx.textBaseline='middle';
+        parts.forEach((pp,pi)=>{
+          const ly=ry+(pi===0?-15:15);
+          ctx.textAlign='left';ctx.fillText(pp.name,nameLeft,ly);
+          ctx.textAlign='right';ctx.fillText(fmt(pp.amt)+'원',clusterRight,ly);
+        });
       }
-      if(ri<coupleTxnRows.length-1)drawDivider(y+(ri+1)*COUPLE_ROW_H);
+      if(ri<coupleTxnRows.length-1)drawDivider(y+(ri+1)*TXN_ROW_H);
     });
     y+=coupleCardH;
   }
