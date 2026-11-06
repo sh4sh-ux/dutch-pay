@@ -1660,8 +1660,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.29';
-const BUILD_TIME='2026-11-06 14:45';
+const APP_VERSION='v7.30';
+const BUILD_TIME='2026-11-06 15:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5412,7 +5412,7 @@ async function generateSettleCanvas(){
       if(parts.length===2&&parts[0].amt!==parts[1].amt){
         const ry=rowY+TXN_ROW_H/2;
         setFont(34,700);const amW=ctx.measureText(fmt(t.amt)+'원').width;
-        const clusterRight=cardX+cardW-38-amW-30;
+        const clusterRight=cardX+cardW-38-amW-60;
         setFont(22,400);ctx.letterSpacing='0px';
         const amtMaxW=Math.max(...parts.map(pp=>ctx.measureText(fmt(pp.amt)+'원').width));
         const nameMaxW=Math.max(...parts.map(pp=>ctx.measureText(pp.name).width));
