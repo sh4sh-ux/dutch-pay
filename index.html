@@ -1025,7 +1025,7 @@ svg{display:block;flex-shrink:0;}
 }
 @media(min-width:1100px){.hist-page{width:66.6667vw;max-width:1200px;}}
 /* 모바일: 기록 보관함을 전체화면 '창'이 아니라 하단 탭바가 보이는 '탭'처럼 — 드로어가 탭바 위까지만 차지 (v7.33) */
-@media(max-width:700px){.hist-page{bottom:calc(72px + env(safe-area-inset-bottom,0px));} .hist-page .hist-back-btn{display:none;} .hist-page .hist-page-nav-row{justify-content:center;}}
+@media(max-width:700px){.hist-page{bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:translateY(100vh);} .hist-page.open{transform:translateY(0);} .hist-page .hist-back-btn{display:none;} .hist-page .hist-page-nav-row{justify-content:center;}}
 .hist-page-eye{display:none;}
 /* 데스크탑: 기록 보관함을 오른쪽 패널 탭과 동일한 레이아웃으로 — 헤더(144px·좌측 눈썹+제목)·구분선 높이·검색/버튼 34px 인셋 통일, < 더치페이 제거. .hist-page 접두로 뒤따르는 기본 규칙보다 우선 (v6.99) */
 @media(min-width:701px){
@@ -1662,8 +1662,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.34';
-const BUILD_TIME='2026-11-06 18:05';
+const APP_VERSION='v7.35';
+const BUILD_TIME='2026-11-06 18:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5283,27 +5283,28 @@ async function hSyncDropbox(uploadOnly=false){
   if(_hSyncing)return;_hSyncing=true;_hSyncState='syncing';_updateHSyncInfo();
   clearTimeout(_hSyncDelayTimer);_hSyncDelayTimer=setTimeout(()=>{if(_hSyncing&&_hSyncState==='syncing'){_hSyncState='delayed';_updateHSyncInfo();}},6000);
   try{
-    const [,raw]=await Promise.all([
-      _syncFixedArchives(token),
-      uploadOnly?Promise.resolve(null):_dbxDownload(token,dbxHistFile(),8000)
-    ]);
+    // 진짜 기록(history)을 먼저 — 다운로드·병합·업로드로 초록을 확보한다(v7.35).
+    // 잠금 원본 백업(_syncFixedArchives, 다건 업로드)을 history 업로드와 동시에/먼저 돌리면
+    // 그 업로드 폭풍이 Dropbox 속도제한을 걸어 바로 뒤 history 업로드가 막혀
+    // '기록 보관함 업로드 실패'로 고착됐다. 그래서 history를 단독 먼저 처리한다.
+    const raw=uploadOnly?null:await _dbxDownload(token,dbxHistFile(),12000);
     const local=loadHistory();
-    if(!uploadOnly){
-      if(raw){
-        const remoteRecs=Array.isArray(raw)?raw:(raw.records||[]);
-        const delIds=_mergeDelIds(Array.isArray(raw)?[]:(raw.deletedIds||[]));
-        const map=new Map();
-        [...remoteRecs,...local].forEach(r=>{if(delIds.has(r.id)&&!_isHistoryFixed(r.id))return;const ex=map.get(r.id);if(!ex||(r.savedAt||'')>(ex.savedAt||''))map.set(r.id,r);});
-        const merged=Array.from(map.values()).sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));
-        saveHistory(merged);
-      }
+    if(!uploadOnly&&raw){
+      const remoteRecs=Array.isArray(raw)?raw:(raw.records||[]);
+      const delIds=_mergeDelIds(Array.isArray(raw)?[]:(raw.deletedIds||[]));
+      const map=new Map();
+      [...remoteRecs,...local].forEach(r=>{if(delIds.has(r.id)&&!_isHistoryFixed(r.id))return;const ex=map.get(r.id);if(!ex||(r.savedAt||'')>(ex.savedAt||''))map.set(r.id,r);});
+      const merged=Array.from(map.values()).sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));
+      saveHistory(merged);
     }
     const toUpload={records:loadHistory(),deletedIds:[..._loadDelIds()]};
-    if(!await _dbxUpload(dbxGetToken(),dbxHistFile(),JSON.stringify(toUpload,null,2),8000))throw new Error('기록 보관함 업로드에 실패했어요');
+    if(!await _dbxUpload(dbxGetToken(),dbxHistFile(),JSON.stringify(toUpload,null,2),12000))throw new Error('기록 보관함 업로드에 실패했어요');
     localStorage.setItem(DBX_H_LASTSYNC,new Date().toISOString());
     _hSyncState='';
     if(_histDrawerOpen){_refreshHistDrawer();}
     else{if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}}
+    // 잠금 원본 백업(교차기기 복원용)은 초록 확보 뒤 best-effort — 실패해도 동기화 상태에 영향 없음.
+    try{await _syncFixedArchives(token);}catch(e){}
   }catch(err){_hSyncState='error';_updateHSyncInfo();toast('동기화 실패: '+err.message,{type:'error'});}
   finally{
     clearTimeout(_hSyncDelayTimer);_hSyncDelayTimer=null;
