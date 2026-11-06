@@ -1660,8 +1660,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.30';
-const BUILD_TIME='2026-11-06 15:05';
+const APP_VERSION='v7.31';
+const BUILD_TIME='2026-11-06 16:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1784,9 +1784,9 @@ function showDataMenu(anchorEl,ev){
     pop.innerHTML=`<button class="data-pop-btn" data-action="setMyName">${_myName?`👤 내 이름: ${_myName}`:'👤 내 이름 설정'}</button><button class="data-pop-btn" data-action="toggleDark">${_getDarkModeLabel()}</button><div class="data-pop-version" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
   }
   pop.addEventListener('click',(e2)=>{e2.stopPropagation();const btn=e2.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;if(action==='dbxAction'){
-      if(dbxGetToken()){dbxResolveRoot().then(()=>{syncFromDropbox();hSyncDropbox();});toast('Dropbox 동기화 중...');}
-      else{_hDbxConnectDirect();}
       pop.remove();
+      if(dbxGetToken()){dbxResolveRoot().then(()=>{syncFromDropbox();hSyncDropbox();});toast('Dropbox 동기화 중...');}
+      else{showDbxConnect();}
     }else if(action==='dbxImportOld'){pop.remove();importFromOldLocation();}
     else if(action==='dbxRename'){pop.remove();_dbxRenameExistingFiles();}
     else if(action==='dbxOrganizeSettle'){pop.remove();_dbxOrganizeSettlementImages();}
@@ -5157,6 +5157,44 @@ async function _hDbxConnectDirect(){
   localStorage.setItem('h_dbx_verifier',verifier);
   const redirectUri=location.origin+location.pathname;
   const params=new URLSearchParams({client_id:appKey,redirect_uri:redirectUri,response_type:'code',code_challenge:challenge,code_challenge_method:'S256',token_access_type:'offline'});
+  location.href=`https://www.dropbox.com/oauth2/authorize?${params}`;
+}
+
+function showDbxConnect(){
+  const token=dbxGetToken();
+  const appKey=localStorage.getItem('dutchpay_dbx_appkey')||'';
+  const redirectUri=location.origin+location.pathname;
+  let ac={};try{ac=JSON.parse(localStorage.getItem('dutchpay_dbx_account')||'{}');}catch(e2){}
+  const ov=document.createElement('div');ov.className='couple-ov';ov.id='dbxConnectOv';
+  if(token){
+    ov.innerHTML=`<div class="couple-modal"><div class="couple-title">Dropbox</div><div class="dbx-guide" style="margin:0 0 14px">현재 연결됨${ac.name?` · ${e(ac.name)}`:''}</div><button class="dbx-btn" id="dbxMdSync">지금 동기화</button><button class="dbx-btn" id="dbxMdDisc" style="background:var(--fill);color:var(--red);margin-top:8px">연결 해제</button><button class="dbx-btn" id="dbxMdClose" style="background:var(--fill);color:var(--label);margin-top:8px">닫기</button></div>`;
+  }else{
+    ov.innerHTML=`<div class="couple-modal"><div class="couple-title">Dropbox 연결</div><div class="dbx-field"><div class="dbx-label">Dropbox App Key</div><input class="dbx-inp" id="dbxMdKey" placeholder="앱 키를 붙여넣으세요" value="${e(appKey)}"/><div class="dbx-guide">Dropbox 개발자 콘솔 <b>dropbox.com/developers/apps</b> 에서 만든 앱의 <b>App key</b>를 복사해 붙여넣으세요.<br>그 앱의 Redirect URI에 아래 주소가 등록돼 있어야 해요:<br><code>${e(redirectUri)}</code></div></div><button class="dbx-btn" id="dbxMdConnect">Dropbox 연결하기</button><button class="dbx-btn" id="dbxMdCancel" style="background:var(--fill);color:var(--label);margin-top:8px">취소</button></div>`;
+  }
+  document.body.appendChild(ov);
+  ov.addEventListener('click',(ev)=>{if(ev.target===ov)ov.remove();});
+  const close=()=>ov.remove();
+  ov.querySelector('#dbxMdClose')?.addEventListener('click',close);
+  ov.querySelector('#dbxMdCancel')?.addEventListener('click',close);
+  ov.querySelector('#dbxMdSync')?.addEventListener('click',()=>{close();dbxResolveRoot().then(()=>{syncFromDropbox();hSyncDropbox();});toast('Dropbox 동기화 중...');});
+  ov.querySelector('#dbxMdDisc')?.addEventListener('click',()=>{close();hDbxDisconnect();});
+  ov.querySelector('#dbxMdConnect')?.addEventListener('click',()=>_dbxConnectFromModal());
+  setTimeout(()=>ov.querySelector('#dbxMdKey')?.focus(),30);
+}
+async function _dbxConnectFromModal(){
+  const appKey=(document.getElementById('dbxMdKey')?.value||'').trim();
+  if(!appKey){toast('App Key를 입력해주세요',{type:'error'});return;}
+  if(localStorage.getItem('dutchpay_dbx_appkey')!==appKey){
+    localStorage.removeItem(DBX_MIGRATED);localStorage.setItem(DBX_KEYCHANGED,'1');
+    ['dutchpay_dbx_token','dutchpay_dbx_refresh'].forEach(k=>localStorage.removeItem(k));
+  }
+  localStorage.setItem('dutchpay_dbx_appkey',appKey);
+  let challenge,verifier;
+  try{verifier=_hRandomStr(64);challenge=await _hSha256b64url(verifier);localStorage.setItem('h_dbx_verifier',verifier);}
+  catch(err){toast('연결 준비 실패: '+(err&&err.message||err),{type:'error',duration:5000});return;}
+  const redirectUri=location.origin+location.pathname;
+  const params=new URLSearchParams({client_id:appKey,redirect_uri:redirectUri,response_type:'code',code_challenge:challenge,code_challenge_method:'S256',token_access_type:'offline'});
+  toast('Dropbox로 이동 중…');
   location.href=`https://www.dropbox.com/oauth2/authorize?${params}`;
 }
 
