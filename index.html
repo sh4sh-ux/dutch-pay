@@ -1660,8 +1660,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.22';
-const BUILD_TIME='2026-11-06 11:05';
+const APP_VERSION='v7.23';
+const BUILD_TIME='2026-11-06 11:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5373,15 +5373,15 @@ async function generateSettleCanvas(){
     const amountX=cardX+cardW-38,amW=ctx.measureText(amountText).width;
     ctx.fillText(amountText,amountX,ry);
     const leftX=cardX+38,maxLeftW=amountX-amW-34-leftX;
-    const AGAP=20,AH=9,AL=36,headW=AH*1.8;
+    const AGAP=20,AH=6,AL=36,headW=24;
     setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
     const fromTxt=truncateCanvasText(ctx,t.from||'',Math.floor((maxLeftW-AL-AGAP*3)*0.45));
     ctx.fillText(fromTxt,leftX,ry);
     const fw=ctx.measureText(fromTxt).width;
     const AX=leftX+fw+AGAP,AEX=AX+AL;
-    ctx.strokeStyle='#B4B8C0';ctx.lineWidth=2.5;ctx.lineCap='round';
+    ctx.strokeStyle='#7C818B';ctx.lineWidth=2;ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
-    ctx.fillStyle='#B4B8C0';ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#7C818B';ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
     ctx.fillStyle=C.text;ctx.fillText(truncateCanvasText(ctx,t.to||'',Math.max(maxLeftW-fw-AGAP-AL-AGAP,40)),AEX+AGAP,ry);
   };
   y=drawSectionLabel('송금',y);
@@ -5752,11 +5752,11 @@ async function generateHistoryCanvas(rec){
       setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
       const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry);
       const fw=ctx.measureText(fromTxt).width;
-      const AGAP=20,AH=9,AL=36,headW=AH*1.8;
+      const AGAP=20,AH=6,AL=36,headW=24;
       const AX=leftX+fw+AGAP,AEX=AX+AL;
-      ctx.strokeStyle='#B4B8C0';ctx.lineWidth=2.5;ctx.lineCap='round';
+      ctx.strokeStyle='#7C818B';ctx.lineWidth=2;ctx.lineCap='round';
       ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
-      ctx.fillStyle='#B4B8C0';ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#7C818B';ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
       const toStartX=AEX+AGAP;const maxToW=amtX-amtW-30-toStartX;
       setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
       ctx.fillText(truncateCanvasText(ctx,t.to||'',Math.max(maxToW,40)),toStartX,ry);
@@ -5834,11 +5834,11 @@ async function generateHistoryCanvas(rec){
       setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
       const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry);
       const fw=ctx.measureText(fromTxt).width;
-      const AGAP=20,AH=9,AL=36,headW=AH*1.8;
+      const AGAP=20,AH=6,AL=36,headW=24;
       const AX=leftX+fw+AGAP,AEX=AX+AL;
-      ctx.strokeStyle='#B4B8C0';ctx.lineWidth=2.5;ctx.lineCap='round';
+      ctx.strokeStyle='#7C818B';ctx.lineWidth=2;ctx.lineCap='round';
       ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
-      ctx.fillStyle='#B4B8C0';ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#7C818B';ctx.beginPath();ctx.moveTo(AEX-headW,ry-AH);ctx.lineTo(AEX,ry);ctx.lineTo(AEX-headW,ry+AH);ctx.closePath();ctx.fill();
       const toStartX=AEX+AGAP;
       const maxToW=amtX-amtW-30-bW-14-toStartX;
       const toTxt=truncateCanvasText(ctx,t.to||'',Math.max(maxToW,40));
