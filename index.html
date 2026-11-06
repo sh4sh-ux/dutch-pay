@@ -1660,8 +1660,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.26';
-const BUILD_TIME='2026-11-06 13:15';
+const APP_VERSION='v7.27';
+const BUILD_TIME='2026-11-06 13:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5307,7 +5307,7 @@ function _groupCoupleShareTxns(txns,coupleConfig){
   const aTxn=txns[aIdx],bTxn=txns[bIdx];
   return{
     normalTxns:txns.filter((_,i)=>i!==aIdx&&i!==bIdx),
-    coupleTxnRows:[{from:`${ca} · ${cb}`,to:aTxn.to,amt:aTxn.amt+bTxn.amt}]
+    coupleTxnRows:[{from:`${ca} · ${cb}`,to:aTxn.to,amt:aTxn.amt+bTxn.amt,parts:[{name:ca,amt:aTxn.amt},{name:cb,amt:bTxn.amt}]}]
   };
 }
 
@@ -5325,7 +5325,9 @@ async function generateSettleCanvas(){
   const txnGroups=_groupTxnsByRecipient(normalTxns,_myName),DIV_H=3;
   const _multiG=txnGroups.length>1; // 수취인 그룹 2개 이상일 때만 색상 구분선 (v5.73)
   const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+(_multiG?txnGroups.length*DIV_H:0)):EMPTY_CARD_H;
-  const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*TXN_ROW_H:0;
+  const _coupleBreak=coupleTxnRows.some(t=>t.parts&&t.parts.length===2&&t.parts[0].amt!==t.parts[1].amt);
+  const COUPLE_ROW_H=_coupleBreak?140:TXN_ROW_H;
+  const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*COUPLE_ROW_H:0;
   const coupleSection=coupleCardH?(COUPLE_GAP+coupleCardH):0;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
   const H=TOP_PAD+HEADER_H+SECTION_LABEL_H+TOTAL_CARD_H+SECTION_GAP+SECTION_LABEL_H+txnCardH+coupleSection+SECTION_GAP+SECTION_LABEL_H+itemCardH+(hasRounding?NOTICE_H:0)+FOOTER_H;
@@ -5406,8 +5408,18 @@ async function generateSettleCanvas(){
     y+=COUPLE_GAP;
     drawCard(cardX,y,cardW,coupleCardH);
     coupleTxnRows.forEach((t,ri)=>{
-      drawTxnRow(t,y+ri*TXN_ROW_H,TXN_ROW_H);
-      if(ri<coupleTxnRows.length-1)drawDivider(y+(ri+1)*TXN_ROW_H);
+      const rowY=y+ri*COUPLE_ROW_H;
+      const parts=t.parts||[];
+      const showBreak=parts.length===2&&parts[0].amt!==parts[1].amt;
+      if(showBreak){
+        drawTxnRow(t,rowY,96);
+        const sub=`${parts[0].name} ${fmt(parts[0].amt)}원 · ${parts[1].name} ${fmt(parts[1].amt)}원`;
+        ctx.fillStyle=C.muted;setFont(24,400);ctx.textAlign='left';ctx.textBaseline='middle';ctx.letterSpacing='0px';
+        ctx.fillText(truncateCanvasText(ctx,sub,cardW-76),cardX+38,rowY+118);
+      }else{
+        drawTxnRow(t,rowY,COUPLE_ROW_H);
+      }
+      if(ri<coupleTxnRows.length-1)drawDivider(y+(ri+1)*COUPLE_ROW_H);
     });
     y+=coupleCardH;
   }
