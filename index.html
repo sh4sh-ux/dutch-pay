@@ -1002,7 +1002,7 @@ svg{display:block;flex-shrink:0;}
 .rc-txn-amt{font-weight:600;flex-shrink:0;}
 .result-amt-hero,.sh-num,.txn-amt,.detail-amt,.rc-item-amt,.rc-txn-amt,.sh-sub,.item-amt,.rbd-val,#dTotal,#mTotal{font-family:system-ui,-apple-system,'BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif;}
 .rc-no-txn{font-size:13px;color:var(--green);padding:10px 16px;text-align:center;}
-.rc-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 16px;background:var(--fill2);border-top:1px solid var(--sep);}
+.rc-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 16px;background:var(--card);border-top:1px solid var(--sep);}
 .rc-saved-at{font-size:11px;color:var(--label3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
 .rc-del-btn{font-size:12px;color:var(--red);border:none;background:transparent;font-weight:500;padding:8px 6px;cursor:pointer;}
 .rc-del-btn:hover{opacity:.7;}
@@ -1078,7 +1078,7 @@ svg{display:block;flex-shrink:0;}
   .hist-page.open{transform:none;opacity:1;pointer-events:auto;}
   .hist-page .hist-back-btn{display:none;}
   /* 헤더: 다른 탭(.mob-header)과 완전 동일한 2줄 구조 — eyebrow+sync / 좌측제목+전체상세저장 (2×2 그리드) */
-  .hist-page .hist-page-nav{display:grid;grid-template-columns:1fr auto;grid-template-areas:'eyebrow sync' 'title action';align-items:center;row-gap:17px;column-gap:10px;padding:max(20px,calc(env(safe-area-inset-top,0px) + 12px)) 20px 18px;background:var(--card);border-bottom:1px solid var(--sep);}
+  .hist-page .hist-page-nav{display:grid;grid-template-columns:1fr auto;grid-template-areas:'eyebrow sync' 'title action';align-items:center;row-gap:20px;column-gap:10px;padding:max(18px,calc(env(safe-area-inset-top,0px) + 12px)) 20px 21px;background:var(--card);border-bottom:1px solid var(--sep);}
   .hist-page .hist-page-nav-row,.hist-page .hist-head-right{display:contents;}
   .hist-page .hist-back-btn,.hist-page .hist-page-eye,.hist-page .hist-cnt-badge{display:none;} /* 뒤로가기·데스크탑눈썹·중복건수 제거 */
   .hist-page .hist-mob-eyebrow{grid-area:eyebrow;display:flex;align-items:baseline;gap:10px;color:var(--label3);font-size:11px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;line-height:1.25;}
@@ -1141,7 +1141,7 @@ svg{display:block;flex-shrink:0;}
 .hist-filter-wrap{position:relative;flex-shrink:0;}
 .hist-head-right{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0 16px 8px;}
 .hist-head-right .hist-head-sync{margin:0;padding:0;text-align:right;}
-.hist-dr-sinp{width:100%;background:var(--fill2);border:none;border-radius:10px;padding:9px 12px 9px 34px;font-size:14px;color:var(--label);font-family:inherit;outline:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center;}
+.hist-dr-sinp{width:100%;background:var(--card);border:1px solid var(--sep2);border-radius:10px;padding:8px 12px 8px 34px;font-size:14px;color:var(--label);font-family:inherit;outline:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center;}
 .hist-dr-sinp::placeholder{color:var(--label3);}
 .hist-dr-sinp:focus{box-shadow:inset 0 0 0 1px var(--blue);background-color:var(--card);}
 .hist-dr-sinp:focus-visible{outline:none;}
@@ -1724,8 +1724,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.42';
-const BUILD_TIME='2026-11-06 23:10';
+const APP_VERSION='v7.43';
+const BUILD_TIME='2026-11-06 23:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5284,7 +5284,7 @@ function _updateHSyncInfo(){
   const el=document.getElementById('hSyncInfo');if(!el)return;
   if(_hSyncState==='syncing'){el.textContent='↻ 동기화 중…';el.style.color='var(--label3)';return;}
   if(_hSyncState==='delayed'){el.textContent='↻ 동기화가 지연되고 있어요…';el.style.color='var(--label3)';return;}
-  if(_hSyncState==='error'){el.textContent='⚠ 동기화 실패 · 아래 Dropbox에서 다시 시도해주세요';el.style.color='var(--red)';return;}
+  if(_hSyncState==='error'){el.textContent='⚠ '+(_hSyncErrShort||'동기화 실패')+' · 다시 시도';el.style.color='var(--red)';return;}
   const last=localStorage.getItem(DBX_H_LASTSYNC);
   if(!last){el.textContent='';return;}
   try{el.textContent='● '+_relativeSyncLabel(last);el.style.color='var(--green)';}catch(e2){}
@@ -5413,7 +5413,8 @@ function hDbxDisconnect(){
   if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
 }
 
-let _hSyncing=false,_hSyncState='',_hSyncDelayTimer=null;
+let _hSyncing=false,_hSyncState='',_hSyncDelayTimer=null,_hSyncErrShort='';
+function _syncErrShort(msg){msg=String(msg||'');if(/저장공간|507|insufficient|over_quota/i.test(msg))return '저장공간 가득';if(/요청.*제한|429/i.test(msg))return '요청 제한 · 잠시 후';if(/Failed to fetch|NetworkError|network|offline|load failed/i.test(msg))return '네트워크 오류';return '동기화 실패';}
 async function _syncFixedArchives(token){
   const requestTimeout=8000;
   const uploadTimeout=15000;
@@ -5496,7 +5497,7 @@ async function hSyncDropbox(uploadOnly=false){
     else{if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}}
     // 잠금 원본 백업(교차기기 복원용)은 초록 확보 뒤 best-effort — 실패해도 동기화 상태에 영향 없음.
     try{await _syncFixedArchives(token);}catch(e){}
-  }catch(err){_hSyncState='error';_updateHSyncInfo();toast('동기화 실패: '+err.message,{type:'error'});}
+  }catch(err){_hSyncState='error';_hSyncErrShort=_syncErrShort(err&&err.message);_updateHSyncInfo();toast('동기화 실패: '+err.message,{type:'error'});}
   finally{
     clearTimeout(_hSyncDelayTimer);_hSyncDelayTimer=null;
     _hSyncing=false;
