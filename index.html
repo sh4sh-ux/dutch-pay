@@ -1660,8 +1660,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.31';
-const BUILD_TIME='2026-11-06 16:20';
+const APP_VERSION='v7.32';
+const BUILD_TIME='2026-11-06 16:55';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5233,6 +5233,7 @@ function hDbxDisconnect(){
 let _hSyncing=false,_hSyncState='',_hSyncDelayTimer=null;
 async function _syncFixedArchives(token){
   const requestTimeout=8000;
+  const uploadTimeout=15000;
   let candidates=[];try{candidates=[...await _ensureFixedArchives()];}catch(e){}
   const [remoteDeleted,manifest]=await Promise.all([
     _dbxDownload(token,dbxFixedDeletedFile(),requestTimeout),
@@ -5252,12 +5253,26 @@ async function _syncFixedArchives(token){
   await _dbxRpc(token,'files/create_folder_v2',{path:dbxFixedDir()},requestTimeout);
   const remoteById=new Map((Array.isArray(manifest)?manifest:[]).filter(Boolean).map(f=>[String(f.fixId),f]));
   const changed=merged.filter(f=>{const r=remoteById.get(String(f.fixId));return!r||r.guard!==f.guard||String(r.sha256||'')!==String(f.sha256||'');});
-  const uploads=[
-    _dbxUpload(token,dbxFixedDeletedFile(),JSON.stringify([...deleted],null,2),requestTimeout).then(ok=>{if(!ok)throw new Error('잠금 삭제 목록 업로드 실패');}),
-    _dbxUpload(token,dbxFixedFile(),JSON.stringify(merged,null,2),requestTimeout).then(ok=>{if(!ok)throw new Error('잠금 목록 업로드 실패');}),
-    ...changed.map(f=>{const safe=String(f.fixId).replace(/[^a-zA-Z0-9_-]/g,'_');return _dbxUpload(token,dbxFixedDir()+'/'+safe+'.json',JSON.stringify(f,null,2),requestTimeout).then(ok=>{if(!ok)throw new Error('잠금 원본 업로드 실패');});})
-  ];
-  await Promise.all(uploads);
+  // 잠긴 원본이 많으면(재연결 직후 등) 한꺼번에 올릴 때 Dropbox가 과부하로 거부한다.
+  // 동시 3개씩·각 2회 재시도·넉넉한 타임아웃으로 나눠 올리고, 못 올린 건 manifest에서 빼
+  // 다음 동기화에 자연히 재시도되게 한다(하드 실패로 전체 동기화를 막지 않음).
+  const failedIds=new Set();
+  const _uploadOrig=async(f)=>{
+    const safe=String(f.fixId).replace(/[^a-zA-Z0-9_-]/g,'_');
+    for(let a=0;a<2;a++){if(await _dbxUpload(token,dbxFixedDir()+'/'+safe+'.json',JSON.stringify(f,null,2),uploadTimeout))return;}
+    failedIds.add(String(f.fixId));
+  };
+  let _ci=0;const _pool=Math.max(1,Math.min(3,changed.length));
+  const _worker=async()=>{while(_ci<changed.length){await _uploadOrig(changed[_ci++]);}};
+  if(changed.length)await Promise.all(Array.from({length:_pool},_worker));
+  // manifest는 실제로 올라간(또는 이미 원격에 있던) 원본만 담는다 → 못 올린 건 다음 동기화에 재시도.
+  const manifestOut=merged.filter(f=>!failedIds.has(String(f.fixId))||remoteById.has(String(f.fixId)));
+  let okDel=false,okMan=false;
+  for(let a=0;a<2&&!okDel;a++)okDel=await _dbxUpload(token,dbxFixedDeletedFile(),JSON.stringify([...deleted],null,2),uploadTimeout);
+  if(!okDel)throw new Error('잠금 삭제 목록 업로드 실패');
+  for(let a=0;a<2&&!okMan;a++)okMan=await _dbxUpload(token,dbxFixedFile(),JSON.stringify(manifestOut,null,2),uploadTimeout);
+  if(!okMan)throw new Error('잠금 목록 업로드 실패');
+  if(failedIds.size)console.warn('[dutchpay] 잠금 원본 '+failedIds.size+'건은 다음 동기화에 이어서 올립니다');
   await _verifyAndRepairFixedHistory();return merged;
 }
 async function hSyncDropbox(uploadOnly=false){
