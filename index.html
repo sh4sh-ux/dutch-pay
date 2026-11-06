@@ -1733,8 +1733,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.47';
-const BUILD_TIME='2026-11-07 01:20';
+const APP_VERSION='v7.48';
+const BUILD_TIME='2026-11-07 01:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4986,11 +4986,14 @@ function _dedupHistoryDetailed(arr){
     if(match<0&&!r.dedupKeepSeparate){const fp=_histFingerprint(r);match=out.findIndex(x=>!x.dedupKeepSeparate&&_histFingerprint(x)===fp);}
     if(match<0){out.push(r);return;}
     const ex=out[match],sameId=rid&&String(ex.id)===rid;
-    // 서로 다른 잠금 원본은 자동 삭제하지 않는다.
-    if(!sameId&&_isHistoryFixed(ex.id)&&_isHistoryFixed(r.id)){out.push(r);return;}
+    // 서로 다른 잠금 원본은 자동 삭제하지 않는다 — 단, 내용(날짜·참여자·항목·입금 전부)이 완전히
+    // 동일하면 진짜 중복이라 하나로 합친다(데이터 손실 0). 내용이 다르면 둘 다 보존. (v7.48 사용자 신고)
+    const bothFixedDup=!sameId&&_isHistoryFixed(ex.id)&&_isHistoryFixed(r.id);
+    if(bothFixedDup&&!_sameHistoryContent(ex,r)){out.push(r);return;}
     const merged=_mergeHistoryDuplicate(ex,r);out[match]=merged;
     const removedRecord=merged.id===ex.id?r:ex,removed=removedRecord&&removedRecord.id;
-    if(!sameId&&removed!=null&&!_isHistoryFixed(removed)){removedIds.push(String(removed));removedRecords.push(removedRecord);keptIds.push(String(merged.id));}
+    // 완전 동일한 잠금 중복을 합쳤을 땐 진 쪽 id를 삭제목록(툼스톤)에 넣어 다른 기기/Dropbox에서도 되살아나지 않게 한다.
+    if(removed!=null&&(!_isHistoryFixed(removed)?!sameId:bothFixedDup)){removedIds.push(String(removed));removedRecords.push(removedRecord);keptIds.push(String(merged.id));}
   });
   const unique=[];const seen=new Set();removedRecords.forEach(r=>{const id=String(r.id);if(!seen.has(id)){seen.add(id);unique.push(r);}});
   return{records:out.sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||'')),removedIds:[...new Set(removedIds)],removedRecords:unique,keptIds:[...new Set(keptIds)]};
