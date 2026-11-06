@@ -1662,8 +1662,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.36';
-const BUILD_TIME='2026-11-06 19:05';
+const APP_VERSION='v7.37';
+const BUILD_TIME='2026-11-06 19:35';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5259,26 +5259,27 @@ async function _syncFixedArchives(token){
   try{await _dbxRpc(token,'files/create_folder_v2',{path:dbxFixedDir()},requestTimeout);}catch(e){}
   const remoteById=new Map((Array.isArray(manifest)?manifest:[]).filter(Boolean).map(f=>[String(f.fixId),f]));
   const changed=merged.filter(f=>{const r=remoteById.get(String(f.fixId));return!r||r.guard!==f.guard||String(r.sha256||'')!==String(f.sha256||'');});
-  // 잠긴 원본이 많으면(재연결 직후 등) 한꺼번에 올릴 때 Dropbox가 과부하로 거부한다.
-  // 동시 3개씩·각 2회 재시도·넉넉한 타임아웃으로 나눠 올리고, 못 올린 건 manifest에서 빼
-  // 다음 동기화에 자연히 재시도되게 한다(하드 실패로 전체 동기화를 막지 않음).
-  const failedIds=new Set();
+  // 잠긴 원본이 많으면 한꺼번에 올릴 때 Dropbox 요청제한(429)에 걸려 메인 동기화까지 흔든다(v7.37).
+  // 한 동기화당 최대 CAP개만 동시 3개씩 올리고, 나머지는 다음 동기화에 이어서 → 요청을 분산한다.
+  const CAP=5;
+  const batch=changed.slice(0,CAP);
+  const uploadedIds=new Set();
   const _uploadOrig=async(f)=>{
     const safe=String(f.fixId).replace(/[^a-zA-Z0-9_-]/g,'_');
-    for(let a=0;a<2;a++){if(await _dbxUpload(token,dbxFixedDir()+'/'+safe+'.json',JSON.stringify(f,null,2),uploadTimeout))return;}
-    failedIds.add(String(f.fixId));
+    for(let a=0;a<2;a++){if(await _dbxUpload(token,dbxFixedDir()+'/'+safe+'.json',JSON.stringify(f,null,2),uploadTimeout)){uploadedIds.add(String(f.fixId));return;}}
   };
-  let _ci=0;const _pool=Math.max(1,Math.min(3,changed.length));
-  const _worker=async()=>{while(_ci<changed.length){await _uploadOrig(changed[_ci++]);}};
-  if(changed.length)await Promise.all(Array.from({length:_pool},_worker));
-  // manifest는 실제로 올라간(또는 이미 원격에 있던) 원본만 담는다 → 못 올린 건 다음 동기화에 재시도.
-  const manifestOut=merged.filter(f=>!failedIds.has(String(f.fixId))||remoteById.has(String(f.fixId)));
+  let _ci=0;const _pool=Math.max(1,Math.min(3,batch.length));
+  const _worker=async()=>{while(_ci<batch.length){await _uploadOrig(batch[_ci++]);}};
+  if(batch.length)await Promise.all(Array.from({length:_pool},_worker));
+  // manifest는 '원격에 이미 있거나 이번에 올린' 원본만 담는다 → 아직 안 올린 건 다음 동기화에 changed로 잡혀 재시도.
+  const manifestOut=merged.filter(f=>remoteById.has(String(f.fixId))||uploadedIds.has(String(f.fixId)));
+  const pending=changed.length-uploadedIds.size;
   let okDel=false,okMan=false;
   for(let a=0;a<2&&!okDel;a++)okDel=await _dbxUpload(token,dbxFixedDeletedFile(),JSON.stringify([...deleted],null,2),uploadTimeout);
   for(let a=0;a<2&&!okMan;a++)okMan=await _dbxUpload(token,dbxFixedFile(),JSON.stringify(manifestOut,null,2),uploadTimeout);
   // 잠금 원본 백업(교차기기 복원용 추가 레이어)이 실패해도 메인 동기화(기록/데이터)는 절대 막지 않는다(v7.34).
   // 과거엔 여기서 throw해 hSyncDropbox 전체가 빨간 '동기화 실패'로 고착됐다. 못 올린 건 다음 동기화에 재시도.
-  if(!okDel||!okMan||failedIds.size)console.warn('[dutchpay] 잠금 원본 동기화 일부 지연 — 다음 동기화에 이어서 재시도');
+  if(!okDel||!okMan||pending>0)console.warn('[dutchpay] 잠금 원본 '+pending+'건 다음 동기화에 이어서 업로드(요청 분산)');
   try{await _verifyAndRepairFixedHistory();}catch(e){}
   return merged;
 }
