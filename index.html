@@ -1078,7 +1078,7 @@ svg{display:block;flex-shrink:0;}
   .hist-page.open{transform:none;opacity:1;pointer-events:auto;}
   .hist-page .hist-back-btn{display:none;}
   /* 헤더: 다른 탭(.mob-header)과 완전 동일한 2줄 구조 — eyebrow+sync / 좌측제목+전체상세저장 (2×2 그리드) */
-  .hist-page .hist-page-nav{display:grid;grid-template-columns:1fr auto;grid-template-areas:'eyebrow sync' 'title action';align-items:center;row-gap:20px;column-gap:10px;padding:max(18px,calc(env(safe-area-inset-top,0px) + 12px)) 20px 21px;background:var(--card);border-bottom:1px solid var(--sep);}
+  .hist-page .hist-page-nav{display:grid;grid-template-columns:1fr auto;grid-template-areas:'eyebrow sync' 'title action';align-items:center;row-gap:20px;column-gap:10px;padding:max(18px,calc(env(safe-area-inset-top,0px) + 12px)) 20px 20px;background:var(--card);border-bottom:1px solid var(--sep);}
   .hist-page .hist-page-nav-row,.hist-page .hist-head-right{display:contents;}
   .hist-page .hist-back-btn,.hist-page .hist-page-eye,.hist-page .hist-cnt-badge{display:none;} /* 뒤로가기·데스크탑눈썹·중복건수 제거 */
   .hist-page .hist-mob-eyebrow{grid-area:eyebrow;display:flex;align-items:baseline;gap:10px;color:var(--label3);font-size:11px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;line-height:1.25;}
@@ -1086,6 +1086,9 @@ svg{display:block;flex-shrink:0;}
   .hist-page .hist-page-title{grid-area:title;position:static;text-align:left;font-size:24px;font-weight:700;letter-spacing:-.4px;line-height:1.15;pointer-events:auto;align-self:end;}
   .hist-page .hist-head-sync{grid-area:sync;justify-self:end;margin:0;padding:0;text-align:right;font-size:11px;white-space:nowrap;}
   .hist-page .hist-bulk-detail-btn{grid-area:action;justify-self:end;align-self:end;margin:0;}
+  /* 검색창·정렬·정산상태 높이 통일(36px) — 검색창이 더 커서 버튼과 어긋나던 문제 (v7.46) */
+  .hist-page .hist-dr-sinp{height:36px;box-sizing:border-box;padding-top:0;padding-bottom:0;}
+  .hist-page .hist-sort-btn,.hist-page .hist-settle-btn{height:36px;box-sizing:border-box;}
 }
 .hist-page-eye,.hist-mob-eyebrow{display:none;}
 /* 데스크탑: 기록 보관함을 오른쪽 패널 탭과 동일한 레이아웃으로 — 헤더(144px·좌측 눈썹+제목)·구분선 높이·검색/버튼 34px 인셋 통일, < 더치페이 제거. .hist-page 접두로 뒤따르는 기본 규칙보다 우선 (v6.99) */
@@ -1728,8 +1731,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.45';
-const BUILD_TIME='2026-11-07 00:35';
+const APP_VERSION='v7.46';
+const BUILD_TIME='2026-11-07 01:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
