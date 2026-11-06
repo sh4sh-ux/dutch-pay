@@ -1147,6 +1147,10 @@ svg{display:block;flex-shrink:0;}
 .hist-dr-sinp:focus-visible{outline:none;}
 .hist-dr-sinp::-webkit-search-cancel-button,.hist-dr-sinp::-webkit-search-decoration{-webkit-appearance:none;display:none;}
 .hist-dr-body{overflow-y:auto;flex:1;padding:0 16px 40px;}
+/* 당겨서 새로고침 인디케이터 (v7.45) */
+.hist-ptr{position:absolute;left:50%;top:0;transform:translate(-50%,0);z-index:6;width:34px;height:34px;border-radius:50%;background:var(--card);box-shadow:0 2px 10px rgba(0,0,0,.18),0 0 0 1px var(--sep);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;}
+.hist-ptr-sp{width:18px;height:18px;border:2.5px solid var(--sep2);border-top-color:var(--blue);border-radius:50%;}
+.hist-ptr.spin .hist-ptr-sp{animation:rcptspin .7s linear infinite;}
 .sinp-rel{position:relative;display:flex;align-items:center;width:100%;}
 .sinp-rel > input{padding-right:26px;}
 .sinp-clr{position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--label3);font-size:14px;line-height:1;cursor:pointer;padding:2px 4px;display:none;-webkit-appearance:none;appearance:none;touch-action:manipulation;}
@@ -1724,8 +1728,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.44';
-const BUILD_TIME='2026-11-07 00:05';
+const APP_VERSION='v7.45';
+const BUILD_TIME='2026-11-07 00:35';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2932,10 +2936,37 @@ function openHistDrawer(){
   _histPlaceDesktop();
   dr.classList.add('open');
   _syncShellNav('history'); // 기록 보관함을 열면 레일/하단 '기록' 탭을 활성 표시 (v7.02)
+  _bindHistPTR(); // 당겨서 Dropbox 재동기화 (v7.45)
   const onEnd=()=>{dr.removeEventListener('transitionend',onEnd);if(dr.classList.contains('open'))dr.style.transform='none';};
   dr.addEventListener('transitionend',onEnd);
   document.addEventListener('keydown',_histEscHandler);
   window.addEventListener('resize',_histResizeHandler);
+}
+// ── 기록 보관함 당겨서 새로고침(Dropbox 재동기화) v7.45 ──
+let _histPtrBusy=false;
+function _bindHistPTR(){
+  const dr=document.getElementById('histDr'),body=document.getElementById('histDrBody');
+  if(!dr||!body||dr.dataset.ptr)return;dr.dataset.ptr='1';
+  const ind=document.createElement('div');ind.className='hist-ptr';ind.innerHTML='<span class="hist-ptr-sp"></span>';dr.appendChild(ind);
+  const nav=dr.querySelector('.hist-page-nav');
+  const base=()=>(nav?nav.getBoundingClientRect().height:60)-6;
+  const TH=64,MAX=92;let startY=0,active=false,d=0;
+  const setInd=(dist,spin)=>{ind.style.transform='translate(-50%,'+(base()+Math.min(dist,MAX))+'px)';ind.style.opacity=spin?'1':String(Math.min(1,dist/TH));ind.classList.toggle('spin',!!spin);const sp=ind.querySelector('.hist-ptr-sp');if(sp)sp.style.transform=spin?'':'rotate('+Math.round(dist*4)+'deg)';};
+  const reset=()=>{ind.style.transition='transform .22s ease,opacity .22s ease';ind.style.transform='translate(-50%,'+(base()-8)+'px)';ind.style.opacity='0';ind.classList.remove('spin');setTimeout(()=>{ind.style.transition='';},230);};
+  body.addEventListener('touchstart',e=>{if(_histPtrBusy||body.scrollTop>0||e.touches.length!==1){active=false;return;}startY=e.touches[0].clientY;active=true;d=0;ind.style.transition='';},{passive:true});
+  body.addEventListener('touchmove',e=>{if(!active||_histPtrBusy)return;d=e.touches[0].clientY-startY;if(d<=0||body.scrollTop>0){active=false;reset();return;}setInd(d*0.55,false);if(e.cancelable)e.preventDefault();},{passive:false});
+  body.addEventListener('touchend',()=>{if(!active||_histPtrBusy)return;active=false;if(d*0.55>=TH)_histPtrRun(setInd,reset);else reset();},{passive:true});
+  body.addEventListener('touchcancel',()=>{if(active){active=false;reset();}},{passive:true});
+}
+function _histPtrRun(setInd,reset){
+  _histPtrBusy=true;setInd(64,true);
+  const done=()=>{_histPtrBusy=false;reset();};
+  if(!dbxGetToken()){toast('Dropbox가 연결되어 있지 않아요 · ⚙️ 설정에서 연결해주세요',{type:'error'});setTimeout(done,400);return;}
+  (async()=>{try{await dbxResolveRoot();}catch(_){}
+    try{syncFromDropbox();}catch(_){}
+    try{await hSyncDropbox();}catch(_){}
+    try{_updateHSyncInfo();}catch(_){}
+    done();})();
 }
 function _histEscHandler(e){if(e.key==='Escape'&&_histDrawerOpen)closeHistDrawer();}
 function closeHistDrawer(){
