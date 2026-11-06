@@ -1074,8 +1074,21 @@ svg{display:block;flex-shrink:0;}
 }
 @media(min-width:1100px){.hist-page{width:66.6667vw;max-width:1200px;}}
 /* 모바일: 기록 보관함을 전체화면 '창'이 아니라 하단 탭바가 보이는 '탭'처럼 — 드로어가 탭바 위까지만 차지 (v7.33) */
-@media(max-width:700px){.hist-page{bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:translateY(100vh);} .hist-page.open{transform:translateY(0);} .hist-page .hist-back-btn{display:none;} .hist-page .hist-page-nav-row{justify-content:center;}}
-.hist-page-eye{display:none;}
+@media(max-width:700px){
+  .hist-page{bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:translateY(100vh);}
+  .hist-page.open{transform:translateY(0);}
+  .hist-page .hist-back-btn{display:none;}
+  /* 기록 보관함 헤더를 다른 탭(.mob-header)과 같은 톤으로 — 브랜드 eyebrow + 좌측 제목 + 우측 건수 (v7.40) */
+  .hist-page .hist-page-nav{padding:max(20px,calc(env(safe-area-inset-top,0px) + 12px)) 20px 10px;background:var(--card);border-bottom:1px solid var(--sep);}
+  .hist-page .hist-page-nav-row{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;height:auto;padding:0;position:static;}
+  .hist-page .hist-mob-eyebrow{display:flex;align-items:baseline;gap:10px;width:100%;order:-1;margin-bottom:8px;color:var(--label3);font-size:11px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;line-height:1.25;}
+  .hist-page .hist-mob-eyebrow b{font-weight:600;letter-spacing:0;text-transform:none;}
+  .hist-page .hist-page-eye{display:none;}
+  .hist-page .hist-page-title{position:static;text-align:left;font-size:24px;font-weight:700;letter-spacing:-.4px;line-height:1.15;pointer-events:auto;}
+  .hist-page .hist-cnt-badge{margin:0;padding:0;font-size:13px;font-weight:500;color:var(--label2);align-self:flex-end;}
+  .hist-page .hist-head-right{padding:10px 20px 8px;}
+}
+.hist-page-eye,.hist-mob-eyebrow{display:none;}
 /* 데스크탑: 기록 보관함을 오른쪽 패널 탭과 동일한 레이아웃으로 — 헤더(144px·좌측 눈썹+제목)·구분선 높이·검색/버튼 34px 인셋 통일, < 더치페이 제거. .hist-page 접두로 뒤따르는 기본 규칙보다 우선 (v6.99) */
 @media(min-width:701px){
   .hist-page{background:var(--panel-bg);}
@@ -1674,6 +1687,7 @@ svg{display:block;flex-shrink:0;}
         <span class="hist-back-arr">‹</span>
         <span class="hist-back-lbl">더치페이</span>
       </button>
+      <span class="hist-mob-eyebrow"><span>DUTCH PAY</span><b id="histVerM"></b></span>
       <span class="hist-page-eye">보관함</span>
       <span class="hist-page-title">기록 보관함</span>
       <span class="hist-cnt-badge" id="histDrCnt"></span>
@@ -1711,8 +1725,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.39';
-const BUILD_TIME='2026-11-06 21:30';
+const APP_VERSION='v7.40';
+const BUILD_TIME='2026-11-06 22:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -6180,7 +6194,7 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
     btn._navTipTimer=setTimeout(()=>btn.classList.remove('show-nav-tip'),1200);
   });
 });
-(()=>{['appVersionD','appVersionM','appVersionMob'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;const _hdb=document.getElementById('histDrBody');if(_hdb)_hdb.addEventListener('scroll',()=>{const si=document.getElementById('histDrSinp');if(si&&si===document.activeElement){if(Date.now()-_histSearchTypedAt<800)return;si.blur();}},{passive:true});})();
+(()=>{['appVersionD','appVersionM','appVersionMob','histVerM'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;const _hdb=document.getElementById('histDrBody');if(_hdb)_hdb.addEventListener('scroll',()=>{const si=document.getElementById('histDrSinp');if(si&&si===document.activeElement){if(Date.now()-_histSearchTypedAt<800)return;si.blur();}},{passive:true});})();
 // ── 앱 내 뒤로가기 (브라우저·안드로이드 back) ─────────────────────────────
 // SPA라 back 버튼이 열린 오버레이/탭을 닫지 않고 페이지 자체(앱)를 벗어나 버린다.
 // [근본 방식] 클릭을 보고 "추측"하지 않는다. 실제 화면 상태(현재 탭·열린 오버레이 수·검색 여부)를
