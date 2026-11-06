@@ -1662,8 +1662,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.33';
-const BUILD_TIME='2026-11-06 17:30';
+const APP_VERSION='v7.34';
+const BUILD_TIME='2026-11-06 18:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5252,7 +5252,7 @@ async function _syncFixedArchives(token){
   const valid=[];
   for(const f of candidates){if(!f||!f.fixId||!f.recordId||deleted.has(String(f.recordId))||!f.payload||f.guard!==_fixedGuard(f.payload))continue;if(f.sha256&&await _hSha256b64url(_stableJson(f.payload))!==f.sha256)continue;valid.push(f);}
   const merged=await _saveFixedArchives(valid);
-  await _dbxRpc(token,'files/create_folder_v2',{path:dbxFixedDir()},requestTimeout);
+  try{await _dbxRpc(token,'files/create_folder_v2',{path:dbxFixedDir()},requestTimeout);}catch(e){}
   const remoteById=new Map((Array.isArray(manifest)?manifest:[]).filter(Boolean).map(f=>[String(f.fixId),f]));
   const changed=merged.filter(f=>{const r=remoteById.get(String(f.fixId));return!r||r.guard!==f.guard||String(r.sha256||'')!==String(f.sha256||'');});
   // 잠긴 원본이 많으면(재연결 직후 등) 한꺼번에 올릴 때 Dropbox가 과부하로 거부한다.
@@ -5271,11 +5271,12 @@ async function _syncFixedArchives(token){
   const manifestOut=merged.filter(f=>!failedIds.has(String(f.fixId))||remoteById.has(String(f.fixId)));
   let okDel=false,okMan=false;
   for(let a=0;a<2&&!okDel;a++)okDel=await _dbxUpload(token,dbxFixedDeletedFile(),JSON.stringify([...deleted],null,2),uploadTimeout);
-  if(!okDel)throw new Error('잠금 삭제 목록 업로드 실패');
   for(let a=0;a<2&&!okMan;a++)okMan=await _dbxUpload(token,dbxFixedFile(),JSON.stringify(manifestOut,null,2),uploadTimeout);
-  if(!okMan)throw new Error('잠금 목록 업로드 실패');
-  if(failedIds.size)console.warn('[dutchpay] 잠금 원본 '+failedIds.size+'건은 다음 동기화에 이어서 올립니다');
-  await _verifyAndRepairFixedHistory();return merged;
+  // 잠금 원본 백업(교차기기 복원용 추가 레이어)이 실패해도 메인 동기화(기록/데이터)는 절대 막지 않는다(v7.34).
+  // 과거엔 여기서 throw해 hSyncDropbox 전체가 빨간 '동기화 실패'로 고착됐다. 못 올린 건 다음 동기화에 재시도.
+  if(!okDel||!okMan||failedIds.size)console.warn('[dutchpay] 잠금 원본 동기화 일부 지연 — 다음 동기화에 이어서 재시도');
+  try{await _verifyAndRepairFixedHistory();}catch(e){}
+  return merged;
 }
 async function hSyncDropbox(uploadOnly=false){
   const token=hDbxGetToken();if(!token)return;
