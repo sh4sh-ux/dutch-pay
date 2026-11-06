@@ -854,7 +854,7 @@ svg{display:block;flex-shrink:0;}
 .imgzoom-ctl button[data-z=reset]{min-width:44px;padding:0 14px;border-radius:19px;}
 /* 이미지 뷰어 컨트롤 자동 숨김(3초 무동작) v7.12 */
 .imgzoom-ctl,.rcpt-viewer-close,.history-image-viewer-close{transition:opacity .3s ease;}
-.rcpt-viewer.ui-hidden .imgzoom-ctl,.rcpt-viewer.ui-hidden .rcpt-viewer-close,.history-image-viewer.ui-hidden .imgzoom-ctl,.history-image-viewer.ui-hidden .history-image-viewer-close{opacity:0;pointer-events:none;}
+.rcpt-viewer.ui-hidden .imgzoom-ctl,.history-image-viewer.ui-hidden .imgzoom-ctl{opacity:0;pointer-events:none;}
 .rcpt-viewer-close{z-index:3;}
 .rcpt-viewer-close:hover{background:rgba(255,255,255,.28);}
 .rcpt-viewer-spin{width:38px;height:38px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:rcptspin .8s linear infinite;}
@@ -1724,8 +1724,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.43';
-const BUILD_TIME='2026-11-06 23:40';
+const APP_VERSION='v7.44';
+const BUILD_TIME='2026-11-07 00:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4510,10 +4510,10 @@ function _bindImgZoom(ov,img,close){
   ctl.innerHTML='<button type="button" data-z="out" aria-label="축소">−</button><button type="button" data-z="reset" aria-label="원래 크기">100%</button><button type="button" data-z="in" aria-label="확대">+</button>';
   ov.appendChild(ctl);const pct=ctl.querySelector('[data-z=reset]');
   // v7.12 — 컨트롤(줌·닫기) 3초 무동작 시 숨김, 움직임/터치 시 복귀
-  // v7.42 — 줌·닫기 컨트롤은 항상 고정 표시(자동 숨김 제거: 확대/축소 때 나타났다 사라지던 문제)
+  // v7.44 — 줌 컨트롤은 무동작 1초 뒤 숨김, 조작(터치·휠·버튼) 시 복귀. X(닫기)는 항상 표시.
   let _uiHidden=false,_uiTimer=null;
-  function hideUI(){}
-  function showUI(){_uiHidden=false;ov.classList.remove('ui-hidden');}
+  function hideUI(){if(!ov.isConnected)return;if(pts.size>0){showUI();return;}_uiHidden=true;ov.classList.add('ui-hidden');}
+  function showUI(){_uiHidden=false;ov.classList.remove('ui-hidden');if(_uiTimer)clearTimeout(_uiTimer);_uiTimer=setTimeout(hideUI,1000);}
   const clamp=()=>{const mx=Math.max(0,(img.offsetWidth*s-ov.clientWidth)/2),my=Math.max(0,(img.offsetHeight*s-ov.clientHeight)/2);x=Math.max(-mx,Math.min(mx,x));y=Math.max(-my,Math.min(my,y));};
   const apply=anim=>{img.style.transition=anim?'transform .18s ease':'none';img.style.transform=`translate(${x}px,${y}px) scale(${s})`;img.style.cursor=s>1.01?'grab':'zoom-in';pct.textContent=Math.round(s*100)+'%';};
   const zoomAt=(ns,px,py,anim)=>{ns=Math.max(1,Math.min(MAX,ns));if(ns<1.02)ns=1;const k=ns/s,cx=px-ov.clientWidth/2,cy=py-ov.clientHeight/2;x=cx-k*(cx-x);y=cy-k*(cy-y);s=ns;if(s===1){x=0;y=0;}clamp();apply(anim);};
