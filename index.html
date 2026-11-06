@@ -1660,8 +1660,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.23';
-const BUILD_TIME='2026-11-06 11:40';
+const APP_VERSION='v7.24';
+const BUILD_TIME='2026-11-06 12:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5373,7 +5373,7 @@ async function generateSettleCanvas(){
     const amountX=cardX+cardW-38,amW=ctx.measureText(amountText).width;
     ctx.fillText(amountText,amountX,ry);
     const leftX=cardX+38,maxLeftW=amountX-amW-34-leftX;
-    const AGAP=20,AH=6,AL=36,headW=24;
+    const AGAP=20,AH=5,AL=36,headW=24;
     setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
     const fromTxt=truncateCanvasText(ctx,t.from||'',Math.floor((maxLeftW-AL-AGAP*3)*0.45));
     ctx.fillText(fromTxt,leftX,ry);
@@ -5752,7 +5752,7 @@ async function generateHistoryCanvas(rec){
       setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
       const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry);
       const fw=ctx.measureText(fromTxt).width;
-      const AGAP=20,AH=6,AL=36,headW=24;
+      const AGAP=20,AH=5,AL=36,headW=24;
       const AX=leftX+fw+AGAP,AEX=AX+AL;
       ctx.strokeStyle='#7C818B';ctx.lineWidth=2;ctx.lineCap='round';
       ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
@@ -5834,7 +5834,7 @@ async function generateHistoryCanvas(rec){
       setFont(32,700);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=C.text;
       const fromTxt=t.from||'';ctx.fillText(fromTxt,leftX,ry);
       const fw=ctx.measureText(fromTxt).width;
-      const AGAP=20,AH=6,AL=36,headW=24;
+      const AGAP=20,AH=5,AL=36,headW=24;
       const AX=leftX+fw+AGAP,AEX=AX+AL;
       ctx.strokeStyle='#7C818B';ctx.lineWidth=2;ctx.lineCap='round';
       ctx.beginPath();ctx.moveTo(AX,ry);ctx.lineTo(AEX-headW,ry);ctx.stroke();
