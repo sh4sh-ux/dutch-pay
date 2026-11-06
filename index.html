@@ -1073,20 +1073,20 @@ svg{display:block;flex-shrink:0;}
   .hist-backdrop{display:none;}
 }
 @media(min-width:1100px){.hist-page{width:66.6667vw;max-width:1200px;}}
-/* 모바일: 기록 보관함을 전체화면 '창'이 아니라 하단 탭바가 보이는 '탭'처럼 — 드로어가 탭바 위까지만 차지 (v7.33) */
+/* 모바일: 기록 보관함을 다른 탭처럼 — 슬라이드로 떠오르지 않고 페이드로 자연스럽게 전환, 헤더는 .mob-header와 동일 규격 (v7.41) */
 @media(max-width:700px){
-  .hist-page{bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:translateY(100vh);}
-  .hist-page.open{transform:translateY(0);}
+  .hist-page{bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:none;opacity:0;pointer-events:none;transition:opacity .16s ease;}
+  .hist-page.open{transform:none;opacity:1;pointer-events:auto;}
   .hist-page .hist-back-btn{display:none;}
-  /* 기록 보관함 헤더를 다른 탭(.mob-header)과 같은 톤으로 — 브랜드 eyebrow + 좌측 제목 + 우측 건수 (v7.40) */
-  .hist-page .hist-page-nav{padding:max(20px,calc(env(safe-area-inset-top,0px) + 12px)) 20px 10px;background:var(--card);border-bottom:1px solid var(--sep);}
-  .hist-page .hist-page-nav-row{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;height:auto;padding:0;position:static;}
-  .hist-page .hist-mob-eyebrow{display:flex;align-items:baseline;gap:10px;width:100%;order:-1;margin-bottom:8px;color:var(--label3);font-size:11px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;line-height:1.25;}
+  /* 헤더: 다른 탭(.mob-header)과 완전 동일한 2줄 구조 — eyebrow+sync / 좌측제목+전체상세저장 (2×2 그리드) */
+  .hist-page .hist-page-nav{display:grid;grid-template-columns:1fr auto;grid-template-areas:'eyebrow sync' 'title action';align-items:center;row-gap:17px;column-gap:10px;padding:max(20px,calc(env(safe-area-inset-top,0px) + 12px)) 20px 18px;background:var(--card);border-bottom:1px solid var(--sep);}
+  .hist-page .hist-page-nav-row,.hist-page .hist-head-right{display:contents;}
+  .hist-page .hist-back-btn,.hist-page .hist-page-eye,.hist-page .hist-cnt-badge{display:none;} /* 뒤로가기·데스크탑눈썹·중복건수 제거 */
+  .hist-page .hist-mob-eyebrow{grid-area:eyebrow;display:flex;align-items:baseline;gap:10px;color:var(--label3);font-size:11px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;line-height:1.25;}
   .hist-page .hist-mob-eyebrow b{font-weight:600;letter-spacing:0;text-transform:none;}
-  .hist-page .hist-page-eye{display:none;}
-  .hist-page .hist-page-title{position:static;text-align:left;font-size:24px;font-weight:700;letter-spacing:-.4px;line-height:1.15;pointer-events:auto;}
-  .hist-page .hist-cnt-badge{margin:0;padding:0;font-size:13px;font-weight:500;color:var(--label2);align-self:flex-end;}
-  .hist-page .hist-head-right{padding:10px 20px 8px;}
+  .hist-page .hist-page-title{grid-area:title;position:static;text-align:left;font-size:24px;font-weight:700;letter-spacing:-.4px;line-height:1.15;pointer-events:auto;align-self:end;}
+  .hist-page .hist-head-sync{grid-area:sync;justify-self:end;margin:0;padding:0;text-align:right;font-size:11px;white-space:nowrap;}
+  .hist-page .hist-bulk-detail-btn{grid-area:action;justify-self:end;align-self:end;margin:0;}
 }
 .hist-page-eye,.hist-mob-eyebrow{display:none;}
 /* 데스크탑: 기록 보관함을 오른쪽 패널 탭과 동일한 레이아웃으로 — 헤더(144px·좌측 눈썹+제목)·구분선 높이·검색/버튼 34px 인셋 통일, < 더치페이 제거. .hist-page 접두로 뒤따르는 기본 규칙보다 우선 (v6.99) */
@@ -1725,8 +1725,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.40';
-const BUILD_TIME='2026-11-06 22:10';
+const APP_VERSION='v7.41';
+const BUILD_TIME='2026-11-06 22:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
