@@ -1756,8 +1756,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.58';
-const BUILD_TIME='2026-11-12 18:30';
+const APP_VERSION='v7.59';
+const BUILD_TIME='2026-11-12 19:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4901,6 +4901,7 @@ function _validFixedEntry(x){return!!(x&&x.fixId&&x.recordId&&x.payload&&x.guard
 function _loadFixedDeletedIds(){try{return new Set(JSON.parse(localStorage.getItem(FIXED_DELETED_KEY)||'[]'));}catch(e){return new Set();}}
 function _mergeFixedDeletedIds(ids){const s=_loadFixedDeletedIds();(ids||[]).forEach(id=>{if(id)s.add(String(id));});localStorage.setItem(FIXED_DELETED_KEY,JSON.stringify([...s]));return s;}
 function _markFixedDeletedId(id){return _mergeFixedDeletedIds([id]);}
+function _unmarkFixedDeletedId(id){const s=_loadFixedDeletedIds();if(s.delete(String(id)))localStorage.setItem(FIXED_DELETED_KEY,JSON.stringify([...s]));return s;}
 function _loadFixedArchivesRaw(){try{const v=JSON.parse(localStorage.getItem(FIXED_HISTORY_KEY)||'[]');return Array.isArray(v)?v:[];}catch(e){return[];}}
 function _loadFixedManifest(){return _loadFixedArchivesRaw().filter(x=>x&&x.fixId&&x.recordId&&x.guard).map(x=>({schemaVersion:x.schemaVersion||1,fixId:x.fixId,recordId:x.recordId,fixedAt:x.fixedAt||'',guard:x.guard,sha256:x.sha256||'',pinHash:x.pinHash||'',pinSalt:x.pinSalt||''}));}
 let _fixedArchivesCache=null,_fixedHydratePromise=null;
@@ -4980,6 +4981,7 @@ async function fixHistoryRecord(id){
   try{if(!await _ensureLockPin())return false;}catch(e){toast(_storageErrorMessage(e,'잠금 비밀번호 저장'),{type:'error',duration:5000});return false;}
   const payload=JSON.parse(JSON.stringify(record));const canonical=_stableJson(payload);const fixedAt=new Date().toISOString();
   const entry={schemaVersion:2,fixId:'fix_'+Date.now()+'_'+_hRandomStr(8),recordId:id,fixedAt,payload,guard:_fixedGuard(payload),sha256:await _hSha256b64url(canonical),pinHash:localStorage.getItem(LOCK_PIN_HASH_KEY)||'',pinSalt:localStorage.getItem(LOCK_PIN_SALT_KEY)||''};
+  _unmarkFixedDeletedId(id); // 재잠금: 과거 잠금해제/삭제로 남은 톰스톤을 지워야 _saveFixedArchives가 새 잠금을 버리지 않음 (v7.59)
   try{await _saveFixedArchives([...loadFixedArchives(),entry]);_removeDelId(id);saveHistory(loadHistory());_refreshHistoryLockSurfaces();}
   catch(e){toast(_storageErrorMessage(e,'잠금'),{type:'error',duration:5000});return false;}
   if(hDbxGetToken())try{await _syncFixedArchives(hDbxGetToken());}catch(e){toast('기기에는 잠겼지만 Dropbox 원본 저장은 재시도가 필요해요',{type:'error',duration:5000});}
@@ -5488,6 +5490,9 @@ async function _syncFixedArchives(token){
     _dbxDownload(token,dbxFixedFile(),requestTimeout)
   ]);
   const deleted=_mergeFixedDeletedIds(Array.isArray(remoteDeleted)?remoteDeleted:[]);
+  // 로컬에서 (다시) 잠근 기록은 톰스톤에서 제외 — 재잠금이 과거 삭제표식보다 우선. 안 그러면 동기화가 재잠금을 되돌림 (v7.59)
+  candidates.filter(_validFixedEntry).forEach(f=>deleted.delete(String(f.recordId)));
+  localStorage.setItem(FIXED_DELETED_KEY,JSON.stringify([...deleted]));
   if(Array.isArray(manifest))candidates.push(...manifest);
   // 정상 manifest가 있으면 개별 원본 전체를 매번 다시 내려받지 않는다. manifest가 없거나
   // 손상됐을 때만 개별 파일을 훑어 복구한다. 기록 수만큼 요청하던 동기화 지연을 막는다.
