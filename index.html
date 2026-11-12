@@ -1756,8 +1756,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.62';
-const BUILD_TIME='2026-11-12 21:15';
+const APP_VERSION='v7.63';
+const BUILD_TIME='2026-11-12 21:55';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5029,7 +5029,41 @@ function _dedupHistory(arr){return _dedupHistoryDetailed(arr).records;}
 // 저장공간 초과 시 비파괴적으로 공간을 비운다: localStorage 에 남은 레거시 자동백업은
 // 실제 복구본이 IndexedDB 에 있으므로 지워도 정산·기록·이미지 데이터 손실이 없다. (v7.62)
 function _freeLocalStorageOnce(){let freed=false;try{if(localStorage.getItem(AUTO_BACKUP_KEY)!==null){localStorage.removeItem(AUTO_BACKUP_KEY);freed=true;}}catch(e){}return freed;}
-function saveHistory(arr){const cleaned=_dedupHistoryDetailed(arr);const write=()=>{_recordHistoryDedup(cleaned);cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));};try{write();return true;}catch(e){if(_isQuotaError(e)&&_freeLocalStorageOnce()){try{write();return true;}catch(e2){e=e2;}}toast(_storageErrorMessage(e,'기록 저장'),{type:'error',duration:5000});return false;}}
+// 기록 배열 안의 인라인 사진(data URI)을 IndexedDB 로 옮긴다 — 사진은 IDB 에 보존되고
+// localStorage 에는 'idb:' 참조만 남아 용량이 크게 준다. (v7.63)
+async function _offloadRecordImages(recs){let ch=false;for(const rec of (recs||[])){for(const it of (rec.items||[])){const u=(it&&it.receiptUrl)||'';if(_isDataUrl(u)){try{const key='r'+(it.id||'x')+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);await _rcptIdbPut(key,u);try{_markReceiptUploadPending(key);_rcptUploadQ.set(key,u);}catch(e){}it.receiptUrl='idb:'+key;ch=true;}catch(e){}}}}return ch;}
+let _histQuotaRecovering=false;
+async function _recoverStorageThenSaveHistory(cleaned){
+  if(_histQuotaRecovering)return;_histQuotaRecovering=true;
+  try{
+    try{await _migrateReceiptsToIdb();}catch(e){} // 라이브·그룹·기록의 인라인 사진을 IDB 로 이전
+    await _offloadRecordImages(cleaned.records); // 저장하려는 배열 자체도 이전
+    _freeLocalStorageOnce();
+    try{
+      localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));
+      try{_flushReceiptUploads();}catch(e){}
+      toast('저장공간을 정리하고 저장했어요 ✓',{type:'success',duration:2600});
+      try{renderAll(true);}catch(e){}
+    }catch(e){
+      toast('저장공간이 가득 찼어요 · 기록 보관함에서 오래된 기록이나 사진을 지워 공간을 비워주세요',{type:'error',duration:6000});
+    }
+  }finally{_histQuotaRecovering=false;}
+}
+function saveHistory(arr){
+  const cleaned=_dedupHistoryDetailed(arr);
+  const write=()=>{_recordHistoryDedup(cleaned);cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));};
+  try{write();return true;}
+  catch(e){
+    if(_isQuotaError(e)){
+      if(_freeLocalStorageOnce()){try{write();return true;}catch(e2){}}
+      // 레거시 백업 제거로도 부족하면: 사진을 IDB 로 옮겨 공간 확보 후 재저장(비동기)
+      toast('저장공간을 정리하는 중이에요…',{type:'info',duration:2600});
+      _recoverStorageThenSaveHistory(cleaned);
+      return true;
+    }
+    toast(_storageErrorMessage(e,'기록 저장'),{type:'error',duration:5000});return false;
+  }
+}
 function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const cleaned=_dedupHistoryDetailed(arr),removed=arr.length-cleaned.records.length;if(removed>0){_recordHistoryDedup(cleaned);cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));setTimeout(()=>toast(`중복 기록 ${removed}건을 하나로 정리했어요`,{type:'success',duration:4200}),400);}}catch(e){}}
 // 같은 정산(지문 완전 동일 = 날짜·참여자·항목 전부 같고 입금만 다름)의 중복 기록 정리 계획을 세운다. 순수 함수.
 // v6.65 이하: 잠긴 정산에 입금을 갱신하면 saveToHistory가 새 'hv_' 버전으로 쪼개 중복이 쌓였다(사용자 신고).
