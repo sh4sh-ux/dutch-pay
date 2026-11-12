@@ -1756,8 +1756,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.59';
-const BUILD_TIME='2026-11-12 19:10';
+const APP_VERSION='v7.60';
+const BUILD_TIME='2026-11-12 20:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3628,7 +3628,7 @@ function _pmSegHtml(){
 function _pmCurrentHtml(txns){
   const hasItems=items.some(it=>+it.amount!==0);
   const dbxBtn=hDbxGetToken()?'<button class="pm-dbx-btn" onclick="saveSettleToDropbox()">☁️ Dropbox에 이미지 저장</button>':'';
-  const _rec=_currentHistoryRecord(),_saved=!!_rec,_fixed=!!(_rec&&_isHistoryFixed(_rec.id)&&_historyContentSignature(_rec)===_currentContentSignature());
+  const _rec=_currentHistoryRecord(),_saved=!!_rec,_fixed=!!(_rec&&_isHistoryFixed(_rec.id)&&_historyLockMatches(_rec));
   const saveBtn=`<button class="pm-save-btn${_saved?' saved':''}" onclick="_saveHistFromResult()">${_saved?'✓ 기록보관함에 저장됨':'📌 기록보관함에 저장'}</button><button class="pm-save-btn lock-action${_fixed?' fixed':''}" style="margin-top:8px" onclick="${_fixed?`unlockHistoryForEdit('${jsa(_rec.id)}')`:'_fixCurrentHistory()'}">${_fixed?LOCK_CLOSED_SVG+' 잠김':LOCK_OPEN_SVG+' 잠금'}</button>`;
   if(!txns.length)return '<div class="empty" style="padding:40px 0"><div class="empty-icon">'+svgEmpty+'</div><p>정산할 입금 내역이 없어요</p></div>'+(hasItems?saveBtn+dbxBtn:'');
   return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">입금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>'+saveBtn+dbxBtn;
@@ -5849,7 +5849,7 @@ async function generateSettleCanvas(){
 function _histSaveBtnHtml(){
   if(!items.some(it=>+it.amount!==0))return '';
   if(_editingFixedSourceId)return `<div class="hist-save-row"><button class="hist-save-btn" onclick="_saveHistFromResult()">수정 내용 저장</button><button class="hist-fix-btn" onclick="_fixCurrentHistory()">${LOCK_OPEN_SVG}잠금 저장</button><div class="hist-save-hint">현재 수정 가능합니다. 완료 후 ‘잠금 저장’을 눌러주세요.</div></div>`;
-  const rec=_currentHistoryRecord(),saved=!!rec,fixed=!!(rec&&_isHistoryFixed(rec.id)&&_historyContentSignature(rec)===_currentContentSignature());
+  const rec=_currentHistoryRecord(),saved=!!rec,fixed=!!(rec&&_isHistoryFixed(rec.id)&&_historyLockMatches(rec));
   const hint=fixed?'<div class="hist-save-hint">잠김을 누르고 암호를 입력하면 수정할 수 있습니다.</div>':(saved?'<div class="hist-save-hint">영수증을 붙였거나 내용을 바꿨다면 다시 눌러 업데이트하세요</div>':'<div class="hist-save-hint">보관함에 저장한 뒤 잠그면 원본을 안전하게 보존합니다.</div>');
   return `<div class="hist-save-row"><button class="hist-save-btn${saved?' saved':''}" onclick="_saveHistFromResult()">${saved?'✓ 기록 보관함에 저장됨':'📌 기록 보관함에 저장'}</button><button class="hist-fix-btn${fixed?' fixed':''}" onclick="${fixed?`unlockHistoryForEdit('${jsa(rec.id)}')`:'_fixCurrentHistory()'}">${fixed?LOCK_CLOSED_SVG+'잠김':LOCK_OPEN_SVG+'잠금'}</button>${hint}</div>`;
 }
@@ -5865,10 +5865,15 @@ function _currentHistoryRecord(){
 function _historyContentSignature(r){return _stableJson({dateStart:r.dateStart||'',dateEnd:r.dateEnd||null,people:r.people||[],total:+r.total||0,items:(r.items||[]).map(({id,...it})=>it),payments:r.payments||{},coupleNames:r.coupleNames||[]});}
 function _currentContentSignature(){return _stableJson({dateStart:settleDateStart||'',dateEnd:settleDateEnd||null,people:[...people],total:items.reduce((s,it)=>s+(+it.amount||0),0),items:JSON.parse(JSON.stringify(items)).map(({id,...it})=>it),payments:JSON.parse(JSON.stringify(payments||{})),coupleNames:_coupleNames.slice()});}
 function _sameHistoryContent(a,b){return!!(a&&b&&_historyContentSignature(a)===_historyContentSignature(b));}
+// 잠김 판정 전용 서명: payments(입금 현황)는 잠금 후에도 계속 바뀌는 운영 데이터이므로 제외한다.
+// (입금 체크만으로 '잠김' 버튼이 '잠금'으로 되돌아가던 버그 수정 — v7.60)
+function _lockIdentitySig(o){return _stableJson({dateStart:o.dateStart||'',dateEnd:o.dateEnd||null,people:o.people||[],total:+o.total||0,items:(o.items||[]).map(({id,...it})=>it),coupleNames:o.coupleNames||[]});}
+function _currentLockIdentitySig(){return _lockIdentitySig({dateStart:settleDateStart,dateEnd:settleDateEnd,people:[...people],total:items.reduce((s,it)=>s+(+it.amount||0),0),items:JSON.parse(JSON.stringify(items)),coupleNames:_coupleNames.slice()});}
+function _historyLockMatches(r){return!!(r&&_lockIdentitySig(r)===_currentLockIdentitySig());}
 async function _fixCurrentHistory(){
   if(_editingFixedSourceId){const saved=saveToHistory();if(saved)await fixHistoryRecord(saved.id);return;}
   let rec=_currentHistoryRecord();
-  if(!rec||(_isHistoryFixed(rec.id)&&_historyContentSignature(rec)!==_currentContentSignature())){const saved=saveToHistory();if(!saved)return;rec=loadHistory().find(r=>r.id===saved.id)||_currentHistoryRecord();}
+  if(!rec||(_isHistoryFixed(rec.id)&&!_historyLockMatches(rec))){const saved=saveToHistory();if(!saved)return;rec=loadHistory().find(r=>r.id===saved.id)||_currentHistoryRecord();}
   if(rec)await fixHistoryRecord(rec.id);
 }
 function _isAlreadySaved(){
