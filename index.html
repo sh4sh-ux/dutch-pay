@@ -1756,8 +1756,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.60';
-const BUILD_TIME='2026-11-12 20:05';
+const APP_VERSION='v7.61';
+const BUILD_TIME='2026-11-12 20:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5865,11 +5865,11 @@ function _currentHistoryRecord(){
 function _historyContentSignature(r){return _stableJson({dateStart:r.dateStart||'',dateEnd:r.dateEnd||null,people:r.people||[],total:+r.total||0,items:(r.items||[]).map(({id,...it})=>it),payments:r.payments||{},coupleNames:r.coupleNames||[]});}
 function _currentContentSignature(){return _stableJson({dateStart:settleDateStart||'',dateEnd:settleDateEnd||null,people:[...people],total:items.reduce((s,it)=>s+(+it.amount||0),0),items:JSON.parse(JSON.stringify(items)).map(({id,...it})=>it),payments:JSON.parse(JSON.stringify(payments||{})),coupleNames:_coupleNames.slice()});}
 function _sameHistoryContent(a,b){return!!(a&&b&&_historyContentSignature(a)===_historyContentSignature(b));}
-// 잠김 판정 전용 서명: payments(입금 현황)는 잠금 후에도 계속 바뀌는 운영 데이터이므로 제외한다.
-// (입금 체크만으로 '잠김' 버튼이 '잠금'으로 되돌아가던 버그 수정 — v7.60)
-function _lockIdentitySig(o){return _stableJson({dateStart:o.dateStart||'',dateEnd:o.dateEnd||null,people:o.people||[],total:+o.total||0,items:(o.items||[]).map(({id,...it})=>it),coupleNames:o.coupleNames||[]});}
-function _currentLockIdentitySig(){return _lockIdentitySig({dateStart:settleDateStart,dateEnd:settleDateEnd,people:[...people],total:items.reduce((s,it)=>s+(+it.amount||0),0),items:JSON.parse(JSON.stringify(items)),coupleNames:_coupleNames.slice()});}
-function _historyLockMatches(r){return!!(r&&_lockIdentitySig(r)===_currentLockIdentitySig());}
+// 잠김 판정: 앱 전역에서 '같은 정산인가'를 판단하는 검증된 _histFingerprint 로 비교한다.
+// (날짜·참여자·항목 이름/금액/결제자/멤버만 — 입금·커플·영수증텍스트·멤버순서·id 등 부수 필드는
+//  _histFingerprint 가 전부 무시하므로, 그런 값이 달라져도 '잠김'이 '잠금'으로 되돌아가지 않는다. v7.61)
+function _currentHistoryFingerprint(){return _histFingerprint({dateStart:settleDateStart,dateEnd:settleDateEnd,people:[...people],items});}
+function _historyLockMatches(r){return!!(r&&_histFingerprint(r)===_currentHistoryFingerprint());}
 async function _fixCurrentHistory(){
   if(_editingFixedSourceId){const saved=saveToHistory();if(saved)await fixHistoryRecord(saved.id);return;}
   let rec=_currentHistoryRecord();
