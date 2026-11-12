@@ -1089,8 +1089,9 @@ svg{display:block;flex-shrink:0;}
   /* 검색창·정렬·정산상태 높이 통일(36px) — 검색창이 더 커서 버튼과 어긋나던 문제 (v7.46) */
   .hist-page .hist-dr-sinp{height:36px;box-sizing:border-box;padding-top:0;padding-bottom:0;}
   .hist-page .hist-sort-btn,.hist-page .hist-settle-btn{height:36px;box-sizing:border-box;}
-  /* 본문(검색창·카드) 좌우 인셋을 헤더(20px)와 일치 — 기존 16px이라 제목보다 4px 왼쪽에서 시작하던 어긋남 (v7.47) */
-  .hist-page .hist-dr-body{padding-left:20px;padding-right:20px;}
+  /* 본문(검색창·카드) 좌우 인셋은 다른 탭 본문(.mob-body 16px)과 동일하게 — v7.47에서 헤더(20px)에
+     맞췄다가 카드가 공유 카드(16px)보다 좁아진 문제. 제목은 20px, 카드는 16px(모든 탭 공통 구조) (v7.51).
+     → 별도 override 없이 base .hist-dr-body(16px) 사용. */
   /* 구분선→검색창 간격을 다른 탭 본문 상단 여백(16px)과 일치 — 기존 10px이라 검색창이 6px 더 위에서 시작하던 어긋남 (v7.49) */
   .hist-page .hist-dr-sinp-wrap{padding-top:16px;}
 }
@@ -1735,8 +1736,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.50';
-const BUILD_TIME='2026-11-12 01:35';
+const APP_VERSION='v7.51';
+const BUILD_TIME='2026-11-12 02:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
