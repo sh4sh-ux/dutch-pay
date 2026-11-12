@@ -1062,6 +1062,8 @@ svg{display:block;flex-shrink:0;}
 /* ── 기록 보관함 풀스크린 ── */
 .hist-page{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .38s cubic-bezier(.32,.72,0,1);will-change:transform;}
 .hist-page.open{transform:translateY(0);}
+.hist-mob-shell{display:none;}
+.hist-mob-actions{display:none;}
 /* 데스크탑: 전체화면 대신 오른쪽 패널 영역에 통합 배치(_histPlaceDesktop) — 딤·그림자·슬라이드 없이 패널처럼 (v6.99) */
 .hist-backdrop{display:none;}
 @media(min-width:701px){
@@ -1076,6 +1078,11 @@ svg{display:block;flex-shrink:0;}
 @media(max-width:700px){
   .hist-page{bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:none;opacity:0;pointer-events:none;transition:opacity .16s ease;}
   .hist-page.open{transform:none;opacity:1;pointer-events:auto;}
+  /* 모바일 기록 헤더: 흉내(.hist-page-nav 그리드) 숨기고 다른 탭과 동일한 .mob-header(.hist-mob-shell) 사용 → 헤더 밑 구분선 위치가 다른 탭과 100% 동일 (v7.55) */
+  #histDr .hist-page-nav{display:none;}
+  #histDr .hist-mob-shell{display:block;}
+  #histDr .hist-mob-shell .hist-head-sync{margin-left:auto;font-size:11px;line-height:1.25;white-space:nowrap;}
+  #histDr .hist-mob-actions{display:flex;justify-content:flex-end;padding:12px 16px 0;}
   .hist-page .hist-back-btn{display:none;}
   /* 헤더: 다른 탭(.mob-header)과 완전 동일한 2줄 구조 — eyebrow+sync / 좌측제목+전체상세저장 (2×2 그리드) */
   .hist-page .hist-page-nav{display:grid;grid-template-columns:1fr auto;grid-template-areas:'eyebrow sync' 'title action';align-items:center;row-gap:20px;column-gap:10px;padding:max(18px,calc(env(safe-area-inset-top,0px) + 12px)) 20px 20px;background:var(--card);border-bottom:1px solid var(--sep);}
@@ -1165,7 +1172,7 @@ svg{display:block;flex-shrink:0;}
 .sinp-clr.vis{display:flex;align-items:center;justify-content:center;}
 /* ── 날짜 표시 (로케일 독립적 YYYY.MM.DD) ── */
 .dp-wrap{position:relative;width:100%;display:block;}
-.dp-txt{border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 28px 8px 10px;font-size:13px;background-color:var(--card);color:var(--label);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2' ry='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/></svg>");background-repeat:no-repeat;background-position:right 8px center;background-size:14px 14px;cursor:pointer;white-space:nowrap;width:100%;box-sizing:border-box;line-height:1.4;}
+.dp-txt{border:1px solid var(--sep2);border-radius:var(--rs);height:36px;padding:0 28px 0 10px;display:flex;align-items:center;font-size:13px;background-color:var(--card);color:var(--label);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2' ry='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/></svg>");background-repeat:no-repeat;background-position:right 8px center;background-size:14px 14px;cursor:pointer;white-space:nowrap;width:100%;box-sizing:border-box;line-height:1.4;}
 .dp-wrap:focus-within>.dp-txt,.dp-wrap.dp-open>.dp-txt{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);}
 .dp-wrap.share-date-dp{display:block;margin:0;}
 .dp-wrap.share-date-dp>.dp-txt{height:36px;box-sizing:border-box;}
@@ -1554,7 +1561,7 @@ svg{display:block;flex-shrink:0;}
   .mob-total-stack{text-align:right;}
   .mob-total-stack>span{display:block;}
   .mob-total-stack .mob-total-caption{margin-bottom:3px;font-size:10px;font-weight:600;color:var(--label3);}
-  .mob-total-stack #mTotal{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .mob-total-stack #mTotal,.mob-total-stack .js-hist-cnt{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;}
   .mob-tabs{position:fixed;right:0;bottom:0;left:0;z-index:90;display:flex;gap:4px;padding:8px 14px calc(9px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--card) 94%,transparent);border-top:1px solid var(--sep);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}
   .mob-tab{display:flex;min-height:54px;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:0;border:0;border-radius:14px;font-size:10px;}
   .mob-tab svg{width:20px;height:20px;}
@@ -1692,13 +1699,28 @@ svg{display:block;flex-shrink:0;}
 <!-- 기록 보관함 풀스크린 -->
 <div class="hist-backdrop" id="histBackdrop" onclick="closeHistDrawer()" aria-hidden="true"></div>
 <div class="hist-page" id="histDr">
+  <!-- 모바일 전용: 다른 탭과 완전히 동일한 .mob-header를 그대로 사용(흉내 아님). 데스크탑은 아래 .hist-page-nav 사용 -->
+  <div class="mob-header hist-mob-shell">
+    <div class="mob-eyebrow-row">
+      <span>DUTCH PAY</span>
+      <b class="mob-ver-badge js-hist-ver"></b>
+      <div class="sync-info hist-head-sync hist-mshell-sync"></div>
+    </div>
+    <div class="mob-title-row">
+      <span class="mob-title">기록 보관함</span>
+      <div class="mob-total-stack">
+        <span class="mob-total-caption">총 기록</span>
+        <span class="js-hist-cnt">0건</span>
+      </div>
+    </div>
+  </div>
   <div class="hist-page-nav">
     <div class="hist-page-nav-row">
       <button class="hist-back-btn" onclick="closeHistDrawer()" aria-label="닫기">
         <span class="hist-back-arr">‹</span>
         <span class="hist-back-lbl">더치페이</span>
       </button>
-      <span class="hist-mob-eyebrow"><span>DUTCH PAY</span><b id="histVerM"></b></span>
+      <span class="hist-mob-eyebrow"><span>DUTCH PAY</span><b id="histVerM" class="js-hist-ver"></b></span>
       <span class="hist-page-eye">보관함</span>
       <span class="hist-page-title">기록 보관함</span>
       <span class="hist-cnt-badge" id="histDrCnt"></span>
@@ -1709,6 +1731,7 @@ svg{display:block;flex-shrink:0;}
     </div>
   </div>
   <div class="hist-dr-body" id="histDrBody">
+    <div class="hist-mob-actions"><button class="hist-bulk-detail-btn" onclick="saveAllHistoryDetailsToDropbox()">전체 상세 저장</button></div>
     <div class="hist-dr-sinp-wrap">
       <div class="sinp-rel">
         <input class="hist-dr-sinp" id="histDrSinp" type="search" placeholder="이름, 참여자, 날짜 검색…" oninput="updateHistorySearch(this.value);_chkClear(this)">
@@ -1736,8 +1759,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.54';
-const BUILD_TIME='2026-11-12 16:30';
+const APP_VERSION='v7.55';
+const BUILD_TIME='2026-11-12 17:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3073,7 +3096,7 @@ function _recTot(r){return(r.items||[]).reduce((s,it)=>s+(+it.amount||0),0);}
 function _refreshHistDrawer(){
   _hPanelOpen=false;
   const recs=loadHistory();
-  const cnt=document.getElementById('histDrCnt');if(cnt)cnt.textContent=recs.length?`${recs.length}건`:'';
+  const cnt=document.getElementById('histDrCnt');if(cnt)cnt.textContent=recs.length?`${recs.length}건`:'';document.querySelectorAll('.js-hist-cnt').forEach(e=>{e.textContent=recs.length?`${recs.length}건`:'0건';});
   const content=document.getElementById('histDrContent');if(!content)return;
   content.innerHTML=`${_historyDedupNoticeHtml()}<div id="histDrList">${_histDrListHtml(recs)}</div>`;
   _updateHSyncInfo();
@@ -3161,7 +3184,7 @@ function _histDrListHtml(recs){
 function _refreshHistDrList(){
   const el=document.getElementById('histDrList');if(!el)return;
   const recs=loadHistory();
-  const cnt=document.getElementById('histDrCnt');if(cnt)cnt.textContent=recs.length?`${recs.length}건`:'';
+  const cnt=document.getElementById('histDrCnt');if(cnt)cnt.textContent=recs.length?`${recs.length}건`:'';document.querySelectorAll('.js-hist-cnt').forEach(e=>{e.textContent=recs.length?`${recs.length}건`:'0건';});
   el.innerHTML=_histDrListHtml(recs);
 }
 function cap(s){return s[0].toUpperCase()+s.slice(1);}
@@ -5325,13 +5348,13 @@ function _updateHDbxBadge(){
 }
 
 function _updateHSyncInfo(){
-  const el=document.getElementById('hSyncInfo');if(!el)return;
-  if(_hSyncState==='syncing'){el.textContent='↻ 동기화 중…';el.style.color='var(--label3)';return;}
-  if(_hSyncState==='delayed'){el.textContent='↻ 동기화가 지연되고 있어요…';el.style.color='var(--label3)';return;}
-  if(_hSyncState==='error'){el.textContent='⚠ '+(_hSyncErrShort||'동기화 실패')+' · 다시 시도';el.style.color='var(--red)';return;}
-  const last=localStorage.getItem(DBX_H_LASTSYNC);
-  if(!last){el.textContent='';return;}
-  try{el.textContent='● '+_relativeSyncLabel(last);el.style.color='var(--green)';}catch(e2){}
+  const els=document.querySelectorAll('.hist-head-sync');if(!els.length)return;
+  let text='',color='';
+  if(_hSyncState==='syncing'){text='↻ 동기화 중…';color='var(--label3)';}
+  else if(_hSyncState==='delayed'){text='↻ 동기화가 지연되고 있어요…';color='var(--label3)';}
+  else if(_hSyncState==='error'){text='⚠ '+(_hSyncErrShort||'동기화 실패')+' · 다시 시도';color='var(--red)';}
+  else{const last=localStorage.getItem(DBX_H_LASTSYNC);if(last){try{text='● '+_relativeSyncLabel(last);color='var(--green)';}catch(e2){}}}
+  els.forEach(el=>{el.textContent=text;el.style.color=color;});
 }
 
 let _hPanelOpen=false;
@@ -5920,7 +5943,7 @@ function _prepareDetailHistoryExports(records){
 }
 
 let _bulkDetailBusy=false;
-function _setBulkDetailProgress(text,busy){const btn=document.getElementById('histBulkDetailBtn');if(!btn)return;btn.textContent=text;btn.disabled=!!busy;btn.setAttribute('aria-busy',busy?'true':'false');}
+function _setBulkDetailProgress(text,busy){document.querySelectorAll('.hist-bulk-detail-btn').forEach(btn=>{btn.textContent=text;btn.disabled=!!busy;btn.setAttribute('aria-busy',busy?'true':'false');});}
 async function saveAllHistoryDetailsToDropbox(){
   if(_bulkDetailBusy)return;
   let token=hDbxGetToken();if(!token){toast('Dropbox가 연결되지 않았어요. 먼저 Dropbox를 연결해주세요.',{type:'error'});return;}
@@ -6239,7 +6262,7 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
     btn._navTipTimer=setTimeout(()=>btn.classList.remove('show-nav-tip'),1200);
   });
 });
-(()=>{['appVersionD','appVersionM','appVersionMob','histVerM'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;const _hdb=document.getElementById('histDrBody');if(_hdb)_hdb.addEventListener('scroll',()=>{const si=document.getElementById('histDrSinp');if(si&&si===document.activeElement){if(Date.now()-_histSearchTypedAt<800)return;si.blur();}},{passive:true});})();
+(()=>{['appVersionD','appVersionM','appVersionMob','histVerM'].forEach(id=>{const v=document.getElementById(id);if(v)v.textContent=APP_VERSION;});document.querySelectorAll('.js-hist-ver').forEach(v=>{v.textContent=APP_VERSION;});_updateDataMenuBtns();_initVerBadge();_initMobTitle();_dpUpdate('meetingDateDisp',settleDateStart);const mdi=document.getElementById('meetingDateInp');if(mdi)mdi.value=settleDateStart;const _hdb=document.getElementById('histDrBody');if(_hdb)_hdb.addEventListener('scroll',()=>{const si=document.getElementById('histDrSinp');if(si&&si===document.activeElement){if(Date.now()-_histSearchTypedAt<800)return;si.blur();}},{passive:true});})();
 // ── 앱 내 뒤로가기 (브라우저·안드로이드 back) ─────────────────────────────
 // SPA라 back 버튼이 열린 오버레이/탭을 닫지 않고 페이지 자체(앱)를 벗어나 버린다.
 // [근본 방식] 클릭을 보고 "추측"하지 않는다. 실제 화면 상태(현재 탭·열린 오버레이 수·검색 여부)를
