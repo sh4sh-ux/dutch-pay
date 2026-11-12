@@ -1756,8 +1756,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.61';
-const BUILD_TIME='2026-11-12 20:40';
+const APP_VERSION='v7.62';
+const BUILD_TIME='2026-11-12 21:15';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5026,7 +5026,10 @@ function _dedupHistoryDetailed(arr){
   return{records:out.sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||'')),removedIds:[...new Set(removedIds)],removedRecords:unique,keptIds:[...new Set(keptIds)]};
 }
 function _dedupHistory(arr){return _dedupHistoryDetailed(arr).records;}
-function saveHistory(arr){try{const cleaned=_dedupHistoryDetailed(arr);_recordHistoryDedup(cleaned);cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));return true;}catch(e){toast(_storageErrorMessage(e,'기록 저장'),{type:'error',duration:5000});return false;}}
+// 저장공간 초과 시 비파괴적으로 공간을 비운다: localStorage 에 남은 레거시 자동백업은
+// 실제 복구본이 IndexedDB 에 있으므로 지워도 정산·기록·이미지 데이터 손실이 없다. (v7.62)
+function _freeLocalStorageOnce(){let freed=false;try{if(localStorage.getItem(AUTO_BACKUP_KEY)!==null){localStorage.removeItem(AUTO_BACKUP_KEY);freed=true;}}catch(e){}return freed;}
+function saveHistory(arr){const cleaned=_dedupHistoryDetailed(arr);const write=()=>{_recordHistoryDedup(cleaned);cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));};try{write();return true;}catch(e){if(_isQuotaError(e)&&_freeLocalStorageOnce()){try{write();return true;}catch(e2){e=e2;}}toast(_storageErrorMessage(e,'기록 저장'),{type:'error',duration:5000});return false;}}
 function _deduplicateHistoryOnStartup(){try{const arr=loadHistory();if(arr.length<2)return;const cleaned=_dedupHistoryDetailed(arr),removed=arr.length-cleaned.records.length;if(removed>0){_recordHistoryDedup(cleaned);cleaned.removedIds.forEach(id=>_saveDelId(id));localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(cleaned.records)));setTimeout(()=>toast(`중복 기록 ${removed}건을 하나로 정리했어요`,{type:'success',duration:4200}),400);}}catch(e){}}
 // 같은 정산(지문 완전 동일 = 날짜·참여자·항목 전부 같고 입금만 다름)의 중복 기록 정리 계획을 세운다. 순수 함수.
 // v6.65 이하: 잠긴 정산에 입금을 갱신하면 saveToHistory가 새 'hv_' 버전으로 쪼개 중복이 쌓였다(사용자 신고).

@@ -73,23 +73,13 @@
     pop.style.margin = '0';
     pop.style.zIndex = '1000';
 
-    const visibleBounds = () => {
-      let top = margin;
-      let bottom = (window.innerHeight || document.documentElement.clientHeight) - margin;
-      let node = anchorEl && anchorEl.parentElement;
-
-      while (node && node !== document.body && node !== document.documentElement) {
-        const cs = getComputedStyle(node);
-        const overflowY = cs.overflowY;
-        if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'hidden' || overflowY === 'clip') {
-          const r = node.getBoundingClientRect();
-          top = Math.max(top, r.top + margin);
-          bottom = Math.min(bottom, r.bottom - margin);
-        }
-        node = node.parentElement;
-      }
-      return { top, bottom };
-    };
+    // 팝업은 position:fixed 로 body 에 붙어 anchor 의 overflow 조상(스크롤 영역)에
+    // 전혀 잘리지 않는다. 따라서 가용 높이는 overflow 조상이 아니라 뷰포트로만 잡아야 한다.
+    // (조상으로 제한하면 2줄짜리 작은 그리드가 '안 들어간다'고 오판해 억지로 스크롤되던 버그 — v7.62)
+    const visibleBounds = () => ({
+      top: margin,
+      bottom: (window.innerHeight || document.documentElement.clientHeight) - margin
+    });
 
     const positionPopup = () => {
       if (!pop.isConnected) return;
