@@ -956,7 +956,7 @@ svg{display:block;flex-shrink:0;}
 .hist-dbx-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--label2);padding:5px 10px;border:1px solid var(--sep);background:var(--fill2);border-radius:20px;cursor:pointer;white-space:nowrap;}
 .hist-dbx-btn:hover{background:var(--fill);color:var(--label);}
 .record-list{display:flex;flex-direction:column;gap:10px;}
-.record-card{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;}
+.record-card{background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:0 1px 2px rgba(20,25,40,.05),0 5px 14px rgba(20,25,40,.08);}
 .rc-hd{padding:14px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;cursor:pointer;transition:background .12s;touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent;}
 .rc-hd:hover{background:var(--fill2);}
 .rc-meta{flex:1;min-width:0;}
@@ -1736,8 +1736,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.51';
-const BUILD_TIME='2026-11-12 02:00';
+const APP_VERSION='v7.52';
+const BUILD_TIME='2026-11-12 02:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
