@@ -1117,7 +1117,7 @@ svg{display:block;flex-shrink:0;}
   .hist-page .hist-head-sync{margin:0;padding:0;text-align:right;}
   .hist-page .hist-dr-body{padding:0 34px 40px;}
   /* 검색 + 최신순 + 정산상태 한 줄 → 카드가 더 많이 보이게 */
-  .hist-page .hist-dr-sinp-wrap{display:flex;gap:8px;align-items:center;overflow:visible;padding:14px 0 10px;flex-wrap:nowrap;background:var(--panel-bg);position:static;}
+  .hist-page .hist-dr-sinp-wrap{display:flex;gap:8px;align-items:center;overflow:visible;padding:18px 0 10px;flex-wrap:nowrap;background:var(--panel-bg);position:static;}
   .hist-page .sinp-rel{flex:1;min-width:0;}
   .hist-page .hist-dr-sinp{height:36px;box-sizing:border-box;padding-top:0;padding-bottom:0;font-size:13px;}
   .hist-page .hist-filter-wrap{flex-shrink:0;position:relative;}
@@ -1756,8 +1756,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.56';
-const BUILD_TIME='2026-11-12 17:40';
+const APP_VERSION='v7.57';
+const BUILD_TIME='2026-11-12 18:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
