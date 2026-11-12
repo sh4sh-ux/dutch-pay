@@ -1084,13 +1084,15 @@ svg{display:block;flex-shrink:0;}
   .hist-page .hist-mob-eyebrow{grid-area:eyebrow;display:flex;align-items:baseline;gap:10px;color:var(--label3);font-size:11px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;line-height:1.25;}
   .hist-page .hist-mob-eyebrow b{font-weight:600;letter-spacing:0;text-transform:none;}
   .hist-page .hist-page-title{grid-area:title;position:static;text-align:left;font-size:24px;font-weight:700;letter-spacing:-.4px;line-height:1.15;pointer-events:auto;align-self:end;}
-  .hist-page .hist-head-sync{grid-area:sync;justify-self:end;margin:0;padding:0;text-align:right;font-size:11px;white-space:nowrap;}
+  .hist-page .hist-head-sync{grid-area:sync;justify-self:end;margin:0;padding:0;text-align:right;font-size:11px;line-height:1.25;white-space:nowrap;}
   .hist-page .hist-bulk-detail-btn{grid-area:action;justify-self:end;align-self:end;margin:0;}
   /* 검색창·정렬·정산상태 높이 통일(36px) — 검색창이 더 커서 버튼과 어긋나던 문제 (v7.46) */
   .hist-page .hist-dr-sinp{height:36px;box-sizing:border-box;padding-top:0;padding-bottom:0;}
   .hist-page .hist-sort-btn,.hist-page .hist-settle-btn{height:36px;box-sizing:border-box;}
   /* 본문(검색창·카드) 좌우 인셋을 헤더(20px)와 일치 — 기존 16px이라 제목보다 4px 왼쪽에서 시작하던 어긋남 (v7.47) */
   .hist-page .hist-dr-body{padding-left:20px;padding-right:20px;}
+  /* 구분선→검색창 간격을 다른 탭 본문 상단 여백(16px)과 일치 — 기존 10px이라 검색창이 6px 더 위에서 시작하던 어긋남 (v7.49) */
+  .hist-page .hist-dr-sinp-wrap{padding-top:16px;}
 }
 .hist-page-eye,.hist-mob-eyebrow{display:none;}
 /* 데스크탑: 기록 보관함을 오른쪽 패널 탭과 동일한 레이아웃으로 — 헤더(144px·좌측 눈썹+제목)·구분선 높이·검색/버튼 34px 인셋 통일, < 더치페이 제거. .hist-page 접두로 뒤따르는 기본 규칙보다 우선 (v6.99) */
@@ -1733,8 +1735,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.48';
-const BUILD_TIME='2026-11-07 01:40';
+const APP_VERSION='v7.49';
+const BUILD_TIME='2026-11-12 01:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
