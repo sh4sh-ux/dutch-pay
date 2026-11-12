@@ -1756,8 +1756,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.57';
-const BUILD_TIME='2026-11-12 18:05';
+const APP_VERSION='v7.58';
+const BUILD_TIME='2026-11-12 18:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4923,7 +4923,7 @@ async function _hydrateFixedArchives(){const deleted=_loadFixedDeletedIds(),raw=
 function _ensureFixedArchives(){if(_fixedArchivesCache)return Promise.resolve(_fixedArchivesCache);if(!_fixedHydratePromise)_fixedHydratePromise=_hydrateFixedArchives().catch(e=>{_fixedHydratePromise=null;throw e;});return _fixedHydratePromise;}
 function _fixedArchiveFor(recordId){if(_loadFixedDeletedIds().has(String(recordId)))return null;return loadFixedArchives().find(x=>x.recordId===recordId)||_loadFixedManifest().find(x=>x.recordId===recordId)||null;}
 function _isHistoryFixed(recordId){return!!_fixedArchiveFor(recordId);}
-function _refreshHistoryLockSurfaces(){if(_histDrawerOpen){_refreshHistDrawer();return;}renderAll(true);}
+function _refreshHistoryLockSurfaces(){const dr=document.getElementById('histDr');if(_histDrawerOpen||(dr&&dr.classList.contains('open'))){_refreshHistDrawer();return;}renderAll(true);}
 function _removeDelId(id){try{const s=_loadDelIds();s.delete(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
 function _loadHistoryDedupAudit(){try{const a=JSON.parse(localStorage.getItem(HISTORY_DEDUP_AUDIT_KEY)||'null');return a&&Array.isArray(a.removedRecords)&&a.removedRecords.length?a:null;}catch(e){return null;}}
 function _recordHistoryDedup(cleaned){
