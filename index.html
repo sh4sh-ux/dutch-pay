@@ -1756,8 +1756,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.63';
-const BUILD_TIME='2026-11-12 21:55';
+const APP_VERSION='v7.64';
+const BUILD_TIME='2026-11-13 10:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1950,6 +1950,7 @@ function openInExternalBrowser(){const t=detectInAppBrowser();const url=location
 const STORAGE_KEY='dutchpay_v1';
 const HISTORY_KEY='dutchpay_history';
 const HISTORY_DEL_KEY='dutchpay_hist_deleted';
+const HISTORY_DEL_FP_KEY='dutchpay_hist_deleted_fp'; // 삭제된 기록의 내용 지문 — 기기마다 id가 달라도 삭제 전파 (v7.64)
 const FIXED_HISTORY_KEY='dutchpay_fixed_history_v1';
 const LOCK_PIN_HASH_KEY='dutchpay_lock_pin_hash_v1';
 const LOCK_PIN_SALT_KEY='dutchpay_lock_pin_salt_v1';
@@ -4754,6 +4755,8 @@ function saveToHistory(){
     payments:JSON.parse(JSON.stringify(payments)),
     coupleNames:_coupleNames.slice()
   };
+  // 저장(재생성 포함)하는 정산은 삭제 톰스톤에서 해제 — 과거 삭제표식이 새 저장을 지우지 않게 (v7.64)
+  _removeDelFp(record);try{_removeDelId(record.id);}catch(e){}
   try{
     const raw=localStorage.getItem(HISTORY_KEY);
     const arr=raw?JSON.parse(raw):[];
@@ -4991,6 +4994,33 @@ function _fixedMutationBlocked(id){if(!_isHistoryFixed(id))return false;toast('�
 function _loadDelIds(){try{return new Set(JSON.parse(localStorage.getItem(HISTORY_DEL_KEY)||'[]'));}catch(e){return new Set();}}
 function _saveDelId(id,force=false){try{if(!force&&_isHistoryFixed(id))return;const s=_loadDelIds();s.add(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
 function _mergeDelIds(remoteIds){try{const s=_loadDelIds();(remoteIds||[]).forEach(id=>s.add(id));localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));return s;}catch(e){return _loadDelIds();}}
+// 삭제 지문 톰스톤: 같은 정산이 기기마다 다른 id를 가져도 '내용'으로 삭제를 전파한다. (v7.64)
+// {지문: 삭제시각} 맵 — 삭제시각보다 '나중에 저장된' 동일 정산은 살린다(재생성=최신 우선, LWW).
+// 저장(saveToHistory) 시 해당 지문을 해제하므로 '동일 정산 재생성'이 정상 동작한다.
+const _MAX_DEL_FP=400; // 무한 증가 방지(최근 삭제 우선 보존)
+function _loadDelFps(){try{const o=JSON.parse(localStorage.getItem(HISTORY_DEL_FP_KEY)||'{}');return(o&&typeof o==='object'&&!Array.isArray(o))?o:{};}catch(e){return{};}}
+function _saveDelFpsObj(obj){try{let ks=Object.keys(obj);if(ks.length>_MAX_DEL_FP){ks=ks.sort((a,b)=>String(obj[a]).localeCompare(String(obj[b]))).slice(ks.length-_MAX_DEL_FP);const n={};ks.forEach(k=>n[k]=obj[k]);obj=n;}localStorage.setItem(HISTORY_DEL_FP_KEY,JSON.stringify(obj));}catch(e){}}
+function _saveDelFp(record,at){try{if(!record)return;const fp=_histFingerprint(record);if(!fp)return;const o=_loadDelFps();const t=at||new Date().toISOString();if(!o[fp]||String(t)>String(o[fp]))o[fp]=t;_saveDelFpsObj(o);}catch(e){}}
+function _removeDelFp(record){try{if(!record)return;const fp=_histFingerprint(record);const o=_loadDelFps();if(o[fp]!==undefined){delete o[fp];_saveDelFpsObj(o);}}catch(e){}}
+function _mergeDelFps(remoteObj){try{const o=_loadDelFps();if(remoteObj&&typeof remoteObj==='object'){Object.keys(remoteObj).forEach(fp=>{const t=remoteObj[fp];if(!o[fp]||String(t)>String(o[fp]))o[fp]=t;});}_saveDelFpsObj(o);return o;}catch(e){return _loadDelFps();}}
+// 기록이 삭제시각보다 나중에 저장됐으면(재생성) 톰스톤보다 우선 — 삭제 대상 아님.
+function _fpDeleted(delFps,r){const fp=_histFingerprint(r),t=delFps&&delFps[fp];return t!==undefined&&(r.savedAt||'')<=String(t);}
+// remote·local 기록을 병합한다. id 톰스톤 또는 내용-지문 톰스톤(삭제시각 이후 재저장분 제외)에
+// 걸리면 버리고, 잠긴(fixed) 기록은 보호한다. 살아남은 최신 재생성분의 지문 톰스톤은 해제한다.
+// (hSyncDropbox 와 테스트가 같은 로직을 쓰도록 분리 — v7.64)
+function _computeHistoryMerge(remoteRecs,local,delIds,delFps){
+  const map=new Map();
+  [...(remoteRecs||[]),...(local||[])].forEach(r=>{
+    if(!r||r.id===undefined)return;
+    if((delIds.has(r.id)||_fpDeleted(delFps,r))&&!_isHistoryFixed(r.id))return;
+    const ex=map.get(r.id);if(!ex||(r.savedAt||'')>(ex.savedAt||''))map.set(r.id,r);
+  });
+  const merged=Array.from(map.values()).sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));
+  let fpChanged=false;
+  merged.forEach(r=>{if(!_isHistoryFixed(r.id)){const fp=_histFingerprint(r);if(delFps[fp]!==undefined&&(r.savedAt||'')>String(delFps[fp])){delete delFps[fp];fpChanged=true;}}});
+  if(fpChanged)_saveDelFpsObj(delFps);
+  return merged;
+}
 function _histFingerprint(r){return[r.dateStart||'',r.dateEnd||'',(r.people||[]).slice().sort().join('|'),(r.items||[]).map(i=>`${i.name||''}|${+i.amount||0}|${i.payer||''}|${i.isTreat?1:0}|${(i.members||[]).slice().sort().join('~')}|${(i.watchers||[]).slice().sort().join('~')}|${i.rounderOverride||''}`).sort().join(',')].join('§');}
 function _historyRecordIdForGroup(groupId){return'hg_'+_dataHash(['history',String(groupId)]);}
 function _mergeHistoryDuplicate(a,b){
@@ -5137,7 +5167,7 @@ async function deleteHistoryRecord(id,event){
       const compact=remaining.map(f=>({schemaVersion:f.schemaVersion||1,fixId:f.fixId,recordId:f.recordId,fixedAt:f.fixedAt||'',guard:f.guard,sha256:f.sha256||'',pinHash:f.pinHash||'',pinSalt:f.pinSalt||''}));
       localStorage.setItem(FIXED_HISTORY_KEY,JSON.stringify(compact));_fixedArchivesCache=remaining;
     }
-    _saveDelId(id,fixed);saveHistory(loadHistory().filter(r=>r.id!==id));
+    _saveDelId(id,fixed);if(!fixed)_saveDelFp(record);saveHistory(loadHistory().filter(r=>r.id!==id));
   }catch(e){toast(_storageErrorMessage(e,'기록 삭제'),{type:'error',duration:5000});return;}
   toast(fixed?'잠긴 기록이 삭제됐어요 · 안전백업 보관됨':'기록이 삭제됐어요',{type:'success',duration:4000});
   if(hDbxGetToken())hSyncDropbox(true);
@@ -5581,12 +5611,11 @@ async function hSyncDropbox(uploadOnly=false){
     if(!uploadOnly&&raw){
       const remoteRecs=Array.isArray(raw)?raw:(raw.records||[]);
       const delIds=_mergeDelIds(Array.isArray(raw)?[]:(raw.deletedIds||[]));
-      const map=new Map();
-      [...remoteRecs,...local].forEach(r=>{if(delIds.has(r.id)&&!_isHistoryFixed(r.id))return;const ex=map.get(r.id);if(!ex||(r.savedAt||'')>(ex.savedAt||''))map.set(r.id,r);});
-      const merged=Array.from(map.values()).sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));
+      const delFps=_mergeDelFps(Array.isArray(raw)?{}:(raw.deletedFps||{}));
+      const merged=_computeHistoryMerge(remoteRecs,local,delIds,delFps);
       saveHistory(merged);
     }
-    const toUpload={records:loadHistory(),deletedIds:[..._loadDelIds()]};
+    const toUpload={records:loadHistory(),deletedIds:[..._loadDelIds()],deletedFps:_loadDelFps()};
     if(!await _dbxUpload(dbxGetToken(),dbxHistFile(),JSON.stringify(toUpload,null,2),12000)){
       const s=_dbxLastUploadStatus,b=_dbxLastUploadBody||'';
       const insuf=s===507||/insufficient_space|no_write_permission|payment_required|over_quota|team_folder/i.test(b);
