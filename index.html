@@ -848,13 +848,13 @@ svg{display:block;flex-shrink:0;}
 .rcpt-viewer-img{max-width:100%;max-height:82vh;border-radius:12px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none;cursor:zoom-in;touch-action:none;user-select:none;-webkit-user-select:none;}
 .rcpt-viewer-img.ready{display:block;}
 .rcpt-viewer-close{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));width:44px;height:44px;border-radius:50%;background:rgba(28,28,30,.78);box-shadow:0 0 0 1px rgba(255,255,255,.28);color:#fff;border:none;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:3;}
-/* 영수증 앱과 동일한 하단 중앙 흰색 알약 — [−  100%  +] 한 덩어리 (v7.65) */
-.imgzoom-ctl{position:absolute;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:0;background:#fff;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.3),0 0 0 1px rgba(0,0,0,.05);padding:4px;}
-.imgzoom-ctl button{height:40px;display:inline-flex;align-items:center;justify-content:center;border:none;background:transparent;box-shadow:none;color:#1c1c1e;text-shadow:none;font-size:20px;font-weight:600;line-height:1;cursor:pointer;font-family:inherit;border-radius:999px;transition:background .15s ease;}
+/* 하단 중앙 회색 반투명 알약 — [−  100%  +] 흰색 글자, 그림자 없음 (v7.66) */
+.imgzoom-ctl{position:absolute;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:0;background:rgba(60,60,67,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:999px;padding:4px;}
+.imgzoom-ctl button{height:40px;display:inline-flex;align-items:center;justify-content:center;border:none;background:transparent;box-shadow:none;color:#fff;text-shadow:none;font-size:20px;font-weight:600;line-height:1;cursor:pointer;font-family:inherit;border-radius:999px;transition:background .15s ease;}
 .imgzoom-ctl button[data-z=out],.imgzoom-ctl button[data-z=in]{width:44px;min-width:44px;padding:0;font-size:25px;}
-.imgzoom-ctl button[data-z=reset]{min-width:58px;padding:0 10px;font-size:15px;font-weight:600;color:#6b6b70;letter-spacing:.2px;font-variant-numeric:tabular-nums;}
-.imgzoom-ctl button:hover{background:rgba(0,0,0,.06);}
-.imgzoom-ctl button:active{background:rgba(0,0,0,.12);}
+.imgzoom-ctl button[data-z=reset]{min-width:58px;padding:0 10px;font-size:15px;font-weight:600;color:#fff;letter-spacing:.2px;font-variant-numeric:tabular-nums;}
+.imgzoom-ctl button:hover{background:rgba(255,255,255,.14);}
+.imgzoom-ctl button:active{background:rgba(255,255,255,.24);}
 /* 이미지 뷰어 컨트롤 자동 숨김(3초 무동작) v7.12 */
 .imgzoom-ctl,.rcpt-viewer-close,.history-image-viewer-close{transition:opacity .3s ease;}
 .rcpt-viewer.ui-hidden .imgzoom-ctl,.history-image-viewer.ui-hidden .imgzoom-ctl{opacity:0;pointer-events:none;}
@@ -1759,8 +1759,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.65';
-const BUILD_TIME='2026-11-13 11:30';
+const APP_VERSION='v7.66';
+const BUILD_TIME='2026-11-13 12:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
