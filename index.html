@@ -1766,8 +1766,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.75';
-const BUILD_TIME='2026-11-13 19:05';
+const APP_VERSION='v7.76';
+const BUILD_TIME='2026-11-13 20:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3244,11 +3244,11 @@ function _paymentDisplay(pm,billing,{owner=true}={}){
   if(pm.done&&pm.timestamp)meta.push(_dtpFmt(pm.timestamp));
   return{received,diff,status,waived:false,meta,metaText:meta.join(' · ')};
 }
-function _paymentBadgeHtml(pm,billing,{owner=true}={}){
+function _paymentBadgeHtml(pm,billing,{owner=true,badgeOnly=false}={}){
   const d=_paymentDisplay(pm,billing,{owner});
   if(pm?.waived)return `<span class="pm-badge waived">🤝 퉁</span>`;
   const cls=pm?.done?(d.diff>0?'pos':d.diff<0?'neg':'done'):'pending';
-  return `<span class="pm-badge ${cls}">${pm?.done?'✓ ':''}${e(d.status)}</span>${d.metaText?`<span class="pm-record-account">${e(d.metaText)}</span>`:''}`;
+  return `<span class="pm-badge ${cls}">${pm?.done?'✓ ':''}${e(d.status)}</span>${(!badgeOnly&&d.metaText)?`<span class="pm-record-account">${e(d.metaText)}</span>`:''}`;
 }
 
 function togglePaymentPanel(key){
@@ -3758,15 +3758,19 @@ function _pmHistResultsHtml(){
   }
   if(!displayCards.length)return summaryHtml+controlsHtml+'<div class="empty" style="padding:30px 0"><p style="color:var(--label3)">해당하는 기록이 없어요</p></div>';
   const _renderCard=c=>{
-    const dateStr=c.rec.dateStart?c.rec.dateStart.slice(2).replace(/-/g,'. ')+'.':c.rec.savedAt.slice(0,10);
+    // 기록보관함 카드(.record-card/.rc-*) 셸을 재사용해 통일 (v7.76).
+    // 토글·수정패널이 쓰는 훅(.pm-record-card/.pm-record-chev/.pm-rec-detail)은 그대로 유지.
+    const fhd=d=>{const[y,m,day]=(d||'').split('-');return day?`${y}년 ${+m}월 ${+day}일`:(d||'');};
+    const dateStr=c.rec.dateStart?fhd(c.rec.dateStart):(c.rec.savedAt||'').slice(0,10);
     const members=(c.rec.people||[]).join(' · ');
-    let statusHtml,amtHtml;
+    const peopleCnt=(c.rec.people||[]).length;
+    let badgeHtml,amtHtml;
     if(c.isParticipant){
-      statusHtml=c.isTreat?`<span class="pm-badge treat">한턱 ${fmt(c.treatAmt)}원</span>`:`<span class="pm-badge attend">참석</span>`;
+      badgeHtml=c.isTreat?`<span class="pm-badge treat">한턱 ${fmt(c.treatAmt)}원</span>`:`<span class="pm-badge attend">참석</span>`;
       amtHtml='';
     }else{
-      statusHtml=_paymentBadgeHtml(c.pm,c.billing,{owner:c.isOwnerTxn});
-      amtHtml=`<div class="pm-record-total">${fmt(c.billing)}원</div>`;
+      badgeHtml=_paymentBadgeHtml(c.pm,c.billing,{owner:c.isOwnerTxn,badgeOnly:true});
+      amtHtml=`<div class="rc-total">${fmt(c.billing)}원</div>`;
     }
     const personTreatAmt=(!c.isParticipant)?(c.rec.items||[]).filter(it=>it.payer===name&&it.isTreat).reduce((s,it)=>s+(+it.amount||0),0):0;
     const treatLineHtml=personTreatAmt>0?`<span class="pm-net-badge treat">한턱 ${fmt(personTreatAmt)}원</span>`:'';
@@ -3774,11 +3778,14 @@ function _pmHistResultsHtml(){
     const rid=ea(c.rec.id||'');const rkey=ea(c.key||'__attend__');
     const recItems=(c.rec.items||[]).filter(it=>+it.amount!==0);
     const itemsHtml=recItems.length?`<div class="pm-rec-items"><div class="pm-rec-items-title">지출 내역</div>${recItems.map(it=>{const uid='rcpt_'+(c.rec.id||'')+'_'+(it.id||'');const memsStr=_orderedMemberList(it.members,it.watchers,c.rec.people||[]).map(e).join(', ');const rowClick=it.receiptText?` onclick="toggleItemReceipt('${uid}',event)" style="cursor:pointer"`:'';const chev=it.receiptText?`<span class="rc-chev" data-rcpt-chev="${uid}"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:'';return `<div class="rc-item-row rc-3line"${rowClick}><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱</span>':''}${_alcBadge(it)}</div><div class="rc-item-meta">${memsStr}</div></div>${chev}<span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid,c.rec.id)}`;}).join('')}</div>`:'';
-    const bodyHtml=!c.isParticipant&&c.done?`<div class="pm-record-body"><div class="pm-record-row"><span class="pm-record-lbl">실수령액</span><span class="pm-record-val${recValCls}">${fmt(c.received)}원</span></div></div>`:'';
+    const recvHtml=!c.isParticipant&&c.done?`<div class="pm-record-body"><div class="pm-record-row"><span class="pm-record-lbl">실수령액</span><span class="pm-record-val${recValCls}">${fmt(c.received)}원</span></div></div>`:'';
+    const bodyInner=`${itemsHtml}${recvHtml}`;
+    const bodyHtml=`<div class="rc-body pm-rec-detail" style="display:none">${bodyInner}</div>`;
     const footMeta=!c.isParticipant?_paymentDisplay(c.pm,c.billing,{owner:c.isOwnerTxn}).meta:[];
-    const footHtml=footMeta.length?`<div class="pm-record-foot"><span class="pm-record-account">${e(footMeta.join(' · '))}</span></div>`:'';
-    const editBtnHtml=!c.isParticipant&&c.isOwnerTxn?`<div class="pm-rec-edit-row"><button class="pm-rec-edit-btn" onclick="event.stopPropagation();toggleHistRecordPanel('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')">✏️ 수정</button></div>`:'';
-    return `<div class="pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="pm-record-hd" onclick="togglePmRecCard('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')"><div class="pm-record-meta"><div class="pm-record-date">${e(dateStr)}</div><div class="pm-record-group">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="pm-record-members">${e(members)}</div></div><div class="pm-record-right">${amtHtml}${statusHtml}${treatLineHtml}<span class="pm-record-chev">▼</span></div></div><div class="pm-rec-detail" style="display:none">${itemsHtml}${bodyHtml}${footHtml}${editBtnHtml}</div></div>`;
+    const footLeft=footMeta.length?e(footMeta.join(' · ')):`${peopleCnt}명`;
+    const editBtnHtml=!c.isParticipant&&c.isOwnerTxn?`<button class="rc-load-btn rc-edit-btn" onclick="event.stopPropagation();toggleHistRecordPanel('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')">✏️ 수정</button>`:'';
+    const footHtml=`<div class="rc-foot"><span class="rc-saved-at">${footLeft}</span>${editBtnHtml}</div>`;
+    return `<div class="record-card pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="rc-hd" onclick="togglePmRecCard('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')"><div class="rc-meta"><div class="rc-date">${e(dateStr)}</div><div class="rc-name">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="rc-people">${e(members)}</div></div><div class="rc-right"><div class="rc-amt-line">${badgeHtml}${amtHtml}${treatLineHtml}</div><span class="rc-chevron pm-record-chev">▼</span></div></div>${bodyHtml}${footHtml}</div>`;
   };
   // 년도 선택 시 월별 그룹, 특정 월/전체 시 flat
   let cardsHtml='';
