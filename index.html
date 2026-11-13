@@ -1143,6 +1143,9 @@ svg{display:block;flex-shrink:0;}
 .hist-sort-chk{font-size:13px;}
 .hist-settle-btn{display:flex;align-items:center;gap:3px;padding:6px 12px;border-radius:20px;border:1.5px solid var(--sep2);background:transparent;font-size:12px;font-weight:500;color:var(--label2);cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .12s;-webkit-tap-highlight-color:transparent;}
 .hist-settle-btn.on{background:var(--green-bg);border-color:var(--green-txt);color:var(--green-txt);font-weight:600;}
+/* 클릭 시 뜨던 브라우저 기본 파란 포커스 링 제거(키보드 포커스는 은은한 링 유지) (v7.73) */
+.hist-settle-btn:focus,.hist-sort-btn:focus{outline:none;}
+.hist-settle-btn:focus-visible,.hist-sort-btn:focus-visible{outline:2px solid var(--sep2);outline-offset:2px;}
 .hist-bulk-detail-btn{margin-left:auto;display:flex;align-items:center;padding:6px 12px;border-radius:20px;border:1.5px solid #aab4ff;background:var(--blue-bg);font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;font-family:inherit;white-space:nowrap;}
 .hist-bulk-detail-btn:disabled{opacity:.55;cursor:default;}
 /* 배지를 금액 왼쪽 같은 줄에 — 배지 유무로 카드 높이가 바뀌지 않게 (v7.71) */
@@ -1760,8 +1763,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.72';
-const BUILD_TIME='2026-11-13 17:00';
+const APP_VERSION='v7.73';
+const BUILD_TIME='2026-11-13 17:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3040,27 +3043,24 @@ function toggleHistSettle(){
   const btn=document.getElementById('histSettleBtn');if(btn)btn.classList.toggle('on',_histSettleMode);
   _refreshHistDrList();
 }
-// 정산상태(net, v7.72): 검색한 사람과 '나(owner)' 사이의 순 정산만 본다. 제3자 거래는 제외.
-//   · 신유철 → 나 (신유철이 나에게 줄 돈): delta += 실제입금 − 계획 (미납이면 음수=부족)
-//   · 나 → 신유철 (내가 신유철에게 줄/보낸 돈, 예: 유철이 결제한 건): delta += 계획 − 실제 (초과쪽)
-//   두 방향을 상계(netting)하므로 '유철 결제 내 몫'은 빼지 않고 내가 줄 돈으로 반영된다.
-// ownerName 인자는 테스트용(미지정 시 _myName). owner 미설정이면 집계 불가 → null.
+// 정산상태(v7.73): '순수하게 내가(owner) 받을/받은 돈'만 본다 — 검색한 사람 → 나 송금만 집계.
+//   delta = 실제 받은 금액 − 받기로 한 금액 (미납이면 음수='부족', 더 받으면 양수='초과').
+//   내가 신유철에게 줄 돈(나→신유철, 유철이 결제한 건)·제3자끼리 거래는 집계 제외 →
+//   그런 송금만 있는 기록은 배지 없음(null). ownerName 인자는 테스트용(미지정 시 _myName).
 function _personSettleDelta(r,personName,ownerName){
   const q=(personName||'').trim().toLowerCase();if(!q)return null;
   const owner=((ownerName!=null?ownerName:_myName)||'').trim().toLowerCase();if(!owner)return null;
   const txns=r.txns||[];const pmObj=r.payments||{};
   let delta=0,found=false;
   for(const t of txns){
-    const from=(t.from||'').toLowerCase(),to=(t.to||'').toLowerCase();
-    const isPtoO=(from===q&&to===owner),isOtoP=(from===owner&&to===q);
-    if(!isPtoO&&!isOtoP)continue; // 조상현↔신유철 거래만 (제3자 제외)
+    if((t.from||'').toLowerCase()!==q||(t.to||'').toLowerCase()!==owner)continue; // 신유철 → 나 만
     found=true;
     const key=`${t.from}|${t.to}`;
     const pm=pmObj[key]||{};
     const planned=+t.amt||0;
     const hasAmt=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);
     const actual=pm.done?(hasAmt?+pm.amount:planned):0;
-    delta+=isPtoO?(actual-planned):(planned-actual);
+    delta+=actual-planned;
   }
   return found?delta:null;
 }
