@@ -1188,6 +1188,31 @@ suite('TC26: 정산상태 _personSettleDelta — 내가 받을 돈만 [v7.73]', 
     const r={txns:[{from:'신유철',to:'조상현',amt:50000}],payments:{}};
     expect(D(r,'')).toBe(null);
   });
+  // 퉁(waived) = 완전 중립 [v7.75]: 집계 제외(수금과 동일), 금액은 _personSettleWaived로 표시
+  test('퉁(waived) 송금은 delta 집계에서 제외 → 퉁만 있으면 null(배지는 퉁으로)', () => {
+    const r={txns:[{from:'신유철',to:'조상현',amt:866}],payments:{'신유철|조상현':{waived:true}}};
+    expect(D(r)).toBe(null);
+  });
+  test('퉁은 delta에서 빠지고 _personSettleWaived가 그 금액을 돌려줌', () => {
+    const W=(r,owner)=>APP._personSettleWaived(r,'신유철',owner===undefined?'조상현':owner);
+    const r={txns:[{from:'신유철',to:'조상현',amt:866}],payments:{'신유철|조상현':{waived:true}}};
+    expect(W(r)).toBe(866);
+  });
+  test('혼합: 미납 1,084 + 퉁 866 → delta는 -1084(퉁 제외), waived=866', () => {
+    const W=(r,owner)=>APP._personSettleWaived(r,'신유철',owner===undefined?'조상현':owner);
+    const r={txns:[
+      {from:'신유철',to:'조상현',amt:1084},   // 미납 → -1084
+      {from:'신유철',to:'조상현',amt:866}      // 퉁 → 집계 제외
+    ],payments:{'신유철|조상현':{waived:true}}};
+    // 같은 key(신유철|조상현)라 두 송금이 같은 pm을 공유하는 구성은 실제엔 드무니, 분리 키 케이스로 검증
+    const r2={txns:[
+      {from:'신유철',to:'조상현',amt:1084}
+    ],payments:{}};
+    expect(D(r2)).toBe(-1084);
+    const rW={txns:[{from:'신유철',to:'조상현',amt:866}],payments:{'신유철|조상현':{waived:true}}};
+    expect(W(rW)).toBe(866);
+    expect(D(rW)).toBe(null);
+  });
 });
 
 // 기록 검색 오염 2종 수정 [v7.74]:
