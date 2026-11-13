@@ -1145,11 +1145,13 @@ svg{display:block;flex-shrink:0;}
 .hist-settle-btn.on{background:var(--green-bg);border-color:var(--green-txt);color:var(--green-txt);font-weight:600;}
 .hist-bulk-detail-btn{margin-left:auto;display:flex;align-items:center;padding:6px 12px;border-radius:20px;border:1.5px solid #aab4ff;background:var(--blue-bg);font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;font-family:inherit;white-space:nowrap;}
 .hist-bulk-detail-btn:disabled{opacity:.55;cursor:default;}
-.rc-settle-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:2px 7px;border-radius:100px;white-space:nowrap;margin-top:1px;}
+/* 배지를 금액 왼쪽 같은 줄에 — 배지 유무로 카드 높이가 바뀌지 않게 (v7.71) */
+.rc-amt-line{display:flex;align-items:center;justify-content:flex-end;gap:8px;}
+.rc-settle-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;line-height:1;padding:3px 8px;border-radius:100px;white-space:nowrap;}
 .rc-settle-badge.pos{background:var(--green-bg);color:var(--green-txt);}
 .rc-settle-badge.neg{background:var(--red-bg);color:var(--red);}
 .rc-settle-badge.zero{background:var(--green-bg);color:var(--green-txt);}
-.hmn-stat-settle{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:2px 7px;border-radius:100px;margin-top:3px;white-space:nowrap;}
+.hmn-stat-settle{display:inline-flex;align-items:center;font-size:11px;font-weight:600;line-height:1;padding:3px 8px;border-radius:100px;white-space:nowrap;}
 .hmn-stat-settle.pos{background:var(--green-bg);color:var(--green-txt);}
 .hmn-stat-settle.neg{background:var(--red-bg);color:var(--red);}
 .hmn-stat-settle.zero{background:var(--green-bg);color:var(--green-txt);}
@@ -1758,8 +1760,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.70';
-const BUILD_TIME='2026-11-13 15:30';
+const APP_VERSION='v7.71';
+const BUILD_TIME='2026-11-13 16:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5298,8 +5300,7 @@ function _buildRecordCardHtml(r){
         <div class="rc-people">${e(ppl)}</div>
       </div>
       <div class="rc-right">
-        <div class="rc-total${(r.total??0)<0?' neg':''}">${fmt(r.total!=null?r.total:(r.items||[]).reduce((s,it)=>s+(+it.amount||0),0))}원</div>
-        ${(()=>{if(!_histSettleMode||!_historySearch.trim())return'';const d=_personSettleDelta(r,_historySearch.trim());if(d===null)return'';if(d>0)return`<span class="rc-settle-badge pos">+${fmt(d)}원 초과</span>`;if(d<0)return`<span class="rc-settle-badge neg">-${fmt(-d)}원 부족</span>`;return`<span class="rc-settle-badge zero">완납</span>`;})()}
+        <div class="rc-amt-line">${(()=>{if(!_histSettleMode||!_historySearch.trim())return'';const d=_personSettleDelta(r,_historySearch.trim());if(d===null)return'';if(d>0)return`<span class="rc-settle-badge pos">+${fmt(d)}원 초과</span>`;if(d<0)return`<span class="rc-settle-badge neg">-${fmt(-d)}원 부족</span>`;return`<span class="rc-settle-badge zero">완납</span>`;})()}<div class="rc-total${(r.total??0)<0?' neg':''}">${fmt(r.total!=null?r.total:(r.items||[]).reduce((s,it)=>s+(+it.amount||0),0))}원</div></div>
         <span class="rc-chevron" id="rcc_${sid}">▼</span>
       </div>
     </div>
