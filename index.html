@@ -967,6 +967,7 @@ svg{display:block;flex-shrink:0;}
 .rc-people{font-size:12px;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .rc-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
 .rc-total{font-size:18px;font-weight:700;white-space:nowrap;}
+.rc-total.rc-total-zero{color:var(--label3);font-weight:600;}
 .rc-total.neg{color:var(--red);}
 .rc-chevron{font-size:11px;color:var(--label3);transition:transform .2s;}
 .rc-chevron.open{transform:rotate(180deg);}
@@ -1766,8 +1767,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.76';
-const BUILD_TIME='2026-11-13 20:10';
+const APP_VERSION='v7.77';
+const BUILD_TIME='2026-11-13 20:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3767,7 +3768,7 @@ function _pmHistResultsHtml(){
     let badgeHtml,amtHtml;
     if(c.isParticipant){
       badgeHtml=c.isTreat?`<span class="pm-badge treat">한턱 ${fmt(c.treatAmt)}원</span>`:`<span class="pm-badge attend">참석</span>`;
-      amtHtml='';
+      amtHtml='<div class="rc-total rc-total-zero">0원</div>';
     }else{
       badgeHtml=_paymentBadgeHtml(c.pm,c.billing,{owner:c.isOwnerTxn,badgeOnly:true});
       amtHtml=`<div class="rc-total">${fmt(c.billing)}원</div>`;
@@ -3785,7 +3786,7 @@ function _pmHistResultsHtml(){
     const footLeft=footMeta.length?e(footMeta.join(' · ')):`${peopleCnt}명`;
     const editBtnHtml=!c.isParticipant&&c.isOwnerTxn?`<button class="rc-load-btn rc-edit-btn" onclick="event.stopPropagation();toggleHistRecordPanel('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')">✏️ 수정</button>`:'';
     const footHtml=`<div class="rc-foot"><span class="rc-saved-at">${footLeft}</span>${editBtnHtml}</div>`;
-    return `<div class="record-card pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="rc-hd" onclick="togglePmRecCard('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')"><div class="rc-meta"><div class="rc-date">${e(dateStr)}</div><div class="rc-name">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="rc-people">${e(members)}</div></div><div class="rc-right"><div class="rc-amt-line">${badgeHtml}${amtHtml}${treatLineHtml}</div><span class="rc-chevron pm-record-chev">▼</span></div></div>${bodyHtml}${footHtml}</div>`;
+    return `<div class="record-card pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="rc-hd" onclick="togglePmRecCard('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')"><div class="rc-meta"><div class="rc-date">${e(dateStr)}</div><div class="rc-name">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="rc-people">${e(members)}</div></div><div class="rc-right"><div class="rc-amt-line">${treatLineHtml}${badgeHtml}${amtHtml}</div><span class="rc-chevron pm-record-chev">▼</span></div></div>${bodyHtml}${footHtml}</div>`;
   };
   // 년도 선택 시 월별 그룹, 특정 월/전체 시 flat
   let cardsHtml='';
