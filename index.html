@@ -3040,10 +3040,10 @@ function toggleHistSettle(){
   const btn=document.getElementById('histSettleBtn');if(btn)btn.classList.toggle('on',_histSettleMode);
   _refreshHistDrList();
 }
-// 정산상태(A안, v7.72): 검색한 사람이 '나(owner)에게 줄 돈'만 집계한다.
-//   = 송금 중 from===검색한사람 && to===owner(내 이름) 인 것만 (신유철 → 조상현).
-//   유철이 결제한 건(내가 줄 돈, to===검색한사람)·제3자끼리의 거래는 제외 → 입금 추적이
-//   되는 '내가 받을 돈' 방향만 본다. delta = 실제입금 − 계획 (미납이면 음수=부족).
+// 정산상태(net, v7.72): 검색한 사람과 '나(owner)' 사이의 순 정산만 본다. 제3자 거래는 제외.
+//   · 신유철 → 나 (신유철이 나에게 줄 돈): delta += 실제입금 − 계획 (미납이면 음수=부족)
+//   · 나 → 신유철 (내가 신유철에게 줄/보낸 돈, 예: 유철이 결제한 건): delta += 계획 − 실제 (초과쪽)
+//   두 방향을 상계(netting)하므로 '유철 결제 내 몫'은 빼지 않고 내가 줄 돈으로 반영된다.
 // ownerName 인자는 테스트용(미지정 시 _myName). owner 미설정이면 집계 불가 → null.
 function _personSettleDelta(r,personName,ownerName){
   const q=(personName||'').trim().toLowerCase();if(!q)return null;
@@ -3051,14 +3051,16 @@ function _personSettleDelta(r,personName,ownerName){
   const txns=r.txns||[];const pmObj=r.payments||{};
   let delta=0,found=false;
   for(const t of txns){
-    if((t.from||'').toLowerCase()!==q||(t.to||'').toLowerCase()!==owner)continue; // 신유철 → 나 만
+    const from=(t.from||'').toLowerCase(),to=(t.to||'').toLowerCase();
+    const isPtoO=(from===q&&to===owner),isOtoP=(from===owner&&to===q);
+    if(!isPtoO&&!isOtoP)continue; // 조상현↔신유철 거래만 (제3자 제외)
     found=true;
     const key=`${t.from}|${t.to}`;
     const pm=pmObj[key]||{};
     const planned=+t.amt||0;
     const hasAmt=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);
     const actual=pm.done?(hasAmt?+pm.amount:planned):0;
-    delta+=actual-planned;
+    delta+=isPtoO?(actual-planned):(planned-actual);
   }
   return found?delta:null;
 }
