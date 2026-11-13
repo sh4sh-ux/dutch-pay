@@ -1143,9 +1143,8 @@ svg{display:block;flex-shrink:0;}
 .hist-sort-chk{font-size:13px;}
 .hist-settle-btn{display:flex;align-items:center;gap:3px;padding:6px 12px;border-radius:20px;border:1.5px solid var(--sep2);background:transparent;font-size:12px;font-weight:500;color:var(--label2);cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .12s;-webkit-tap-highlight-color:transparent;}
 .hist-settle-btn.on{background:var(--green-bg);border-color:var(--green-txt);color:var(--green-txt);font-weight:600;}
-/* 클릭 시 뜨던 브라우저 기본 파란 포커스 링 제거(키보드 포커스는 은은한 링 유지) (v7.73) */
-.hist-settle-btn:focus,.hist-sort-btn:focus{outline:none;}
-.hist-settle-btn:focus-visible,.hist-sort-btn:focus-visible{outline:2px solid var(--sep2);outline-offset:2px;}
+/* 포커스 테두리 완전 제거 (v7.73) */
+.hist-settle-btn:focus,.hist-sort-btn:focus,.hist-settle-btn:focus-visible,.hist-sort-btn:focus-visible{outline:none;box-shadow:none;}
 .hist-bulk-detail-btn{margin-left:auto;display:flex;align-items:center;padding:6px 12px;border-radius:20px;border:1.5px solid #aab4ff;background:var(--blue-bg);font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;font-family:inherit;white-space:nowrap;}
 .hist-bulk-detail-btn:disabled{opacity:.55;cursor:default;}
 /* 배지를 금액 왼쪽 같은 줄에 — 배지 유무로 카드 높이가 바뀌지 않게 (v7.71) */
