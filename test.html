@@ -634,7 +634,7 @@ suite('TC13: 사용자 카테고리 SVG [v5.25 회귀]', () => {
       .map(e=>((e.querySelector('.icon-opt-lbl')||e).textContent||'').trim());
     doc.querySelectorAll('.icon-pop').forEach(e=>e.remove());
     const expected=['자동','외식','카페','술집','노래방','쇼핑','문화','교통','여행',
-                    '숙박','골프','스파','운동','기념일','경조','의료','기타'];
+                    '숙박','골프','뷰티','운동','기념일','경조','의료','기타'];
     const missing=expected.filter(x=>!labels.includes(x));
     if(missing.length) throw new Error('누락: '+missing.join(', ')+' / 실제: '+labels.join(','));
     expect(labels.length).toBe(17);   // 자동 + 카테고리 16
@@ -1187,6 +1187,49 @@ suite('TC26: 정산상태 _personSettleDelta — 내가 받을 돈만 [v7.73]', 
   test('owner(_myName) 미설정이면 집계 불가 → null', () => {
     const r={txns:[{from:'신유철',to:'조상현',amt:50000}],payments:{}};
     expect(D(r,'')).toBe(null);
+  });
+});
+
+// 기록 검색 오염 2종 수정 [v7.74]:
+//  (1) 카드에 숨겨진 0원 항목의 이름이 검색에만 걸림 → 0원 항목은 검색 대상에서 제외(카드와 일치).
+//  (2) 사람 이름(어느 기록의 참여자)으로 검색하면, 그 이름이 상호명/항목명에만 든 불참 모임 제외.
+// (실제 사례: 7/30 모임에 '신유철' 이름의 0원 항목이 숨어 있어, 참여자가 아닌데도 신유철 검색에 뜸)
+suite('TC27: 기록 검색 — 0원 항목 제외 + 사람 이름은 참여자 기준 [v7.74]', () => {
+  // recA: 신유철이 실제 참여자
+  const recA={id:'a',savedAt:'2026-08-20T10:00',dateStart:'2026-08-20',dateEnd:null,
+    people:['신유철','조상현'],total:64000,
+    items:[{name:'전북상회',amount:64000,payer:'조상현',members:['신유철','조상현'],watchers:[]}],
+    txns:[{from:'신유철',to:'조상현',amt:32000}],payments:{}};
+  // recB: 신유철 불참. 카드엔 '회비'(334800)만 보이고, '신유철' 이름의 0원 항목은 카드에서 숨겨짐.
+  const recB={id:'b',savedAt:'2026-07-30T10:00',dateStart:'2026-07-30',dateEnd:null,
+    people:['이정환','박정호','노소영','조상현','지유정'],total:334800,
+    items:[
+      {name:'회비',amount:334800,payer:'이정환',members:['이정환','박정호','노소영','조상현','지유정'],watchers:[]},
+      {name:'신유철',amount:0,payer:'이정환',members:[],watchers:[]}   // 0원 → 카드 비표시
+    ],
+    txns:[{from:'박정호',to:'이정환',amt:50000}],payments:{}};
+  const ids=q=>{APP._histMonthAllMode=true;return APP._filterHistoryRecords([recA,recB],q).map(r=>r.id).sort().join(',');};
+  test("'신유철' 검색 → 실제 참여 모임(a)만, 0원 항목명으로만 걸린 불참 모임(b) 제외", () => {
+    expect(ids('신유철')).toBe('a');
+  });
+  test("0원 항목 이름은 상호명 검색으로도 매칭 안 됨(카드에 안 보이므로)", () => {
+    // '신유철'이 어디서도 참여자가 아닌 데이터셋이면 사람검색이 아니지만, 0원 항목이라 여전히 제외
+    const only0={id:'c',savedAt:'2026-05-01T10:00',dateStart:'2026-05-01',dateEnd:null,
+      people:['김가','나다'],total:0,items:[{name:'신유철',amount:0,payer:'김가',members:[],watchers:[]}],txns:[],payments:{}};
+    APP._histMonthAllMode=true;
+    expect(APP._filterHistoryRecords([only0],'신유철').length).toBe(0);
+  });
+  test("상호명 '전북상회'(0원 아님) 검색 → 항목명 매칭 유지(a)", () => {
+    expect(ids('전북상회')).toBe('a');
+  });
+  test("'조상현'(양쪽 참여) 검색 → 두 모임 모두", () => {
+    expect(ids('조상현')).toBe('a,b');
+  });
+  test("'이정환'(b만 참여) 검색 → b만", () => {
+    expect(ids('이정환')).toBe('b');
+  });
+  test("날짜 검색은 사람검색과 무관하게 동작('2026.07.30' → b)", () => {
+    expect(ids('2026.07.30')).toBe('b');
   });
 });
 

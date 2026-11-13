@@ -1762,8 +1762,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.73';
-const BUILD_TIME='2026-11-13 17:40';
+const APP_VERSION='v7.74';
+const BUILD_TIME='2026-11-13 18:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5346,15 +5346,28 @@ function _filterHistoryRecords(records,query){
   // 사용자가 입력하는 어떤 구분자로도 검색되게 한다. (v6.67: '날짜 검색'이 한글 외엔 안 되던 버그)
   const dateForms=d=>{if(!d)return[];const[y,m,day]=d.split('-');if(!day)return[d];return[d,`${y}.${m}.${day}`,`${+m}.${+day}`,`${y}년 ${+m}월 ${+day}일`,`${+m}월 ${+day}일`];};
   const qDigits=q.replace(/\D/g,'');
-  return recs.filter(r=>{
-    if((r.groupName||'').toLowerCase().includes(q))return true;
-    if((r.people||[]).some(p=>p.toLowerCase().includes(q)))return true;
-    if((r.items||[]).some(it=>(it.name||'').toLowerCase().includes(q)))return true;
+  // 날짜 매칭
+  const dateMatch=r=>{
     const forms=[...dateForms(r.dateStart),...dateForms(r.dateEnd)].filter(Boolean);
     if(forms.some(f=>f.toLowerCase().includes(q)))return true;
     if(qDigits.length>=2){const recDigits=[r.dateStart,r.dateEnd].filter(Boolean).map(d=>d.replace(/\D/g,''));if(recDigits.some(rd=>rd.includes(qDigits)))return true;}
     return false;
-  });
+  };
+  // 사람(참여자) 매칭: 참가자·송금 당사자·결제자·분담멤버 중 이름이 걸리면 '사람 검색'
+  const personMatch=r=>
+    (r.people||[]).some(p=>(p||'').toLowerCase().includes(q))
+    ||(r.txns||[]).some(t=>(t.from||'').toLowerCase().includes(q)||(t.to||'').toLowerCase().includes(q))
+    ||(r.items||[]).some(it=>(it.payer||'').toLowerCase().includes(q)||(it.members||[]).some(m=>(m||'').toLowerCase().includes(q)));
+  // 상호명(그룹명·항목명) 매칭: 사람과 무관한 텍스트.
+  // 카드에 보이지 않는 0원 항목은 검사하지 않는다 — 카드에서 숨긴 항목(0원)의 이름이
+  // 검색에만 걸려 '카드엔 없는데 검색엔 뜨는' 일이 없도록. (v7.74)
+  const textMatch=r=>
+    (r.groupName||'').toLowerCase().includes(q)
+    ||(r.items||[]).some(it=>(+it.amount!==0)&&(it.name||'').toLowerCase().includes(q));
+  // 검색어가 '어느 기록의 참여자'이기도 하면 사람 검색으로 간주 → 그 이름이 우연히 항목명/상호명에만
+  // 들어간, 그 사람이 불참한 모임은 제외한다. (v7.74: 신유철 검색에 신유철 불참 모임이 뜨던 문제)
+  const isPersonQuery=records.some(personMatch);
+  return recs.filter(r=>personMatch(r)||dateMatch(r)||(!isPersonQuery&&textMatch(r)));
 }
 function _chkClear(inp){const btn=inp.nextElementSibling;if(btn&&btn.classList.contains('sinp-clr'))btn.classList.toggle('vis',inp.value.length>0);}
 function _clrHistDr(){const i=document.getElementById('histDrSinp');if(i){i.value='';_chkClear(i);updateHistorySearch('');}}
