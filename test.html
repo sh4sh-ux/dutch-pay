@@ -1148,6 +1148,49 @@ suite('TC25: 알림이 하단 버튼을 가리지 않음 [v6.52]', () => {
   });
 });
 
+// 정산상태(net, v7.72): 조상현↔신유철 순 정산. 제3자 거래는 제외(null).
+//  · 신유철→나 미납 = 음수(신유철이 나에게 줄, 부족)  · 나→신유철(유철 결제) = 양수(내가 줄, 초과)
+//  두 방향을 상계. 유철 결제건은 빼지 않고 '내가 줄 돈'으로 netting.
+suite('TC26: 정산상태 _personSettleDelta — 나↔사람 순 정산 [v7.72]', () => {
+  const D=(r,owner)=>APP._personSettleDelta(r,'신유철',owner===undefined?'조상현':owner);
+  test('신유철→나(조상현) 미입금 → 계획 전액 부족(음수)', () => {
+    const r={txns:[{from:'신유철',to:'조상현',amt:50000}],payments:{}};
+    expect(D(r)).toBe(-50000);
+  });
+  test('신유철→나 완납(done, 금액 일치) → 0', () => {
+    const r={txns:[{from:'신유철',to:'조상현',amt:50000}],payments:{'신유철|조상현':{done:true,amount:50000}}};
+    expect(D(r)).toBe(0);
+  });
+  test('신유철→나 일부만(40000) 입금 → -10000 부족', () => {
+    const r={txns:[{from:'신유철',to:'조상현',amt:50000}],payments:{'신유철|조상현':{done:true,amount:40000}}};
+    expect(D(r)).toBe(-10000);
+  });
+  test('유철이 결제(조상현→신유철, 내가 줄 돈) → 내가 줄 돈으로 +75000(초과)', () => {
+    const r={txns:[{from:'조상현',to:'신유철',amt:75000}],payments:{}};
+    expect(D(r)).toBe(75000);
+  });
+  test('신유철↔제3자(이영환) 거래는 제외 → null', () => {
+    const r={txns:[{from:'신유철',to:'이영환',amt:30000},{from:'이영환',to:'신유철',amt:10000}],payments:{}};
+    expect(D(r)).toBe(null);
+  });
+  test('순 정산: 신유철→나 100000 미납 + 나→신유철 30000 → -70000(신유철이 나에게 70000 줄)', () => {
+    const r={txns:[{from:'신유철',to:'조상현',amt:100000},{from:'조상현',to:'신유철',amt:30000}],payments:{}};
+    expect(D(r)).toBe(-70000);
+  });
+  test('혼합: 신유철→나 20000미납 + 유철결제 75000 + 제3자 16500 → 제3자 빼고 net +55000', () => {
+    const r={txns:[
+      {from:'신유철',to:'조상현',amt:20000},   // -20000
+      {from:'조상현',to:'신유철',amt:75000},   // +75000 (내가 줄 돈)
+      {from:'신유철',to:'이영환',amt:16500}    // 제외(제3자)
+    ],payments:{}};
+    expect(D(r)).toBe(55000);
+  });
+  test('owner(_myName) 미설정이면 집계 불가 → null', () => {
+    const r={txns:[{from:'신유철',to:'조상현',amt:50000}],payments:{}};
+    expect(D(r,'')).toBe(null);
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────
