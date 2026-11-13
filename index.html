@@ -1760,8 +1760,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.71';
-const BUILD_TIME='2026-11-13 16:10';
+const APP_VERSION='v7.72';
+const BUILD_TIME='2026-11-13 17:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3040,21 +3040,25 @@ function toggleHistSettle(){
   const btn=document.getElementById('histSettleBtn');if(btn)btn.classList.toggle('on',_histSettleMode);
   _refreshHistDrList();
 }
-function _personSettleDelta(r,personName){
+// 정산상태(A안, v7.72): 검색한 사람이 '나(owner)에게 줄 돈'만 집계한다.
+//   = 송금 중 from===검색한사람 && to===owner(내 이름) 인 것만 (신유철 → 조상현).
+//   유철이 결제한 건(내가 줄 돈, to===검색한사람)·제3자끼리의 거래는 제외 → 입금 추적이
+//   되는 '내가 받을 돈' 방향만 본다. delta = 실제입금 − 계획 (미납이면 음수=부족).
+// ownerName 인자는 테스트용(미지정 시 _myName). owner 미설정이면 집계 불가 → null.
+function _personSettleDelta(r,personName,ownerName){
   const q=(personName||'').trim().toLowerCase();if(!q)return null;
+  const owner=((ownerName!=null?ownerName:_myName)||'').trim().toLowerCase();if(!owner)return null;
   const txns=r.txns||[];const pmObj=r.payments||{};
   let delta=0,found=false;
   for(const t of txns){
-    const fromM=(t.from||'').toLowerCase()===q;
-    const toM=(t.to||'').toLowerCase()===q;
-    if(!fromM&&!toM)continue;
+    if((t.from||'').toLowerCase()!==q||(t.to||'').toLowerCase()!==owner)continue; // 신유철 → 나 만
     found=true;
     const key=`${t.from}|${t.to}`;
     const pm=pmObj[key]||{};
     const planned=+t.amt||0;
     const hasAmt=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);
     const actual=pm.done?(hasAmt?+pm.amount:planned):0;
-    if(fromM){delta+=actual-planned;}else{delta+=planned-actual;}
+    delta+=actual-planned;
   }
   return found?delta:null;
 }
