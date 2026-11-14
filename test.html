@@ -1273,8 +1273,7 @@ suite('TC28: 한턱 내역 집계 _treatBreakdownHtml [v7.82]', () => {
     expect(h.includes('이정환')).toBe(true);
     expect(h.includes('97,000원')).toBe(true);
     expect((h.match(/🎉 한턱/g)||[]).length).toBe(2);  // 결제자 2명 배지 2개
-    expect(h.includes('한턱 합계')).toBe(true);
-    expect(h.includes('157,360원')).toBe(true);    // 60360+97000
+    expect(h.includes('한턱 합계')).toBe(false);   // 합계 제거(v7.84)
   });
   test('한턱 없으면 빈 문자열', () => {
     expect(H({items:[{name:'밥',amount:10000,payer:'조상현',isTreat:false}]})).toBe('');
