@@ -1767,8 +1767,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.77';
-const BUILD_TIME='2026-11-13 20:45';
+const APP_VERSION='v7.78';
+const BUILD_TIME='2026-11-14 09:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3647,7 +3647,7 @@ function toggleAllRecCard(recId){
   const ownerInline=_ownerUnlocked?`${fixed?`<span class="rc-fix-btn fixed">${LOCK_CLOSED_SVG}잠김</span>`:''}<button class="rc-owner-btn edit" onclick="${fixed?`unlockHistoryForEdit('${jsa(recId)}')`:`loadHistoryForEdit('${jsa(recId)}')`}">수정</button><button class="rc-owner-btn del" onclick="_pmDelRec('${jsa(recId)}',event)">삭제</button>`:'';
   const actions=(dbxInline||ownerInline)?`<div class="rc-owner-actions">${dbxInline}${ownerInline}</div>`:'';
   if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>'+actions;}
-  else{detail.innerHTML=txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const owner=t.to===_myName;const badge=_paymentBadgeHtml(pm,t.amt,{owner});const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(recId)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+actions;}
+  else{detail.innerHTML='<div class="rc-section-title" style="padding:10px 16px 2px">입금 내역 <span style="font-weight:400;color:var(--label3);font-size:11px">· 탭하면 실수령·금융기관·일시</span></div>'+txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const owner=t.to===_myName;const badge=_paymentBadgeHtml(pm,t.amt,{owner});const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(recId)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+actions;}
   card.insertAdjacentElement('afterend',detail);
 }
 
@@ -3671,8 +3671,9 @@ function _pmHistResultsHtml(){
     if(!allRecs.length)return '<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">저장된 정산 기록이 없어요</p></div>';
     const viewToggle=`<div class="pm-view-toggle"><button class="pm-view-btn${_pmViewMode==='list'?' on':''}" onclick="_pmSetViewMode('list')">목록</button><button class="pm-view-btn${_pmViewMode==='monthly'?' on':''}" onclick="_pmSetViewMode('monthly')">월별 통계</button></div>`;
     if(_pmViewMode==='monthly')return viewToggle+_pmMonthlyHtml(allRecs);
+    const _fhdAll=d=>{const[y,m,day]=(d||'').split('-');return day?`${y}년 ${+m}월 ${+day}일`:(d||'');};
     const recsHtml=allRecs.map(rec=>{
-      const dateStr=rec.dateStart?rec.dateStart.slice(2).replace(/-/g,'. ')+'.':rec.savedAt?rec.savedAt.slice(0,10):'';
+      const dateStr=rec.dateStart?_fhdAll(rec.dateStart):(rec.savedAt?rec.savedAt.slice(0,10):'');
       const txnsList=_myName?(rec.txns||[]).filter(t=>t.to===_myName):(rec.txns||[]);
       const pmObj=rec.payments||{};
       const doneCount=txnsList.filter(t=>{const p=pmObj[`${t.from}|${t.to}`]||{};return p.done||p.waived;}).length;
@@ -3682,7 +3683,11 @@ function _pmHistResultsHtml(){
         :doneCount===0?`<span class="pm-badge pending">${totalCount}명 미입금</span>`
         :`<span class="pm-badge pending">${totalCount-doneCount}명 미입금</span>`;
       const rid=ea(rec.id);
-      return `<div class="pm-allrec-card" data-rec-id="${rid}" onclick="toggleAllRecCard('${jsa(rec.id)}')"><div class="pm-allrec-left"><div class="pm-allrec-dateline"><span class="pm-record-date">${e(dateStr)}</span>${statusHtml}</div><div class="pm-record-group">${e((rec.people||[]).join(', ')||rec.groupName||'')}</div></div><div class="pm-allrec-right"><div class="pm-record-total">${fmt(rec.total||0)}원</div><span class="pm-allrec-chev">▼</span></div></div>`;
+      const names=(rec.people||[]).join(', ')||rec.groupName||'';
+      const members=(rec.people||[]).join(' · ');
+      // 전체기록 카드도 통일 카드 셸(.rc-*)로 — 단, 확장 상세가 형제로 붙는 아코디언이라
+      // .pm-allrec-card/.pm-allrec-chev 훅은 유지 (toggleAllRecCard 무변경). (v7.78)
+      return `<div class="pm-allrec-card" data-rec-id="${rid}" onclick="toggleAllRecCard('${jsa(rec.id)}')"><div class="pm-allrec-left"><div class="rc-date">${e(dateStr)}</div><div class="rc-name">${e(names)}</div><div class="rc-people">${e(members)}</div></div><div class="pm-allrec-right"><div class="rc-amt-line">${statusHtml}<div class="rc-total">${fmt(rec.total||0)}원</div></div><span class="pm-allrec-chev rc-chevron">▼</span></div></div>`;
     }).join('');
     return viewToggle+`<div class="pay-section-title" style="margin-top:8px">전체 기록 · ${allRecs.length}건</div>`+recsHtml;
   }
@@ -3783,7 +3788,8 @@ function _pmHistResultsHtml(){
     const bodyInner=`${itemsHtml}${recvHtml}`;
     const bodyHtml=`<div class="rc-body pm-rec-detail" style="display:none">${bodyInner}</div>`;
     const footMeta=!c.isParticipant?_paymentDisplay(c.pm,c.billing,{owner:c.isOwnerTxn}).meta:[];
-    const footLeft=footMeta.length?e(footMeta.join(' · ')):`${peopleCnt}명`;
+    const _fromNm=(c.key||'').split('|')[0];  // 입금자 이름 — foot의 은행·시각이 누구 것인지 명확히 (v7.78)
+    const footLeft=footMeta.length?e(_fromNm+' · '+footMeta.join(' · ')):`${peopleCnt}명`;
     const editBtnHtml=!c.isParticipant&&c.isOwnerTxn?`<button class="rc-load-btn rc-edit-btn" onclick="event.stopPropagation();toggleHistRecordPanel('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')">✏️ 수정</button>`:'';
     const footHtml=`<div class="rc-foot"><span class="rc-saved-at">${footLeft}</span>${editBtnHtml}</div>`;
     return `<div class="record-card pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="rc-hd" onclick="togglePmRecCard('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')"><div class="rc-meta"><div class="rc-date">${e(dateStr)}</div><div class="rc-name">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="rc-people">${e(members)}</div></div><div class="rc-right"><div class="rc-amt-line">${treatLineHtml}${badgeHtml}${amtHtml}</div><span class="rc-chevron pm-record-chev">▼</span></div></div>${bodyHtml}${footHtml}</div>`;
