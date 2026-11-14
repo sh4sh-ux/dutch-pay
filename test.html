@@ -1268,10 +1268,11 @@ suite('TC28: 한턱 내역 집계 _treatBreakdownHtml [v7.82]', () => {
       {name:'일반',amount:10000,payer:'조상현',isTreat:false}
     ]};
     const h=H(r);
-    expect(h.includes('조상현 한턱')).toBe(true);
+    expect(h.includes('조상현')).toBe(true);
     expect(h.includes('60,360원')).toBe(true);    // 조상현 6360+54000
-    expect(h.includes('이정환 한턱')).toBe(true);
+    expect(h.includes('이정환')).toBe(true);
     expect(h.includes('97,000원')).toBe(true);
+    expect((h.match(/🎉 한턱/g)||[]).length).toBe(2);  // 결제자 2명 배지 2개
     expect(h.includes('한턱 합계')).toBe(true);
     expect(h.includes('157,360원')).toBe(true);    // 60360+97000
   });
@@ -1287,8 +1288,8 @@ suite('TC28: 한턱 내역 집계 _treatBreakdownHtml [v7.82]', () => {
       {name:'c',amount:30000,payer:'나다',isTreat:true}
     ]};
     const h=H(r);
-    expect(h.includes('김가 한턱')).toBe(false);
-    expect(h.includes('나다 한턱')).toBe(true);
+    expect(h.includes('김가')).toBe(false);
+    expect(h.includes('나다')).toBe(true);
     expect(h.includes('30,000원')).toBe(true);
   });
 });
