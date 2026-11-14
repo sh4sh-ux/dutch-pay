@@ -1798,8 +1798,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.86';
-const BUILD_TIME='2026-11-14 20:40';
+const APP_VERSION='v7.87';
+const BUILD_TIME='2026-11-14 21:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5161,9 +5161,11 @@ async function _recoverReceiptRefs(apply){
         const revs=(data.entries||[]).slice().sort((a,b)=>String(b.server_modified||'').localeCompare(String(a.server_modified||''))).map(e=>e.rev).filter(Boolean);
         for(const rev of revs){
           if(map.size>=need.size)break;
-          let arr=null;try{arr=await _dbxDownload(token,'rev:'+rev);}catch(e){}
-          if(!Array.isArray(arr))continue;
-          arr.forEach(r=>(r&&r.items||[]).forEach(it=>{const u=String(it&&it.receiptUrl||'').trim();if(!u)return;const k=r.id+'|'+it.id;if(need.has(k)&&!map.has(k))map.set(k,u);}));
+          let data=null;try{data=await _dbxDownload(token,'rev:'+rev);}catch(e){}
+          // history.json은 신형 {records:[...]} 또는 구형 [...] 둘 다 가능 (v7.87 버그수정: records 꺼내기)
+          const recs=Array.isArray(data)?data:(data&&Array.isArray(data.records)?data.records:null);
+          if(!recs)continue;
+          recs.forEach(r=>(r&&r.items||[]).forEach(it=>{const u=String(it&&it.receiptUrl||'').trim();if(!u)return;const k=r.id+'|'+it.id;if(need.has(k)&&!map.has(k))map.set(k,u);}));
         }
       }
     }catch(e){}
