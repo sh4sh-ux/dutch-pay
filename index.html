@@ -1161,7 +1161,7 @@ svg{display:block;flex-shrink:0;}
 .hist-sort-btn{display:flex;align-items:center;gap:5px;padding:6px 16px;border-radius:20px;border:1.5px solid var(--sep2);background:transparent;font-size:12px;font-weight:500;color:var(--label2);cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .12s;-webkit-tap-highlight-color:transparent;}
 .hist-sort-btn.open{border-color:var(--blue);color:var(--blue);background:var(--blue-bg);}
 .hist-sort-arr{display:inline-flex;align-items:center;justify-content:center;opacity:.85;}
-.hist-sort-arr svg{width:14px;height:17px;display:block;}
+.hist-sort-arr svg{width:13px;height:14px;display:block;}
 .hist-sort-btn.open .hist-sort-arr svg{transform:rotate(180deg);}
 .hist-sort-dd{position:absolute;top:calc(100% + 4px);left:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:100;min-width:136px;overflow:hidden;}
 .hist-sort-dd-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;font-size:13px;cursor:pointer;color:var(--label);transition:background .1s;-webkit-tap-highlight-color:transparent;}
@@ -1197,7 +1197,7 @@ svg{display:block;flex-shrink:0;}
   .hist-dr-sinp-wrap>.hist-filter-wrap{flex:0 0 92px;}
   .hist-dr-sinp-wrap>.hist-filter-wrap>.hist-sort-btn{width:100%;justify-content:center;padding-left:10px;padding-right:10px;}
   .hist-dr-sinp-wrap>.hist-settle-btn{flex:0 0 92px;justify-content:center;padding-left:10px;padding-right:10px;}
-  .hist-sort-arr svg{width:20px;height:24px;}
+  .hist-sort-arr svg{width:19px;height:20px;}
 }
 .hist-head-right{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0 16px 8px;}
 .hist-head-right .hist-head-sync{margin:0;padding:0;text-align:right;}
@@ -1781,7 +1781,7 @@ svg{display:block;flex-shrink:0;}
       </div>
       <div class="hist-filter-wrap">
         <button class="hist-sort-btn" id="histSortBtn" onclick="toggleHistSortDd(event)">
-          <span id="histSortLbl">최신순</span><span class="hist-sort-arr"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span id="histSortLbl">최신순</span><span class="hist-sort-arr"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 16L5 8h14z"/></svg></span>
         </button>
         <div class="hist-sort-dd" id="histSortDd" style="display:none">
           <div class="hist-sort-dd-item on" data-sort="newest" onclick="setHistorySort('newest')">최신순<span class="hist-sort-chk">✓</span></div>
