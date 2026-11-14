@@ -1798,8 +1798,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.84';
-const BUILD_TIME='2026-11-14 18:40';
+const APP_VERSION='v7.85';
+const BUILD_TIME='2026-11-14 20:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2944,6 +2944,7 @@ function _setPanelHtml(){
       +`<button class="set-btn" data-action="dbxImportOld">옛 위치에서 가져오기</button>`
       +`<button class="set-btn" data-action="dbxRename">이미지 파일명 일괄 변경</button>`
       +`<button class="set-btn" data-action="dbxOrganizeSettle">정산 이미지 폴더 정리</button>`
+      +`<button class="set-btn" data-action="recoverReceipts">영수증 사진 복구</button>`
       +`<button class="set-btn danger" data-action="dbxDisconnect">연결 해제</button>`
       +`</div></div>`;
   }else{
@@ -2979,6 +2980,7 @@ function _settingsAction(action){
   else if(action==='dbxImportOld'){close();importFromOldLocation();}
   else if(action==='dbxRename'){close();_dbxRenameExistingFiles();}
   else if(action==='dbxOrganizeSettle'){close();_dbxOrganizeSettlementImages();}
+  else if(action==='recoverReceipts'){close();recoverReceipts();}
   else if(action==='dbxDisconnect'){hDbxDisconnect();refresh();}
   else if(action==='openHistory'){close();goToHistory();}
   else if(action==='saveHistory'){close();saveToHistory();}
@@ -5082,7 +5084,12 @@ function _computeHistoryMerge(remoteRecs,local,delIds,delFps){
   [...(remoteRecs||[]),...(local||[])].forEach(r=>{
     if(!r||r.id===undefined)return;
     if((delIds.has(r.id)||_fpDeleted(delFps,r))&&!_isHistoryFixed(r.id))return;
-    const ex=map.get(r.id);if(!ex||(r.savedAt||'')>(ex.savedAt||''))map.set(r.id,r);
+    const ex=map.get(r.id);
+    if(!ex){map.set(r.id,r);return;}
+    // 최신본(savedAt)을 쓰되, 영수증 참조(receiptUrl)·상세는 둘 중 있는 쪽을 보존한다 —
+    // LWW 통째 교체가 사진 링크를 지워 영수증이 사라지던 문제 방지 (v7.85)
+    const newer=(r.savedAt||'')>(ex.savedAt||'')?r:ex,older=newer===r?ex:r;
+    map.set(r.id,{...newer,items:_mergeHistoryReceiptDetails(older.items,newer.items,{preserveUrl:true})});
   });
   const merged=Array.from(map.values()).sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''));
   let fpChanged=false;
@@ -5125,6 +5132,77 @@ function _dedupHistoryDetailed(arr){
   return{records:out.sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||'')),removedIds:[...new Set(removedIds)],removedRecords:unique,keptIds:[...new Set(keptIds)]};
 }
 function _dedupHistory(arr){return _dedupHistoryDetailed(arr).records;}
+
+// ── 영수증 참조 복구 (v7.85) ──────────────────────────────────────────
+// 동기화 LWW 병합이 '영수증 참조(receiptUrl) 빠진 더 최신 버전'으로 로컬을 덮어써 사진 링크가
+// 사라진 경우, Dropbox가 보관한 history.json '이전 버전들'에서 (기록 id·항목 id로) 참조만 되살린다.
+// 사진 파일(/receipts/*.jpg)·IndexedDB는 건드리지 않는다. 빈 receiptUrl만 채운다(비파괴).
+// 잠긴(fixed) 기록은 표시가 봉인 아카이브에서 나오므로 아카이브 payload도 고쳐 재봉인한다.
+async function _recoverReceiptRefs(apply){
+  const token=dbxGetToken();
+  if(!token)return {error:'no-token'};
+  try{await dbxResolveRoot();}catch(e){}
+  try{await _ensureFixedArchives();}catch(e){}
+  const local=loadHistory();
+  const arcs=loadFixedArchives();
+  // 복구 필요한 (기록id|항목id) — 라이브 + 아카이브 payload 모두
+  const need=new Set();
+  const collect=(items,recId)=>(items||[]).forEach(it=>{if(it&&it.id!=null&&!String(it.receiptUrl||'').trim())need.add(recId+'|'+it.id);});
+  local.forEach(r=>collect(r.items,r.id));
+  arcs.forEach(f=>{if(f&&f.payload)collect(f.payload.items,f.payload.id);});
+  if(!need.size)return {restored:0,need:0};
+  // Dropbox 이전 버전들을 최신→과거로 훑어 (기록id|항목id)→receiptUrl 맵을 만든다(처음 찾은 값=가장 최근).
+  const map=new Map();
+  try{
+    const res=await _dbxRpc(token,'files/list_revisions',{path:dbxHistFile(),mode:'path',limit:100});
+    if(res&&res.ok){
+      const data=await res.json();
+      const revs=(data.entries||[]).slice().sort((a,b)=>String(b.server_modified||'').localeCompare(String(a.server_modified||''))).map(e=>e.rev).filter(Boolean);
+      for(const rev of revs){
+        if(map.size>=need.size)break;
+        let arr=null;try{arr=await _dbxDownload(token,'rev:'+rev);}catch(e){}
+        if(!Array.isArray(arr))continue;
+        arr.forEach(r=>(r&&r.items||[]).forEach(it=>{const u=String(it&&it.receiptUrl||'').trim();if(!u)return;const k=r.id+'|'+it.id;if(need.has(k)&&!map.has(k))map.set(k,u);}));
+      }
+    }
+  }catch(e){}
+  if(!map.size)return {restored:0,need:need.size};
+  let restored=0;
+  const fill=(items,recId)=>{let ch=false;const out=(items||[]).map(it=>{if(!it||it.id==null||String(it.receiptUrl||'').trim())return it;const u=map.get(recId+'|'+it.id);if(u){restored++;ch=true;return {...it,receiptUrl:u};}return it;});return {items:out,ch};};
+  const nowIso=new Date().toISOString();
+  const nextLocal=local.map(r=>{const {items,ch}=fill(r.items,r.id);return ch?{...r,items,savedAt:nowIso}:r;});
+  // 잠금 아카이브 재봉인
+  let arcChanged=false;const newArcs=[];
+  for(const f of arcs){
+    if(!f||!f.payload){newArcs.push(f);continue;}
+    const {items,ch}=fill(f.payload.items,f.payload.id);
+    if(!ch){newArcs.push(f);continue;}
+    arcChanged=true;
+    const payload={...f.payload,items};
+    newArcs.push({...f,payload,guard:_fixedGuard(payload),sha256:await _hSha256b64url(_stableJson(payload))});
+  }
+  if(apply&&restored>0){
+    if(arcChanged){try{await _saveFixedArchives(newArcs);}catch(e){}}
+    localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(nextLocal)));
+    try{await hSyncDropbox();}catch(e){}
+    if(arcChanged&&hDbxGetToken()){try{await _syncFixedArchives(hDbxGetToken());}catch(e){}}
+    try{_refreshHistDrawer();}catch(e){}
+    try{renderAll(true);}catch(e){}
+  }
+  return {restored,need:need.size};
+}
+async function recoverReceipts(){
+  if(!dbxGetToken()){toast('Dropbox가 연결되어 있지 않아요',{type:'error'});return;}
+  toast('Dropbox 이전 버전에서 영수증을 찾는 중…');
+  let dry;try{dry=await _recoverReceiptRefs(false);}catch(e){dry={error:'fail'};}
+  if(!dry||dry.error){toast('복구 확인에 실패했어요 — Dropbox 연결을 확인해주세요',{type:'error',duration:5000});return;}
+  if(!dry.need){toast('모든 기록에 영수증 참조가 있어요 (복구 불필요)',{type:'success',duration:4500});return;}
+  if(!dry.restored){toast(`비어있는 영수증 ${dry.need}개 중 Dropbox 이전 버전에서 되살릴 수 있는 게 없어요`,{type:'error',duration:6000});return;}
+  if(!confirm(`영수증 참조 ${dry.restored}개를 되살립니다.\n· 사진은 지우지 않고 참조만 복구\n· 다른 기기에도 반영됩니다\n적용할까요?`))return;
+  toast('영수증 복구 중…');
+  let r;try{r=await _recoverReceiptRefs(true);}catch(e){r={restored:0};}
+  toast(`영수증 ${r.restored}개를 복구했어요`,{type:'success',duration:6000});
+}
 // 저장공간 초과 시 비파괴적으로 공간을 비운다: localStorage 에 남은 레거시 자동백업은
 // 실제 복구본이 IndexedDB 에 있으므로 지워도 정산·기록·이미지 데이터 손실이 없다. (v7.62)
 function _freeLocalStorageOnce(){let freed=false;try{if(localStorage.getItem(AUTO_BACKUP_KEY)!==null){localStorage.removeItem(AUTO_BACKUP_KEY);freed=true;}}catch(e){}return freed;}
