@@ -3643,7 +3643,7 @@ function toggleAllRecCard(recId){
   const detail=document.createElement('div');detail.className='pm-allrec-detail';
   const fixed=_isHistoryFixed(recId);
   // 기록보관함 카드 foot와 동일한 작은 텍스트 버튼으로 통일 (v7.79)
-  const dbxInline=hDbxGetToken()?`<button class="rc-load-btn" onclick="saveHistRecToDropbox('${jsa(recId)}')">이미지</button>`:'';
+  const dbxInline=hDbxGetToken()?`<button class="rc-load-btn" onclick="saveHistRecToDropbox('${jsa(recId)}')">☁️ 이미지 저장</button>`:'';
   const ownerInline=_ownerUnlocked?`<button class="rc-load-btn rc-edit-btn" onclick="${fixed?`unlockHistoryForEdit('${jsa(recId)}')`:`loadHistoryForEdit('${jsa(recId)}')`}">수정</button>${fixed?`<span class="rc-fix-btn fixed">${LOCK_CLOSED_SVG}잠김</span>`:''}<button class="rc-del-btn" onclick="_pmDelRec('${jsa(recId)}',event)">삭제</button>`:'';
   const actions=(dbxInline||ownerInline)?`<div class="rc-foot"><span class="rc-saved-at"></span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">${dbxInline}${ownerInline}</div></div>`:'';
   if(!txns.length){detail.innerHTML='<div class="rc-no-txn">모두 정산 완료 ✓</div>'+actions;}
