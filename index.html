@@ -914,6 +914,8 @@ svg{display:block;flex-shrink:0;}
 .history-image-viewer img{display:block;max-width:100%;max-height:100%;object-fit:contain;background:#fff;box-shadow:0 18px 60px rgba(0,0,0,.35);}
 .history-image-viewer-close{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:1;width:44px;height:44px;border:1px solid rgba(255,255,255,.24);border-radius:50%;background:rgba(20,20,22,.72);color:#fff;line-height:0;padding:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box;cursor:pointer;}
 .history-image-viewer-close svg{width:20px;height:20px;display:block;}
+.history-image-viewer-save{position:absolute;left:50%;transform:translateX(-50%);bottom:max(20px,env(safe-area-inset-bottom,0px));z-index:1;padding:11px 20px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(20,20,22,.78);color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.history-image-viewer-save:active{opacity:.8;}
 .share-hist-btn{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:12px;font-size:14px;font-weight:600;background:var(--fill);color:var(--label);cursor:pointer;transition:background .12s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
 .share-hist-btn:hover{background:var(--fill2);}
 .notice{font-size:11px;color:var(--label3);text-align:center;margin-top:12px;line-height:1.6;}
@@ -1018,8 +1020,11 @@ svg{display:block;flex-shrink:0;}
 /* foot 버튼 — 전부 아이콘+글자 박스, 등폭(색은 각자 유지). 한 줄 유지, 모바일은 아이콘만 (v7.81) */
 .rc-foot-btns{display:flex;gap:6px;align-items:center;flex-shrink:0;}
 .rc-foot-btns>*{min-width:60px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:4px;text-align:center;border-radius:8px;font-weight:700;padding:6px 8px;font-size:12px;white-space:nowrap;}
-.rc-foot-btns>.rc-load-btn:not(.rc-edit-btn){border:1px solid #aab4ff;background:#f4f5ff;color:var(--blue);}
+.rc-foot-btns>.rc-load-btn:not(.rc-edit-btn){border:1px solid #d6d9e0;background:#f5f6f8;color:#868c98;}
+.rc-foot-btns>.rc-load-btn:not(.rc-edit-btn) .rc-btn-ico{filter:grayscale(1);opacity:.6;}
 .rc-foot-btns>.rc-del-btn{border:1px solid #f0b2b2;background:var(--red-bg);color:var(--red);}
+.rc-foot-btns .rc-btn-ico{display:inline-flex;align-items:center;}
+.rc-foot-btns>.rc-edit-btn .rc-btn-ico{transform:scaleX(-1);}
 /* 데스크탑: 이모지+글자 / 모바일: 이모지 숨기고 글자만 + 저장시간 숨겨 버튼이 한 줄 꽉 채움 */
 @media(max-width:700px){.rc-foot .rc-saved-at{display:none;}.rc-foot-btns .rc-btn-ico{display:none;}.rc-foot-btns{flex:1;}.rc-foot-btns>*{flex:1;min-width:0;gap:0;}}
 .lock-ico{width:14px;height:14px;display:inline-block;flex:0 0 auto;}
@@ -5319,7 +5324,7 @@ function _cardFootHtml(r){
   const lockBtn=fixed
     ?`<span class="rc-fix-btn fixed" title="잠긴 기록"><span class="rc-btn-ico">🔒</span><span class="rc-btn-lbl">잠김</span></span>`
     :`<button class="rc-fix-btn" onclick="event.stopPropagation();fixHistoryRecord('${jsa(r.id)}')"><span class="rc-btn-ico">🔓</span><span class="rc-btn-lbl">잠금</span></button>`;
-  const imgBtn=`<button class="rc-load-btn" onclick="event.stopPropagation();viewHistoryImage('${jsa(r.id)}')"><span class="rc-btn-ico">🧾</span><span class="rc-btn-lbl">이미지</span></button>`;
+  const imgBtn=`<button class="rc-load-btn" onclick="event.stopPropagation();viewHistoryImage('${jsa(r.id)}')"><span class="rc-btn-ico">☁️</span><span class="rc-btn-lbl">이미지</span></button>`;
   const editBtn=`<button class="rc-load-btn rc-edit-btn"${fixed?' title="암호 입력 후 수정"':''} onclick="event.stopPropagation();${fixed?`unlockHistoryForEdit('${jsa(r.id)}')`:`loadHistoryForEdit('${jsa(r.id)}')`}"><span class="rc-btn-ico">✏️</span><span class="rc-btn-lbl">수정</span></button>`;
   const delBtn=`<button class="rc-del-btn"${fixed?' title="암호 입력 후 삭제"':''} onclick="event.stopPropagation();deleteHistoryRecord('${jsa(r.id)}',event)"><span class="rc-btn-ico">🗑</span><span class="rc-btn-lbl">삭제</span></button>`;
   return `<div class="rc-foot"><span class="rc-saved-at">${savedAtStr} 저장 · ${(r.people||[]).length}명</span><div class="rc-foot-btns">${lockBtn}${imgBtn}${editBtn}${delBtn}</div></div>`;
@@ -6357,6 +6362,7 @@ async function viewHistoryImage(id){
     viewer.innerHTML='<button class="history-image-viewer-close" type="button" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><img alt="보관된 정산 기록 이미지">';
     viewer.querySelector('img').src=url;
     viewer.querySelector('button').onclick=closeHistoryImageViewer;
+    if(hDbxGetToken()){const sb=document.createElement('button');sb.className='history-image-viewer-save';sb.type='button';sb.innerHTML='☁️ 드롭박스 저장';sb.onclick=(ev)=>{ev.stopPropagation();saveHistRecToDropbox(id);};viewer.appendChild(sb);}
     document.body.appendChild(viewer);
     _bindImgZoom(viewer,viewer.querySelector('img'),closeHistoryImageViewer);
   }catch(err){toast('이미지를 열지 못했어요',{type:'error'});}
