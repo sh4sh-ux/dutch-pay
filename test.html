@@ -1293,6 +1293,25 @@ suite('TC28: 한턱 내역 집계 _treatBreakdownHtml [v7.82]', () => {
   });
 });
 
+suite('TC29: 동기화 병합이 영수증 참조(receiptUrl)를 안 지운다 [v7.85]', () => {
+  const M=(remote,local)=>APP._computeHistoryMerge(remote,local,new Set(),{});
+  const rec=(id,savedAt,receiptUrl)=>({id,savedAt,dateStart:'2026-11-03',people:['조상현'],total:100,items:[{id:1,name:'전북상회',amount:100,payer:'조상현',members:['조상현'],receiptUrl}]});
+  test('최신본에 영수증 없고 과거본에 있으면 → 최신본 쓰되 receiptUrl 보존', () => {
+    const m=M([rec('a','2026-11-10T00:00:00Z','')],[rec('a','2026-11-05T00:00:00Z','idb:k1')]);
+    const r=m.find(x=>x.id==='a');
+    expect(r.savedAt).toBe('2026-11-10T00:00:00Z');   // 최신본 채택
+    expect(r.items[0].receiptUrl).toBe('idb:k1');      // 영수증은 보존
+  });
+  test('최신본에 영수증 있으면 그대로 유지', () => {
+    const m=M([rec('b','2026-11-10T00:00:00Z','idb:k2')],[rec('b','2026-11-05T00:00:00Z','')]);
+    expect(m.find(x=>x.id==='b').items[0].receiptUrl).toBe('idb:k2');
+  });
+  test('양쪽 다 영수증 없으면 빈 채로 둠(없는 걸 만들지 않음)', () => {
+    const m=M([rec('c','2026-11-10T00:00:00Z','')],[rec('c','2026-11-05T00:00:00Z','')]);
+    expect(m.find(x=>x.id==='c').items[0].receiptUrl).toBe('');
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────
