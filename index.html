@@ -1583,7 +1583,7 @@ svg{display:block;flex-shrink:0;}
      없어서 직접 구현한다. overscroll-behavior로 브라우저 기본 동작을 끄고
      우리 인디케이터만 쓰게 해 두 개가 겹치지 않게 한다. */
   html{overscroll-behavior-y:contain;}
-  .ptr-ind{position:fixed;left:50%;top:0;z-index:95;width:36px;height:36px;
+  .ptr-ind{position:fixed;left:50%;top:0;z-index:350;width:36px;height:36px;
     margin-left:-18px;border-radius:50%;background:var(--card);
     box-shadow:0 2px 10px rgba(20,25,40,.16);display:flex;align-items:center;
     justify-content:center;pointer-events:none;opacity:0;
@@ -1798,8 +1798,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.83';
-const BUILD_TIME='2026-11-14 17:20';
+const APP_VERSION='v7.84';
+const BUILD_TIME='2026-11-14 18:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3007,7 +3007,7 @@ function openHistDrawer(){
   _histPlaceDesktop();
   dr.classList.add('open');
   _syncShellNav('history'); // 기록 보관함을 열면 레일/하단 '기록' 탭을 활성 표시 (v7.02)
-  _bindHistPTR(); // 당겨서 Dropbox 재동기화 (v7.45)
+  // _bindHistPTR 제거 — 다른 탭과 동일하게 전역 PTR(당겨서 reload)이 드로어도 처리 (v7.84)
   const onEnd=()=>{dr.removeEventListener('transitionend',onEnd);if(dr.classList.contains('open'))dr.style.transform='none';};
   dr.addEventListener('transitionend',onEnd);
   document.addEventListener('keydown',_histEscHandler);
@@ -3674,7 +3674,7 @@ function toggleAllRecCard(recId){
   const detail=document.createElement('div');detail.className='pm-allrec-detail';
   // 기록보관함 카드와 동일하게: 입금 내역 + 공용 foot(_cardFootHtml) (v7.81)
   const foot=_cardFootHtml(rec);
-  if(!txns.length){detail.innerHTML=_treatBreakdownHtml(rec)+'<div class="rc-no-txn">모두 정산 완료 ✓</div>'+foot;}
+  if(!txns.length){detail.innerHTML=_treatBreakdownHtml(rec)+foot;}
   else{detail.innerHTML='<div class="rc-section-title rc-section-sep">입금 내역</div><div class="rc-txns">'+txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const owner=t.to===_myName;const badge=_paymentBadgeHtml(pm,t.amt,{owner});const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(recId)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+'</div>'+foot;}
   card.insertAdjacentElement('afterend',detail);
 }
@@ -5348,16 +5348,15 @@ function _cardFootHtml(r){
   const delBtn=`<button class="rc-del-btn"${fixed?' title="암호 입력 후 삭제"':''} onclick="event.stopPropagation();deleteHistoryRecord('${jsa(r.id)}',event)"><span class="rc-btn-ico">🗑</span><span class="rc-btn-lbl">삭제</span></button>`;
   return `<div class="rc-foot"><span class="rc-saved-at">${savedAtStr} 저장 · ${(r.people||[]).length}명</span><div class="rc-foot-btns">${lockBtn}${imgBtn}${editBtn}${delBtn}</div></div>`;
 }
-// 한턱 내역 — 결제자(payer)별 한턱(isTreat) 금액 합 + 한턱 합계. 받을 돈 없는(모두 정산 완료) 카드에서
-// '누가 얼마 쐈는지'를 입금 내역처럼 보여준다. 표시 전용(집계는 payer별 isTreat 합). (v7.82)
+// 한턱 내역 — 결제자(payer)별 한턱(isTreat) 금액. 받을 돈 없는 카드에서
+// '누가 얼마 쐈는지'를 입금 내역처럼 보여준다. 표시 전용(집계는 payer별 isTreat 합). (v7.82, 합계 제거 v7.84)
 function _treatBreakdownHtml(r,withSep=true){
   const treatItems=(r.items||[]).filter(it=>it.isTreat&&(+it.amount||0)>0);
   if(!treatItems.length)return '';
   const byPayer={};const order=[];
   treatItems.forEach(it=>{const p=it.payer||'결제자 미정';if(byPayer[p]==null){byPayer[p]=0;order.push(p);}byPayer[p]+=(+it.amount||0);});
-  const total=order.reduce((s,p)=>s+byPayer[p],0);
   const rows=order.map(p=>`<div class="rc-txn-row"><div class="rc-txn-people"><span>${e(p)}</span></div><div class="rc-treat-right"><span class="rc-treat-badge">🎉 한턱</span><span class="rc-txn-amt">${fmt(byPayer[p])}원</span></div></div>`).join('');
-  return `<div class="rc-section-title${withSep?' rc-section-sep':''}">한턱 내역</div><div class="rc-txns">${rows}<div class="rc-txn-row rc-treat-sum"><div class="rc-txn-left"><span>한턱 합계</span></div><span class="rc-txn-amt">${fmt(total)}원</span></div></div>`;
+  return `<div class="rc-section-title${withSep?' rc-section-sep':''}">한턱 내역</div><div class="rc-txns">${rows}</div>`;
 }
 function _buildRecordCardHtml(r){
   const sid=r.id.replace(/[^a-zA-Z0-9]/g,'');
@@ -5379,7 +5378,7 @@ function _buildRecordCardHtml(r){
   const pmObj=r.payments||{};
   const txnHtml=txns.length
     ?`<div class="rc-section-title">입금 내역</div><div class="rc-txns">`+txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const badge=_paymentBadgeHtml(pm,t.amt,{owner:t.to===_myName});const rid=ea(r.id);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(r.id)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+`</div>`
-    :_treatBreakdownHtml(r,false)+`<div class="rc-no-txn">모두 정산 완료 ✓</div>`;
+    :_treatBreakdownHtml(r,false);
   const savedAtStr=(()=>{try{const d=new Date(r.savedAt);return d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e2){return '';}})();
   return `<div class="record-card" data-rec-id="${e(r.id)}">
     <div class="rc-hd" onclick="toggleHistoryCard('${sid}')">
@@ -6503,10 +6502,14 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
   if(!('ontouchstart' in window))return;
   const shell=document.querySelector('.mobile-shell');if(!shell)return;
   // 시트·드로어·모달·팝오버가 떠 있으면 당겨서 새로고침을 막는다.
-  const BLOCK='.history-image-viewer,.mob-sheet.open,.hist-page.open,#histDr.open,.pm-payer-modal-bg,'
+  // 기록보관함 드로어(.hist-page.open/#histDr.open)는 차단하지 않는다 — 다른 탭처럼 당겨서 reload.
+  // 단, 드로어가 열려 있으면 스크롤 기준을 드로어 본문으로 본다(아래 _ptrTop). (v7.84)
+  const BLOCK='.history-image-viewer,.mob-sheet.open,.pm-payer-modal-bg,'
              +'.sc-overlay,.couple-ov,.share-fallback,.data-pop,.icon-pop,.group-pop,.rounder-pop';
   const TH=70,MAX=104;                    // 발동 임계값 / 최대 당김
   let y0=0,pulling=false,dist=0,busy=false;
+  // 드로어가 열려 있으면 그 본문 스크롤, 아니면 페이지 스크롤 — 둘 다 맨 위일 때만 당겨서 새로고침
+  const _ptrTop=()=>{const dr=document.getElementById('histDr');if(dr&&dr.classList.contains('open')){const b=document.getElementById('histDrBody');return b?b.scrollTop:0;}return window.scrollY||0;};
 
   const ind=document.createElement('div');
   ind.className='ptr-ind';
@@ -6517,7 +6520,7 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
   const icon=ind.firstElementChild;
 
   const ready=()=>!busy&&matchMedia('(max-width:700px)').matches
-    &&(window.scrollY||0)<=0&&!document.querySelector(BLOCK);
+    &&_ptrTop()<=0&&!document.querySelector(BLOCK);
   const place=(d,rot)=>{ind.style.transform='translateY('+(d-48)+'px)';
     icon.style.transform='rotate('+rot+'deg)';ind.style.opacity=String(Math.min(1,d/TH*1.2));};
   const reset=()=>{dist=0;ind.classList.add('settle');ind.classList.remove('spin');
@@ -6531,7 +6534,7 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
   addEventListener('touchmove',e=>{
     if(!pulling)return;
     const dy=e.touches[0].clientY-y0;
-    if(dy<=0||(window.scrollY||0)>0){pulling=false;if(dist)reset();return;}
+    if(dy<=0||_ptrTop()>0){pulling=false;if(dist)reset();return;}
     e.preventDefault();                   // 기본 바운스·새로고침 억제
     dist=Math.min(MAX,dy*0.5);            // 감쇠해서 손가락보다 덜 움직이게
     place(dist,Math.min(1,dist/TH)*270);
