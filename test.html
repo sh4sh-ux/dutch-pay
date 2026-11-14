@@ -1258,6 +1258,42 @@ suite('TC27: 기록 검색 — 0원 항목 제외 + 사람 이름은 참여자 �
   });
 });
 
+suite('TC28: 한턱 내역 집계 _treatBreakdownHtml [v7.82]', () => {
+  const H=r=>APP._treatBreakdownHtml(r);
+  test('결제자별 한턱 합 + 한턱 합계', () => {
+    const r={items:[
+      {name:'커피',amount:6360,payer:'조상현',isTreat:true},
+      {name:'약국',amount:54000,payer:'조상현',isTreat:true},
+      {name:'꼬치',amount:97000,payer:'이정환',isTreat:true},
+      {name:'일반',amount:10000,payer:'조상현',isTreat:false}
+    ]};
+    const h=H(r);
+    expect(h.includes('조상현')).toBe(true);
+    expect(h.includes('60,360원')).toBe(true);    // 조상현 6360+54000
+    expect(h.includes('이정환')).toBe(true);
+    expect(h.includes('97,000원')).toBe(true);
+    expect((h.match(/🎉 한턱/g)||[]).length).toBe(2);  // 결제자 2명 배지 2개
+    expect(h.includes('한턱 합계')).toBe(true);
+    expect(h.includes('157,360원')).toBe(true);    // 60360+97000
+  });
+  test('한턱 없으면 빈 문자열', () => {
+    expect(H({items:[{name:'밥',amount:10000,payer:'조상현',isTreat:false}]})).toBe('');
+    expect(H({items:[]})).toBe('');
+    expect(H({})).toBe('');
+  });
+  test('0원·음수 한턱은 집계 제외', () => {
+    const r={items:[
+      {name:'a',amount:0,payer:'김가',isTreat:true},
+      {name:'b',amount:-5000,payer:'김가',isTreat:true},
+      {name:'c',amount:30000,payer:'나다',isTreat:true}
+    ]};
+    const h=H(r);
+    expect(h.includes('김가')).toBe(false);
+    expect(h.includes('나다')).toBe(true);
+    expect(h.includes('30,000원')).toBe(true);
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────
