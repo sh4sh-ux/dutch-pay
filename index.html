@@ -1798,8 +1798,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.91';
-const BUILD_TIME='2026-11-16 10:30';
+const APP_VERSION='v7.92';
+const BUILD_TIME='2026-11-16 11:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -6276,7 +6276,9 @@ function generateFullDetailCanvases(rec){
   const allTxns=(rec.txns||[]).filter(t=>t&&(+t.amt||0)!==0);  // 하단 입금 내역 (v7.91)
   return pages.map((pg,pageIndex)=>{
     const isLast=pageIndex===pages.length-1;
-    const txnH=(isLast&&allTxns.length)?(16+44+allTxns.length*ROW+22):0;  // 입금 내역 블록 높이 예약
+    // 입금 내역 — 화면(수금)처럼 배지(퉁·초과·부족·입금완료·미입금)와 입금정보(실수령·은행·일시)까지 (v7.92)
+    const txnRows=isLast?allTxns.map(t=>{const pm=(rec.payments||{})[`${t.from}|${t.to}`]||{};const owner=t.to===_myName;const d=_paymentDisplay(pm,t.amt,{owner});return {t,pm,d,badgeText:(d.waived?d.status:(pm.done?'✓ ':'')+d.status),meta:d.metaText};}):[];
+    const txnH=txnRows.length?(16+44+txnRows.reduce((s,r)=>s+(r.meta?74:52),0)+28):0;  // 입금 내역 블록 높이 예약
     const H=Math.max(620,Math.min(MAX_H,pg.used+txnH+FOOTER));const canvas=document.createElement('canvas');canvas.width=W*SCALE;canvas.height=H*SCALE;const ctx=canvas.getContext('2d');ctx.scale(SCALE,SCALE);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
     // Dropbox 보관용 상세 이미지의 모든 글꼴은 화면용 기준보다 2px 작게 그린다.
     const font=(size,weight=400)=>ctx.font=`${weight} ${Math.max(1,size-2)}px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Arial,sans-serif`;
@@ -6293,15 +6295,29 @@ function generateFullDetailCanvases(rec){
       if(last){ctx.fillStyle='#111';font(19,700);ctx.textAlign='left';ctx.fillText('합계',44,y+35);const badge=audit.status==='ok'?'✓ 계산 일치':audit.label;ctx.fillStyle=audit.status==='ok'?'#16843b':audit.status==='bad'?'#d92d20':'#777';font(15,700);ctx.fillText(badge,104,y+35);ctx.fillStyle='#111';font(20,700);ctx.textAlign='right';ctx.fillText(fmt(audit.total)+'원',676,y+35);y+=72;}else{ctx.fillStyle='#8e8e93';font(14,600);ctx.textAlign='right';ctx.fillText('다음 페이지에 계속',676,y+24);y+=36;}y+=22;
     }
     // 하단 입금 내역 (마지막 페이지) — 누가 누구에게 보낼 금액 (v7.91)
-    if(isLast&&allTxns.length){
-      y+=16;ctx.fillStyle='#111';font(19,700);ctx.textAlign='left';ctx.fillText('입금 내역',30,y+26);y+=44;
+    if(isLast&&txnRows.length){
+      y+=16;ctx.fillStyle='#111';font(19,700);ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('입금 내역',30,y+26);y+=44;
       ctx.strokeStyle='#dedee3';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(28,y);ctx.lineTo(692,y);ctx.stroke();
-      allTxns.forEach(t=>{
-        ctx.fillStyle='#222';font(17,600);ctx.textAlign='left';ctx.fillText(truncateCanvasText(ctx,`${t.from||''}  →  ${t.to||''}`,420),44,y+32);
-        ctx.textAlign='right';font(18,700);ctx.fillText(fmt(+t.amt||0)+'원',676,y+32);
-        ctx.strokeStyle='#ececf0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(28,y+ROW);ctx.lineTo(692,y+ROW);ctx.stroke();
-        y+=ROW;
+      const drawArrow=(ax,ay)=>{ctx.strokeStyle='#9a9aa1';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax+20,ay);ctx.moveTo(ax+13,ay-6);ctx.lineTo(ax+20,ay);ctx.lineTo(ax+13,ay+6);ctx.stroke();};
+      txnRows.forEach((r,ri)=>{
+        const rowH=r.meta?74:52;const cy=y+(r.meta?30:28);
+        ctx.textBaseline='middle';
+        font(17,600);ctx.fillStyle='#222';ctx.textAlign='left';
+        const fromT=truncateCanvasText(ctx,r.t.from||'',150);ctx.fillText(fromT,44,cy);
+        const ax=44+ctx.measureText(fromT).width+12;drawArrow(ax,cy);
+        font(17,600);ctx.fillStyle='#222';const toT=truncateCanvasText(ctx,r.t.to||'',150);ctx.fillText(toT,ax+32,cy);
+        const bx=ax+32+ctx.measureText(toT).width+14;
+        let bg='#eef0f2',fg='#8a8a8e';
+        if(!r.d.waived&&r.pm.done){if(r.d.diff>0){bg='#edfaf3';fg='#13823d';}else if(r.d.diff<0){bg='#fff0f0';fg='#e53e3e';}else{bg='#edfaf3';fg='#13823d';}}
+        font(13,700);const bpw=ctx.measureText(r.badgeText).width+20,bph=26;
+        ctx.fillStyle=bg;roundRectPath(ctx,bx,cy-bph/2,bpw,bph,bph/2);ctx.fill();
+        ctx.fillStyle=fg;ctx.textAlign='left';ctx.fillText(r.badgeText,bx+10,cy);
+        ctx.fillStyle='#111';font(18,700);ctx.textAlign='right';ctx.fillText(fmt(+r.t.amt||0)+'원',676,cy);
+        if(r.meta){ctx.textAlign='left';ctx.fillStyle='#9a9aa1';font(13,500);ctx.textBaseline='alphabetic';ctx.fillText(truncateCanvasText(ctx,r.meta,560),44,y+60);ctx.textBaseline='middle';}
+        if(ri<txnRows.length-1){ctx.strokeStyle='#ececf0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(28,y+rowH);ctx.lineTo(692,y+rowH);ctx.stroke();}
+        y+=rowH;
       });
+      ctx.textBaseline='alphabetic';
     }
     ctx.fillStyle='#a0a0a6';font(14,500);ctx.textAlign='center';ctx.fillText("Let's split it. · Dropbox 보관용",W/2,H-22);return canvas;
   });
