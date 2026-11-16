@@ -2786,8 +2786,10 @@ function clearSettleEndDate(){settleDateEnd=null;saveState();renderDesktopRight(
 
 const svgX='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 const svgTrash='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
-/* 화살표 모양을 캔버스(공유·상세 이미지) 송금 화살표와 동일 비율(AL=36:headW=24:AH=5 → 선+가늘고 긴 삼각형)로 통일 (v7.96) */
-const svgArrow='<svg width="16" height="16" viewBox="0 0 24 24"><line x1="2" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8.5 9.2 L22 12 L8.5 14.8 Z" fill="currentColor"/></svg>';
+/* 화살표: 캔버스(공유·상세 이미지) 송금 화살표와 동일한 가늘고 긴 삼각형 + 회색 #969BA4.
+   화면 화살표가 글자 대비 너무 작아 깨져 보이던 것 → 글자의 약 1.3배로 키우고(width 24/20),
+   viewBox를 세로로 잘라(0 6 24 12=2:1) 행 높이는 안 바뀌게. currentColor(#111 검정) 제거. (v7.96) */
+const svgArrow='<svg width="24" height="12" viewBox="0 6 24 12"><line x1="2" y1="12" x2="9" y2="12" stroke="#969BA4" stroke-width="2" stroke-linecap="round"/><path d="M8.5 9.2 L22 12 L8.5 14.8 Z" fill="#969BA4"/></svg>';
 const svgEmpty='<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="11" y2="16"/></svg>';
 const svgShare='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
 const svgBookmark='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
@@ -4975,7 +4977,7 @@ async function _resealArchiveReceipts(recId,liveItems,preserveReceiptUrl){
 const DBX_H_LASTSYNC='dutchpay_dbx_lastsync';
 const HISTORY_DEDUP_AUDIT_KEY='dutchpay_history_dedup_audit_v1';
 // 기록 보관함 파일 — 경로는 dbxHistFile()이 DBX_DIR 기준으로 만든다
-const svgArrowH='<svg width="13" height="13" viewBox="0 0 24 24"><line x1="2" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M8.5 9.2 L22 12 L8.5 14.8 Z" fill="currentColor"/></svg>';
+const svgArrowH='<svg width="20" height="10" viewBox="0 6 24 12"><line x1="2" y1="12" x2="9" y2="12" stroke="#969BA4" stroke-width="2" stroke-linecap="round"/><path d="M8.5 9.2 L22 12 L8.5 14.8 Z" fill="#969BA4"/></svg>';
 
 function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JSON.parse(r):[];}catch(e){return [];}}
 function _stableJson(v){
