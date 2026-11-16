@@ -6268,7 +6268,7 @@ async function saveAllHistoryDetailsToDropbox(){
 }
 
 function generateFullDetailCanvases(rec){
-  const W=SHARE_IMG_W,MAX_H=3300,SCALE=2,HEADER=154,FOOTER=82,ROW=48,CARD_GAP=14,MAX_ROWS=38;
+  const W=SHARE_IMG_W,MAX_H=3300,SCALE=2,HEADER=154,FOOTER=60,ROW=48,CARD_GAP=14,MAX_ROWS=38;
   const valid=(rec.items||[]).filter(it=>+it.amount!==0),segments=[];
   for(const it of valid){
     const all=parseReceiptLines(it.receiptText||''),audit=all.length?_receiptAudit(it,all):{status:'warn',label:'상세 품목 없음',total:0,diff:-(+it.amount||0),badRows:new Set()};
@@ -6327,7 +6327,7 @@ function generateFullDetailCanvases(rec){
       });
       ctx.textBaseline='alphabetic';
     }
-    ctx.fillStyle='#a0a0a6';font(14,500);ctx.textAlign='center';ctx.fillText("Let's split it. · Dropbox 보관용",W/2,H-46);return canvas;
+    ctx.fillStyle='#a0a0a6';font(14,500);ctx.textAlign='center';ctx.fillText("Let's split it. · Dropbox 보관용",W/2,H-50);return canvas;
   });
 }
 
