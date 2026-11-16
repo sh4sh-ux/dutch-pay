@@ -1798,8 +1798,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.89';
-const BUILD_TIME='2026-11-14 21:45';
+const APP_VERSION='v7.90';
+const BUILD_TIME='2026-11-16 10:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2609,6 +2609,8 @@ function _mergeReceiptEnvelope(envelope){
     currentGroupId=groupId;loadGroupData(savedGroup);
     localStorage.setItem(STORAGE_KEY,JSON.stringify({version:3,savedAt:now,groups,currentGroupId,deletedGroups}));
     _saveSyncedHashes(baseHashes);
+    // 영수증 앱에서 가져온 영수증을, 이미 기록보관함에 저장된 같은 정산에도 반영한다(잠긴 기록 포함). (v7.90)
+    try{_updateArchivedReceipts();}catch(e){}
     return{count:entries.length,created:existing?0:entries.length,updated:existing?entries.length:0};
   }catch(e){return null;}
 }
@@ -4923,12 +4925,43 @@ function _updateArchivedReceipts({preserveReceiptUrl=true}={}){
     if(idx<0&&sourceGroupId)idx=arr.findIndex(r=>r.sourceGroupId===sourceGroupId);
     if(idx<0)idx=arr.findIndex(r=>_histFingerprint(r)===_histFingerprint(cur));
     if(idx<0)return false; // 보관함에 없으면 아무것도 안 함
-    if(_isHistoryFixed(arr[idx].id))return false;
-    arr[idx]={...arr[idx],items:_mergeHistoryReceiptDetails(arr[idx].items,JSON.parse(JSON.stringify(items)),{preserveUrl:preserveReceiptUrl}),savedAt:new Date().toISOString()};
+    const recId=arr[idx].id;
+    const liveItems=JSON.parse(JSON.stringify(items));
+    // 잠긴 기록도 영수증은 갱신한다 — receiptUrl/receiptText는 잠금 지문(날짜·참여자·금액·결제자)에 없어 무결성과 무관.
+    // 봉인 아카이브 payload도 갱신·재봉인해야 saveHistory의 _enforceFixedHistory가 되돌리지 않는다. (v7.90)
+    if(_isHistoryFixed(recId)){_resealArchiveReceipts(recId,liveItems,preserveReceiptUrl);return true;}
+    arr[idx]={...arr[idx],items:_mergeHistoryReceiptDetails(arr[idx].items,liveItems,{preserveUrl:preserveReceiptUrl}),savedAt:new Date().toISOString()};
     saveHistory(arr);
     if(hDbxGetToken())try{hSyncDropbox(true);}catch(e){}
     return true;
   }catch(e){return false;}
+}
+// 잠긴(fixed) 기록의 봉인 아카이브 payload에 라이브 영수증(receiptUrl/receiptText)을 반영하고 재봉인한다.
+// receiptUrl/receiptText는 잠금 지문에 없어 무결성과 무관. enforce가 라이브를 되돌릴 때 새 payload가 쓰이게 한다. (v7.90)
+async function _resealArchiveReceipts(recId,liveItems,preserveReceiptUrl){
+  try{
+    try{await _ensureFixedArchives();}catch(e){}
+    const arcs=loadFixedArchives();const aIdx=arcs.findIndex(f=>f&&f.recordId===recId);
+    if(aIdx<0||!arcs[aIdx].payload)return;
+    const f=arcs[aIdx];
+    const liveByKey=new Map();(liveItems||[]).forEach(it=>liveByKey.set(_historyItemDetailKey(it),it));
+    let ch=false;
+    const payloadItems=(f.payload.items||[]).map(it=>{
+      const lv=liveByKey.get(_historyItemDetailKey(it));if(!lv)return it;
+      const newUrl=preserveReceiptUrl?(String(lv.receiptUrl||'')||String(it.receiptUrl||'')):String(lv.receiptUrl||'');
+      const newText=String(lv.receiptText||'')||String(it.receiptText||'');
+      if(newUrl!==String(it.receiptUrl||'')||newText!==String(it.receiptText||'')){ch=true;return {...it,receiptUrl:newUrl,receiptText:newText};}
+      return it;
+    });
+    if(!ch)return;
+    const payload={...f.payload,items:payloadItems};
+    const newArcs=arcs.slice();newArcs[aIdx]={...f,payload,guard:_fixedGuard(payload),sha256:await _hSha256b64url(_stableJson(payload))};
+    await _saveFixedArchives(newArcs);
+    localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(loadHistory())));
+    if(hDbxGetToken()){try{await _syncFixedArchives(hDbxGetToken());}catch(e){}try{hSyncDropbox(true);}catch(e){}}
+    try{_refreshHistoryLockSurfaces();}catch(e){}
+    try{_refreshHistDrawer();}catch(e){}
+  }catch(e){}
 }
 
 // ── 기록 보관함 (SPA) ──
