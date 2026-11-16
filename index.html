@@ -1146,7 +1146,7 @@ svg{display:block;flex-shrink:0;}
   .hist-page .hist-page-title{position:static;text-align:left;font-size:24px;font-weight:700;letter-spacing:-.6px;line-height:1.2;}
   .hist-page .hist-cnt-badge{display:block;margin:5px 0 0;padding:0;font-size:13px;font-weight:400;color:var(--label2);}
   /* 헤더 우측: 동기화 표시 + 전체 상세 저장 */
-  .hist-page .hist-head-right{position:absolute;right:34px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:flex-end;gap:9px;padding:0;}
+  .hist-page .hist-head-right{position:absolute;right:calc(34px + var(--hist-sbw,0px));top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:flex-end;gap:9px;padding:0;}/* 본문 스크롤바 폭만큼 보정해 정산상태 버튼과 우측 정렬 (v7.99) */
   .hist-page .hist-head-sync{margin:0;padding:0;text-align:right;}
   .hist-page .hist-dr-body{padding:0 34px 40px;}
   /* 검색 + 최신순 + 정산상태 한 줄 → 카드가 더 많이 보이게 */
@@ -1805,7 +1805,7 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-4.js"></script>
 <script>
 const APP_VERSION='v7.99';
-const BUILD_TIME='2026-11-16 21:00';
+const BUILD_TIME='2026-11-16 22:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3170,7 +3170,17 @@ function _refreshHistDrawer(){
   const content=document.getElementById('histDrContent');if(!content)return;
   content.innerHTML=`${_historyDedupNoticeHtml()}<div id="histDrList">${_histDrListHtml(recs)}</div>`;
   _updateHSyncInfo();
+  requestAnimationFrame(_syncHistHeadInset);
 }
+// 데스크탑 드로어: 본문 스크롤바가 생기면 본문 콘텐츠(검색/정산상태 줄)는 스크롤바 폭만큼 왼쪽으로 밀리는데
+// 헤더 우측(동기화·전체 상세 저장, position:absolute)은 안 밀려 어긋난다(집 PC=클래식 스크롤바, 회사=오버레이라 정상).
+// → 실제 스크롤바 폭을 재서 --hist-sbw로 헤더 우측 오른쪽값에 더해 둘을 정렬 (v7.99)
+function _syncHistHeadInset(){
+  const body=document.getElementById('histDrBody');if(!body)return;
+  const sbw=Math.max(0,body.offsetWidth-body.clientWidth);
+  document.documentElement.style.setProperty('--hist-sbw',sbw+'px');
+}
+window.addEventListener('resize',()=>{try{_syncHistHeadInset();}catch(e){}});
 function _histMonthNavHtml(allRecs,dispRecs){
   const now=new Date();const curY=now.getFullYear(),curM=now.getMonth()+1;
   const atMax=!_histMonthAllMode&&(_histMonthYear>curY||(_histMonthYear===curY&&_histMonthMonth>=curM));
