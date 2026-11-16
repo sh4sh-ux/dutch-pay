@@ -821,13 +821,14 @@ svg{display:block;flex-shrink:0;}
 }
 /* 영수증 사진 링크 (지출 내역) */
 .rcpt-photo-link{flex-shrink:0;display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--blue);background:none;border:none;cursor:pointer;padding:6px 4px;margin:-6px 0;font-family:inherit;line-height:1;-webkit-tap-highlight-color:transparent;white-space:nowrap;}
-.rcpt-photo-link:hover{color:var(--label);}
+/* hover는 마우스 기기에서만 — 터치 기기는 탭 후 :hover가 들러붙어 영수증 링크가 검정으로 보이던 버그 방지 (v7.94) */
+@media(hover:hover){.rcpt-photo-link:hover{color:var(--label);}}
 .rcpt-photo-link:active{opacity:.55;}
 .rcpt-photo-link .rcpt-arrow{font-size:13px;}
 /* 상세내역 합계 옆 영수증 링크 (v5.54) */
 .rc-foot-cell{text-align:right;padding-right:14px;} /* 단가 열 우측 패딩(14px)에 맞춰 '영수증'을 단가 값과 우측정렬 (v7.93) */
 .rc-foot-link{display:inline-flex;align-items:center;gap:1px;margin:0;font-size:11px;font-weight:600;color:var(--blue);background:none;border:none;cursor:pointer;padding:2px 0;font-family:inherit;vertical-align:middle;-webkit-tap-highlight-color:transparent;white-space:nowrap;}
-.rc-foot-link:hover{color:var(--label);}
+@media(hover:hover){.rc-foot-link:hover{color:var(--label);}}
 .rc-foot-link:active{opacity:.55;}
 .rc-foot-arrow{font-size:13px;margin-left:1px;}
 .rc-photo-only-tbl tfoot td{border-top:none;}
@@ -914,8 +915,13 @@ svg{display:block;flex-shrink:0;}
 .history-image-viewer img{display:block;max-width:100%;max-height:100%;object-fit:contain;background:#fff;box-shadow:0 18px 60px rgba(0,0,0,.35);}
 .history-image-viewer-close{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:1;width:44px;height:44px;border:1px solid rgba(255,255,255,.24);border-radius:50%;background:rgba(20,20,22,.72);color:#fff;line-height:0;padding:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box;cursor:pointer;}
 .history-image-viewer-close svg{width:20px;height:20px;display:block;}
-.history-image-viewer-save{position:absolute;left:50%;transform:translateX(-50%);top:calc(16px + env(safe-area-inset-top,0px));z-index:4;padding:10px 18px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(20,20,22,.78);color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
-@media(min-width:701px){.history-image-viewer-save{top:36px;}}
+.history-image-viewer-save{position:absolute;left:50%;transform:translateX(-50%);top:calc(62px + env(safe-area-inset-top,0px));z-index:4;padding:10px 18px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(20,20,22,.78);color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+@media(min-width:701px){.history-image-viewer-save{top:84px;}}
+/* 정산/상세 토글 (뷰어 상단 중앙) (v7.94) */
+.history-image-viewer-seg{position:absolute;left:50%;transform:translateX(-50%);top:calc(14px + env(safe-area-inset-top,0px));z-index:4;display:flex;gap:3px;padding:3px;border-radius:999px;background:rgba(20,20,22,.78);border:1px solid rgba(255,255,255,.2);}
+.history-image-viewer-seg button{border:0;background:transparent;color:rgba(255,255,255,.72);font-size:13px;font-weight:700;font-family:inherit;padding:6px 16px;border-radius:999px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.history-image-viewer-seg button.on{background:rgba(255,255,255,.95);color:#111;}
+@media(min-width:701px){.history-image-viewer-seg{top:34px;}}
 .history-image-viewer-save:active{opacity:.8;}
 .share-hist-btn{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:12px;font-size:14px;font-weight:600;background:var(--fill);color:var(--label);cursor:pointer;transition:background .12s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
 .share-hist-btn:hover{background:var(--fill2);}
@@ -1798,8 +1804,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.93';
-const BUILD_TIME='2026-11-16 11:20';
+const APP_VERSION='v7.94';
+const BUILD_TIME='2026-11-16 15:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -6278,7 +6284,7 @@ function generateFullDetailCanvases(rec){
     const isLast=pageIndex===pages.length-1;
     // 입금 내역 — 화면(수금)처럼 배지(퉁·초과·부족·입금완료·미입금)와 입금정보(실수령·은행·일시)까지 (v7.92)
     const txnRows=isLast?allTxns.map(t=>{const pm=(rec.payments||{})[`${t.from}|${t.to}`]||{};const owner=t.to===_myName;const d=_paymentDisplay(pm,t.amt,{owner});return {t,pm,d,badgeText:(d.waived?d.status:(pm.done?'✓ ':'')+d.status),meta:d.metaText};}):[];
-    const txnH=txnRows.length?(16+44+txnRows.reduce((s,r)=>s+(r.meta?74:52),0)+28):0;  // 입금 내역 블록 높이 예약
+    const txnH=txnRows.length?(16+44+txnRows.length*52+28):0;  // 입금 내역 블록 높이 예약 (한 줄 52px, v7.94)
     const H=Math.max(620,Math.min(MAX_H,pg.used+txnH+FOOTER));const canvas=document.createElement('canvas');canvas.width=W*SCALE;canvas.height=H*SCALE;const ctx=canvas.getContext('2d');ctx.scale(SCALE,SCALE);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
     // Dropbox 보관용 상세 이미지의 모든 글꼴은 화면용 기준보다 2px 작게 그린다.
     const font=(size,weight=400)=>ctx.font=`${weight} ${Math.max(1,size-2)}px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Arial,sans-serif`;
@@ -6300,7 +6306,7 @@ function generateFullDetailCanvases(rec){
       ctx.strokeStyle='#dedee3';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(28,y);ctx.lineTo(692,y);ctx.stroke();
       const drawArrow=(ax,ay)=>{ctx.strokeStyle='#9a9aa1';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax+20,ay);ctx.moveTo(ax+13,ay-6);ctx.lineTo(ax+20,ay);ctx.lineTo(ax+13,ay+6);ctx.stroke();};
       txnRows.forEach((r,ri)=>{
-        const rowH=r.meta?74:52;const cy=y+(r.meta?30:28);
+        const rowH=52,cy=y+28;
         ctx.textBaseline='middle';
         font(17,600);ctx.fillStyle='#222';ctx.textAlign='left';
         const fromT=truncateCanvasText(ctx,r.t.from||'',150);ctx.fillText(fromT,44,cy);
@@ -6312,8 +6318,10 @@ function generateFullDetailCanvases(rec){
         font(13,700);const bpw=ctx.measureText(r.badgeText).width+20,bph=26;
         ctx.fillStyle=bg;roundRectPath(ctx,bx,cy-bph/2,bpw,bph,bph/2);ctx.fill();
         ctx.fillStyle=fg;ctx.textAlign='left';ctx.fillText(r.badgeText,bx+10,cy);
-        ctx.fillStyle='#111';font(18,700);ctx.textAlign='right';ctx.fillText(fmt(+r.t.amt||0)+'원',676,cy);
-        if(r.meta){ctx.textAlign='left';ctx.fillStyle='#9a9aa1';font(13,500);ctx.textBaseline='alphabetic';ctx.fillText(truncateCanvasText(ctx,r.meta,560),44,y+60);ctx.textBaseline='middle';}
+        const amtStr=fmt(+r.t.amt||0)+'원';font(18,700);const amtW=ctx.measureText(amtStr).width;
+        // 입금정보(실수령·은행·일시)를 배지 오른쪽 같은 줄로 — 금액과 안 겹치게 잘라서 (v7.94)
+        if(r.meta){const mStart=bx+bpw+10,mMax=(676-amtW-14)-mStart;if(mMax>24){ctx.fillStyle='#9a9aa1';font(13,500);ctx.textAlign='left';ctx.fillText(truncateCanvasText(ctx,r.meta,mMax),mStart,cy);}}
+        ctx.fillStyle='#111';font(18,700);ctx.textAlign='right';ctx.fillText(amtStr,676,cy);
         if(ri<txnRows.length-1){ctx.strokeStyle='#ececf0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(28,y+rowH);ctx.lineTo(692,y+rowH);ctx.stroke();}
         y+=rowH;
       });
@@ -6521,26 +6529,65 @@ async function generateHistoryCanvas(rec){
 function closeHistoryImageViewer(){
   const viewer=document.querySelector('.history-image-viewer');
   if(!viewer)return;
-  const url=viewer.dataset.objectUrl;
+  const urls=viewer._objUrls||(viewer.dataset.objectUrl?[viewer.dataset.objectUrl]:[]);
   viewer.remove();
-  if(url)URL.revokeObjectURL(url);
+  urls.forEach(u=>{try{if(u)URL.revokeObjectURL(u);}catch(e){}});
+}
+// 여러 페이지 상세 캔버스를 세로로 이어 붙여 한 장으로 — 뷰어 표시용 (v7.94)
+function _stackCanvases(canvases){
+  if(!canvases.length)return null;
+  if(canvases.length===1)return canvases[0];
+  const GAP=48,w=canvases[0].width;let h=0;for(const c of canvases)h+=c.height;h+=GAP*(canvases.length-1);
+  const out=document.createElement('canvas');out.width=w;out.height=h;const ctx=out.getContext('2d');
+  ctx.fillStyle='#e4e4e9';ctx.fillRect(0,0,w,h);
+  let y=0;for(const c of canvases){ctx.drawImage(c,0,y);y+=c.height+GAP;}
+  return out;
+}
+// 기록보관함의 한 기록을 상세내역 이미지로 Dropbox 상세내역 폴더에 저장 (v7.94)
+async function saveHistRecDetailToDropbox(id){
+  if(_shareBusy)return;if(!hDbxGetToken()){toast('Dropbox가 연결되지 않았어요. ⋯ 메뉴에서 연결해주세요.',{type:'error'});return;}
+  const rec=loadHistory().find(r=>r.id===id);if(!rec){toast('기록을 찾을 수 없어요',{type:'error'});return;}
+  if(!(rec.items||[]).some(it=>+it.amount!==0)){toast('저장할 상세내역이 없어요',{type:'error'});return;}
+  _setShareBusy(true);
+  try{toast('전체 상세 이미지 만드는 중…',{duration:10000});const token=await _dbxEnsureFolder(hDbxGetToken(),dbxDetailDir());if(!token)throw new Error('상세내역 폴더 준비 실패');const canvases=generateFullDetailCanvases(rec),base=_buildDetailFilename(rec);let saved=0;for(let i=0;i<canvases.length;i++){const blob=await new Promise(r=>canvases[i].toBlob(r,'image/png'));if(!blob)throw new Error('이미지 생성 실패');const suffix=canvases.length>1?`_${String(i+1).padStart(2,'0')}`:'';const ok=await _dbxUpload(token,`${dbxDetailDir()}/${base}${suffix}.png`,blob);if(!ok)throw new Error('Dropbox 업로드 실패');saved++;}toast(saved>1?`Dropbox 상세내역 폴더에 ${saved}장으로 나눠 저장했어요 ✓`:'Dropbox 상세내역 폴더에 저장했어요 ✓',{type:'success',duration:4200});}
+  catch(err){console.error('[detail image]',err);toast('상세 이미지 저장에 실패했어요. 기존 데이터는 변경되지 않았습니다.',{type:'error'});}finally{_setShareBusy(false);}
 }
 async function viewHistoryImage(id){
   const rec=loadHistory().find(r=>r.id===id);if(!rec){toast('기록을 찾을 수 없어요',{type:'error'});return;}
+  const hasDetail=(rec.items||[]).some(it=>+it.amount!==0);
   toast('이미지 생성 중…',{type:'info'});
   try{
-    const canvas=await generateHistoryCanvas(rec);
-    const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob){toast('이미지 생성에 실패했어요',{type:'error'});return;}
+    const settleCanvas=await generateHistoryCanvas(rec);
+    const settleBlob=await new Promise(r=>settleCanvas.toBlob(r,'image/png'));if(!settleBlob){toast('이미지 생성에 실패했어요',{type:'error'});return;}
     closeHistoryImageViewer();
-    const url=URL.createObjectURL(blob),viewer=document.createElement('div');
-    viewer.className='history-image-viewer';viewer.dataset.objectUrl=url;
+    const settleUrl=URL.createObjectURL(settleBlob),viewer=document.createElement('div');
+    viewer.className='history-image-viewer';viewer._objUrls=[settleUrl];
     viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','기록 이미지');
     viewer.innerHTML='<button class="history-image-viewer-close" type="button" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><img alt="보관된 정산 기록 이미지">';
-    viewer.querySelector('img').src=url;
-    viewer.querySelector('button').onclick=closeHistoryImageViewer;
-    if(hDbxGetToken()){const sb=document.createElement('button');sb.className='history-image-viewer-save';sb.type='button';sb.innerHTML='☁️ 드롭박스 저장';sb.onclick=(ev)=>{ev.stopPropagation();saveHistRecToDropbox(id);};viewer.appendChild(sb);}
+    const img=viewer.querySelector('img');img.src=settleUrl;
+    viewer.querySelector('.history-image-viewer-close').onclick=closeHistoryImageViewer;
+    // 정산/상세 토글 (상세내역이 있을 때만) (v7.94)
+    let seg=null;
+    if(hasDetail){seg=document.createElement('div');seg.className='history-image-viewer-seg';seg.innerHTML='<button type="button" data-mode="settle" class="on">정산</button><button type="button" data-mode="detail">상세</button>';viewer.appendChild(seg);}
+    // 드롭박스 저장 버튼 — 현재 보는 모드(정산/상세)를 저장
+    let saveBtn=null;
+    if(hDbxGetToken()){saveBtn=document.createElement('button');saveBtn.className='history-image-viewer-save';saveBtn.type='button';saveBtn.innerHTML='☁️ 드롭박스 저장';viewer.appendChild(saveBtn);}
     document.body.appendChild(viewer);
-    _bindImgZoom(viewer,viewer.querySelector('img'),closeHistoryImageViewer);
+    _bindImgZoom(viewer,img,closeHistoryImageViewer);
+    let mode='settle',detailUrl=null;
+    const applySave=()=>{if(saveBtn)saveBtn.onclick=(ev)=>{ev.stopPropagation();if(mode==='detail')saveHistRecDetailToDropbox(id);else saveHistRecToDropbox(id);};};
+    applySave();
+    if(seg){seg.querySelectorAll('button').forEach(b=>b.onclick=async(ev)=>{
+      ev.stopPropagation();const m=b.dataset.mode;if(m===mode)return;
+      if(m==='detail'&&!detailUrl){
+        toast('상세 이미지 생성 중…',{type:'info'});
+        try{const pages=generateFullDetailCanvases(rec),stacked=_stackCanvases(pages);const db=await new Promise(r=>stacked.toBlob(r,'image/png'));if(!db){toast('상세 이미지 생성 실패',{type:'error'});return;}detailUrl=URL.createObjectURL(db);viewer._objUrls.push(detailUrl);}
+        catch(e){toast('상세 이미지를 열지 못했어요',{type:'error'});return;}
+      }
+      mode=m;img.src=(m==='detail'?detailUrl:settleUrl);
+      seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.mode===m));
+      applySave();
+    });}
   }catch(err){toast('이미지를 열지 못했어요',{type:'error'});}
 }
 
