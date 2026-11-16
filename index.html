@@ -1146,7 +1146,7 @@ svg{display:block;flex-shrink:0;}
   .hist-page .hist-page-title{position:static;text-align:left;font-size:24px;font-weight:700;letter-spacing:-.6px;line-height:1.2;}
   .hist-page .hist-cnt-badge{display:block;margin:5px 0 0;padding:0;font-size:13px;font-weight:400;color:var(--label2);}
   /* 헤더 우측: 동기화 표시 + 전체 상세 저장 */
-  .hist-page .hist-head-right{position:absolute;right:34px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:flex-end;gap:9px;padding:0;}
+  .hist-page .hist-head-right{position:absolute;right:calc(34px + var(--hist-sbw,0px));top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:flex-end;gap:9px;padding:0;}/* 본문 스크롤바 폭만큼 보정해 정산상태 버튼과 우측 정렬 (v7.99) */
   .hist-page .hist-head-sync{margin:0;padding:0;text-align:right;}
   .hist-page .hist-dr-body{padding:0 34px 40px;}
   /* 검색 + 최신순 + 정산상태 한 줄 → 카드가 더 많이 보이게 */
@@ -1804,8 +1804,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v7.98';
-const BUILD_TIME='2026-11-16 20:10';
+const APP_VERSION='v7.99';
+const BUILD_TIME='2026-11-16 22:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3170,7 +3170,17 @@ function _refreshHistDrawer(){
   const content=document.getElementById('histDrContent');if(!content)return;
   content.innerHTML=`${_historyDedupNoticeHtml()}<div id="histDrList">${_histDrListHtml(recs)}</div>`;
   _updateHSyncInfo();
+  requestAnimationFrame(_syncHistHeadInset);
 }
+// 데스크탑 드로어: 본문 스크롤바가 생기면 본문 콘텐츠(검색/정산상태 줄)는 스크롤바 폭만큼 왼쪽으로 밀리는데
+// 헤더 우측(동기화·전체 상세 저장, position:absolute)은 안 밀려 어긋난다(집 PC=클래식 스크롤바, 회사=오버레이라 정상).
+// → 실제 스크롤바 폭을 재서 --hist-sbw로 헤더 우측 오른쪽값에 더해 둘을 정렬 (v7.99)
+function _syncHistHeadInset(){
+  const body=document.getElementById('histDrBody');if(!body)return;
+  const sbw=Math.max(0,body.offsetWidth-body.clientWidth);
+  document.documentElement.style.setProperty('--hist-sbw',sbw+'px');
+}
+window.addEventListener('resize',()=>{try{_syncHistHeadInset();}catch(e){}});
 function _histMonthNavHtml(allRecs,dispRecs){
   const now=new Date();const curY=now.getFullYear(),curM=now.getMonth()+1;
   const atMax=!_histMonthAllMode&&(_histMonthYear>curY||(_histMonthYear===curY&&_histMonthMonth>=curM));
@@ -6318,14 +6328,14 @@ function generateFullDetailCanvases(rec){
     };
     // 한턱 내역 — 결제자별 한턱 금액 (화면 _treatBreakdownHtml 형식: 이름 + 🎉한턱 배지 + 금액) (v7.97)
     if(isLast&&treatRows.length){
-      y+=16;ctx.fillStyle='#111';font(19,700);ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('한턱 내역',30,y+26);y+=44;
+      y+=16;ctx.fillStyle='#111';font(19,700);ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('한턱 내역',44,y+26);y+=44;/* 콘텐츠 인셋 x=44에 맞춤 (v7.98) */
       ctx.strokeStyle='#dedee3';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(28,y);ctx.lineTo(692,y);ctx.stroke();
       treatRows.forEach((r,ri)=>{const rowH=52,cy=y+28;drawSecRow(r.payer,'#FFF1E0','#E8710A','🎉 한턱',fmt(r.amt)+'원',cy);if(ri<treatRows.length-1){ctx.strokeStyle='#ececf0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(28,y+rowH);ctx.lineTo(692,y+rowH);ctx.stroke();}y+=rowH;});
       ctx.textBaseline='alphabetic';drewBottom=true;
     }
     // 입금 내역 — 누가 누구에게 보낼 금액 (v7.91)
     if(isLast&&txnRows.length){
-      y+=16;ctx.fillStyle='#111';font(19,700);ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('입금 내역',30,y+26);y+=44;
+      y+=16;ctx.fillStyle='#111';font(19,700);ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('입금 내역',44,y+26);y+=44;/* 콘텐츠 인셋 x=44에 맞춤 (v7.98) */
       ctx.strokeStyle='#dedee3';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(28,y);ctx.lineTo(692,y);ctx.stroke();
       // 공유 이미지 송금 화살표(drawTxnRow: AL=36,headW=24,AH=5, #969BA4)와 동일 비율로 축소: 선+가늘고 긴 삼각형 (v7.96)
       const drawArrow=(ax,ay)=>{const AL=20,headW=13,AH=2.8,aex=ax+AL;ctx.strokeStyle='#969BA4';ctx.lineWidth=2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(aex-headW,ay);ctx.stroke();ctx.fillStyle='#969BA4';ctx.beginPath();ctx.moveTo(aex-headW,ay-AH);ctx.lineTo(aex,ay);ctx.lineTo(aex-headW,ay+AH);ctx.closePath();ctx.fill();};
