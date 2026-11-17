@@ -1049,7 +1049,7 @@ svg{display:block;flex-shrink:0;}
 .rc-foot-btns .rc-btn-ico{display:inline-flex;align-items:center;}
 .rc-foot-btns>.rc-edit-btn .rc-btn-ico{transform:scaleX(-1);}
 /* 데스크탑: 이모지+글자 / 모바일: 이모지 숨기고 글자만 + 저장시간 숨겨 버튼이 한 줄 꽉 채움 */
-@media(max-width:700px){.rc-foot .rc-saved-at{display:none;}.rc-foot-btns .rc-btn-ico{display:none;}.rc-foot-btns{flex:1;}.rc-foot-btns>*{flex:1;min-width:0;gap:0;}}
+@media(max-width:700px){.rc-foot{flex-direction:column;align-items:stretch;gap:7px;}.rc-foot .rc-saved-at{flex:none;}.rc-foot-btns .rc-btn-ico{display:none;}.rc-foot-btns{flex:1;}.rc-foot-btns>*{flex:1;min-width:0;gap:0;}}
 .lock-ico{width:14px;height:14px;display:inline-block;flex:0 0 auto;}
 .rc-foot-summary{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
 .receipt-audit{display:inline-flex;align-items:center;padding:2px 6px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;}
@@ -1809,8 +1809,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.04';
-const BUILD_TIME='2026-11-17 13:00';
+const APP_VERSION='v8.05';
+const BUILD_TIME='2026-11-17 19:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
