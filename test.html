@@ -1315,6 +1315,40 @@ suite('TC28: 한턱 내역 집계 _treatBreakdownHtml [v7.82]', () => {
   });
 });
 
+suite('TC30: 결제자별 한턱 합 _treatPayerRows (정산·상세 이미지 공용) [v8.04]', () => {
+  const R=items=>APP._treatPayerRows(items);
+  test('결제자별로 합산, 입력 순서 유지', () => {
+    const rows=R([
+      {name:'a',amount:67000,payer:'신유철',isTreat:true},
+      {name:'b',amount:44000,payer:'조상현',isTreat:true},
+      {name:'c',amount:10000,payer:'신유철',isTreat:true}
+    ]);
+    expect(rows.length).toBe(2);
+    expect(rows[0].payer).toBe('신유철');
+    expect(rows[0].amt).toBe(77000);
+    expect(rows[1].payer).toBe('조상현');
+    expect(rows[1].amt).toBe(44000);
+  });
+  test('한턱 아님·0원·음수는 제외', () => {
+    const rows=R([
+      {name:'a',amount:50000,payer:'조상현',isTreat:true},
+      {name:'b',amount:30000,payer:'조상현',isTreat:false},
+      {name:'c',amount:0,payer:'조상현',isTreat:true},
+      {name:'d',amount:-5000,payer:'조상현',isTreat:true}
+    ]);
+    expect(rows.length).toBe(1);
+    expect(rows[0].amt).toBe(50000);
+  });
+  test('결제자 미지정은 "결제자 미정"', () => {
+    const rows=R([{name:'a',amount:10000,payer:'',isTreat:true}]);
+    expect(rows[0].payer).toBe('결제자 미정');
+  });
+  test('빈 입력 → 빈 배열', () => {
+    expect(R([]).length).toBe(0);
+    expect(R(null).length).toBe(0);
+  });
+});
+
 suite('TC29: 동기화 병합이 영수증 참조(receiptUrl)를 안 지운다 [v7.85]', () => {
   const M=(remote,local)=>APP._computeHistoryMerge(remote,local,new Set(),{});
   const rec=(id,savedAt,receiptUrl)=>({id,savedAt,dateStart:'2026-11-03',people:['조상현'],total:100,items:[{id:1,name:'전북상회',amount:100,payer:'조상현',members:['조상현'],receiptUrl}]});
