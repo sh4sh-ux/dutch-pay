@@ -1256,6 +1256,28 @@ suite('TC27: 기록 검색 — 0원 항목 제외 + 사람 이름은 참여자 �
   test("날짜 검색은 사람검색과 무관하게 동작('2026.07.30' → b)", () => {
     expect(ids('2026.07.30')).toBe('b');
   });
+  // v8.01: 영수증 상세 품목(receiptText)도 검색 대상
+  const recC={id:'c',savedAt:'2026-09-01T10:00',dateStart:'2026-09-01',dateEnd:null,
+    people:['조상현','지유정'],total:80000,
+    items:[{name:'저녁식사',amount:80000,payer:'조상현',members:['조상현','지유정'],watchers:[],
+      receiptText:'족발 | 1 | 50000 | 50000\n막국수 | 2 | 15000 | 30000'}],
+    txns:[],payments:{}};
+  test("'족발'이 항목명 아닌 영수증 품목에만 있어도 검색됨(c)", () => {
+    APP._histMonthAllMode=true;
+    expect(APP._filterHistoryRecords([recC],'족발').map(r=>r.id).join(',')).toBe('c');
+  });
+  test("'막국수'(영수증 품목) 검색 → c", () => {
+    APP._histMonthAllMode=true;
+    expect(APP._filterHistoryRecords([recC],'막국수').map(r=>r.id).join(',')).toBe('c');
+  });
+  test("영수증 품목이라도 0원 항목이면 제외(카드 비표시 일관)", () => {
+    const rec0={id:'z',savedAt:'2026-09-01T10:00',dateStart:'2026-09-01',dateEnd:null,
+      people:['조상현','지유정'],total:0,
+      items:[{name:'서비스',amount:0,payer:'조상현',members:['조상현','지유정'],watchers:[],
+        receiptText:'족발 | 1 | 0 | 0'}],txns:[],payments:{}};
+    APP._histMonthAllMode=true;
+    expect(APP._filterHistoryRecords([rec0],'족발').length).toBe(0);
+  });
 });
 
 suite('TC28: 한턱 내역 집계 _treatBreakdownHtml [v7.82]', () => {

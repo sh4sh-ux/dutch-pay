@@ -1804,8 +1804,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.00';
-const BUILD_TIME='2026-11-16 23:30';
+const APP_VERSION='v8.01';
+const BUILD_TIME='2026-11-17 09:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5573,9 +5573,11 @@ function _filterHistoryRecords(records,query){
   // 상호명(그룹명·항목명) 매칭: 사람과 무관한 텍스트.
   // 카드에 보이지 않는 0원 항목은 검사하지 않는다 — 카드에서 숨긴 항목(0원)의 이름이
   // 검색에만 걸려 '카드엔 없는데 검색엔 뜨는' 일이 없도록. (v7.74)
+  // 항목명뿐 아니라 영수증 상세 품목(receiptText)도 검색 — '족발'이 항목명이 아니라
+  // 영수증 품목 안에만 있어도 찾도록. (v8.01) 0원 항목은 카드 비표시이므로 동일하게 제외.
   const textMatch=r=>
     (r.groupName||'').toLowerCase().includes(q)
-    ||(r.items||[]).some(it=>(+it.amount!==0)&&(it.name||'').toLowerCase().includes(q));
+    ||(r.items||[]).some(it=>(+it.amount!==0)&&((it.name||'').toLowerCase().includes(q)||(it.receiptText||'').toLowerCase().includes(q)));
   // 검색어가 '어느 기록의 참여자'이기도 하면 사람 검색으로 간주 → 그 이름이 우연히 항목명/상호명에만
   // 들어간, 그 사람이 불참한 모임은 제외한다. (v7.74: 신유철 검색에 신유철 불참 모임이 뜨던 문제)
   const isPersonQuery=records.some(personMatch);
