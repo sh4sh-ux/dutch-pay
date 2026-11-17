@@ -744,6 +744,11 @@ svg{display:block;flex-shrink:0;}
 .set-field-val{font-size:15px;font-weight:600;color:var(--label);display:flex;align-items:center;gap:6px;}
 .set-field-val .chev{color:var(--label3);font-size:17px;line-height:1;}
 .set-field-val.empty{color:var(--blue);font-weight:500;}
+/* 내 이름 인라인 입력칸 (영수증 앱과 동일 스타일, v8.03) */
+.set-inp-label{display:block;font-size:12px;font-weight:600;color:var(--label2);margin:12px 0 7px;}
+.set-inp{width:100%;min-height:44px;box-sizing:border-box;border:1px solid var(--sep2);border-radius:11px;padding:11px 14px;font-size:15px;font-weight:500;background:var(--fill2);color:var(--label);outline:none;font-family:inherit;}
+.set-inp:focus{border-color:var(--blue);background:var(--card);}
+.set-inp::placeholder{color:var(--label3);font-weight:400;}
 /* 테마 세그먼트 */
 .set-seg{display:flex;gap:6px;margin-top:10px;background:var(--fill2);border:1px solid var(--sep);border-radius:12px;padding:4px;}
 .set-seg-btn{flex:1;border:none;background:transparent;border-radius:9px;padding:9px 4px;font-size:13.5px;font-weight:600;color:var(--label2);cursor:pointer;font-family:inherit;transition:background .15s,color .15s;}
@@ -1804,8 +1809,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.02';
-const BUILD_TIME='2026-11-17 10:30';
+const APP_VERSION='v8.03';
+const BUILD_TIME='2026-11-17 11:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2930,8 +2935,9 @@ function _setPanelHtml(){
   const dbxConnected=!!dbxGetToken();
   // 내 이름 카드
   const nameCard=`<div class="set-card"><div class="set-card-title">내 정보</div>`
-    +`<button class="set-field" data-action="setMyName"><span class="set-field-label">내 이름</span><span class="set-field-val${_myName?'':' empty'}">${_myName?e(_myName):'설정하기'}<span class="chev">›</span></span></button>`
-    +`<div class="set-card-note">입금 관리에서 나에게 오는 입금을 이 이름으로 구분해요.</div></div>`;
+    +`<div class="set-card-note" style="margin-top:6px">입금 관리에서 나에게 오는 입금을 이 이름으로 구분해요.</div>`
+    +`<label class="set-inp-label" for="setMyNameInp">내 이름</label>`
+    +`<input id="setMyNameInp" class="set-inp" type="text" placeholder="설정하기" value="${ea(_myName)}" onchange="updateMyName(this.value)" autocomplete="off"/></div>`;
   // 화면 테마 카드 (시스템/라이트/다크)
   const tm=localStorage.getItem('dutchpay_dark_mode'); const mode=tm==='light'?'light':tm==='dark'?'dark':'system';
   const themeCard=`<div class="set-card"><div class="set-card-title">화면 테마</div>`
@@ -2984,6 +2990,17 @@ function _setPanelHtml(){
   return `<div class="set-intro">앱 설정과 데이터를 관리해요.</div>`
     +nameCard+themeCard+dbxCard+histCard+dataCard+resetCard
     +`<div class="set-ver" data-action="lockOwner">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
+}
+// 내 이름 인라인 입력 — prompt 없이 저장 (설정 카드, v8.03). setMyName(⋯ 메뉴)의 저장·잠금해제 로직과 동일
+function updateMyName(val){
+  const n=(val||'').trim();
+  if(n===_myName)return;              // 변화 없으면 no-op (불필요한 renderAll·토스트 방지)
+  _myName=n;
+  localStorage.setItem('dutchpay_my_name',_myName);
+  const wasUnlocked=_ownerUnlocked;
+  _ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_myName===OWNER_NAME;
+  toast(_myName?`내 이름이 "${_myName}"으로 설정됐어요${(!wasUnlocked&&_ownerUnlocked)?' · 소유자 기능 잠금 해제됨':''}`:'내 이름 설정이 해제됐어요',{type:'success'});
+  renderAll();_refreshSetDrawer();
 }
 function _settingsAction(action){
   const close=()=>closeSetDrawer(),refresh=()=>_refreshSetDrawer();
