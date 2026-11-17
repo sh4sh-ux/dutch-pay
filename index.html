@@ -1804,8 +1804,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.01';
-const BUILD_TIME='2026-11-17 09:30';
+const APP_VERSION='v8.02';
+const BUILD_TIME='2026-11-17 10:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -6301,9 +6301,11 @@ function generateFullDetailCanvases(rec){
     const txnRows=isLast?allTxns.map(t=>{const pm=(rec.payments||{})[`${t.from}|${t.to}`]||{};const owner=t.to===_myName;const d=_paymentDisplay(pm,t.amt,{owner});return {t,pm,d,badgeText:(d.waived?d.status:(pm.done?'✓ ':'')+d.status),meta:d.metaText};}):[];
     // 한턱 내역 — 결제자별 한턱(isTreat) 금액 합 (화면 _treatBreakdownHtml과 동일) (v7.97)
     const treatRows=isLast?(()=>{const ti=(rec.items||[]).filter(it=>it.isTreat&&(+it.amount||0)>0);const bp={},ord=[];ti.forEach(it=>{const p=it.payer||'결제자 미정';if(bp[p]==null){bp[p]=0;ord.push(p);}bp[p]+=(+it.amount||0);});return ord.map(p=>({payer:p,amt:bp[p]}));})():[];
-    const treatH=treatRows.length?(16+44+treatRows.length*52+28):0;
-    const txnH=txnRows.length?(16+44+txnRows.length*52+28):0;  // 입금 내역 블록 높이 예약 (한 줄 52px, v7.94)
-    const H=Math.max(620,pg.used+treatH+txnH+FOOTER);const canvas=document.createElement('canvas');/* MAX_H 상한 제거: 입금 블록이 페이지를 넘겨도 잘려 뭉개지지 않고 높이가 늘어나 푸터 여백 유지 (v7.96) */canvas.width=W*SCALE;canvas.height=H*SCALE;const ctx=canvas.getContext('2d');ctx.scale(SCALE,SCALE);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    const treatH=treatRows.length?(16+44+treatRows.length*52):0;  // 한턱 블록 실제 높이 (꼬리 +28 제거, v8.02)
+    const txnH=txnRows.length?(16+44+txnRows.length*52):0;  // 입금 내역 블록 실제 높이 (한 줄 52px, v7.94)
+    // 하단 여백: 섹션(한턱/입금) 유무와 '개수'에 무관하게 닫는구분선 밑 88px 고정(=한턱만일 때와 동일 여백). 둘 다 있어도 꼬리 중복으로 커지지 않게 (v8.02)
+    const bottomPad=(treatH||txnH)?(28+FOOTER):FOOTER;
+    const H=Math.max(620,pg.used+treatH+txnH+bottomPad);const canvas=document.createElement('canvas');/* MAX_H 상한 제거: 입금 블록이 페이지를 넘겨도 잘려 뭉개지지 않고 높이가 늘어나 푸터 여백 유지 (v7.96) */canvas.width=W*SCALE;canvas.height=H*SCALE;const ctx=canvas.getContext('2d');ctx.scale(SCALE,SCALE);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
     // Dropbox 보관용 상세 이미지의 모든 글꼴은 화면용 기준보다 2px 작게 그린다.
     const font=(size,weight=400)=>ctx.font=`${weight} ${Math.max(1,size-2)}px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Arial,sans-serif`;
     ctx.fillStyle='#4355e8';font(15,700);ctx.textAlign='left';ctx.fillText('DUTCH PAY '+APP_VERSION,30,42);ctx.fillStyle='#111';font(34,700);ctx.fillText('상세내역',30,90);ctx.textAlign='right';font(29,700);ctx.fillText(fmt(total)+'원',690,90);ctx.fillStyle='#777';font(16,500);ctx.textAlign='left';ctx.fillText(date,30,126);ctx.textAlign='right';ctx.fillText(`${pageIndex+1} / ${pages.length}`,690,126);ctx.strokeStyle='#dedee3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(28,142);ctx.lineTo(692,142);ctx.stroke();
@@ -6333,6 +6335,7 @@ function generateFullDetailCanvases(rec){
       y+=16;ctx.fillStyle='#111';font(19,700);ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('한턱 내역',44,y+26);y+=44;/* 콘텐츠 인셋 x=44에 맞춤 (v7.98) */
       ctx.strokeStyle='#dedee3';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(28,y);ctx.lineTo(692,y);ctx.stroke();
       treatRows.forEach((r,ri)=>{const rowH=52,cy=y+28;drawSecRow(r.payer,'#FFF1E0','#E8710A','🎉 한턱',fmt(r.amt)+'원',cy);if(ri<treatRows.length-1){ctx.strokeStyle='#ececf0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(28,y+rowH);ctx.lineTo(692,y+rowH);ctx.stroke();}y+=rowH;});
+      if(txnRows.length){ctx.strokeStyle='#dedee3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(28,y);ctx.lineTo(692,y);ctx.stroke();}/* 한턱 섹션 닫는 구분선 2px — 입금 내역이 뒤따를 때 입금 내역처럼 bookend (v8.02) */
       ctx.textBaseline='alphabetic';drewBottom=true;
     }
     // 입금 내역 — 누가 누구에게 보낼 금액 (v7.91)
