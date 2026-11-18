@@ -1809,8 +1809,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.05';
-const BUILD_TIME='2026-11-17 19:40';
+const APP_VERSION='v8.06';
+const BUILD_TIME='2026-11-18 09:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4700,7 +4700,7 @@ function _bindImgZoom(ov,img,close){
     if(pts.size===0&&down){const d=down;down=null;
       if(!d.moved){
         if(d.onImg){const t=Date.now();if(lastTap&&t-lastTap.t<300&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<30){lastTap=null;zoomAt(s>1.01?1:2.5,e.clientX,e.clientY,true);}else lastTap={t,x:e.clientX,y:e.clientY};}
-        else if(s<=1.01&&e.type==='pointerup'&&!d.wasHidden)close();}
+        else if(s<=1.01&&e.type==='pointerup')close();}/* 바깥 클릭=항상 닫기: 줌 UI 숨김(wasHidden) 여부와 무관하게 (v8.06) */
       else if(s<1.02)zoomAt(1,0,0,true);}};
   ov.addEventListener('pointerup',end);ov.addEventListener('pointercancel',end);
   ov.addEventListener('wheel',e=>{showUI();e.preventDefault();zoomAt(s*Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0018)),e.clientX,e.clientY,false);},{passive:false});
