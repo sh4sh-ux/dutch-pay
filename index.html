@@ -1905,8 +1905,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.18';
-const BUILD_TIME='2026-11-19 04:20';
+const APP_VERSION='v8.19';
+const BUILD_TIME='2026-11-19 04:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -6100,7 +6100,7 @@ function loadHistoryForEdit(id,fromFixed=false){
   let newIdc=0;
   const newItems=(r.items||[]).map(it=>({id:++newIdc,name:it.name||'',amount:it.amount||0,payer:it.payer||'',members:[...(it.members||[])],watchers:[...(it.watchers||[])],isTreat:it.isTreat||false,rounderOverride:it.rounderOverride||null,iconOverride:it.iconOverride||null,receiptText:it.receiptText||'',receiptUrl:it.receiptUrl||'',noDrink:[...(it.noDrink||[])],alcoholOn:[...(it.alcoholOn||[])],alcoholOff:[...(it.alcoholOff||[])]}));
   const newId=_newGroupId();
-  const _cleanPm=v=>{const amt=(v.amount!==null&&v.amount!==undefined&&v.amount!==''&&!isNaN(+v.amount))?+v.amount:null;return{done:!!v.done,waived:!!v.waived,amount:amt,timestamp:v.timestamp||'',account:v.account||'',memo:v.memo||''};};
+  const _cleanPm=v=>{const amt=(v.amount!==null&&v.amount!==undefined&&v.amount!==''&&!isNaN(+v.amount))?+v.amount:null;return{done:!!v.done,waived:!!v.waived,shortWaived:!!v.shortWaived,amount:amt,timestamp:v.timestamp||'',account:v.account||'',memo:v.memo||''};};
   const cleanPayments={};Object.entries(r.payments||{}).forEach(([k,v])=>{cleanPayments[k]=_cleanPm(v);});
   const newGroup={id:newId,name:displayName,nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||_todayYMD(),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:'',payments:cleanPayments}};
   _editPrevGroupId=currentGroupId; // 취소 시 돌아갈 이전 그룹 (v8.14)
