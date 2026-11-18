@@ -25,11 +25,12 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v8.18** (2026-11-19) — 작업 브랜치
+**v8.19** (2026-11-19) — 작업 브랜치
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v8.19 | **차액 퉁(shortWaived)이 기록 수정 후 사라지던 버그 수정**(사용자: 7/21 양승모 50원을 퉁으로 수정·저장해도 다시 보면 퉁이 안 남음) — **근본원인**: 기록을 수정용으로 불러오는 `loadHistoryForEdit`의 payment 정리 함수 `_cleanPm`이 **`shortWaived`를 반환 객체에서 누락**(done·waived·amount·timestamp·account·memo만) → 차액 퉁이 있는 기록을 수정 모드로 열면 퉁이 **로드 시점에 버려지고**, 그대로 저장하면 영구 소실. → `_cleanPm`에 `shortWaived:!!v.shortWaived` 추가. (다른 payment 재구성 지점엔 누락 없음 확인.) **[재현] A(기록 패널 토글 퉁)·B(수정→퉁→저장)·C(이미 퉁인 기록 수정후 저장) 모두 enforce 재실행에도 퉁 유지.** test 213 통과. **데이터 민감(퉁 소실)이라 재현 검증.** |
 | v8.18 | **이번 정산 입금 패널 '완료' 버튼 제거(사실상 닫기만 함·자동저장과 중복)**(사용자: 수정 후 입금관리에서 고치면 밑 완료 버튼도 의미 없지 않냐 / 이런 걸 미리 살펴 제안해야) — 입금은 토글/입력마다 이미 자동저장(saveState)되고, v8.13에 넣은 '완료'(`pmPanelDone`)는 **패널을 닫으며 "저장됐어요" 토스트만** 띄워 실제 저장 동작이 없는 '닫기' 버튼이었음(전체 기록 입금 패널엔 없음·앱의 '저장버튼 없음=자동저장' 원칙과도 어긋남). → 사용자 선택대로 **완료 버튼·`pmPanelDone`·`.pay-done-btn` CSS 제거**, 패널은 행을 다시 탭하면 닫힘(`togglePaymentPanel` 토글, 다른 패널과 동일). 표시 전용·계산 불변, test **213 통과**. |
 | v8.17 | **수정 후 저장 시 하단 바가 안 사라지던 버그 — 근본 원인(모든 저장 경로)으로 재수정**(사용자: v8.16에도 저장이 이상하다) — v8.16은 `editBannerSave`(바의 '저장')만 플래그를 해제해, **데스크탑 '수정 내용 저장'(`_saveHistFromResult`)·'잠금 저장'(`_fixCurrentHistory`)** 경로는 여전히 `saveToHistory`의 '변경 없음' 분기가 `_loadedHistId=source.id`로 플래그를 되살려 바가 안 사라졌음. → **근본 수정: `saveToHistory` '변경 없음' 분기(index.html:5261)를 `_loadedHistId=null;_editingFixedSourceId=null`로** 바꿔 모든 저장 경로에서 수정 모드 종료(saveToHistory는 끝 finally로 `_refreshEditBanner` 호출→바 제거). [측정] 수정내용저장·잠금저장·바저장 **변경·무변경 모두 바 사라짐·기록 1개·수정(updateField 40,000) 반영·잠김 유지**, test 213 통과. |
 | v8.16 | **①수정 후 '저장' 눌러도 하단 바가 안 사라지던 버그 수정 + ②수정 중 바 이모지를 기록 '수정' 버튼과 일치**(사용자: 저장 눌러도 바가 안 없어지고 '동일한 기록' 뜨며 저장이 의미 없음 / 수정 이모지가 기록보관함 수정 버튼과 좌우 반대 / 모바일은 이모지 불필요) — **①저장 바 버그**: `editBannerSave`가 `saveToHistory` 후 `_refreshEditBanner`만 호출했는데, `saveToHistory`의 **'변경 없음' 분기가 `_loadedHistId=source.id`로 수정 플래그를 되살려** 바가 안 사라짐. → `editBannerSave`에서 저장 성공 시 **변경 유무와 무관하게 `_loadedHistId`/`_editingFixedSourceId`/`_editPrevGroupId`를 모두 해제**(바 제거) + 디바운스 입력(`_flushUpdateField`) 먼저 반영. [측정] 변경·무변경 저장 둘 다 바 사라짐·기록 1개·변경 반영·잠김 유지. **②이모지**: 기록 '수정' 버튼은 CSS `.rc-edit-btn .rc-btn-ico{transform:scaleX(-1)}`로 ✏️를 **좌우 반전**하는데 배너 `.edit-banner-ico`엔 반전이 없어 실제로 좌우가 반대였음(같은 문자여도 CSS 반전 차이). → `.edit-banner-ico`에 `scaleX(-1)` 추가(데스크탑 동일) + **모바일은 `@media(max-width:700px)`로 숨김**(기록보관함 버튼이 모바일서 글자만인 것과 일치). 표시/저장경로 변경·계산 불변, test **213 통과**. |
