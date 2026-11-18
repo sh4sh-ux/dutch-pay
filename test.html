@@ -1425,6 +1425,50 @@ suite('TC31: 대시보드 집계 — 내 부담·버킷·요약 정합 [v8.08]',
   });
 });
 
+suite('TC32: 차액 퉁(shortWaived) — 받은 만큼 완료, 차액만 안 받기 [v8.11]', () => {
+  const E=(pm,billing)=>APP._pmEff(pm,billing);
+  const D=(pm,billing)=>APP._paymentDisplay(pm,billing,{owner:true});
+  test('차액 퉁: 실수령 35,000 / 청구 35,050 → 청구=수령=35,000, 미수 0, 완료', () => {
+    const ef=E({done:true,amount:35000,shortWaived:true},35050);
+    expect(ef.billedEff).toBe(35000);     // 받은 만큼만 청구(차액 forgive)
+    expect(ef.receivedEff).toBe(35000);   // 받은 돈 보존(전체 퉁과 다름)
+    expect(ef.billedEff-ef.receivedEff).toBe(0); // 미수 0
+    expect(ef.resolved).toBe(true);
+    expect(ef.shortWaived).toBe(true);
+  });
+  test('차액 퉁 상태표시: 부족 아니라 입금완료 + 차액 50원 퉁 메타', () => {
+    const d=D({done:true,amount:35000,shortWaived:true},35050);
+    expect(d.status).toBe('입금완료');
+    expect(d.metaText.includes('차액 50원 퉁')).toBe(true);
+  });
+  test('차액 퉁인데 실수령 ≥ 청구면 무효(일반 완료)', () => {
+    const ef=E({done:true,amount:35050,shortWaived:true},35050);
+    expect(ef.shortWaived).toBe(false);
+    expect(ef.billedEff).toBe(35050);
+    expect(ef.receivedEff).toBe(35050);
+  });
+  test('차액 퉁인데 미입금(done=false)이면 무효', () => {
+    const ef=E({done:false,amount:35000,shortWaived:true},35050);
+    expect(ef.shortWaived).toBe(false);
+    expect(ef.billedEff).toBe(35050);
+    expect(ef.receivedEff).toBe(0);
+  });
+  test('전체 퉁(waived)은 그대로 — 받은 것까지 0(차액 퉁과 구분)', () => {
+    const ef=E({waived:true,done:true,amount:35000,shortWaived:true},35050);
+    expect(ef.waived).toBe(true);
+    expect(ef.billedEff).toBe(0);
+    expect(ef.receivedEff).toBe(0);
+  });
+  test('차액 퉁 아님(일반 입금완료 35,000): 미수 50 유지(기존 불변)', () => {
+    const ef=E({done:true,amount:35000},35050);
+    expect(ef.billedEff).toBe(35050);
+    expect(ef.receivedEff).toBe(35000);
+    expect(ef.billedEff-ef.receivedEff).toBe(50);
+    const d=D({done:true,amount:35000},35050);
+    expect(d.status).toBe('-50원 부족');
+  });
+});
+
 suite('TC29: 동기화 병합이 영수증 참조(receiptUrl)를 안 지운다 [v7.85]', () => {
   const M=(remote,local)=>APP._computeHistoryMerge(remote,local,new Set(),{});
   const rec=(id,savedAt,receiptUrl)=>({id,savedAt,dateStart:'2026-11-03',people:['조상현'],total:100,items:[{id:1,name:'전북상회',amount:100,payer:'조상현',members:['조상현'],receiptUrl}]});

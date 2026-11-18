@@ -397,6 +397,9 @@ svg{display:block;flex-shrink:0;}
 .pay-waive-btn{margin-left:4px;flex-shrink:0;border:1px solid var(--sep2);background:var(--card);color:var(--label2);font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;cursor:pointer;font-family:inherit;line-height:1;transition:all .15s;-webkit-tap-highlight-color:transparent;}
 .pay-waive-btn:hover{border-color:var(--label3);}
 .pay-waive-btn.on{background:var(--label2);border-color:var(--label2);color:#fff;}
+/* 차액 퉁 — '완료'로 정리되는 거라 on 상태는 초록 (전체 퉁 회색과 구분) (v8.11) */
+.pm-shortwaive-row .pay-waive-btn{margin-left:auto;}
+.pm-shortwaive-btn.on{background:var(--green);border-color:var(--green);color:#fff;}
 .pm-pay-field{transition:opacity .15s;}
 .pay-panel.pm-waived .pm-pay-field,.pm-hist-edit-panel.pm-waived .pm-pay-field,.rc-txn-edit-panel.pm-waived .pm-pay-field{opacity:.38;pointer-events:none;}
 .pm-badge.waived{background:var(--fill2);color:var(--label2);}
@@ -1479,6 +1482,9 @@ svg{display:block;flex-shrink:0;}
 .pm-dash-lp-plot{height:140px;display:flex;align-items:flex-end;gap:4px;}
 .pm-dash-lp-col{flex:1;min-width:0;height:100%;display:flex;align-items:flex-end;justify-content:center;}
 .pm-dash-lp-col.has-data{cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.pm-dash-lp-goto{margin-top:12px;width:100%;display:none;align-items:center;justify-content:center;gap:6px;padding:10px;border:1px solid var(--sep);border-radius:12px;background:var(--fill2);font:inherit;font-size:12.5px;font-weight:600;color:var(--blue);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.pm-dash-lp-goto:active{background:var(--fill);}
+.pm-dash-lp-goto-arr{font-weight:700;}
 @keyframes pmFlash{0%{background:color-mix(in srgb,var(--blue) 16%,transparent);}100%{background:transparent;}}
 .pm-allrec-card.pm-flash{animation:pmFlash 1.6s ease-out;}
 .pm-dash-lp-bar{width:14px;max-width:72%;border-radius:7px;background:color-mix(in srgb,var(--blue) 20%,transparent);position:relative;overflow:hidden;transition:height .18s,background .12s;}
@@ -1878,8 +1884,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.10';
-const BUILD_TIME='2026-11-18 18:10';
+const APP_VERSION='v8.11';
+const BUILD_TIME='2026-11-18 20:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3372,27 +3378,56 @@ function _pmEff(pm,billing){
   const waived=!!pm.waived;
   const done=!!pm.done&&!waived;
   const hasAmt=pm.amount!==null&&pm.amount!==undefined&&pm.amount!==''&&!isNaN(+pm.amount);
-  const billedEff=waived?0:billing;
-  const receivedEff=waived?0:(done?(hasAmt?+pm.amount:billing):0);
-  return {waived,done,resolved:waived||done,billedEff,receivedEff};
+  const recv=done?(hasAmt?+pm.amount:billing):0;
+  // 차액 퉁(v8.11): 입금완료 + 실수령<청구일 때 모자란 '차액만' 안 받기로 → 받은 만큼만 청구(미수 0, 완료).
+  //   받은 금액(recv)은 그대로 보존(전체 퉁처럼 0으로 사라지지 않음).
+  const shortWaived=!!pm.shortWaived&&done&&hasAmt&&recv<billing;
+  const billedEff=waived?0:(shortWaived?recv:billing);
+  const receivedEff=waived?0:recv;
+  return {waived,done,shortWaived,resolved:waived||done,billedEff,receivedEff};
 }
 function _paymentDisplay(pm,billing,{owner=true}={}){
   pm=pm||{};billing=+billing||0;
-  if(pm.waived)return{received:0,diff:0,status:'🤝 퉁',waived:true,meta:[],metaText:''};
+  if(pm.waived)return{received:0,diff:0,status:'🤝 퉁',waived:true,shortWaived:false,meta:[],metaText:''};
   const hasAmount=pm.amount!==null&&pm.amount!==undefined&&pm.amount!==''&&!isNaN(+pm.amount);
   const received=pm.done?(hasAmount?+pm.amount:billing):0;
   const diff=pm.done?received-billing:null;
-  const status=pm.done?(diff>0?`+${fmt(diff)}원 초과`:diff<0?`-${fmt(-diff)}원 부족`:(owner?'입금완료':'송금완료')):(owner?'미입금':'미확인');
+  const shortWaived=!!pm.shortWaived&&pm.done&&hasAmount&&received<billing;
+  // 차액 퉁이면 부족이 아니라 '완료' — 모자란 차액은 안 받기로 정리됨
+  const status=shortWaived?(owner?'입금완료':'송금완료')
+    :(pm.done?(diff>0?`+${fmt(diff)}원 초과`:diff<0?`-${fmt(-diff)}원 부족`:(owner?'입금완료':'송금완료')):(owner?'미입금':'미확인'));
   const meta=[];
   if(pm.done&&diff!==0)meta.push(`실수령 ${fmt(received)}원`);
+  if(shortWaived)meta.push(`차액 ${fmt(-diff)}원 퉁`);
   if(pm.done&&pm.account)meta.push(pm.account);
   if(pm.done&&pm.timestamp)meta.push(_dtpFmt(pm.timestamp));
-  return{received,diff,status,waived:false,meta,metaText:meta.join(' · ')};
+  return{received,diff,status,waived:false,shortWaived,meta,metaText:meta.join(' · ')};
+}
+// 차액 퉁 행 — 입금완료 + 실수령<청구(차액 존재)일 때만 보임. 눌러서 모자란 차액만 '안 받기로' 완료. (v8.11)
+// fnScope: 'rc'(toggleRcTxnPanel) | 'hist'(toggleHistRecordPanel)
+function _shortWaiveRowHtml(recId,txnKey,pm,billing,fnScope){
+  pm=pm||{};billing=+billing||0;
+  const hasAmt=pm.amount!==null&&pm.amount!==undefined&&pm.amount!==''&&!isNaN(+pm.amount);
+  const recv=hasAmt?+pm.amount:billing;
+  const short=!!pm.done&&!pm.waived&&hasAmt&&recv<billing;
+  const diffAmt=billing-recv;
+  const on=!!pm.shortWaived&&short;
+  const fn=fnScope==='hist'?'histPmToggleShortWaive':'rcTxnToggleShortWaive';
+  return `<div class="pay-panel-row pm-shortwaive-row" data-billing="${billing}" style="${short?'':'display:none'}"><span class="pay-panel-lbl">차액</span><button type="button" class="pay-waive-btn pm-shortwaive-btn${on?' on':''}" onclick="${fn}('${jsa(recId)}','${jsa(txnKey)}')">🤝 차액 ${fmt(diffAmt)}원 퉁(완료)</button></div>`;
+}
+// 패널의 차액 퉁 행을 현재 pm 상태에 맞게 갱신(표시/숨김·차액 금액·on) — 재렌더 없이. (v8.11)
+function _patchShortWaiveRow(panel,pm,billing){
+  if(!panel)return;const row=panel.querySelector('.pm-shortwaive-row');if(!row)return;
+  const hasAmt=pm&&pm.amount!==null&&pm.amount!==undefined&&pm.amount!==''&&!isNaN(+pm.amount);
+  const recv=hasAmt?+pm.amount:billing;const short=!!(pm&&pm.done&&!pm.waived&&hasAmt&&recv<billing);
+  row.style.display=short?'':'none';
+  const btn=row.querySelector('.pm-shortwaive-btn');
+  if(btn){btn.classList.toggle('on',!!(pm&&pm.shortWaived&&short));btn.innerHTML=`🤝 차액 ${fmt(billing-recv)}원 퉁(완료)`;}
 }
 function _paymentBadgeHtml(pm,billing,{owner=true,badgeOnly=false}={}){
   const d=_paymentDisplay(pm,billing,{owner});
   if(pm?.waived)return `<span class="pm-badge waived">🤝 퉁</span>`;
-  const cls=pm?.done?(d.diff>0?'pos':d.diff<0?'neg':'done'):'pending';
+  const cls=pm?.done?(d.shortWaived?'done':(d.diff>0?'pos':d.diff<0?'neg':'done')):'pending';
   return `<span class="pm-badge ${cls}">${pm?.done?'✓ ':''}${e(d.status)}</span>${(!badgeOnly&&d.metaText)?`<span class="pm-record-account">${e(d.metaText)}</span>`:''}`;
 }
 
@@ -3714,8 +3749,9 @@ function _pmSetFilter(v){_pmHistFilter=v;_patchHistResults();}
 function _pmSetGroup(v){_pmHistGroup=v;_patchHistResults();}
 function _pmSetMonthPeopleSort(v){_pmMonthPeopleSort=v;_patchHistResults();}
 function _pmDashSetUnit(u){_pmDashUnit=u;_pmDashShift=0;_patchHistResults();}
-// 지출 추이 바 클릭 → 목록 뷰로 전환 + 그 기간(연/월/일) 기록으로 스크롤·강조 (v8.10)
+// 지출 추이 바 클릭 → 목록 뷰로 전환 + 그 기간(연/월/일) 기록으로 스크롤·강조 (v8.11: '이 기간 보기' 링크에서만 이동)
 function _pmDashGotoPeriod(key){
+  if(!key)return;
   _pmViewMode='list';_patchHistResults();
   const recs=loadHistory().filter(r=>(r.dateStart||r.savedAt||'').startsWith(key)).sort((a,b)=>(b.dateStart||b.savedAt||'').localeCompare(a.dateStart||a.savedAt||''));
   if(!recs.length)return;
@@ -3729,19 +3765,37 @@ function _pmDashNav(dir){
   _pmDashShift=Math.min(Math.max(0,_pmDashShift+dir*N),maxShift);
   _patchHistResults();
 }
-// 지출 추이 그래프 hover/터치 — 가리킨 칸의 날짜·건수·총/내부담을 요약 줄에 표기 (v8.08)
+// 요약 줄에 한 칸(col)의 날짜·건수·총/내부담을 표기 (col 없으면 기본 합계) (v8.11)
+function _pmDashReadout(sum,col){
+  if(!col){if(sum.dataset.def!=null)sum.innerHTML=sum.dataset.def;return;}
+  const t=+col.dataset.t||0,m=+col.dataset.m||0,c=+col.dataset.c||0,l=col.dataset.l||'';
+  sum.innerHTML=c>0?`${e(l)} · ${c}건 · 총 <b>${fmt(t)}원</b> / 내 부담 <b class="mine">${fmt(m)}원</b>`:`${e(l)} · <span style="color:var(--label3)">기록 없음</span>`;
+}
+// 지출 추이 hover/터치 — 가리킨 칸의 금액을 요약에 미리보기. 떼면 '선택(pick)된 칸'으로 복귀. (v8.08/8.11)
 function _pmDashTrendHover(ev){
   const plot=ev&&ev.currentTarget?ev.currentTarget:document.querySelector('.pm-dash-lp-plot');if(!plot)return;
   const wrap=plot.closest('.pm-dash-lp-wrap');const sum=wrap&&wrap.querySelector('.pm-dash-lp-sum');if(!sum)return;
   const cols=[...plot.querySelectorAll('.pm-dash-lp-col')];
-  const reset=()=>{if(sum.dataset.def!=null)sum.innerHTML=sum.dataset.def;cols.forEach(c=>c.classList.remove('on'));};
-  if(!ev||ev.type==='pointerleave'){reset();return;}
+  const pickKey=plot.dataset.pick||'';
+  const picked=pickKey?cols.find(c=>c.dataset.k===pickKey):null;
+  const toPicked=()=>{cols.forEach(c=>c.classList.toggle('on',c===picked));_pmDashReadout(sum,picked);};
+  if(!ev||ev.type==='pointerleave'){toPicked();return;}
   const x=ev.clientX;let hit=null;
-  cols.forEach(c=>{const r=c.getBoundingClientRect();if(x>=r.left&&x<=r.right)hit=c;});
-  if(!hit){reset();return;}
+  cols.forEach(c=>{const r=c.getBoundingClientRect();if(x>=r.left&&x<=r.right&&c.classList.contains('has-data'))hit=c;});
+  if(!hit){toPicked();return;}
   cols.forEach(c=>c.classList.toggle('on',c===hit));
-  const t=+hit.dataset.t||0,m=+hit.dataset.m||0,c=+hit.dataset.c||0,l=hit.dataset.l||'';
-  sum.innerHTML=c>0?`${e(l)} · ${c}건 · 총 <b>${fmt(t)}원</b> / 내 부담 <b class="mine">${fmt(m)}원</b>`:`${e(l)} · <span style="color:var(--label3)">기록 없음</span>`;
+  _pmDashReadout(sum,hit);
+}
+// 지출 추이 바 클릭 = 선택(pick) — 금액 고정 + '이 기간 보기' 링크 노출. 이동은 그 링크에서만. (v8.11)
+function _pmDashTrendPick(ev){
+  const col=ev.currentTarget;if(!col||!col.classList.contains('has-data'))return;
+  const plot=col.closest('.pm-dash-lp-plot');const wrap=plot&&plot.closest('.pm-dash-lp-wrap');if(!wrap)return;
+  const sum=wrap.querySelector('.pm-dash-lp-sum'),goto=wrap.querySelector('.pm-dash-lp-goto');
+  const key=col.dataset.k,c=+col.dataset.c||0,l=col.dataset.l||'';
+  plot.dataset.pick=key;
+  [...plot.querySelectorAll('.pm-dash-lp-col')].forEach(x=>x.classList.toggle('on',x===col));
+  _pmDashReadout(sum,col);
+  if(goto){goto.dataset.k=key;goto.innerHTML=`${e(l)} · ${c}건 목록에서 보기 <span class="pm-dash-lp-goto-arr">→</span>`;goto.style.display='flex';}
 }
 function _pmSearchInput(v){_pmHistSearch=v;_patchHistResults();}
 function _pmFilterByName(name){_pmHistSearch=name;const inp=document.querySelector('.pm-search');if(inp){inp.value=name;_chkClear(inp);}_patchHistResults();}
@@ -4115,7 +4169,7 @@ function _pmDashboardHtml(allRecs){
   const sumT=buckets.reduce((a,b)=>a+b.t,0),sumM=buckets.reduce((a,b)=>a+b.m,0),sumC=buckets.reduce((a,b)=>a+b.cnt,0);
   const fullLbl=b=>unit==='year'?`${b.key}년`:unit==='month'?`${+b.key.slice(0,4)}년 ${+b.key.slice(5)}월`:`${+b.key.slice(5)}월 ${+b.key.slice(8)}일`;
   const bars=buckets.map(b=>{const has=b.t>0||b.m>0;const hh=b.t>0?Math.max(3,Math.round(b.t/peak*100)):0;const inner=b.t>0?Math.min(100,Math.max(0,b.m/b.t*100)):0;
-    return `<div class="pm-dash-lp-col${has?' has-data':''}" data-t="${b.t}" data-m="${b.m}" data-c="${b.cnt}" data-l="${ea(fullLbl(b))}"${has?` onclick="_pmDashGotoPeriod('${b.key}')"`:''}><div class="pm-dash-lp-bar${has?' has':''}" style="height:${hh}%"><i style="height:${inner}%"></i></div></div>`;}).join('');
+    return `<div class="pm-dash-lp-col${has?' has-data':''}" data-k="${ea(b.key)}" data-t="${b.t}" data-m="${b.m}" data-c="${b.cnt}" data-l="${ea(fullLbl(b))}"${has?` onclick="_pmDashTrendPick(event)"`:''}><div class="pm-dash-lp-bar${has?' has':''}" style="height:${hh}%"><i style="height:${inner}%"></i></div></div>`;}).join('');
   const xax=buckets.map(b=>`<span>${e(b.lbl)}</span>`).join('');
   const tabs=[['year','연간'],['month','월별'],['day','일별']].map(([k,l])=>`<button type="button" class="pm-dash-tab${unit===k?' on':''}" onclick="_pmDashSetUnit('${k}')">${l}</button>`).join('');
   const nav=(canOlder||canNewer)?`<button type="button" class="pm-dash-lp-nav l"${canOlder?' onclick="_pmDashNav(1)"':' disabled'} aria-label="이전">‹</button><button type="button" class="pm-dash-lp-nav r"${canNewer?' onclick="_pmDashNav(-1)"':' disabled'} aria-label="다음">›</button>`:'';
@@ -4124,7 +4178,7 @@ function _pmDashboardHtml(allRecs){
     <div class="pm-dash-head"><span class="pm-dash-title">지출 추이</span><div class="pm-dash-tabs">${tabs}</div></div>
     <div class="pm-dash-lp-wrap">
       <div class="pm-dash-lp-sum" data-def="${ea(defSum)}">${defSum}</div>
-      ${buckets.length?`<div class="pm-dash-lp-plotwrap">${nav}<div class="pm-dash-lp-plot" onpointermove="_pmDashTrendHover(event)" onpointerdown="_pmDashTrendHover(event)" onpointerleave="_pmDashTrendHover(event)">${bars}</div></div><div class="pm-dash-lp-x">${xax}</div>`:'<div class="pm-dash-lp-empty">기록이 없어요</div>'}
+      ${buckets.length?`<div class="pm-dash-lp-plotwrap">${nav}<div class="pm-dash-lp-plot" onpointermove="_pmDashTrendHover(event)" onpointerdown="_pmDashTrendHover(event)" onpointerleave="_pmDashTrendHover(event)">${bars}</div></div><div class="pm-dash-lp-x">${xax}</div><button type="button" class="pm-dash-lp-goto" style="display:none" onclick="_pmDashGotoPeriod(this.dataset.k)"></button>`:'<div class="pm-dash-lp-empty">기록이 없어요</div>'}
       <div class="pm-dash-lp-leg"><span><i class="t"></i>총 지출</span><span><i class="m"></i>내 부담</span><em>내 부담 = 더치페이 분담·한턱 반영</em></div>
     </div></div>`;
   // ④ 카테고리 분해
@@ -4249,47 +4303,56 @@ function toggleHistRecordPanel(recId,txnKey){
   const diffVal=(pm.amount!=null&&pm.amount!=='')?(+pm.amount-baseAmt):null;
   const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
   const panel=document.createElement('div');panel.className='pm-hist-edit-panel'+(pm.waived?' pm-waived':'');
-  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${(pm.done&&!pm.waived)?' on':''}" onclick="histPmToggleDone('${jsa(recId)}','${jsa(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${(pm.done&&!pm.waived)?' on':''}">${pm.waived?'🤝 퉁':(pm.done?'입금완료':'미입금')}</span><button type="button" class="pay-waive-btn${pm.waived?' on':''}" onclick="histPmToggleWaive('${jsa(recId)}','${jsa(txnKey)}')">🤝 퉁</button></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="histPmUpdateAmt('${jsa(recId)}','${jsa(txnKey)}',this)"/><span class="pay-end"><span class="pay-unit">원</span>${diffHtml}</span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<span class="pay-end pay-end-btns"><button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>histPmUpdate('${jsa(recId)}','${jsa(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="histPmSetNow('${jsa(recId)}','${jsa(txnKey)}')">지금</button></span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">계좌</span>${_histAcctHtml(recId,txnKey,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="histPmUpdate('${jsa(recId)}','${jsa(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="toggleHistRecordPanel('${jsa(recId)}','${jsa(txnKey)}')">저장</button>`;
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${(pm.done&&!pm.waived)?' on':''}" onclick="histPmToggleDone('${jsa(recId)}','${jsa(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${(pm.done&&!pm.waived)?' on':''}">${pm.waived?'🤝 퉁':(pm.done?'입금완료':'미입금')}</span><button type="button" class="pay-waive-btn${pm.waived?' on':''}" onclick="histPmToggleWaive('${jsa(recId)}','${jsa(txnKey)}')">🤝 퉁</button></div>${_shortWaiveRowHtml(recId,txnKey,pm,baseAmt,'hist')}<div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="histPmUpdateAmt('${jsa(recId)}','${jsa(txnKey)}',this)"/><span class="pay-end"><span class="pay-unit">원</span>${diffHtml}</span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<span class="pay-end pay-end-btns"><button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>histPmUpdate('${jsa(recId)}','${jsa(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="histPmSetNow('${jsa(recId)}','${jsa(txnKey)}')">지금</button></span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">계좌</span>${_histAcctHtml(recId,txnKey,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="histPmUpdate('${jsa(recId)}','${jsa(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="toggleHistRecordPanel('${jsa(recId)}','${jsa(txnKey)}')">저장</button>`;
   card.appendChild(panel);
 }
 function histPmToggleDone(recId,txnKey){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
-  const p=rec.payments[txnKey];p.done=!p.done;if(p.done)p.waived=false;
-  _saveRecPayments(recId,rec,allRec);
+  const p=rec.payments[txnKey];p.done=!p.done;if(p.done)p.waived=false;else p.shortWaived=false;
+  _saveRecPayments(recId,rec,allRec,{immediate:true});
   if(p.done)_checkAllPaidAutoSaveForRec(rec);
 }
 // 과거 기록 퉁 토글 (v7.06)
 function histPmToggleWaive(recId,txnKey){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
-  const p=rec.payments[txnKey];p.waived=!p.waived;if(p.waived)p.done=false;
-  _saveRecPayments(recId,rec,allRec);
+  const p=rec.payments[txnKey];p.waived=!p.waived;if(p.waived){p.done=false;p.shortWaived=false;}
+  _saveRecPayments(recId,rec,allRec,{immediate:true});
   if(p.waived)_checkAllPaidAutoSaveForRec(rec);
+}
+// 과거 기록 차액 퉁 (v8.11)
+function histPmToggleShortWaive(recId,txnKey){
+  const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
+  if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
+  const p=rec.payments[txnKey];p.shortWaived=!p.shortWaived;
+  _saveRecPayments(recId,rec,allRec,{immediate:true});
+  _checkAllPaidAutoSaveForRec(rec);
 }
 function histPmUpdate(recId,txnKey,field,val){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
-  rec.payments[txnKey][field]=val;_saveRecPayments(recId,rec,allRec);
+  rec.payments[txnKey][field]=val;_saveRecPayments(recId,rec,allRec,{patch:false});
 }
 function histPmUpdateAmt(recId,txnKey,el){
   const raw=el.value.replace(/,/g,'');const num=raw===''?null:+raw;
   el.value=num!==null?fmt(num):'';
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
-  rec.payments[txnKey].amount=num;_saveRecPayments(recId,rec,allRec,false);
+  rec.payments[txnKey].amount=num;_saveRecPayments(recId,rec,allRec,{patch:false});
   const card=document.querySelector(`.pm-record-card[data-rec-id="${CSS.escape(recId)}"]`);if(!card)return;
   const baseAmt=(rec.txns||[]).find(t=>`${t.from}|${t.to}`===txnKey)?.amt||0;
   const diffVal=num!==null?(num-baseAmt):null;
   const panel=card.querySelector('.pm-hist-edit-panel');if(!panel)return;
   let badge=panel.querySelector('.pay-diff-badge');
   if(diffVal!==null){const cls=diffVal>0?'pos':diffVal<0?'neg':'zero';if(!badge){badge=document.createElement('span');badge.className=`pay-diff-badge ${cls}`;const row=panel.querySelectorAll('.pay-panel-row')[1];if(row)row.appendChild(badge);}badge.className=`pay-diff-badge ${cls}`;badge.textContent=`${diffVal>0?'+':''}${fmt(diffVal)}원`;}else if(badge){badge.remove();}
+  _patchShortWaiveRow(panel,rec.payments[txnKey],baseAmt);
 }
 function histPmSetNow(recId,txnKey){
   const now=new Date();const pad=n=>String(n).padStart(2,'0');const local=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
-  rec.payments[txnKey].timestamp=local;_saveRecPayments(recId,rec,allRec,false);
+  rec.payments[txnKey].timestamp=local;_saveRecPayments(recId,rec,allRec,{patch:false});
   const card=document.querySelector(`.pm-record-card[data-rec-id="${CSS.escape(recId)}"]`);
   if(card)_dtpSetValue(card.querySelector('.pm-hist-edit-panel .dtp-wrap'),local);
 }
@@ -5301,12 +5364,20 @@ function _flushResealPayments(){
   const pend=_resealPayPend;_resealPayPend=null;
   if(pend)return _resealArchivePayments(pend.recId,pend.payments);
 }
-// 기록 입금 변경 저장 — 잠긴 기록은 봉인 payload 재봉인(디바운스), 아니면 기존처럼 즉시 저장. (v8.10)
-function _saveRecPayments(recId,rec,allRec,patch){
-  if(patch===undefined)patch=true;
-  if(_isHistoryFixed(recId)){_scheduleResealPayments(recId,rec.payments);}
-  else{saveHistory(allRec);if(patch)_patchHistResults();}
+// 기록 입금 변경 저장 — 잠긴 기록은 봉인 payload 재봉인, 아니면 기존처럼 즉시 저장.
+// opt.immediate: 토글 등 '확정 동작'은 디바운스 없이 즉시 저장 + '저장됨' 피드백. (v8.10/8.11)
+function _saveRecPayments(recId,rec,allRec,opt){
+  opt=opt||{};const patch=opt.patch!==false;
+  if(_isHistoryFixed(recId)){
+    if(opt.immediate){_resealArchivePayments(recId,rec.payments);_pmPaySaved();}
+    else _scheduleResealPayments(recId,rec.payments);
+  }else{
+    saveHistory(allRec);if(patch)_patchHistResults();
+    if(opt.immediate)_pmPaySaved();
+  }
 }
+let _pmPaySavedT=null;
+function _pmPaySaved(){clearTimeout(_pmPaySavedT);_pmPaySavedT=setTimeout(()=>toast('저장됐어요 ✓',{type:'success',duration:1200}),10);}
 
 // ── 기록 보관함 (SPA) ──
 const DBX_H_LASTSYNC='dutchpay_dbx_lastsync';
@@ -5731,7 +5802,7 @@ function toggleRcTxnPanel(recId,txnKey){
   const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
   const panel=document.createElement('div');panel.className='rc-txn-edit-panel'+(pm.waived?' pm-waived':'');
   panel.setAttribute('data-rec-id',recId);panel.setAttribute('data-txn-key',txnKey);
-  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${(pm.done&&!pm.waived)?' on':''}" onclick="rcTxnToggleDone('${jsa(recId)}','${jsa(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${(pm.done&&!pm.waived)?' on':''}">${pm.waived?'🤝 퉁':(pm.done?'입금완료':_rcPendingLbl)}</span><button type="button" class="pay-waive-btn${pm.waived?' on':''}" onclick="rcTxnToggleWaive('${jsa(recId)}','${jsa(txnKey)}')">🤝 퉁</button></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="rcTxnUpdateAmt('${jsa(recId)}','${jsa(txnKey)}',this)"/><span class="pay-end"><span class="pay-unit">원</span>${diffHtml}</span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<span class="pay-end pay-end-btns"><button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="rcTxnSetNow('${jsa(recId)}','${jsa(txnKey)}')">지금</button></span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">계좌</span>${_rcAcctHtml(recId,txnKey,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="_closeRcTxnPanel('${jsa(recId)}','${jsa(txnKey)}')">저장</button>`;
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${(pm.done&&!pm.waived)?' on':''}" onclick="rcTxnToggleDone('${jsa(recId)}','${jsa(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${(pm.done&&!pm.waived)?' on':''}">${pm.waived?'🤝 퉁':(pm.done?'입금완료':_rcPendingLbl)}</span><button type="button" class="pay-waive-btn${pm.waived?' on':''}" onclick="rcTxnToggleWaive('${jsa(recId)}','${jsa(txnKey)}')">🤝 퉁</button></div>${_shortWaiveRowHtml(recId,txnKey,pm,baseAmt,'rc')}<div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="rcTxnUpdateAmt('${jsa(recId)}','${jsa(txnKey)}',this)"/><span class="pay-end"><span class="pay-unit">원</span>${diffHtml}</span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<span class="pay-end pay-end-btns"><button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="rcTxnSetNow('${jsa(recId)}','${jsa(txnKey)}')">지금</button></span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">계좌</span>${_rcAcctHtml(recId,txnKey,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="_closeRcTxnPanel('${jsa(recId)}','${jsa(txnKey)}')">저장</button>`;
   row.insertAdjacentElement('afterend',panel);
 }
 function _rcPatchTxnPanel(recId,txnKey,pm){
@@ -5747,37 +5818,46 @@ function _rcPatchTxnPanel(recId,txnKey,pm){
 function rcTxnToggleDone(recId,txnKey){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
-  const p=rec.payments[txnKey];p.done=!p.done;if(p.done)p.waived=false;
+  const p=rec.payments[txnKey];p.done=!p.done;if(p.done)p.waived=false;else p.shortWaived=false;
   _rcPatchTxnPanel(recId,txnKey,p);
-  _saveRecPayments(recId,rec,allRec);
+  _saveRecPayments(recId,rec,allRec,{immediate:true});
   if(p.done)_checkAllPaidAutoSaveForRec(rec);
 }
 function rcTxnToggleWaive(recId,txnKey){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
-  const p=rec.payments[txnKey];p.waived=!p.waived;if(p.waived)p.done=false;
+  const p=rec.payments[txnKey];p.waived=!p.waived;if(p.waived){p.done=false;p.shortWaived=false;}
   _rcPatchTxnPanel(recId,txnKey,p);
-  _saveRecPayments(recId,rec,allRec);
+  _saveRecPayments(recId,rec,allRec,{immediate:true});
   if(p.waived)_checkAllPaidAutoSaveForRec(rec);
+}
+// 차액 퉁 — 입금완료+실수령<청구일 때 모자란 차액만 '안 받기로' 완료 (v8.11)
+function rcTxnToggleShortWaive(recId,txnKey){
+  const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
+  if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
+  const p=rec.payments[txnKey];p.shortWaived=!p.shortWaived;
+  _saveRecPayments(recId,rec,allRec,{immediate:true});
+  _checkAllPaidAutoSaveForRec(rec);
 }
 function rcTxnUpdate(recId,txnKey,field,val){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
-  rec.payments[txnKey][field]=val;_saveRecPayments(recId,rec,allRec);
+  rec.payments[txnKey][field]=val;_saveRecPayments(recId,rec,allRec,{patch:false});
 }
 function rcTxnUpdateAmt(recId,txnKey,el){
   const raw=el.value.replace(/,/g,'');const num=raw===''?null:+raw;if(raw!==''&&isNaN(num))return;
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
-  rec.payments[txnKey].amount=num;_saveRecPayments(recId,rec,allRec);
+  rec.payments[txnKey].amount=num;_saveRecPayments(recId,rec,allRec,{patch:false});
   const panel=el.closest('.rc-txn-edit-panel');
-  if(panel){const txn=(rec.txns||[]).find(t=>`${t.from}|${t.to}`===txnKey);const baseAmt=txn?txn.amt:0;const diffVal=num!==null?(num-baseAmt):null;const existing=panel.querySelector('.pay-diff-badge');const row=el.closest('.pay-panel-row');if(diffVal!==null){const dh=`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`;if(existing)existing.outerHTML=dh;else if(row)row.insertAdjacentHTML('beforeend',dh);}else if(existing){existing.remove();}}
+  if(panel){const txn=(rec.txns||[]).find(t=>`${t.from}|${t.to}`===txnKey);const baseAmt=txn?txn.amt:0;const diffVal=num!==null?(num-baseAmt):null;const existing=panel.querySelector('.pay-diff-badge');const row=el.closest('.pay-panel-row');if(diffVal!==null){const dh=`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`;if(existing)existing.outerHTML=dh;else if(row)row.insertAdjacentHTML('beforeend',dh);}else if(existing){existing.remove();}
+    _patchShortWaiveRow(panel,rec.payments[txnKey],baseAmt);}
 }
 function rcTxnSetNow(recId,txnKey){
   const now=new Date();const ts=new Date(now-now.getTimezoneOffset()*60000).toISOString().slice(0,16);
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
-  rec.payments[txnKey].timestamp=ts;_saveRecPayments(recId,rec,allRec);
+  rec.payments[txnKey].timestamp=ts;_saveRecPayments(recId,rec,allRec,{patch:false});
   const panel=document.querySelector(`.rc-txn-edit-panel[data-rec-id="${CSS.escape(recId)}"][data-txn-key="${CSS.escape(txnKey)}"]`);
   if(panel)_dtpSetValue(panel.querySelector('.dtp-wrap'),ts);
 }
