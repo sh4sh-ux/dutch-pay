@@ -1055,7 +1055,9 @@ svg{display:block;flex-shrink:0;}
 /* 데스크탑: 떠 있지 않고 지출 목록과 합계 사이에 자리 차지(목록이 줄어 아무것도 안 가림) */
 .edit-banner.edit-banner-panel{position:static;left:auto;right:auto;bottom:auto;width:auto;flex:0 0 auto;padding:12px var(--pad-x);box-shadow:none;}
 .edit-banner-txt{display:flex;align-items:center;flex:1;min-width:0;white-space:nowrap;font-size:14px;font-weight:700;}
-.edit-banner-txt .edit-banner-ico{flex-shrink:0;margin-right:7px;}
+.edit-banner-txt .edit-banner-ico{flex-shrink:0;margin-right:7px;transform:scaleX(-1);}
+/* 모바일은 기록보관함 버튼처럼 글자만 — 이모지 숨김 (v8.16) */
+@media(max-width:700px){.edit-banner-txt .edit-banner-ico{display:none;margin-right:0;}}
 .edit-banner-txt b{flex-shrink:0;}
 .edit-banner-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600;opacity:.92;}
 .edit-banner-btns{display:flex;gap:8px;flex-shrink:0;}
@@ -1907,8 +1909,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.15';
-const BUILD_TIME='2026-11-19 02:10';
+const APP_VERSION='v8.16';
+const BUILD_TIME='2026-11-19 03:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -6154,8 +6156,12 @@ function _bindEditBannerReposition(){
 }
 async function editBannerSave(){
   if(!(_loadedHistId||_editingFixedSourceId))return;
+  if(_ufTimer)_flushUpdateField(); // 디바운스(600ms) 대기 중인 입력을 먼저 반영
   const saved=await saveToHistory();
-  if(saved){try{renderAll();}catch(e){}}
+  // 저장했으면 변경 유무와 무관하게 수정 모드 종료(하단 바 제거). (v8.16)
+  // 기존: saveToHistory의 '변경 없음' 분기가 _loadedHistId=source.id로 되살려 바가 안 사라지던 버그.
+  if(saved){_loadedHistId=null;_editingFixedSourceId=null;_editPrevGroupId=null;}
+  try{renderAll();}catch(e){}
   _refreshEditBanner();
 }
 function editBannerCancel(){
