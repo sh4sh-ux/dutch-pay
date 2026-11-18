@@ -402,6 +402,11 @@ svg{display:block;flex-shrink:0;}
 .pm-shortwaive-btn.on{background:var(--green);border-color:var(--green);color:#fff;}
 .pm-pay-field{transition:opacity .15s;}
 .pay-panel.pm-waived .pm-pay-field,.pm-hist-edit-panel.pm-waived .pm-pay-field,.rc-txn-edit-panel.pm-waived .pm-pay-field{opacity:.38;pointer-events:none;}
+/* 이번 정산 패널 '완료' 버튼 — 눌러서 패널 닫고 '저장됐어요 ✓' 확인. 입력은 이미 자동저장됨. (v8.13) */
+.pay-panel-done-row{margin-top:4px;}
+.pay-done-btn{width:100%;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:700;padding:11px;border-radius:12px;cursor:pointer;font-family:inherit;line-height:1;transition:filter .12s;-webkit-tap-highlight-color:transparent;}
+.pay-done-btn:hover{filter:brightness(1.06);}
+.pay-done-btn:active{filter:brightness(.94);}
 .pm-badge.waived{background:var(--fill2);color:var(--label2);}
 .txn-status-ic.waived{background:var(--label3);border-color:var(--label3);}
 .pay-inp{flex:1;height:34px;box-sizing:border-box;border:1px solid var(--sep2);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;color:var(--label);background:var(--card);outline:none;min-width:0;text-align:left;}
@@ -3446,8 +3451,15 @@ function togglePaymentPanel(key){
   const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
   const panel=document.createElement('div');
   panel.className='pay-panel'+(pm.waived?' pm-waived':'');
-  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${(pm.done&&!pm.waived)?' on':''}" onclick="pmToggleDone('${jsa(key)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${(pm.done&&!pm.waived)?' on':''}">${pm.waived?'🤝 퉁':(pm.done?'입금완료':'미입금')}</span><button type="button" class="pay-waive-btn${pm.waived?' on':''}" onclick="pmToggleWaive('${jsa(key)}')">🤝 퉁</button></div>${_shortWaiveRowHtml(key,key,pm,baseAmt,'live')}<div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!==null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="pmUpdateAmt('${jsa(key)}',this)"/><span class="pay-end"><span class="pay-unit">원</span>${diffHtml}</span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<span class="pay-end pay-end-btns"><button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>pmUpdate('${jsa(key)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="pmSetNow('${jsa(key)}')">지금</button></span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">계좌</span>${_pmAcctHtml(key,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="pmUpdate('${jsa(key)}','memo',this.value)"/></div>`;
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${(pm.done&&!pm.waived)?' on':''}" onclick="pmToggleDone('${jsa(key)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${(pm.done&&!pm.waived)?' on':''}">${pm.waived?'🤝 퉁':(pm.done?'입금완료':'미입금')}</span><button type="button" class="pay-waive-btn${pm.waived?' on':''}" onclick="pmToggleWaive('${jsa(key)}')">🤝 퉁</button></div>${_shortWaiveRowHtml(key,key,pm,baseAmt,'live')}<div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!==null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="pmUpdateAmt('${jsa(key)}',this)"/><span class="pay-end"><span class="pay-unit">원</span>${diffHtml}</span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<span class="pay-end pay-end-btns"><button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>pmUpdate('${jsa(key)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="pmSetNow('${jsa(key)}')">지금</button></span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">계좌</span>${_pmAcctHtml(key,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="pmUpdate('${jsa(key)}','memo',this.value)"/></div><div class="pay-panel-row pay-panel-done-row"><button type="button" class="pay-done-btn" onclick="pmPanelDone('${jsa(key)}')">완료</button></div>`;
   item.appendChild(panel);
+}
+
+// 이번 정산 패널 '완료' — 패널을 닫고 '저장됐어요 ✓' 토스트. 입력은 이미 자동저장됐으므로 별도 저장/확인 팝업 없음. (v8.13)
+function pmPanelDone(key){
+  const item=document.querySelector(`.txn-item[data-pm-key="${CSS.escape(key)}"]`);
+  if(item){const panel=item.querySelector('.pay-panel');if(panel)panel.remove();const chev=item.querySelector('.txn-chev');if(chev)chev.classList.remove('open');}
+  _pmPaySaved();
 }
 
 function _filenamePeople(ppl){
