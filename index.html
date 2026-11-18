@@ -3651,7 +3651,7 @@ function pmUpdateAmt(key,el){
   if(diffVal!==null){
     const cls=diffVal>0?'pos':diffVal<0?'neg':'zero';
     const txt=(diffVal>0?'+':'')+fmt(diffVal)+'원';
-    if(!badge){badge=document.createElement('span');badge.className='pay-diff-badge '+cls;const row=panel.querySelectorAll('.pay-panel-row')[1];if(row)row.appendChild(badge);}
+    if(!badge){badge=document.createElement('span');badge.className='pay-diff-badge '+cls;const payEnd=el.closest('.pay-panel-row').querySelector('.pay-end');if(payEnd)payEnd.appendChild(badge);}
     badge.className='pay-diff-badge '+cls;badge.textContent=txt;
   }else if(badge)badge.remove();
   _pmPatchShortWaive(key);
