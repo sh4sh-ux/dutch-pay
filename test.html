@@ -769,7 +769,7 @@ suite('TC15: 잠금 불변 기록 [v6.14]', () => {
   });
   test('잠긴 카드에는 잠김 상태가 표시되고 복사본 표현은 없음', () => {
     install();
-    try{const host=APP.document.createElement('div');host.innerHTML=APP._buildRecordCardHtml(rec);if(!host.querySelector('.rc-fix-btn.fixed')||!host.textContent.includes('잠김'))throw new Error('잠김 버튼 누락');if(host.textContent.includes('복사본'))throw new Error('복사본 표현이 남아 있음');}
+    try{const host=APP.document.createElement('div');host.innerHTML=APP._buildRecordCardHtml(rec);if(!host.querySelector('.rc-lock-tag')||!host.textContent.includes('잠김'))throw new Error('잠김 상태 칩 누락');if(host.querySelector('.rc-foot-btns .rc-fix-btn'))throw new Error('잠긴 기록 버튼 줄에 잠금 버튼이 남아 있음(칩이어야 함)');if(host.textContent.includes('복사본'))throw new Error('복사본 표현이 남아 있음');}
     finally{clear();}
   });
   test('잠긴 카드에도 수정과 삭제 버튼이 명확히 표시됨', () => {

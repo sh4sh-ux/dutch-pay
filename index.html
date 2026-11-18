@@ -1048,11 +1048,11 @@ svg{display:block;flex-shrink:0;}
 .rc-fix-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#665000;border:1px solid #e1b72f;background:#fff3a6;border-radius:8px;font-weight:700;padding:6px 8px;cursor:pointer;white-space:nowrap;}
 .rc-fix-btn:hover{opacity:.8;}
 .rc-fix-btn.fixed{color:var(--green-txt);border:1px solid #aadcbb;background:var(--green-bg);cursor:pointer;}
-/* '잠김'은 상태 배지 — 클릭 동작 없음(수정은 '수정' 버튼으로). (v8.14) */
-.rc-fix-badge{cursor:default;}
-.rc-fix-badge:hover{opacity:1;}
-/* 수정 중 바 — 하단 고정(탭 네비 위). 헤더·본문 안 건드림. (v8.14) */
+/* 잠김은 상태 칩 — 버튼 줄에서 빼 저장일시 옆에(버튼처럼 안 보이게). (v8.15) */
+.rc-lock-tag{display:inline-flex;align-items:center;gap:3px;background:var(--green-bg);color:var(--green-txt);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700;margin-right:7px;vertical-align:middle;white-space:nowrap;}
+/* 수정 중 바 — 하단 고정. 모바일=전체폭 탭 네비 위, 데스크탑=왼쪽 편집 패널 폭에만(전체폭 X, 부담 줄임). (v8.14/8.15) */
 .edit-banner{position:fixed;left:0;right:0;bottom:0;z-index:85;display:flex;align-items:center;gap:10px;background:var(--blue);color:#fff;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -3px 16px rgba(0,0,0,.16);}
+.edit-banner.edit-banner-panel{right:auto;padding:12px 16px;box-shadow:0 -4px 20px rgba(0,0,0,.12);}
 .edit-banner-txt{display:flex;align-items:center;flex:1;min-width:0;white-space:nowrap;font-size:14px;font-weight:700;}
 .edit-banner-txt .edit-banner-ico{flex-shrink:0;margin-right:7px;}
 .edit-banner-txt b{flex-shrink:0;}
@@ -5966,14 +5966,14 @@ function _refreshRcCard(recId){
 function _cardFootHtml(r){
   const fixed=_isHistoryFixed(r.id);
   const savedAtStr=(()=>{try{const d=new Date(r.savedAt);return d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e2){return '';}})();
-  // 버튼 순서: 잠금/잠김 → 이미지 → 수정 → 삭제 (사용자 지정, v7.81)
-  const lockBtn=fixed
-    ?`<span class="rc-fix-btn fixed rc-fix-badge" title="잠긴 기록 — '수정'을 눌러 암호 입력 후 수정"><span class="rc-btn-ico">🔒</span><span class="rc-btn-lbl">잠김</span></span>`
+  // 잠김은 '상태'라 버튼 줄에서 빼 저장일시 옆 칩으로(버튼처럼 안 보이게). 버튼 줄은 동작만: (잠금)·이미지·수정·삭제. (v8.15)
+  const lockTag=fixed?`<span class="rc-lock-tag" title="잠긴 기록 — '수정'을 눌러 암호 입력 후 수정">🔒 잠김</span>`:'';
+  const lockBtn=fixed?''
     :`<button class="rc-fix-btn" onclick="event.stopPropagation();fixHistoryRecord('${jsa(r.id)}')"><span class="rc-btn-ico">🔓</span><span class="rc-btn-lbl">잠금</span></button>`;
   const imgBtn=`<button class="rc-load-btn" onclick="event.stopPropagation();viewHistoryImage('${jsa(r.id)}')"><span class="rc-btn-ico">☁️</span><span class="rc-btn-lbl">이미지</span></button>`;
   const editBtn=`<button class="rc-load-btn rc-edit-btn"${fixed?' title="암호 입력 후 수정"':''} onclick="event.stopPropagation();${fixed?`unlockHistoryForEdit('${jsa(r.id)}')`:`loadHistoryForEdit('${jsa(r.id)}')`}"><span class="rc-btn-ico">✏️</span><span class="rc-btn-lbl">수정</span></button>`;
   const delBtn=`<button class="rc-del-btn"${fixed?' title="암호 입력 후 삭제"':''} onclick="event.stopPropagation();deleteHistoryRecord('${jsa(r.id)}',event)"><span class="rc-btn-ico">🗑</span><span class="rc-btn-lbl">삭제</span></button>`;
-  return `<div class="rc-foot"><span class="rc-saved-at">${savedAtStr} 저장 · ${(r.people||[]).length}명</span><div class="rc-foot-btns">${lockBtn}${imgBtn}${editBtn}${delBtn}</div></div>`;
+  return `<div class="rc-foot"><span class="rc-saved-at">${lockTag}${savedAtStr} 저장 · ${(r.people||[]).length}명</span><div class="rc-foot-btns">${lockBtn}${imgBtn}${editBtn}${delBtn}</div></div>`;
 }
 // 한턱 내역 — 결제자(payer)별 한턱(isTreat) 금액. 받을 돈 없는 카드에서
 // '누가 얼마 쐈는지'를 입금 내역처럼 보여준다. 표시 전용(집계는 payer별 isTreat 합). (v7.82, 합계 제거 v7.84)
@@ -6123,13 +6123,36 @@ function _refreshEditBanner(){
   const fab=document.getElementById('mobFab');
   if(!editing){if(bar)bar.remove();if(fab)fab.classList.remove('edit-hidden');return;}
   const g=getCurrentGroup();const nm=g&&g.name?g.name:'기록';
-  if(!bar){bar=document.createElement('div');bar.id='editBanner';bar.className='edit-banner';document.body.appendChild(bar);}
+  if(!bar){bar=document.createElement('div');bar.id='editBanner';document.body.appendChild(bar);}
+  const mobile=window.innerWidth<700;
+  bar.className='edit-banner'+(mobile?'':' edit-banner-panel');
   bar.innerHTML=`<span class="edit-banner-txt"><span class="edit-banner-ico">✏️</span><b>수정 중</b>&nbsp;·&nbsp;<span class="edit-banner-nm">${e(nm)}</span></span><span class="edit-banner-btns"><button class="edit-banner-cancel" onclick="editBannerCancel()">취소</button><button class="edit-banner-save" onclick="editBannerSave()">저장</button></span>`;
-  // 하단 고정 — 모바일은 탭 네비(.mob-tabs) 위, 데스크탑은 네비 없으니 바닥(bottom:0). (v8.14)
-  let navH=0;
-  if(window.innerWidth<700){const nav=document.querySelector('.mob-tabs');if(nav){const cs=getComputedStyle(nav);if(cs.display!=='none'&&cs.position==='fixed')navH=nav.offsetHeight;}}
-  bar.style.bottom=navH+'px';
-  if(fab)fab.classList.add('edit-hidden');
+  _positionEditBanner();
+  _bindEditBannerReposition();
+  if(fab){if(mobile)fab.classList.add('edit-hidden');else fab.classList.remove('edit-hidden');}
+}
+// 모바일=전체폭 탭 네비 위. 데스크탑=왼쪽 편집 패널(#dLeft) 폭·바닥에만 맞춰 가둠(전체폭 X). (v8.15)
+function _positionEditBanner(){
+  const bar=document.getElementById('editBanner');if(!bar)return;
+  if(window.innerWidth<700){
+    bar.style.left='';bar.style.width='';
+    let navH=0;const nav=document.querySelector('.mob-tabs');if(nav){const cs=getComputedStyle(nav);if(cs.display!=='none'&&cs.position==='fixed')navH=nav.offsetHeight;}
+    bar.style.bottom=navH+'px';
+  }else{
+    const dl=document.getElementById('dLeft');if(!dl)return;
+    const r=dl.getBoundingClientRect();
+    bar.style.left=r.left+'px';bar.style.width=r.width+'px';
+    // 합계(.left-foot) 위 구분선 기준으로 그 위에 둠(합계 안 가림). (v8.15)
+    const foot=dl.querySelector('.left-foot');
+    const anchorBottom=foot?foot.getBoundingClientRect().top:r.bottom;
+    bar.style.bottom=Math.max(0,Math.round(window.innerHeight-anchorBottom))+'px';
+  }
+}
+let _editBannerReposBound=false;
+function _bindEditBannerReposition(){
+  if(_editBannerReposBound)return;_editBannerReposBound=true;
+  const h=()=>{if(_loadedHistId||_editingFixedSourceId)_positionEditBanner();};
+  window.addEventListener('resize',h);window.addEventListener('scroll',h,true);
 }
 async function editBannerSave(){
   if(!(_loadedHistId||_editingFixedSourceId))return;
