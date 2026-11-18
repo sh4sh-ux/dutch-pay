@@ -1909,8 +1909,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.16';
-const BUILD_TIME='2026-11-19 03:30';
+const APP_VERSION='v8.17';
+const BUILD_TIME='2026-11-19 03:55';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5258,7 +5258,9 @@ async function saveToHistory(){
       const sourceIdx=arr.findIndex(r=>r.id===keepId);
       if(sourceIdx>=0&&_sameHistoryContent(arr[sourceIdx],record)){
         const source=arr[sourceIdx];
-        _loadedHistId=source.id;_editingFixedSourceId=null;
+        // 저장을 눌렀으면 변경이 없어도 수정 모드를 끝낸다(하단 바 제거). 기존 _loadedHistId=source.id가
+        // 플래그를 되살려 바가 안 사라지고 '동일한 기록'으로 남던 버그. (v8.16)
+        _loadedHistId=null;_editingFixedSourceId=null;
         toast('변경된 내용이 없어 기존 기록을 그대로 유지했어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
         return source;
       }
