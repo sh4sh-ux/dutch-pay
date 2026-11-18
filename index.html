@@ -1052,7 +1052,8 @@ svg{display:block;flex-shrink:0;}
 .rc-lock-tag{display:inline-flex;align-items:center;gap:3px;background:var(--green-bg);color:var(--green-txt);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700;margin-right:7px;vertical-align:middle;white-space:nowrap;}
 /* 수정 중 바 — 하단 고정. 모바일=전체폭 탭 네비 위, 데스크탑=왼쪽 편집 패널 폭에만(전체폭 X, 부담 줄임). (v8.14/8.15) */
 .edit-banner{position:fixed;left:0;right:0;bottom:0;z-index:85;display:flex;align-items:center;gap:10px;background:var(--blue);color:#fff;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -3px 16px rgba(0,0,0,.16);}
-.edit-banner.edit-banner-panel{right:auto;padding:12px 16px;box-shadow:0 -4px 20px rgba(0,0,0,.12);}
+/* 데스크탑: 떠 있지 않고 지출 목록과 합계 사이에 자리 차지(목록이 줄어 아무것도 안 가림) */
+.edit-banner.edit-banner-panel{position:static;left:auto;right:auto;bottom:auto;width:auto;flex:0 0 auto;padding:12px var(--pad-x);box-shadow:none;}
 .edit-banner-txt{display:flex;align-items:center;flex:1;min-width:0;white-space:nowrap;font-size:14px;font-weight:700;}
 .edit-banner-txt .edit-banner-ico{flex-shrink:0;margin-right:7px;}
 .edit-banner-txt b{flex-shrink:0;}
@@ -6127,32 +6128,29 @@ function _refreshEditBanner(){
   const mobile=window.innerWidth<700;
   bar.className='edit-banner'+(mobile?'':' edit-banner-panel');
   bar.innerHTML=`<span class="edit-banner-txt"><span class="edit-banner-ico">✏️</span><b>수정 중</b>&nbsp;·&nbsp;<span class="edit-banner-nm">${e(nm)}</span></span><span class="edit-banner-btns"><button class="edit-banner-cancel" onclick="editBannerCancel()">취소</button><button class="edit-banner-save" onclick="editBannerSave()">저장</button></span>`;
-  _positionEditBanner();
-  _bindEditBannerReposition();
-  if(fab){if(mobile)fab.classList.add('edit-hidden');else fab.classList.remove('edit-hidden');}
-}
-// 모바일=전체폭 탭 네비 위. 데스크탑=왼쪽 편집 패널(#dLeft) 폭·바닥에만 맞춰 가둠(전체폭 X). (v8.15)
-function _positionEditBanner(){
-  const bar=document.getElementById('editBanner');if(!bar)return;
-  if(window.innerWidth<700){
+  if(mobile){
+    // 모바일: 전체폭 탭 네비(.mob-tabs) 위 고정. FAB 숨김.
+    if(bar.parentNode!==document.body)document.body.appendChild(bar);
     bar.style.left='';bar.style.width='';
     let navH=0;const nav=document.querySelector('.mob-tabs');if(nav){const cs=getComputedStyle(nav);if(cs.display!=='none'&&cs.position==='fixed')navH=nav.offsetHeight;}
     bar.style.bottom=navH+'px';
+    if(fab)fab.classList.add('edit-hidden');
   }else{
-    const dl=document.getElementById('dLeft');if(!dl)return;
-    const r=dl.getBoundingClientRect();
-    bar.style.left=r.left+'px';bar.style.width=r.width+'px';
-    // 합계(.left-foot) 위 구분선 기준으로 그 위에 둠(합계 안 가림). (v8.15)
-    const foot=dl.querySelector('.left-foot');
-    const anchorBottom=foot?foot.getBoundingClientRect().top:r.bottom;
-    bar.style.bottom=Math.max(0,Math.round(window.innerHeight-anchorBottom))+'px';
+    // 데스크탑: 지출 목록(.items-scroll, flex:1)과 합계(.left-foot) 사이에 자리 차지하게 삽입
+    //  → 목록이 그만큼 줄어 지출 추가·합계 둘 다 안 가림(오버레이 아님). (v8.15)
+    bar.style.left='';bar.style.width='';bar.style.bottom='';
+    const dl=document.getElementById('dLeft');const foot=dl&&dl.querySelector('.left-foot');
+    if(dl&&foot){if(bar.parentNode!==dl||bar.nextElementSibling!==foot)dl.insertBefore(bar,foot);}
+    else if(dl&&bar.parentNode!==dl)dl.appendChild(bar);
+    if(fab)fab.classList.remove('edit-hidden');
   }
+  _bindEditBannerReposition();
 }
+// 창 크기 변경 시(모바일↔데스크탑 전환 포함) 올바른 위치로 다시 배치
 let _editBannerReposBound=false;
 function _bindEditBannerReposition(){
   if(_editBannerReposBound)return;_editBannerReposBound=true;
-  const h=()=>{if(_loadedHistId||_editingFixedSourceId)_positionEditBanner();};
-  window.addEventListener('resize',h);window.addEventListener('scroll',h,true);
+  window.addEventListener('resize',()=>{if(_loadedHistId||_editingFixedSourceId)_refreshEditBanner();});
 }
 async function editBannerSave(){
   if(!(_loadedHistId||_editingFixedSourceId))return;
