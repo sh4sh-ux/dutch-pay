@@ -1048,6 +1048,23 @@ svg{display:block;flex-shrink:0;}
 .rc-fix-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#665000;border:1px solid #e1b72f;background:#fff3a6;border-radius:8px;font-weight:700;padding:6px 8px;cursor:pointer;white-space:nowrap;}
 .rc-fix-btn:hover{opacity:.8;}
 .rc-fix-btn.fixed{color:var(--green-txt);border:1px solid #aadcbb;background:var(--green-bg);cursor:pointer;}
+/* '잠김'은 상태 배지 — 클릭 동작 없음(수정은 '수정' 버튼으로). (v8.14) */
+.rc-fix-badge{cursor:default;}
+.rc-fix-badge:hover{opacity:1;}
+/* 수정 중 바 — 하단 고정(탭 네비 위). 헤더·본문 안 건드림. (v8.14) */
+.edit-banner{position:fixed;left:0;right:0;bottom:0;z-index:85;display:flex;align-items:center;gap:10px;background:var(--blue);color:#fff;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -3px 16px rgba(0,0,0,.16);}
+.edit-banner-txt{display:flex;align-items:center;flex:1;min-width:0;white-space:nowrap;font-size:14px;font-weight:700;}
+.edit-banner-txt .edit-banner-ico{flex-shrink:0;margin-right:7px;}
+.edit-banner-txt b{flex-shrink:0;}
+.edit-banner-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600;opacity:.92;}
+.edit-banner-btns{display:flex;gap:8px;flex-shrink:0;}
+.edit-banner-save,.edit-banner-cancel{border:none;border-radius:999px;font-size:13px;font-weight:800;padding:9px 18px;cursor:pointer;font-family:inherit;line-height:1;-webkit-tap-highlight-color:transparent;}
+.edit-banner-save{background:#fff;color:var(--blue);}
+.edit-banner-cancel{background:rgba(255,255,255,.22);color:#fff;font-weight:700;}
+.edit-banner-save:active{transform:scale(.96);}
+.edit-banner-cancel:active{transform:scale(.96);}
+/* 수정 중엔 FAB 숨김(하단 바와 겹침 방지) */
+.mob-fab.edit-hidden{display:none!important;}
 /* foot 버튼 — 전부 아이콘+글자 박스, 등폭(색은 각자 유지). 한 줄 유지, 모바일은 아이콘만 (v7.81) */
 .rc-foot-btns{display:flex;gap:6px;align-items:center;flex-shrink:0;}
 .rc-foot-btns>*{min-width:60px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:4px;text-align:center;border-radius:8px;font-weight:700;padding:6px 8px;font-size:12px;white-space:nowrap;}
@@ -1889,8 +1906,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.13';
-const BUILD_TIME='2026-11-18 23:30';
+const APP_VERSION='v8.14';
+const BUILD_TIME='2026-11-19 00:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1906,7 +1923,7 @@ let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unloc
 let _historySearch='';let _histSearchTypedAt=0;
 let _historySort='newest';
 let _histSettleMode=false;
-let _histDrawerOpen=false,_loadedHistId=null,_editingFixedSourceId=null;
+let _histDrawerOpen=false,_loadedHistId=null,_editingFixedSourceId=null,_editPrevGroupId=null;
 let _histMonthYear=new Date().getFullYear(),_histMonthMonth=new Date().getMonth()+1,_histMonthAllMode=true;
 let dTab='input',mTab='input';
 let itemSort='default',itemSearch='';
@@ -4493,7 +4510,7 @@ function renderAll(skipSave=false){
   const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
   const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
-  _updateMobFab();if(!skipSave)saveState();
+  _updateMobFab();try{_refreshEditBanner();}catch(e){}if(!skipSave)saveState();
 }
 
 function _pillHtml(p){return `<span class="pill">${e(p)}<button class="pill-x" aria-label="${e(p)} 삭제" onclick="event.stopPropagation();removePerson(${ja(p)})">${svgX}</button></span>`;}
@@ -5205,7 +5222,7 @@ function handleAmtInput(id,el){const posFromEnd=el.value.length-el.selectionStar
 function toggleAmtSign(id){const it=items.find(i=>i.id===id);if(!it)return;const cur=+it.amount||0;if(cur===0)return;it.amount=-cur;saveState();renderAll();const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(id);}
 
 // ── 기록 보관함에 저장 ──
-function saveToHistory(){
+async function saveToHistory(){
   const total=items.reduce((s,it)=>s+(+it.amount||0),0);
   if(!total){toast('저장할 정산 내역이 없어요',{type:'error'});return;}
   const{paid,owes}=computeShares();
@@ -5234,21 +5251,24 @@ function saveToHistory(){
     const raw=localStorage.getItem(HISTORY_KEY);
     const arr=raw?JSON.parse(raw):[];
     if(_editingFixedSourceId){
-      const sourceIdx=arr.findIndex(r=>r.id===_editingFixedSourceId);
+      const keepId=_editingFixedSourceId;
+      const sourceIdx=arr.findIndex(r=>r.id===keepId);
       if(sourceIdx>=0&&_sameHistoryContent(arr[sourceIdx],record)){
         const source=arr[sourceIdx];
         _loadedHistId=source.id;_editingFixedSourceId=null;
         toast('변경된 내용이 없어 기존 기록을 그대로 유지했어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
         return source;
       }
-      // 잠긴 원본은 그대로 두고 사용자가 수정한 내용은 새 버전으로 저장한다.
-      record.id='hv_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8);
-      record.dedupKeepSeparate=true;
-      record.previousRecordId=_editingFixedSourceId;
-      arr.unshift(record);
+      // 제자리 교체 + 다시 잠금 (v8.14, 사용자 선택): 새 버전으로 쪼개지 않고 그 기록 1개를 수정 내용으로 교체.
+      // 봉인 아카이브를 먼저 재봉인해야 saveHistory의 _enforceFixedHistory가 새 내용으로 복원한다(옛 내용 되돌림 방지).
+      record.id=keepId;
+      if(sourceIdx>=0)record.sourceGroupId=arr[sourceIdx].sourceGroupId||record.sourceGroupId;
+      const resealed=await _resealArchiveFull(keepId,record);
+      if(sourceIdx>=0)arr[sourceIdx]={...arr[sourceIdx],...record,id:keepId};
+      else arr.unshift(record);
       if(!saveHistory(arr))return null;
       _editingFixedSourceId=null;
-      toast('수정 내용이 새 기록으로 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+      toast(resealed?'잠긴 기록을 수정하고 다시 잠갔어요 ✓':'수정 내용을 저장했어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
     }else if(_loadedHistId){
       if(_fixedMutationBlocked(_loadedHistId)){_loadedHistId=null;return null;}
       const editIdx=arr.findIndex(r=>r.id===_loadedHistId);
@@ -5300,7 +5320,7 @@ function saveToHistory(){
   }catch(err){
     toast('저장에 실패했어요',{type:'error'});
     return null;
-  }
+  }finally{try{_refreshEditBanner();}catch(e){}}
 }
 
 // 이미 기록 보관함에 저장돼 있는 정산이면, 영수증 첨부/삭제 시 그 기록의 items·savedAt를 자동 갱신.
@@ -5380,6 +5400,23 @@ async function _resealArchivePayments(recId,payments){
     localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(loadHistory())));
     if(hDbxGetToken()){try{await _syncFixedArchives(hDbxGetToken());}catch(e){}try{hSyncDropbox(true);}catch(e){}}
     // 전체 재렌더·잠금서피스 갱신은 하지 않는다 — 패널이 닫혀 '튕기는' 느낌. 입금은 잠금 상태 불변, 호출부가 제자리 갱신. (v8.12)
+    return true;
+  }catch(e){return false;}
+}
+// 잠긴 기록을 '제자리 교체 + 다시 잠금' — 봉인 payload 전체를 수정 내용으로 재봉인(같은 id·pin 유지). (v8.14)
+// 포크(hv_ 새 버전)로 쪼개지 않고 원본 1개를 그대로 수정하기 위함. 아카이브를 먼저 바꿔야
+// saveHistory의 _enforceFixedHistory가 새 내용으로 복원한다(옛 payload로 되돌리지 않음).
+async function _resealArchiveFull(recId,newRecord){
+  try{
+    try{await _ensureFixedArchives();}catch(e){}
+    const arcs=loadFixedArchives();const aIdx=arcs.findIndex(f=>f&&f.recordId===recId);
+    if(aIdx<0||!arcs[aIdx])return false;
+    const f=arcs[aIdx];
+    const payload=JSON.parse(JSON.stringify(newRecord));payload.id=recId;
+    const newArcs=arcs.slice();
+    newArcs[aIdx]={...f,payload,fixedAt:new Date().toISOString(),guard:_fixedGuard(payload),sha256:await _hSha256b64url(_stableJson(payload))};
+    await _saveFixedArchives(newArcs);
+    if(hDbxGetToken()){try{await _syncFixedArchives(hDbxGetToken());}catch(e){}}
     return true;
   }catch(e){return false;}
 }
@@ -5539,7 +5576,7 @@ async function fixHistoryRecord(id){
   if(hDbxGetToken())try{await _syncFixedArchives(hDbxGetToken());}catch(e){toast('기기에는 잠겼지만 Dropbox 원본 저장은 재시도가 필요해요',{type:'error',duration:5000});}
   toast('잠금 완료 — 원본이 안전하게 보존됩니다',{type:'success',duration:4500});return true;
 }
-function _fixedMutationBlocked(id){if(!_isHistoryFixed(id))return false;toast('잠긴 기록입니다. ‘잠김’을 누르고 암호를 입력하면 수정할 수 있어요.',{type:'info',duration:4200});return true;}
+function _fixedMutationBlocked(id){if(!_isHistoryFixed(id))return false;toast('잠긴 기록입니다. ‘수정’을 누르고 암호를 입력하면 수정할 수 있어요.',{type:'info',duration:4200});return true;}
 function _loadDelIds(){try{return new Set(JSON.parse(localStorage.getItem(HISTORY_DEL_KEY)||'[]'));}catch(e){return new Set();}}
 function _saveDelId(id,force=false){try{if(!force&&_isHistoryFixed(id))return;const s=_loadDelIds();s.add(id);localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));}catch(e){}}
 function _mergeDelIds(remoteIds){try{const s=_loadDelIds();(remoteIds||[]).forEach(id=>s.add(id));localStorage.setItem(HISTORY_DEL_KEY,JSON.stringify([...s]));return s;}catch(e){return _loadDelIds();}}
@@ -5931,7 +5968,7 @@ function _cardFootHtml(r){
   const savedAtStr=(()=>{try{const d=new Date(r.savedAt);return d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e2){return '';}})();
   // 버튼 순서: 잠금/잠김 → 이미지 → 수정 → 삭제 (사용자 지정, v7.81)
   const lockBtn=fixed
-    ?`<button class="rc-fix-btn fixed" title="암호 입력 후 수정" onclick="event.stopPropagation();unlockHistoryForEdit('${jsa(r.id)}')"><span class="rc-btn-ico">🔒</span><span class="rc-btn-lbl">잠김</span></button>`
+    ?`<span class="rc-fix-btn fixed rc-fix-badge" title="잠긴 기록 — '수정'을 눌러 암호 입력 후 수정"><span class="rc-btn-ico">🔒</span><span class="rc-btn-lbl">잠김</span></span>`
     :`<button class="rc-fix-btn" onclick="event.stopPropagation();fixHistoryRecord('${jsa(r.id)}')"><span class="rc-btn-ico">🔓</span><span class="rc-btn-lbl">잠금</span></button>`;
   const imgBtn=`<button class="rc-load-btn" onclick="event.stopPropagation();viewHistoryImage('${jsa(r.id)}')"><span class="rc-btn-ico">☁️</span><span class="rc-btn-lbl">이미지</span></button>`;
   const editBtn=`<button class="rc-load-btn rc-edit-btn"${fixed?' title="암호 입력 후 수정"':''} onclick="event.stopPropagation();${fixed?`unlockHistoryForEdit('${jsa(r.id)}')`:`loadHistoryForEdit('${jsa(r.id)}')`}"><span class="rc-btn-ico">✏️</span><span class="rc-btn-lbl">수정</span></button>`;
@@ -6070,12 +6107,51 @@ function loadHistoryForEdit(id,fromFixed=false){
   const _cleanPm=v=>{const amt=(v.amount!==null&&v.amount!==undefined&&v.amount!==''&&!isNaN(+v.amount))?+v.amount:null;return{done:!!v.done,waived:!!v.waived,amount:amt,timestamp:v.timestamp||'',account:v.account||'',memo:v.memo||''};};
   const cleanPayments={};Object.entries(r.payments||{}).forEach(([k,v])=>{cleanPayments[k]=_cleanPm(v);});
   const newGroup={id:newId,name:displayName,nameAuto:false,data:{people:(r.people||[]).slice(),items:newItems,idc:newIdc,settleDateStart:r.dateStart||_todayYMD(),settleDateEnd:r.dateEnd||null,itemSort:'default',itemSearch:'',payments:cleanPayments}};
+  _editPrevGroupId=currentGroupId; // 취소 시 돌아갈 이전 그룹 (v8.14)
   groups.push(newGroup);currentGroupId=newId;loadGroupData(newGroup);_loadedHistId=fromFixed?null:id;_editingFixedSourceId=fromFixed?id:null;
   if(r.coupleNames?.length){_coupleNames=r.coupleNames.slice();localStorage.setItem('dutchpay_couple',JSON.stringify(_coupleNames));}
   saveState();
   if(window.innerWidth<700){mTab='input';_syncShellNav('input');renderMobileBody();window.scrollTo(0,0);}
   else{dTab='input';_syncShellNav('input');renderAll();}
-  toast(fromFixed?`잠금 해제됨 — 수정 후 ‘잠금 저장’을 눌러주세요`:`수정 중: '${displayName}' — 변경 후 기록 보관함에 저장`,{type:'info',duration:5000});
+  _refreshEditBanner();
+  toast(fromFixed?`잠금 해제됨 — 수정 후 상단 ‘저장’을 누르면 다시 잠겨요`:`'${displayName}' 수정 중 — 상단 ‘저장’을 누르면 반영돼요`,{type:'info',duration:5000});
+}
+// ── 수정 중 배너 (v8.14) — 기록을 불러와 수정하는 동안 상단에 '수정 중 · 저장/취소'를 띄운다. ──
+function _refreshEditBanner(){
+  const editing=!!(_loadedHistId||_editingFixedSourceId);
+  let bar=document.getElementById('editBanner');
+  const fab=document.getElementById('mobFab');
+  if(!editing){if(bar)bar.remove();if(fab)fab.classList.remove('edit-hidden');return;}
+  const g=getCurrentGroup();const nm=g&&g.name?g.name:'기록';
+  if(!bar){bar=document.createElement('div');bar.id='editBanner';bar.className='edit-banner';document.body.appendChild(bar);}
+  bar.innerHTML=`<span class="edit-banner-txt"><span class="edit-banner-ico">✏️</span><b>수정 중</b>&nbsp;·&nbsp;<span class="edit-banner-nm">${e(nm)}</span></span><span class="edit-banner-btns"><button class="edit-banner-cancel" onclick="editBannerCancel()">취소</button><button class="edit-banner-save" onclick="editBannerSave()">저장</button></span>`;
+  // 하단 고정 — 모바일은 탭 네비(.mob-tabs) 위, 데스크탑은 네비 없으니 바닥(bottom:0). (v8.14)
+  let navH=0;
+  if(window.innerWidth<700){const nav=document.querySelector('.mob-tabs');if(nav){const cs=getComputedStyle(nav);if(cs.display!=='none'&&cs.position==='fixed')navH=nav.offsetHeight;}}
+  bar.style.bottom=navH+'px';
+  if(fab)fab.classList.add('edit-hidden');
+}
+async function editBannerSave(){
+  if(!(_loadedHistId||_editingFixedSourceId))return;
+  const saved=await saveToHistory();
+  if(saved){try{renderAll();}catch(e){}}
+  _refreshEditBanner();
+}
+function editBannerCancel(){
+  if(!(_loadedHistId||_editingFixedSourceId))return;
+  if(!confirm('수정한 내용을 저장하지 않고 취소할까요?'))return;
+  const tempId=currentGroupId;
+  _loadedHistId=null;_editingFixedSourceId=null;
+  const prev=(_editPrevGroupId&&groups.some(g=>g.id===_editPrevGroupId))?_editPrevGroupId:null;
+  if(groups.length>1){
+    const idx=groups.findIndex(g=>g.id===tempId);
+    if(idx>=0){groups.splice(idx,1);deletedGroups[tempId]=new Date().toISOString();try{delete _syncSnapshots[tempId];}catch(e){}}
+    currentGroupId=(prev&&groups.some(g=>g.id===prev))?prev:groups[0].id;
+    const cg=getCurrentGroup();if(cg)loadGroupData(cg);
+  }
+  _editPrevGroupId=null;
+  _refreshEditBanner();renderAll();
+  toast('수정을 취소했어요',{type:'info'});
 }
 function renderHistoryView(eyeId,titleId,subId,bodyId){
   _hPanelOpen=false;
@@ -6610,7 +6686,7 @@ function _histSaveBtnHtml(){
   const hint=fixed?'<div class="hist-save-hint">잠김을 누르고 암호를 입력하면 수정할 수 있습니다.</div>':(saved?'<div class="hist-save-hint">영수증을 붙였거나 내용을 바꿨다면 다시 눌러 업데이트하세요</div>':'<div class="hist-save-hint">보관함에 저장한 뒤 잠그면 원본을 안전하게 보존합니다.</div>');
   return `<div class="hist-save-row"><button class="hist-save-btn${saved?' saved':''}" onclick="_saveHistFromResult()">${saved?'✓ 기록 보관함에 저장됨':'📌 기록 보관함에 저장'}</button><button class="hist-fix-btn${fixed?' fixed':''}" onclick="${fixed?`unlockHistoryForEdit('${jsa(rec.id)}')`:'_fixCurrentHistory()'}">${fixed?LOCK_CLOSED_SVG+'잠김':LOCK_OPEN_SVG+'잠금'}</button>${hint}</div>`;
 }
-function _saveHistFromResult(){saveToHistory();renderAll();}
+async function _saveHistFromResult(){await saveToHistory();renderAll();}
 function _currentHistoryRecord(){
   const total=items.reduce((s,it)=>s+(+it.amount||0),0);if(!total)return null;
   const record={dateStart:settleDateStart,dateEnd:settleDateEnd,people:[...people],items:JSON.parse(JSON.stringify(items))};
@@ -6628,9 +6704,10 @@ function _sameHistoryContent(a,b){return!!(a&&b&&_historyContentSignature(a)===_
 function _currentHistoryFingerprint(){return _histFingerprint({dateStart:settleDateStart,dateEnd:settleDateEnd,people:[...people],items});}
 function _historyLockMatches(r){return!!(r&&_histFingerprint(r)===_currentHistoryFingerprint());}
 async function _fixCurrentHistory(){
-  if(_editingFixedSourceId){const saved=saveToHistory();if(saved)await fixHistoryRecord(saved.id);return;}
+  // 잠긴 기록을 풀어 수정한 경우: saveToHistory가 제자리 교체+재봉인(잠김 유지)하므로 별도 잠금 불필요. (v8.14)
+  if(_editingFixedSourceId){await saveToHistory();return;}
   let rec=_currentHistoryRecord();
-  if(!rec||(_isHistoryFixed(rec.id)&&!_historyLockMatches(rec))){const saved=saveToHistory();if(!saved)return;rec=loadHistory().find(r=>r.id===saved.id)||_currentHistoryRecord();}
+  if(!rec||(_isHistoryFixed(rec.id)&&!_historyLockMatches(rec))){const saved=await saveToHistory();if(!saved)return;rec=loadHistory().find(r=>r.id===saved.id)||_currentHistoryRecord();}
   if(rec)await fixHistoryRecord(rec.id);
 }
 function _isAlreadySaved(){
