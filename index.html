@@ -1459,6 +1459,64 @@ svg{display:block;flex-shrink:0;}
 .pm-mstat-val.mut{color:var(--label3);}
 /* 이름 검색 요약 카드: 월별과 동일한 통계 카드(pm-month-stats-row) 재사용, 마지막 행 하단 여백 제거 */
 .pm-person-card .pm-month-stats-row:last-child{margin-bottom:0;}
+/* 대시보드 (수금 탭 세번째 뷰) v8.08 */
+.pm-dash{display:flex;flex-direction:column;gap:18px;padding-top:2px;}
+.pm-dash-sec{display:flex;flex-direction:column;gap:9px;}
+.pm-dash-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:0 2px;}
+.pm-dash-title{font-size:14px;font-weight:700;color:var(--label);letter-spacing:-.2px;}
+.pm-dash-sub{font-size:11px;font-weight:500;color:var(--label3);}
+.pm-dash .pm-month-stats-row{margin:0;}
+.pm-dash-cat-list,.pm-dash-ppl-list{border:1px solid var(--sep);border-radius:15px;background:var(--card);overflow:hidden;}
+/* 지출 추이 — 영수증 앱식 얇은 2색 세로 알약 바 + 연/월/일 탭 */
+.pm-dash-tabs{display:inline-flex;background:var(--fill2);border-radius:999px;padding:3px;gap:2px;flex:0 0 auto;}
+.pm-dash-tab{border:none;background:none;font:inherit;font-size:12px;font-weight:600;color:var(--label2);padding:5px 12px;border-radius:999px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.pm-dash-tab.on{background:var(--card);color:var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.pm-dash-lp-wrap{border:1px solid var(--sep);border-radius:15px;background:var(--card);padding:14px 14px 12px;}
+.pm-dash-lp-sum{font-size:12px;color:var(--label2);font-variant-numeric:tabular-nums;margin-bottom:12px;}
+.pm-dash-lp-sum b{color:var(--label);font-weight:700;font-size:12.5px;}
+.pm-dash-lp-sum b.mine{color:var(--blue);}
+.pm-dash-lp-plot{height:140px;display:flex;align-items:flex-end;gap:4px;}
+.pm-dash-lp-col{flex:1;min-width:0;height:100%;display:flex;align-items:flex-end;justify-content:center;}
+.pm-dash-lp-bar{width:14px;max-width:72%;border-radius:7px;background:color-mix(in srgb,var(--blue) 20%,transparent);position:relative;overflow:hidden;transition:height .18s;}
+.pm-dash-lp-bar:not(.has){background:transparent;}
+.pm-dash-lp-bar i{position:absolute;left:0;right:0;bottom:0;display:block;border-radius:7px;background:var(--blue);transition:height .18s;}
+.pm-dash-lp-x{display:flex;gap:4px;margin-top:8px;}
+.pm-dash-lp-x span{flex:1;min-width:0;text-align:center;font-size:10px;color:var(--label3);white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums;}
+.pm-dash-lp-empty{height:120px;display:flex;align-items:center;justify-content:center;color:var(--label3);font-size:13px;}
+.pm-dash-lp-leg{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:13px;padding-top:11px;border-top:1px solid var(--sep);font-size:11px;color:var(--label2);}
+.pm-dash-lp-leg span{display:inline-flex;align-items:center;gap:5px;}
+.pm-dash-lp-leg i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+.pm-dash-lp-leg i.t{background:color-mix(in srgb,var(--blue) 20%,transparent);}
+.pm-dash-lp-leg i.m{background:var(--blue);}
+.pm-dash-lp-leg em{font-style:normal;color:var(--label3);font-size:10.5px;flex-basis:100%;}
+.pm-dash-cat-row{display:grid;grid-template-columns:24px minmax(44px,auto) 1fr auto;align-items:center;gap:10px;padding:10px 14px;}
+.pm-dash-cat-row:not(:last-child){border-bottom:1px solid var(--sep);}
+.pm-dash-cat-ico{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--label2);}
+.pm-dash-cat-ico svg{width:20px;height:20px;}
+.pm-dash-cat-lbl{font-size:13px;font-weight:600;color:var(--label);white-space:nowrap;}
+.pm-dash-cat-bar{height:4px;border-radius:999px;background:var(--fill);overflow:hidden;min-width:28px;}
+.pm-dash-cat-fill{display:block;height:100%;border-radius:999px;background:var(--blue);}
+.pm-dash-cat-amt{font-size:13px;font-weight:600;color:var(--label);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right;}
+.pm-dash-cat-amt .won{font-size:.84em;font-weight:600;color:var(--label2);margin-left:1px;}
+.pm-dash-ppl-head{display:grid;grid-template-columns:1fr 56px minmax(96px,auto);gap:10px;padding:0 14px 2px;font-size:11px;font-weight:600;color:var(--label3);}
+.pm-dash-ppl-head span:nth-child(2){text-align:center;}
+.pm-dash-ppl-head span:nth-child(3){text-align:right;}
+.pm-dash-ppl-row{display:grid;grid-template-columns:1fr 56px minmax(96px,auto);gap:10px;align-items:center;padding:11px 14px;}
+.pm-dash-ppl-row:not(:last-child){border-bottom:1px solid var(--sep);}
+.pm-dash-ppl-name{font-size:13.5px;font-weight:600;color:var(--label);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pm-dash-ppl-cnt{font-size:12.5px;font-weight:600;color:var(--label2);text-align:center;font-variant-numeric:tabular-nums;}
+.pm-dash-ppl-treat{font-size:12.5px;font-weight:700;color:var(--txn-amber);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.pm-dash-ppl-treat .mut{color:var(--label3);font-weight:500;}
+.pm-dash-due-list{border:1px solid var(--sep);border-radius:15px;background:var(--card);overflow:hidden;}
+.pm-dash-due-row{display:grid;grid-template-columns:1fr auto auto 14px;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.pm-dash-due-row:not(:last-child){border-bottom:1px solid var(--sep);}
+.pm-dash-due-row:active{background:var(--fill);}
+.pm-dash-due-name{font-size:14px;font-weight:700;color:var(--label);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pm-dash-due-cnt{font-size:11px;font-weight:600;color:var(--label3);white-space:nowrap;}
+.pm-dash-due-amt{font-size:14.5px;font-weight:700;color:var(--red);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.pm-dash-due-amt .won{font-size:.82em;font-weight:600;margin-left:1px;opacity:.85;}
+.pm-dash-due-go{font-size:17px;color:var(--label3);text-align:center;line-height:1;}
+.pm-dash-allclear{border:1px solid var(--sep);border-radius:15px;background:var(--card);padding:18px 14px;text-align:center;font-size:13px;font-weight:600;color:var(--green);}
 /* v5.87 인원 목록 = 열 머리글 정렬 테이블. 고정 폭 열로 머리글(참여자·횟수|차액|청구금액|상태)과
    모든 행이 같은 세로선에 정렬. 화면 폭에 따라 gap만 조절(PC 넓게·모바일 좁게). 결제는 이름 아래 서브라인.
    [규칙] 리스트 콘텐츠는 구분선(행 폭 전체) 안쪽으로 좌우 14px 여백을 둔다 */
@@ -1809,14 +1867,14 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.07';
-const BUILD_TIME='2026-11-18 09:30';
+const APP_VERSION='v8.08';
+const BUILD_TIME='2026-11-18 14:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
 let payments={};
 let _justAddedId=null;
-let _pmHistTab='current',_pmHistSearch='',_pmHistSort='newest',_pmHistFilter='all',_pmViewMode='list',_pmHistGroup='all',_pmMonthPeopleSort='amt';
+let _pmHistTab='current',_pmHistSearch='',_pmHistSort='newest',_pmHistFilter='all',_pmViewMode='list',_pmHistGroup='all',_pmMonthPeopleSort='amt',_pmDashUnit='month';
 const _pmMonthsOpen=new Set();
 let _dbxAutoSavedFp='';
 const OWNER_NAME='조상현'; // 내 이름이 소유자명이면 5탭 잠금 해제 없이 자동 해제 (v5.75)
@@ -2821,6 +2879,10 @@ const ICON_RULES=[
 ];
 const ICON_BY_KEY={food:svgFood,cafe:svgCafe,beer:svgBeer,mic:svgMic,car:svgCar,shop:svgShop,movie:svgMovie,bed:svgBed,cake:svgCake,golf:svgGolf,spa:svgSpa,dumbbell:svgDumbbell,plane:svgPlane,event:svgEvent,medical:svgMedical,receipt:svgReceipt};
 function getIconSvg(itemOrName){let name,override;if(typeof itemOrName==='string'){name=itemOrName;}else if(itemOrName){name=itemOrName.name;override=itemOrName.iconOverride;}if(override&&ICON_BY_KEY[override])return ICON_BY_KEY[override];if(!name||!name.trim())return svgReceipt;for(const[svg,pat]of ICON_RULES){if(pat.test(name))return svg;}return svgFood;}
+// 카테고리 키: getIconSvg(단일 소스)의 svg를 key로 역매핑 — 로직 복제 없이 항목→카테고리 (대시보드 v8.08)
+const _SVG_TO_CATKEY=(()=>{const m=new Map();for(const k in ICON_BY_KEY)m.set(ICON_BY_KEY[k],k);return m;})();
+const CAT_LABEL={food:'외식',cafe:'카페',beer:'술집',mic:'노래방',car:'교통',shop:'쇼핑',movie:'문화',bed:'숙박',cake:'기념일',golf:'골프',spa:'뷰티',dumbbell:'운동',plane:'여행',event:'경조',medical:'의료',receipt:'기타'};
+function _catKeyOf(item){return _SVG_TO_CATKEY.get(getIconSvg(item))||'receipt';}
 
 const dInp=document.getElementById('dPInp');
 let dComposing=false;
@@ -3640,6 +3702,7 @@ function _pmSetSort(v){_pmHistSort=v;_patchHistResults();}
 function _pmSetFilter(v){_pmHistFilter=v;_patchHistResults();}
 function _pmSetGroup(v){_pmHistGroup=v;_patchHistResults();}
 function _pmSetMonthPeopleSort(v){_pmMonthPeopleSort=v;_patchHistResults();}
+function _pmDashSetUnit(u){_pmDashUnit=u;_patchHistResults();}
 function _pmSearchInput(v){_pmHistSearch=v;_patchHistResults();}
 function _pmFilterByName(name){_pmHistSearch=name;const inp=document.querySelector('.pm-search');if(inp){inp.value=name;_chkClear(inp);}_patchHistResults();}
 function _pmShowPayerItems(nm,ym){
@@ -3737,8 +3800,9 @@ function _pmHistResultsHtml(){
   if(!name){
     const allRecs=loadHistory().sort((a,b)=>(b.dateStart||b.savedAt||'').localeCompare(a.dateStart||a.savedAt||''));
     if(!allRecs.length)return '<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">저장된 정산 기록이 없어요</p></div>';
-    const viewToggle=`<div class="pm-view-toggle"><button class="pm-view-btn${_pmViewMode==='list'?' on':''}" onclick="_pmSetViewMode('list')">목록</button><button class="pm-view-btn${_pmViewMode==='monthly'?' on':''}" onclick="_pmSetViewMode('monthly')">월별 통계</button></div>`;
+    const viewToggle=`<div class="pm-view-toggle"><button class="pm-view-btn${_pmViewMode==='list'?' on':''}" onclick="_pmSetViewMode('list')">목록</button><button class="pm-view-btn${_pmViewMode==='monthly'?' on':''}" onclick="_pmSetViewMode('monthly')">월별 통계</button><button class="pm-view-btn${_pmViewMode==='dashboard'?' on':''}" onclick="_pmSetViewMode('dashboard')">대시보드</button></div>`;
     if(_pmViewMode==='monthly')return viewToggle+_pmMonthlyHtml(allRecs);
+    if(_pmViewMode==='dashboard')return viewToggle+_pmDashboardHtml(allRecs);
     const _fhdAll=d=>{const[y,m,day]=(d||'').split('-');return day?`${y}년 ${+m}월 ${+day}일`:(d||'');};
     const recsHtml=allRecs.map(rec=>{
       const dateStr=rec.dateStart?_fhdAll(rec.dateStart):(rec.savedAt?rec.savedAt.slice(0,10):'');
@@ -3884,6 +3948,133 @@ function togglePmMonth(ymId){
   if(isOpen){_pmMonthsOpen.delete(ymId);detail.style.display='none';}
   else{_pmMonthsOpen.add(ymId);detail.style.display='block';}
   if(chev)chev.classList.toggle('open',!isOpen);
+}
+// 기록 1건의 '내 부담'(내 몫) = 더치페이 분담(computeShares의 owes[나]) + 내가 한턱 쏜 금액. (v8.08)
+// computeShares를 기록 데이터로 그대로 재사용(로직 복제 없음). _myName 없으면 0.
+function _recMyBurden(rec){
+  if(!_myName)return 0;
+  const ppl=rec.people||[],its=rec.items||[];
+  let b=0;
+  try{const{owes}=computeShares(ppl,its);b=owes[_myName]||0;}catch(_){b=0;}
+  its.forEach(it=>{if(it.isTreat&&it.payer===_myName)b+=(+it.amount||0);}); // 한턱 반영
+  return b;
+}
+// 추세 버킷 집계 — 레코드 포인트[{date,total,mine}]를 연/월/일 단위로 묶음(최신 쪽 연속 N칸). (v8.08)
+function _pmBucketPoints(points,unit){
+  const map={};let maxKey='';
+  (points||[]).forEach(p=>{if(!p.date)return;const k=unit==='year'?p.date.slice(0,4):unit==='month'?p.date.slice(0,7):p.date.slice(0,10);if(!map[k])map[k]={t:0,m:0,c:0};map[k].t+=p.total;map[k].m+=p.mine;map[k].c++;if(k>maxKey)maxKey=k;});
+  if(!maxKey)return [];
+  const N=unit==='year'?8:unit==='month'?12:14;
+  const keys=[];
+  if(unit==='year'){let y=+maxKey;for(let i=0;i<N;i++)keys.unshift(String(y-i));}
+  else if(unit==='month'){let yy=+maxKey.slice(0,4),mm=+maxKey.slice(5);for(let i=0;i<N;i++){keys.unshift(`${yy}-${String(mm).padStart(2,'0')}`);mm--;if(mm<1){mm=12;yy--;}}}
+  else{const d=new Date(maxKey+'T00:00:00');for(let i=0;i<N;i++){const dd=new Date(d);dd.setDate(d.getDate()-i);keys.unshift(`${dd.getFullYear()}-${String(dd.getMonth()+1).padStart(2,'0')}-${String(dd.getDate()).padStart(2,'0')}`);}}
+  let arr=keys.map(k=>{const v=map[k]||{t:0,m:0,c:0};const lbl=unit==='year'?`${k}`:unit==='month'?`${+k.slice(5)}월`:`${+k.slice(8)}일`;return{key:k,lbl,t:v.t,m:v.m,cnt:v.c};});
+  while(arr.length>1&&arr[0].t===0&&arr[0].m===0)arr.shift(); // 앞쪽 빈 칸 정리(깔끔)
+  return arr;
+}
+// 대시보드 집계 — 순수 함수(금액 집계라 test.html이 직접 호출해 검증). _myName 기준. (v8.08)
+function _pmDashboardStats(recs){
+  recs=recs||[];
+  let count=recs.length,totalSpend=0,myTreat=0,totalBilled=0,totalReceived=0,totalMine=0;
+  const recPoints=[];
+  const monthSpend={},catAmt={},personCount={},personTreat={},personPaid={};
+  const personBilled={},personReceived={},personDueCnt={}; // 나한테 보낼(=내가 받을) 돈 기준
+  recs.forEach(rec=>{
+    const rtot=+rec.total||0;totalSpend+=rtot;
+    const rmine=_recMyBurden(rec);totalMine+=rmine;
+    recPoints.push({date:(rec.dateStart||rec.savedAt||'').slice(0,10),total:rtot,mine:rmine});
+    const ym=(rec.dateStart||rec.savedAt||'').slice(0,7);
+    if(ym)monthSpend[ym]=(monthSpend[ym]||0)+(+rec.total||0);
+    (rec.people||[]).forEach(p=>{personCount[p]=(personCount[p]||0)+1;});
+    (_myName?(rec.txns||[]).filter(t=>t.to===_myName):(rec.txns||[])).forEach(t=>{
+      const ef=_pmEff((rec.payments||{})[`${t.from}|${t.to}`]||{},t.amt);
+      totalBilled+=ef.billedEff;totalReceived+=ef.receivedEff; // 퉁 완전 중립 (v7.06)
+      const from=t.from;
+      personBilled[from]=(personBilled[from]||0)+ef.billedEff;
+      personReceived[from]=(personReceived[from]||0)+ef.receivedEff;
+      if(ef.billedEff-ef.receivedEff>0)personDueCnt[from]=(personDueCnt[from]||0)+1;
+    });
+    (rec.items||[]).forEach(it=>{
+      const amt=+it.amount||0;
+      if(amt>0){const k=_catKeyOf(it);catAmt[k]=(catAmt[k]||0)+amt;}
+      if(it.payer&&(!_myName||it.payer!==_myName)){
+        personPaid[it.payer]=(personPaid[it.payer]||0)+amt;
+        if(it.isTreat)personTreat[it.payer]=(personTreat[it.payer]||0)+amt;
+      }
+      if(_myName&&it.payer===_myName&&it.isTreat)myTreat+=amt;
+    });
+  });
+  // 미수 현황: 나한테 안 준(미수>0) 사람만, 금액 많은 순. 요약 미수금=이 합(요약=내역 항상 일치)
+  const byOutstanding=Object.keys(personBilled).map(nm=>({name:nm,amount:(personBilled[nm]||0)-(personReceived[nm]||0),count:personDueCnt[nm]||0})).filter(p=>p.amount>0).sort((a,b)=>b.amount-a.amount);
+  const outstanding=byOutstanding.reduce((s,p)=>s+p.amount,0);
+  const byMonth=Object.keys(monthSpend).sort().map(ym=>({ym,amount:monthSpend[ym]}));
+  const byCategory=Object.keys(catAmt).map(k=>({key:k,amount:catAmt[k]})).sort((a,b)=>b.amount-a.amount);
+  const byPerson=Object.keys(personCount).filter(p=>!_myName||p!==_myName).map(p=>({name:p,count:personCount[p],treat:personTreat[p]||0,paid:personPaid[p]||0})).sort((a,b)=>b.count-a.count||b.treat-a.treat);
+  return {count,totalSpend,myTreat,totalMine,outstanding,totalBilled,totalReceived,byMonth,byCategory,byPerson,byOutstanding,recPoints};
+}
+function _pmDashboardHtml(allRecs){
+  const s=_pmDashboardStats(allRecs);
+  if(!s.count)return '<div class="empty" style="padding:30px 0"><p style="color:var(--label3)">기록이 없어요</p></div>';
+  // ① 전체 기간 요약
+  const summary=`<div class="pm-dash-sec">
+    <div class="pm-dash-head"><span class="pm-dash-title">전체 기간</span><span class="pm-dash-sub">${s.count}회 정산</span></div>
+    <div class="pm-month-stats-row">
+      <div class="pm-mstat"><div class="pm-mstat-lbl">총 지출</div><div class="pm-mstat-val">${fmt(s.totalSpend)}원</div></div>
+      <div class="pm-mstat"><div class="pm-mstat-lbl">내가 쏜 돈</div><div class="pm-mstat-val amber">${fmt(s.myTreat)}원</div></div>
+      <div class="pm-mstat"><div class="pm-mstat-lbl">미수금</div><div class="pm-mstat-val${s.outstanding>0?' neg':' mut'}">${s.outstanding>0?fmt(s.outstanding)+'원':'없음'}</div></div>
+    </div></div>`;
+  // ② 미수 현황 — 나한테 안 준 사람별, 탭하면 그 사람으로 이동
+  const dueRows=s.byOutstanding.map(p=>`<div class="pm-dash-due-row pm-name-tap" onclick="_pmFilterByName('${jsa(p.name)}')">
+      <span class="pm-dash-due-name">${e(p.name)}</span>
+      <span class="pm-dash-due-cnt">${p.count}건</span>
+      <span class="pm-dash-due-amt">${fmt(p.amount)}<span class="won">원</span></span>
+      <span class="pm-dash-due-go">›</span>
+    </div>`).join('');
+  const due=s.byOutstanding.length?`<div class="pm-dash-sec">
+    <div class="pm-dash-head"><span class="pm-dash-title">미수 현황</span><span class="pm-dash-sub">탭하면 그 사람 정산으로</span></div>
+    <div class="pm-dash-due-list">${dueRows}</div></div>`
+    :`<div class="pm-dash-sec"><div class="pm-dash-head"><span class="pm-dash-title">미수 현황</span></div>
+    <div class="pm-dash-allclear">✓ 받을 돈 모두 정산 완료</div></div>`;
+  // ③ 지출 추이 — 영수증 앱식 얇은 2색 세로 바(바 전체=총 지출, 아래 진함=내 부담) + 연/월/일 탭
+  const unit=(_pmDashUnit==='year'||_pmDashUnit==='day')?_pmDashUnit:'month';
+  const buckets=_pmBucketPoints(s.recPoints,unit);
+  const peak=Math.max(1,...buckets.map(b=>b.t));
+  const sumT=buckets.reduce((a,b)=>a+b.t,0),sumM=buckets.reduce((a,b)=>a+b.m,0),sumC=buckets.reduce((a,b)=>a+b.cnt,0);
+  const bars=buckets.map(b=>{const has=b.t>0||b.m>0;const hh=b.t>0?Math.max(3,Math.round(b.t/peak*100)):0;const inner=b.t>0?Math.min(100,Math.max(0,b.m/b.t*100)):0;
+    return `<div class="pm-dash-lp-col"><div class="pm-dash-lp-bar${has?' has':''}" style="height:${hh}%"><i style="height:${inner}%"></i></div></div>`;}).join('');
+  const xax=buckets.map(b=>`<span>${e(b.lbl)}</span>`).join('');
+  const tabs=[['year','연간'],['month','월별'],['day','일별']].map(([k,l])=>`<button type="button" class="pm-dash-tab${unit===k?' on':''}" onclick="_pmDashSetUnit('${k}')">${l}</button>`).join('');
+  const trend=`<div class="pm-dash-sec">
+    <div class="pm-dash-head"><span class="pm-dash-title">지출 추이</span><div class="pm-dash-tabs">${tabs}</div></div>
+    <div class="pm-dash-lp-wrap">
+      <div class="pm-dash-lp-sum">${sumC}건 · 총 <b>${fmt(sumT)}원</b> / 내 부담 <b class="mine">${fmt(sumM)}원</b></div>
+      ${buckets.length?`<div class="pm-dash-lp-plot">${bars}</div><div class="pm-dash-lp-x">${xax}</div>`:'<div class="pm-dash-lp-empty">기록이 없어요</div>'}
+      <div class="pm-dash-lp-leg"><span><i class="t"></i>총 지출</span><span><i class="m"></i>내 부담</span><em>내 부담 = 더치페이 분담·한턱 반영</em></div>
+    </div></div>`;
+  // ④ 카테고리 분해
+  const catMax=s.byCategory.length?s.byCategory[0].amount:1;
+  const catRows=s.byCategory.map(c=>`<div class="pm-dash-cat-row">
+      <span class="pm-dash-cat-ico">${getIconSvg({iconOverride:c.key})}</span>
+      <span class="pm-dash-cat-lbl">${e(CAT_LABEL[c.key]||'기타')}</span>
+      <span class="pm-dash-cat-bar"><span class="pm-dash-cat-fill" style="width:${Math.max(3,Math.round(c.amount/catMax*100))}%"></span></span>
+      <span class="pm-dash-cat-amt">${fmt(c.amount)}<span class="won">원</span></span>
+    </div>`).join('');
+  const cats=s.byCategory.length?`<div class="pm-dash-sec">
+    <div class="pm-dash-head"><span class="pm-dash-title">카테고리</span><span class="pm-dash-sub">상호명 자동분류</span></div>
+    <div class="pm-dash-cat-list">${catRows}</div></div>`:'';
+  // ⑤ 사람별 전체 누적 — 탭하면 그 사람으로 이동
+  const ppl=s.byPerson.slice(0,12);
+  const pplRows=ppl.map(p=>`<div class="pm-dash-ppl-row pm-name-tap" onclick="_pmFilterByName('${jsa(p.name)}')">
+      <span class="pm-dash-ppl-name">${e(p.name)}</span>
+      <span class="pm-dash-ppl-cnt">${p.count}회</span>
+      <span class="pm-dash-ppl-treat">${p.treat>0?'🎉 '+fmt(p.treat)+'원':'<span class="mut">—</span>'}</span>
+    </div>`).join('');
+  const people=ppl.length?`<div class="pm-dash-sec">
+    <div class="pm-dash-head"><span class="pm-dash-title">사람별 누적</span><span class="pm-dash-sub">함께한 횟수 · 쏜 금액</span></div>
+    <div class="pm-dash-ppl-head"><span>이름</span><span>횟수</span><span>쏜 금액</span></div>
+    <div class="pm-dash-ppl-list">${pplRows}</div></div>`:'';
+  return `<div class="pm-dash">${summary}${due}${trend}${cats}${people}</div>`;
 }
 function _pmMonthlyHtml(allRecs){
   const months={};
@@ -4338,32 +4529,35 @@ function renderMobileBody(){
 }
 
 // ── 순수 계산 함수 ──────────────────────────────────────────────────────────
-function computeShares(){
+// ppl/its 인자가 없으면 전역(people/items)을 쓴다 — 기존 호출 100% 동일.
+// 기록(history record)의 people/items를 넘기면 그 정산의 분담을 그대로 계산(대시보드 '내 부담' 등). v8.08
+function computeShares(ppl,its){
+  const P=ppl||people,IT=its||items;
   const paid={},owes={},details={},owesFloat={};
-  people.forEach(p=>{paid[p]=0;owes[p]=0;details[p]=[];owesFloat[p]=0;});
+  P.forEach(p=>{paid[p]=0;owes[p]=0;details[p]=[];owesFloat[p]=0;});
   const payerSet={};
-  items.forEach(it=>{
+  IT.forEach(it=>{
     if(!it.amount||+it.amount===0)return;if(it.isTreat)return;
-    const amt=+it.amount,mems=it.members.length?it.members:[...people],n=mems.length;
-    if(it.payer&&people.includes(it.payer))paid[it.payer]=(paid[it.payer]||0)+amt;
-    if(it.payer&&people.includes(it.payer))payerSet[it.payer]=true;
+    const amt=+it.amount,mems=it.members&&it.members.length?it.members:[...P],n=mems.length;
+    if(it.payer&&P.includes(it.payer))paid[it.payer]=(paid[it.payer]||0)+amt;
+    if(it.payer&&P.includes(it.payer))payerSet[it.payer]=true;
     const override=it.rounderOverride;
     const alc=_alcoholInfo(it,mems);
     if(alc){
       // 술값(A)은 음주자끼리, 나머지(base)는 전원이 나눈다. 차액은 전역 반올림이 처리(결제자 우선).
       const bEach=alc.base/n,aEach=alc.A/alc.drinkers.length;
-      mems.forEach(p=>{const share=bEach+(alc.ndSet.has(p)?0:aEach);owesFloat[p]=(owesFloat[p]||0)+share;details[p].push({name:it.name||'(이름 없음)',payer:it.payer,share,extra:false});});
+      mems.forEach(p=>{const share=bEach+(alc.ndSet.has(p)?0:aEach);owesFloat[p]=(owesFloat[p]||0)+share;details[p]&&details[p].push({name:it.name||'(이름 없음)',payer:it.payer,share,extra:false});});
     }else if(override&&mems.includes(override)){
       const base=Math.floor(amt/n),rem=amt-base*n;
-      mems.forEach(p=>{const share=p===override?base+rem:base;owesFloat[p]=(owesFloat[p]||0)+share;details[p].push({name:it.name||'(이름 없음)',payer:it.payer,share,extra:p===override&&rem>0});});
+      mems.forEach(p=>{const share=p===override?base+rem:base;owesFloat[p]=(owesFloat[p]||0)+share;details[p]&&details[p].push({name:it.name||'(이름 없음)',payer:it.payer,share,extra:p===override&&rem>0});});
     }else{
       const exact=amt/n;
-      mems.forEach(p=>{owesFloat[p]=(owesFloat[p]||0)+exact;details[p].push({name:it.name||'(이름 없음)',payer:it.payer,share:exact,extra:false});});
+      mems.forEach(p=>{owesFloat[p]=(owesFloat[p]||0)+exact;details[p]&&details[p].push({name:it.name||'(이름 없음)',payer:it.payer,share:exact,extra:false});});
     }
   });
-  const totalAmt=items.filter(it=>!it.isTreat).reduce((s,it)=>s+(+it.amount||0),0);
+  const totalAmt=IT.filter(it=>!it.isTreat).reduce((s,it)=>s+(+it.amount||0),0);
   let totalFloor=0;const fracParts=[];
-  people.forEach(p=>{const f=owesFloat[p]||0;const fl=Math.floor(f);owes[p]=fl;totalFloor+=fl;fracParts.push({p,frac:f-fl});});
+  P.forEach(p=>{const f=owesFloat[p]||0;const fl=Math.floor(f);owes[p]=fl;totalFloor+=fl;fracParts.push({p,frac:f-fl});});
   let diff=Math.round(totalAmt-totalFloor);
   if(diff!==0){fracParts.sort((a,b)=>{const ap=payerSet[a.p]?1:0,bp=payerSet[b.p]?1:0;if(ap!==bp)return bp-ap;return b.frac-a.frac;});if(fracParts.length)owes[fracParts[0].p]+=diff;}
   return{paid,owes,details,hasRounding:diff!==0};
