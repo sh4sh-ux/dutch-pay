@@ -397,8 +397,8 @@ svg{display:block;flex-shrink:0;}
 .pay-waive-btn{margin-left:4px;flex-shrink:0;border:1px solid var(--sep2);background:var(--card);color:var(--label2);font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;cursor:pointer;font-family:inherit;line-height:1;transition:all .15s;-webkit-tap-highlight-color:transparent;}
 .pay-waive-btn:hover{border-color:var(--label3);}
 .pay-waive-btn.on{background:var(--label2);border-color:var(--label2);color:#fff;}
-/* 차액 퉁 — '완료'로 정리되는 거라 on 상태는 초록 (전체 퉁 회색과 구분) (v8.11) */
-.pm-shortwaive-row .pay-waive-btn{margin-left:auto;}
+/* 차액 퉁 — '완료'로 정리되는 거라 on 상태는 초록 (전체 퉁 회색과 구분). 버튼은 입금완료 밑(왼쪽). (v8.11/8.12) */
+.pm-shortwaive-row .pay-waive-btn{margin-left:0;}
 .pm-shortwaive-btn.on{background:var(--green);border-color:var(--green);color:#fff;}
 .pm-pay-field{transition:opacity .15s;}
 .pay-panel.pm-waived .pm-pay-field,.pm-hist-edit-panel.pm-waived .pm-pay-field,.rc-txn-edit-panel.pm-waived .pm-pay-field{opacity:.38;pointer-events:none;}
@@ -1884,8 +1884,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.11';
-const BUILD_TIME='2026-11-18 20:30';
+const APP_VERSION='v8.12';
+const BUILD_TIME='2026-11-18 22:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4310,7 +4310,7 @@ function histPmToggleDone(recId,txnKey){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
   const p=rec.payments[txnKey];p.done=!p.done;if(p.done)p.waived=false;else p.shortWaived=false;
-  _saveRecPayments(recId,rec,allRec,{immediate:true});
+  _saveRecPayments(recId,rec,allRec,{immediate:true,patch:false});
   if(p.done)_checkAllPaidAutoSaveForRec(rec);
 }
 // 과거 기록 퉁 토글 (v7.06)
@@ -4318,7 +4318,7 @@ function histPmToggleWaive(recId,txnKey){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
   const p=rec.payments[txnKey];p.waived=!p.waived;if(p.waived){p.done=false;p.shortWaived=false;}
-  _saveRecPayments(recId,rec,allRec,{immediate:true});
+  _saveRecPayments(recId,rec,allRec,{immediate:true,patch:false});
   if(p.waived)_checkAllPaidAutoSaveForRec(rec);
 }
 // 과거 기록 차액 퉁 (v8.11)
@@ -4326,7 +4326,7 @@ function histPmToggleShortWaive(recId,txnKey){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
   const p=rec.payments[txnKey];p.shortWaived=!p.shortWaived;
-  _saveRecPayments(recId,rec,allRec,{immediate:true});
+  _saveRecPayments(recId,rec,allRec,{immediate:true,patch:false});
   _checkAllPaidAutoSaveForRec(rec);
 }
 function histPmUpdate(recId,txnKey,field,val){
@@ -5347,9 +5347,7 @@ async function _resealArchivePayments(recId,payments){
     await _saveFixedArchives(newArcs);
     localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(loadHistory())));
     if(hDbxGetToken()){try{await _syncFixedArchives(hDbxGetToken());}catch(e){}try{hSyncDropbox(true);}catch(e){}}
-    try{_patchHistResults();}catch(e){}
-    try{_refreshHistoryLockSurfaces();}catch(e){}
-    try{_refreshHistDrawer();}catch(e){}
+    // 전체 재렌더·잠금서피스 갱신은 하지 않는다 — 패널이 닫혀 '튕기는' 느낌. 입금은 잠금 상태 불변, 호출부가 제자리 갱신. (v8.12)
     return true;
   }catch(e){return false;}
 }
@@ -5815,20 +5813,38 @@ function _rcPatchTxnPanel(recId,txnKey,pm){
   if(wb)wb.className='pay-waive-btn'+(pm.waived?' on':'');
   panel.classList.toggle('pm-waived',!!pm.waived);
 }
+// 카드의 입금행(.rc-txn-row) 배지를 제자리 갱신 — 전체 재렌더 없이. pm 넘기면 그걸(인메모리 최신) 씀. (v8.12)
+function _pmRefreshTxnRow(recId,txnKey,pm,billing){
+  if(!pm){const rec=loadHistory().find(r=>r.id===recId);if(!rec)return;pm=(rec.payments||{})[txnKey]||{};const txn=(rec.txns||[]).find(t=>`${t.from}|${t.to}`===txnKey);billing=txn?txn.amt:0;}
+  const badge=_paymentBadgeHtml(pm,billing,{owner:(txnKey.split('|')[1]||'')===_myName});
+  document.querySelectorAll(`.rc-txn-row[data-rec-id="${CSS.escape(String(recId))}"][data-txn-key="${CSS.escape(txnKey)}"]`).forEach(row=>{
+    const left=row.querySelector('.rc-txn-left');if(!left)return;
+    const people=left.querySelector('.rc-txn-people');if(!people)return;
+    while(people.nextSibling)left.removeChild(people.nextSibling);
+    people.insertAdjacentHTML('afterend',badge);
+  });
+}
+// 입금 토글(입금/퉁/차액퉁) 후: 패널·차액행·카드배지 제자리 갱신 + 즉시 저장(재렌더 없음). (v8.12)
+function _rcAfterPayToggle(recId,txnKey,p,rec,allRec){
+  _rcPatchTxnPanel(recId,txnKey,p);
+  const panel=document.querySelector(`.rc-txn-edit-panel[data-rec-id="${CSS.escape(String(recId))}"][data-txn-key="${CSS.escape(txnKey)}"]`);
+  const txn=(rec.txns||[]).find(t=>`${t.from}|${t.to}`===txnKey);const billing=txn?txn.amt:0;
+  _patchShortWaiveRow(panel,p,billing);
+  _pmRefreshTxnRow(recId,txnKey,p,billing); // 인메모리 최신 pm으로 배지 갱신
+  _saveRecPayments(recId,rec,allRec,{immediate:true,patch:false});
+}
 function rcTxnToggleDone(recId,txnKey){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
   const p=rec.payments[txnKey];p.done=!p.done;if(p.done)p.waived=false;else p.shortWaived=false;
-  _rcPatchTxnPanel(recId,txnKey,p);
-  _saveRecPayments(recId,rec,allRec,{immediate:true});
+  _rcAfterPayToggle(recId,txnKey,p,rec,allRec);
   if(p.done)_checkAllPaidAutoSaveForRec(rec);
 }
 function rcTxnToggleWaive(recId,txnKey){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
   const p=rec.payments[txnKey];p.waived=!p.waived;if(p.waived){p.done=false;p.shortWaived=false;}
-  _rcPatchTxnPanel(recId,txnKey,p);
-  _saveRecPayments(recId,rec,allRec,{immediate:true});
+  _rcAfterPayToggle(recId,txnKey,p,rec,allRec);
   if(p.waived)_checkAllPaidAutoSaveForRec(rec);
 }
 // 차액 퉁 — 입금완료+실수령<청구일 때 모자란 차액만 '안 받기로' 완료 (v8.11)
@@ -5836,7 +5852,7 @@ function rcTxnToggleShortWaive(recId,txnKey){
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   if(!rec.payments)rec.payments={};if(!rec.payments[txnKey])rec.payments[txnKey]={};
   const p=rec.payments[txnKey];p.shortWaived=!p.shortWaived;
-  _saveRecPayments(recId,rec,allRec,{immediate:true});
+  _rcAfterPayToggle(recId,txnKey,p,rec,allRec);
   _checkAllPaidAutoSaveForRec(rec);
 }
 function rcTxnUpdate(recId,txnKey,field,val){
