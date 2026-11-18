@@ -1349,6 +1349,82 @@ suite('TC30: 결제자별 한턱 합 _treatPayerRows (정산·상세 이미지 �
   });
 });
 
+suite('TC31: 대시보드 집계 — 내 부담·버킷·요약 정합 [v8.08]', () => {
+  const me='조상현';
+  const setMe=()=>APP.__test.setMyName(me);
+  const clrMe=()=>APP.__test.setMyName('');
+
+  test('computeShares(ppl,its) — 인자로 넘긴 정산의 분담 계산(전역과 무관)', () => {
+    const {owes}=APP.computeShares(['조상현','김영석','이종현','박민수'],[
+      {name:'고기',amount:168000,payer:'조상현',isTreat:false,members:['조상현','김영석','이종현','박민수']},
+      {name:'노래방',amount:23000,payer:'조상현',isTreat:false,members:['조상현','김영석','이종현','박민수']}
+    ]);
+    expect(owes['조상현']).toBe(47750); // 42000 + 5750
+  });
+
+  test('_recMyBurden = 더치페이 분담 + 내가 쏜 한턱', () => {
+    setMe();
+    const b=APP._recMyBurden({people:['조상현','김영석','이종현'],items:[
+      {name:'스벅',amount:21000,payer:'조상현',isTreat:true,members:['조상현','김영석','이종현']},   // 내 한턱 +21000
+      {name:'영화',amount:45000,payer:'이종현',isTreat:false,members:['조상현','김영석','이종현']},  // 분담 15000
+      {name:'택시',amount:30000,payer:'조상현',isTreat:false,members:['조상현','김영석','이종현']}   // 분담 10000
+    ]});
+    expect(b).toBe(46000); // 25000 + 21000
+    clrMe();
+  });
+
+  test('_recMyBurden — 남이 쏜 한턱은 내 부담 아님(0)', () => {
+    setMe();
+    const b=APP._recMyBurden({people:['조상현','김영석'],items:[
+      {name:'밥',amount:40000,payer:'김영석',isTreat:true,members:['조상현','김영석']}
+    ]});
+    expect(b).toBe(0);
+    clrMe();
+  });
+
+  test('_recMyBurden — _myName 미설정이면 0', () => {
+    clrMe();
+    const b=APP._recMyBurden({people:['조상현','김영석'],items:[
+      {name:'밥',amount:40000,payer:'김영석',isTreat:false,members:['조상현','김영석']}
+    ]});
+    expect(b).toBe(0);
+  });
+
+  test('_pmBucketPoints — 월별 t·m 합산 + 앞 빈칸 정리', () => {
+    const pts=[{date:'2026-09-06',total:243000,mine:47750},{date:'2026-10-11',total:96000,mine:46000},{date:'2026-10-25',total:312000,mine:50000}];
+    const mo=APP._pmBucketPoints(pts,'month');
+    expect(mo.length).toBe(2);           // 앞 빈 달 trim
+    expect(mo[0].key).toBe('2026-09');
+    expect(mo[0].t).toBe(243000);
+    expect(mo[1].t).toBe(408000);        // 96000 + 312000
+    expect(mo[1].m).toBe(96000);         // 46000 + 50000
+  });
+
+  test('_pmBucketPoints — 연간 합산', () => {
+    const pts=[{date:'2026-09-06',total:243000,mine:47750},{date:'2026-10-11',total:96000,mine:46000}];
+    const yr=APP._pmBucketPoints(pts,'year');
+    const last=yr[yr.length-1];
+    expect(last.key).toBe('2026');
+    expect(last.t).toBe(339000);
+    expect(last.m).toBe(93750);
+  });
+
+  test('_pmDashboardStats — 요약=내역 정합(카테고리 합=총지출, 미수 합=outstanding)', () => {
+    setMe();
+    const recs=[{id:'a',dateStart:'2026-10-01',total:90000,people:['조상현','김영석','이종현'],
+      items:[{name:'고기',amount:90000,payer:'조상현',isTreat:false,members:['조상현','김영석','이종현']}],
+      txns:[{from:'김영석',to:'조상현',amt:30000},{from:'이종현',to:'조상현',amt:30000}],
+      payments:{'김영석|조상현':{done:true,amount:30000},'이종현|조상현':{done:false}}}];
+    const s=APP._pmDashboardStats(recs);
+    expect(s.totalSpend).toBe(90000);
+    expect(s.byCategory.reduce((a,c)=>a+c.amount,0)).toBe(90000);         // 카테고리 합 = 총지출
+    expect(s.byOutstanding.reduce((a,p)=>a+p.amount,0)).toBe(s.outstanding); // 미수 합 = 요약
+    expect(s.outstanding).toBe(30000);  // 이종현 미입금
+    expect(s.totalMine).toBe(30000);    // 내 분담 90000/3
+    clrMe();
+  });
+});
+
 suite('TC29: 동기화 병합이 영수증 참조(receiptUrl)를 안 지운다 [v7.85]', () => {
   const M=(remote,local)=>APP._computeHistoryMerge(remote,local,new Set(),{});
   const rec=(id,savedAt,receiptUrl)=>({id,savedAt,dateStart:'2026-11-03',people:['조상현'],total:100,items:[{id:1,name:'전북상회',amount:100,payer:'조상현',members:['조상현'],receiptUrl}]});
@@ -1422,6 +1498,7 @@ function render() {
       helper.textContent = `
         window.__test = {
           set: function(p, i){ people = p; items = i; },
+          setMyName: function(n){ try { _myName = n; } catch(e){} },
           // APP_VERSION은 최상위 const라 window 속성이 아니다. 이 스코프에서 읽어 넘긴다.
           ver: function(){ try { return APP_VERSION; } catch(e) { return null; } },
           resetFixed: function(){ try { _fixedArchivesCache = null; _fixedHydratePromise = null; } catch(e) {} },
