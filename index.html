@@ -562,8 +562,6 @@ svg{display:block;flex-shrink:0;}
 .pm-save-btn:active{opacity:.85;}
 .pm-dbx-btn{display:block;width:100%;margin-top:8px;padding:13px;background:transparent;color:var(--blue);border:1.5px solid var(--blue);border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;}
 .pm-dbx-btn:active{opacity:.75;}
-.pm-close-btn{width:100%;padding:11px;background:var(--fill2);color:var(--label2);border:1px solid var(--sep);border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:4px;}
-.pm-close-btn:active{opacity:.85;}
 .rc-txn-row.clickable{cursor:pointer;user-select:none;}
 .rc-txn-row.clickable:hover{background:var(--fill);}
 .rc-txn-status{display:flex;align-items:center;gap:8px;}
@@ -1905,8 +1903,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.21';
-const BUILD_TIME='2026-11-19 12:30';
+const APP_VERSION='v8.22';
+const BUILD_TIME='2026-11-19 13:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4346,7 +4344,7 @@ function toggleHistRecordPanel(recId,txnKey){
   const diffVal=(pm.amount!=null&&pm.amount!=='')?(+pm.amount-baseAmt):null;
   const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
   const panel=document.createElement('div');panel.className='pm-hist-edit-panel'+(pm.waived?' pm-waived':'');
-  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${(pm.done&&!pm.waived)?' on':''}" onclick="histPmToggleDone('${jsa(recId)}','${jsa(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${(pm.done&&!pm.waived)?' on':''}">${pm.waived?'🤝 퉁':(pm.done?'입금완료':'미입금')}</span><button type="button" class="pay-waive-btn${pm.waived?' on':''}" onclick="histPmToggleWaive('${jsa(recId)}','${jsa(txnKey)}')">🤝 퉁</button></div>${_shortWaiveRowHtml(recId,txnKey,pm,baseAmt,'hist')}<div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="histPmUpdateAmt('${jsa(recId)}','${jsa(txnKey)}',this)"/><span class="pay-end"><span class="pay-unit">원</span>${diffHtml}</span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<span class="pay-end pay-end-btns"><button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>histPmUpdate('${jsa(recId)}','${jsa(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="histPmSetNow('${jsa(recId)}','${jsa(txnKey)}')">지금</button></span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">계좌</span>${_histAcctHtml(recId,txnKey,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="histPmUpdate('${jsa(recId)}','${jsa(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="toggleHistRecordPanel('${jsa(recId)}','${jsa(txnKey)}')">저장</button>`;
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${(pm.done&&!pm.waived)?' on':''}" onclick="histPmToggleDone('${jsa(recId)}','${jsa(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${(pm.done&&!pm.waived)?' on':''}">${pm.waived?'🤝 퉁':(pm.done?'입금완료':'미입금')}</span><button type="button" class="pay-waive-btn${pm.waived?' on':''}" onclick="histPmToggleWaive('${jsa(recId)}','${jsa(txnKey)}')">🤝 퉁</button></div>${_shortWaiveRowHtml(recId,txnKey,pm,baseAmt,'hist')}<div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="histPmUpdateAmt('${jsa(recId)}','${jsa(txnKey)}',this)"/><span class="pay-end"><span class="pay-unit">원</span>${diffHtml}</span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<span class="pay-end pay-end-btns"><button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>histPmUpdate('${jsa(recId)}','${jsa(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="histPmSetNow('${jsa(recId)}','${jsa(txnKey)}')">지금</button></span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">계좌</span>${_histAcctHtml(recId,txnKey,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="histPmUpdate('${jsa(recId)}','${jsa(txnKey)}','memo',this.value)"/></div>`;
   card.appendChild(panel);
 }
 function histPmToggleDone(recId,txnKey){
@@ -5402,7 +5400,9 @@ async function _resealArchivePayments(recId,payments){
     const newArcs=arcs.slice();newArcs[aIdx]={...f,payload,guard:_fixedGuard(payload),sha256:await _hSha256b64url(_stableJson(payload))};
     await _saveFixedArchives(newArcs);
     localStorage.setItem(HISTORY_KEY,JSON.stringify(_enforceFixedHistory(loadHistory())));
-    if(hDbxGetToken()){try{await _syncFixedArchives(hDbxGetToken());}catch(e){}try{hSyncDropbox(true);}catch(e){}}
+    // Dropbox 업로드는 백그라운드 — await 하면 입금/퉁 토글이 업로드(수초)를 기다려 패널이 랙 걸린다.
+    // 로컬 재봉인(_saveFixedArchives)은 이미 끝났고 실패해도 다음 동기화에서 재시도. (v8.22, _resealArchiveFull과 동일)
+    if(hDbxGetToken()){Promise.resolve().then(()=>_syncFixedArchives(hDbxGetToken())).catch(()=>{});try{hSyncDropbox(true);}catch(e){}}
     // 전체 재렌더·잠금서피스 갱신은 하지 않는다 — 패널이 닫혀 '튕기는' 느낌. 입금은 잠금 상태 불변, 호출부가 제자리 갱신. (v8.12)
     return true;
   }catch(e){return false;}
@@ -5864,8 +5864,9 @@ function toggleRcTxnPanel(recId,txnKey){
   const row=document.querySelector(`.rc-txn-row[data-rec-id="${CSS.escape(recId)}"][data-txn-key="${CSS.escape(txnKey)}"]`);
   if(!row)return;
   const next=row.nextElementSibling;
-  if(next&&next.classList.contains('rc-txn-edit-panel')){next.remove();return;}
-  document.querySelectorAll('.rc-txn-edit-panel').forEach(p=>p.remove());
+  // 행을 다시 탭해 닫을 때도 디바운스 대기 중인 잠긴 기록 재봉인을 flush한다(저장 버튼 제거 후에도 유실 방지, v8.22).
+  if(next&&next.classList.contains('rc-txn-edit-panel')){_flushResealPayments();next.remove();return;}
+  _flushResealPayments();document.querySelectorAll('.rc-txn-edit-panel').forEach(p=>p.remove());
   const allRec=loadHistory();const rec=allRec.find(r=>r.id===recId);if(!rec)return;
   const pm=(rec.payments||{})[txnKey]||{};
   const txn=(rec.txns||[]).find(t=>`${t.from}|${t.to}`===txnKey);
@@ -5875,7 +5876,7 @@ function toggleRcTxnPanel(recId,txnKey){
   const diffHtml=diffVal!==null?`<span class="pay-diff-badge ${diffVal>0?'pos':diffVal<0?'neg':'zero'}">${diffVal>0?'+':''}${fmt(diffVal)}원</span>`:'';
   const panel=document.createElement('div');panel.className='rc-txn-edit-panel'+(pm.waived?' pm-waived':'');
   panel.setAttribute('data-rec-id',recId);panel.setAttribute('data-txn-key',txnKey);
-  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${(pm.done&&!pm.waived)?' on':''}" onclick="rcTxnToggleDone('${jsa(recId)}','${jsa(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${(pm.done&&!pm.waived)?' on':''}">${pm.waived?'🤝 퉁':(pm.done?'입금완료':_rcPendingLbl)}</span><button type="button" class="pay-waive-btn${pm.waived?' on':''}" onclick="rcTxnToggleWaive('${jsa(recId)}','${jsa(txnKey)}')">🤝 퉁</button></div>${_shortWaiveRowHtml(recId,txnKey,pm,baseAmt,'rc')}<div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="rcTxnUpdateAmt('${jsa(recId)}','${jsa(txnKey)}',this)"/><span class="pay-end"><span class="pay-unit">원</span>${diffHtml}</span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<span class="pay-end pay-end-btns"><button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="rcTxnSetNow('${jsa(recId)}','${jsa(txnKey)}')">지금</button></span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">계좌</span>${_rcAcctHtml(recId,txnKey,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','memo',this.value)"/></div><button class="pm-close-btn" onclick="_closeRcTxnPanel('${jsa(recId)}','${jsa(txnKey)}')">저장</button>`;
+  panel.innerHTML=`<div class="pay-panel-row"><span class="pay-panel-lbl">입금</span><div class="pay-toggle-track${(pm.done&&!pm.waived)?' on':''}" onclick="rcTxnToggleDone('${jsa(recId)}','${jsa(txnKey)}')"><div class="pay-toggle-thumb"></div></div><span class="pay-toggle-lbl${(pm.done&&!pm.waived)?' on':''}">${pm.waived?'🤝 퉁':(pm.done?'입금완료':_rcPendingLbl)}</span><button type="button" class="pay-waive-btn${pm.waived?' on':''}" onclick="rcTxnToggleWaive('${jsa(recId)}','${jsa(txnKey)}')">🤝 퉁</button></div>${_shortWaiveRowHtml(recId,txnKey,pm,baseAmt,'rc')}<div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">실수령액</span><input class="pay-inp" type="text" inputmode="numeric" placeholder="${fmt(baseAmt)}" value="${pm.amount!=null&&pm.amount!==''?fmt(+pm.amount):''}" oninput="rcTxnUpdateAmt('${jsa(recId)}','${jsa(txnKey)}',this)"/><span class="pay-end"><span class="pay-unit">원</span>${diffHtml}</span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">입금일시</span>${_dtpHtml(pm.timestamp||'','','pay-date-wrap')}<span class="pay-end pay-end-btns"><button class="pay-now-btn" onclick="_dtpRowConfirm(this,v=>rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','timestamp',v))">확인</button><button class="pay-now-btn" onclick="rcTxnSetNow('${jsa(recId)}','${jsa(txnKey)}')">지금</button></span></div><div class="pay-panel-row pm-pay-field"><span class="pay-panel-lbl">계좌</span>${_rcAcctHtml(recId,txnKey,pm.account)}</div><div class="pay-panel-row"><span class="pay-panel-lbl">메모</span><input class="pay-inp" type="text" placeholder="메모" value="${ea(pm.memo||'')}" oninput="rcTxnUpdate('${jsa(recId)}','${jsa(txnKey)}','memo',this.value)"/></div>`;
   row.insertAdjacentElement('afterend',panel);
 }
 function _rcPatchTxnPanel(recId,txnKey,pm){
@@ -5951,11 +5952,6 @@ function rcTxnSetNow(recId,txnKey){
   rec.payments[txnKey].timestamp=ts;_saveRecPayments(recId,rec,allRec,{patch:false});
   const panel=document.querySelector(`.rc-txn-edit-panel[data-rec-id="${CSS.escape(recId)}"][data-txn-key="${CSS.escape(txnKey)}"]`);
   if(panel)_dtpSetValue(panel.querySelector('.dtp-wrap'),ts);
-}
-function _closeRcTxnPanel(recId,txnKey){
-  _flushResealPayments(); // 잠긴 기록 입금 변경을 닫을 때 즉시 재봉인(디바운스 대기분 반영)
-  document.querySelectorAll('.rc-txn-edit-panel').forEach(p=>p.remove());
-  _refreshRcCard(recId);_patchHistResults();
 }
 function _refreshRcCard(recId){
   const card=document.querySelector(`.record-card[data-rec-id="${CSS.escape(recId)}"]`);

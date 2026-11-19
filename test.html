@@ -1078,6 +1078,16 @@ suite('TC22d: 같은 정산(지문 동일) 중복 정리 [v6.66]', () => {
   test('동기화 직후에도 지문 정리를 돌린다 — hSyncDropbox가 _cleanupSameSettlementDuplicates 호출 [v8.21]', () => {
     if(!APP.hSyncDropbox.toString().includes('_cleanupSameSettlementDuplicates'))throw new Error('동기화 병합 후 지문 정리 호출 누락');
   });
+  test('입금 패널에 가짜 저장(pm-close-btn) 버튼 없음 + 재탭 닫기가 재봉인 flush [v8.22]', () => {
+    // 입금은 토글·입력마다 자동저장 — 패널 하단 '저장' 버튼은 닫기만 하던 가짜 버튼(제거).
+    const rc=APP.toggleRcTxnPanel.toString();
+    if(rc.includes('pm-close-btn'))throw new Error('rc-txn 입금 패널에 저장 버튼이 남아 있음');
+    // 저장 버튼 제거 후, 행 재탭으로 닫을 때도 디바운스 대기 중인 잠긴 기록 재봉인을 flush해야 유실 없음
+    if(!rc.includes('_flushResealPayments'))throw new Error('rc-txn 재탭 닫기 flush 누락');
+    const hp=APP.toggleHistRecordPanel.toString();
+    if(hp.includes('pm-close-btn'))throw new Error('histPm 입금 패널에 저장 버튼이 남아 있음');
+    if(!hp.includes('_flushResealPayments'))throw new Error('histPm 재탭 닫기 flush 누락');
+  });
 });
 
 suite('TC23: 입금 달력·시간 팝업 레이아웃 [v6.50]', () => {
