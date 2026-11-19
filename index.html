@@ -1216,7 +1216,7 @@ svg{display:block;flex-shrink:0;}
 .hist-bulk-detail-btn:disabled{opacity:.55;cursor:default;}
 /* 배지를 금액 왼쪽 같은 줄에 — 배지 유무로 카드 높이가 바뀌지 않게 (v7.71) */
 .rc-amt-line{display:flex;align-items:center;justify-content:flex-end;gap:8px;}
-.rc-mytreat-line{display:flex;justify-content:flex-end;}
+.rc-mytreat-line{display:flex;align-items:center;justify-content:flex-end;gap:6px;}
 .rc-settle-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;line-height:1;padding:3px 8px;border-radius:100px;white-space:nowrap;}
 .rc-settle-badge.pos{background:var(--green-bg);color:var(--green-txt);}
 .rc-settle-badge.neg{background:var(--red-bg);color:var(--red);}
@@ -4125,7 +4125,7 @@ function _pmHistResultsHtml(){
     const bodyInner=`${itemsHtml}${txnsHtml}`;
     const bodyHtml=`<div class="rc-body pm-rec-detail" style="display:none">${bodyInner}</div>`;
     const footHtml=_cardFootHtml(c.rec);
-    return `<div class="record-card pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="rc-hd" onclick="togglePmRecCard('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')"><div class="rc-meta"><div class="rc-date">${e(dateStr)}</div><div class="rc-name">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="rc-people">${e(members)}</div></div><div class="rc-right"><div class="rc-amt-line">${treatLineHtml}${badgeHtml}${amtHtml}</div>${myTreatLineHtml?`<div class="rc-mytreat-line">${myTreatLineHtml}</div>`:''}<span class="rc-chevron pm-record-chev">▼</span></div></div>${bodyHtml}${footHtml}</div>`;
+    return `<div class="record-card pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="rc-hd" onclick="togglePmRecCard('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')"><div class="rc-meta"><div class="rc-date">${e(dateStr)}</div><div class="rc-name">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="rc-people">${e(members)}</div></div><div class="rc-right"><div class="rc-amt-line">${treatLineHtml}${badgeHtml}${amtHtml}</div>${myTreatLineHtml?`<div class="rc-mytreat-line">${myTreatLineHtml}<span class="rc-chevron pm-record-chev">▼</span></div>`:`<span class="rc-chevron pm-record-chev">▼</span>`}</div></div>${bodyHtml}${footHtml}</div>`;
   };
   // 년도 선택 시 월별 그룹, 특정 월/전체 시 flat
   let cardsHtml='';
