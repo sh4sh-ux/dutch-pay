@@ -1240,6 +1240,40 @@ suite('TC26: 정산상태 _personSettleDelta — 내가 받을 돈만 [v7.73]', 
     expect(W(rW)).toBe(866);
     expect(D(rW)).toBe(null);
   });
+  // 퉁 금액에 차액 퉁(shortWaived)도 포함 [v8.23]
+  test('_personSettleWaived — 차액 퉁(shortWaived) 차액도 퉁 금액에 포함', () => {
+    const W=(r)=>APP._personSettleWaived(r,'신유철','조상현');
+    // 청구 100,000, 실수령 95,000 → 모자란 5,000만 안 받기로(차액 퉁)
+    expect(W({txns:[{from:'신유철',to:'조상현',amt:100000}],payments:{'신유철|조상현':{done:true,shortWaived:true,amount:95000}}})).toBe(5000);
+    // 전체 퉁은 그대로 전액
+    expect(W({txns:[{from:'신유철',to:'조상현',amt:866}],payments:{'신유철|조상현':{waived:true}}})).toBe(866);
+    // done 아니면 차액 퉁 무효
+    expect(W({txns:[{from:'신유철',to:'조상현',amt:100000}],payments:{'신유철|조상현':{shortWaived:true,amount:95000}}})).toBe(0);
+  });
+});
+
+// 수금 사람 검색 요약 배지 — 한턱은 참석(0원) 모임도 포함, 퉁 배지도 초과/한턱과 나란히 표시 [v8.23]
+suite('TC33: 수금 사람 요약 배지 정합 [v8.23]', () => {
+  test('요약 한턱 = 참석(0원) 카드 한턱도 합산 + 퉁 배지 표시', () => {
+    const prevHist=APP.localStorage.getItem('dutchpay_history');
+    // A: 신유철이 108,000 한턱(나한테 낼 돈 0 → 참석 카드) / B: 신유철 67,000 한턱 + 나한테 150,000 낼 돈(txn 카드)
+    // C: 신유철 866 전체 퉁
+    const A={id:'tsA',dateStart:'2026-11-17',people:['신유철','조상현'],total:108000,items:[{id:1,name:'저녁',amount:108000,payer:'신유철',isTreat:true,members:['신유철','조상현']}],txns:[],payments:{}};
+    const B={id:'tsB',dateStart:'2026-10-06',people:['신유철','조상현','이영환'],total:267000,items:[{id:1,name:'술',amount:67000,payer:'신유철',isTreat:true,members:['신유철','조상현','이영환']},{id:2,name:'밥',amount:200000,payer:'조상현',members:['신유철','조상현','이영환']}],txns:[{from:'신유철',to:'조상현',amt:150000}],payments:{'신유철|조상현':{done:true,amount:150000}}};
+    const C={id:'tsC',dateStart:'2026-11-03',people:['신유철','조상현'],total:1732,items:[{id:1,name:'간식',amount:1732,payer:'조상현',members:['신유철','조상현']}],txns:[{from:'신유철',to:'조상현',amt:866}],payments:{'신유철|조상현':{waived:true}}};
+    APP.localStorage.setItem('dutchpay_history',JSON.stringify([A,B,C]));
+    APP.__test.setMyName('조상현');
+    APP._pmSearchInput('신유철');
+    const html=APP._pmHistResultsHtml();
+    const sm=(html.match(/pm-person-name-row[\s\S]*?<\/div>/)||[''])[0];
+    const treat=sm.match(/한턱 ([\d,]+)원/);
+    const waived=sm.match(/🤝 ([\d,]+)원 퉁/);
+    // 복원
+    APP._pmSearchInput('');
+    if(prevHist!=null)APP.localStorage.setItem('dutchpay_history',prevHist);else APP.localStorage.removeItem('dutchpay_history');
+    expect(treat&&treat[1]).toBe('175,000'); // 108,000(참석 카드)+67,000(txn 카드) 모두 포함
+    expect(waived&&waived[1]).toBe('866');    // 퉁 배지가 요약에 표시
+  });
 });
 
 // 기록 검색 오염 2종 수정 [v7.74]:
