@@ -1276,6 +1276,35 @@ suite('TC33: 수금 사람 요약 배지 정합 [v8.23]', () => {
   });
 });
 
+// 내 한턱(파랑) = 특정인 검색 시 그 사람 기록에서 '내가(_myName) 쏜 한턱' 합. 그 사람 한턱(주황)과 분리. [v8.26]
+suite('TC34: 수금 요약·카드 내 한턱(파랑)', () => {
+  test('내 한턱 = 내가 쏜 한턱 합(그 사람 한턱과 분리) + 카드 표시 + 자기검색 제외', () => {
+    const prevHist=APP.localStorage.getItem('dutchpay_history');
+    // r1: 신유철 108,000 한턱 + 내(조상현) 100,000 한턱 / r2: 내 67,000 한턱
+    const r1={id:'mtA',dateStart:'2026-11-17',people:['신유철','조상현'],total:208000,items:[{id:1,name:'저녁',amount:108000,payer:'신유철',isTreat:true,members:['신유철','조상현']},{id:2,name:'마사지',amount:100000,payer:'조상현',isTreat:true,members:['신유철','조상현']}],txns:[],payments:{}};
+    const r2={id:'mtB',dateStart:'2026-10-06',people:['신유철','조상현'],total:67000,items:[{id:1,name:'점심',amount:67000,payer:'조상현',isTreat:true,members:['신유철','조상현']}],txns:[],payments:{}};
+    APP.localStorage.setItem('dutchpay_history',JSON.stringify([r1,r2]));
+    APP.__test.setMyName('조상현');
+    // 신유철 검색: 내 한턱=100,000+67,000=167,000 / 그 사람 한턱=108,000
+    APP._pmSearchInput('신유철');
+    const html=APP._pmHistResultsHtml();
+    const sm=(html.match(/pm-person-card[\s\S]*?pm-month-stats-row/)||[''])[0];
+    const myt=sm.match(/내 한턱 ([\d,]+)원/);
+    const their=sm.match(/>한턱 ([\d,]+)원/);
+    const cardHasMyTreat=/내 한턱 100,000원/.test(html); // r1 카드에 파랑 줄
+    // 조상현(자기) 검색: 내 한턱 안 뜸(중복 방지)
+    APP._pmSearchInput('조상현');
+    const selfHasMyTreat=/내 한턱/.test(APP._pmHistResultsHtml());
+    // 복원
+    APP._pmSearchInput('');
+    if(prevHist!=null)APP.localStorage.setItem('dutchpay_history',prevHist);else APP.localStorage.removeItem('dutchpay_history');
+    expect(myt&&myt[1]).toBe('167,000');
+    expect(their&&their[1]).toBe('108,000');
+    expect(cardHasMyTreat).toBe(true);
+    expect(selfHasMyTreat).toBe(false);
+  });
+});
+
 // 기록 검색 오염 2종 수정 [v7.74]:
 //  (1) 카드에 숨겨진 0원 항목의 이름이 검색에만 걸림 → 0원 항목은 검색 대상에서 제외(카드와 일치).
 //  (2) 사람 이름(어느 기록의 참여자)으로 검색하면, 그 이름이 상호명/항목명에만 든 불참 모임 제외.
