@@ -1265,7 +1265,7 @@ suite('TC33: 수금 사람 요약 배지 정합 [v8.23]', () => {
     APP.__test.setMyName('조상현');
     APP._pmSearchInput('신유철');
     const html=APP._pmHistResultsHtml();
-    const sm=(html.match(/pm-person-name-row[\s\S]*?<\/div>/)||[''])[0];
+    const sm=(html.match(/pm-person-card[\s\S]*?pm-month-stats-row/)||[''])[0]; // 요약 카드(이름 줄+배지 줄)
     const treat=sm.match(/한턱 ([\d,]+)원/);
     const waived=sm.match(/🤝 ([\d,]+)원 퉁/);
     // 복원
