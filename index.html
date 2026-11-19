@@ -1914,8 +1914,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.24';
-const BUILD_TIME='2026-11-19 15:53';
+const APP_VERSION='v8.25';
+const BUILD_TIME='2026-11-19 16:04';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3857,7 +3857,7 @@ function _pmDashTrendPick(ev){
   if(goto){goto.dataset.k=key;goto.innerHTML=`${e(l)} · ${c}건 목록에서 보기 <span class="pm-dash-lp-goto-arr">→</span>`;goto.style.display='flex';}
 }
 function _pmSearchInput(v){_pmHistSearch=v;_patchHistResults();}
-function _pmFilterByName(name){_pmHistSearch=name;const inp=document.querySelector('.pm-search');if(inp){inp.value=name;_chkClear(inp);}_patchHistResults();}
+function _pmFilterByName(name){_pmHistSearch=name;const inp=document.querySelector('.pm-search');if(inp){inp.value=name;_chkClear(inp);}_patchHistResults();const mb=document.getElementById('mBody'),db=document.getElementById('dRBody');if(mb)mb.scrollTop=0;if(db)db.scrollTop=0;window.scrollTo(0,0);}
 function _pmShowPayerItems(nm,ym){
   const allRecs=loadHistory();
   const recs=allRecs.filter(r=>(r.dateStart||r.savedAt||'').slice(0,7)===ym);
