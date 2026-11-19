@@ -1229,6 +1229,7 @@ svg{display:block;flex-shrink:0;}
 .hmn-stat-settle.treat{background:#FFF1E0;color:#E8710A;}
 @media(prefers-color-scheme:dark){.hmn-stat-settle.treat{background:#3a2a10;color:#FB923C;}}
 :root[data-theme="dark"] .hmn-stat-settle.treat{background:#3a2a10;color:#FB923C;}
+:root[data-theme="light"] .hmn-stat-settle.treat{background:#FFF1E0;color:#E8710A;} /* OS 다크+앱 라이트일 때 다크 배경 누수 방지 (v8.26) */
 .hmn-stat-settle+.hmn-stat-settle{margin-left:4px;}
 .hist-dr-sinp-wrap{position:sticky;top:0;z-index:2;background:var(--bg);padding:10px 0 4px;overflow:visible;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .hist-dr-sinp-wrap>.sinp-rel{flex:1 1 110px;min-width:0;}
@@ -1914,8 +1915,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.25';
-const BUILD_TIME='2026-11-19 16:04';
+const APP_VERSION='v8.26';
+const BUILD_TIME='2026-11-19 16:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
