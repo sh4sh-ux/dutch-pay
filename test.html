@@ -1065,6 +1065,19 @@ suite('TC22d: 같은 정산(지문 동일) 중복 정리 [v6.66]', () => {
     const src=APP.saveToHistory.toString();
     if(!src.includes('_histFingerprint(arr[dupIdx])===recordFp'))throw new Error('잠긴 동일 지문 제자리 갱신 분기 누락');
   });
+  test('동기화 병합은 id로만 합쳐 같은 정산이 다른 id면 둘 다 남는다 [v8.21]', () => {
+    // 같은 내용(지문 동일) 다른 id — 기기별로 다른 id가 붙은 과거 중복 상황
+    const a=mk('A',{},'2026-10-28T03:00'),b=mk('B',{},'2026-10-29T01:00');
+    const merged=APP._computeHistoryMerge([b],[a],new Set(),{});
+    expect(merged.length).toBe(2); // id-only 병합이라 둘 다 남음(동기화 직후 중복처럼 보이는 원인)
+    // 지문 기준 정리하면 하나로 합쳐짐(= 동기화 직후 _cleanupSameSettlementDuplicates가 하는 일)
+    const plan=APP._planSameSettlementMerge(merged,()=>false);
+    expect(plan.length).toBe(1);
+    expect(plan[0].removeIds.length).toBe(1);
+  });
+  test('동기화 직후에도 지문 정리를 돌린다 — hSyncDropbox가 _cleanupSameSettlementDuplicates 호출 [v8.21]', () => {
+    if(!APP.hSyncDropbox.toString().includes('_cleanupSameSettlementDuplicates'))throw new Error('동기화 병합 후 지문 정리 호출 누락');
+  });
 });
 
 suite('TC23: 입금 달력·시간 팝업 레이아웃 [v6.50]', () => {
