@@ -1905,8 +1905,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.19';
-const BUILD_TIME='2026-11-19 04:45';
+const APP_VERSION='v8.20';
+const BUILD_TIME='2026-11-19 06:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5295,20 +5295,28 @@ async function saveToHistory(){
       }else if(dupIdx>=0&&_isHistoryFixed(arr[dupIdx].id)&&_histFingerprint(arr[dupIdx])===recordFp){
         // 같은 정산의 잠긴 기록 — 입금만 달라진 경우(지문 동일) 새 버전으로 쪼개지 않고
         // 잠긴 기록의 입금 현황(payments)만 제자리 병합 갱신한다. (v6.66: 잠금+입금갱신 중복 생성 수정)
-        arr[dupIdx]={...arr[dupIdx],payments:{...(arr[dupIdx].payments||{}),...record.payments},savedAt:record.savedAt};
+        const mergedPm={...(arr[dupIdx].payments||{}),...record.payments};
+        arr[dupIdx]={...arr[dupIdx],payments:mergedPm,savedAt:record.savedAt};
         record.id=arr[dupIdx].id;
+        // 봉인 아카이브의 payments도 함께 재봉인한다. 안 그러면 saveHistory의 _enforceFixedHistory가
+        // 옛 payments 봉인본으로 되돌려 입금·차액 퉁이 "갱신했어요 ✓" 토스트와 달리 사라진다. (v8.20)
+        await _resealArchivePayments(arr[dupIdx].id,mergedPm);
         if(!saveHistory(arr))return null;
         toast('잠긴 기록의 입금 현황을 갱신했어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+      }else if(dupIdx>=0&&_isHistoryFixed(arr[dupIdx].id)){
+        // 같은 그룹(sourceGroupId 일치)의 '잠긴 기록'을 📌로 다시 저장하는데 항목(지문)이 달라진 경우.
+        // 예전엔 조용히 새 hv_ 기록으로 쪼개서 '저장일시만 다른 중복'처럼 보였다(사용자 신고). 잠긴 내용은
+        // '수정'으로 잠금을 풀어야만 바꿀 수 있으므로, 포크하지 않고 안내만 한다(입금·차액 퉁은 위 분기에서
+        // 이미 자동 반영). 이 else 분기의 잠긴 dupIdx는 지문이 다르고 sourceGroupId가 같은 '같은 그룹'뿐이다
+        // — 날짜·참여자만 우연히 같은 다른 정산은 dupIdx=-1로 아래 '새 기록' 경로를 탄다. (v8.20)
+        _loadedHistId=null;_editingFixedSourceId=null;
+        toast("이 정산은 '잠긴 기록'이에요. 입금·차액 퉁은 자동 반영되고, 항목 내용을 바꾸려면 기록의 '수정'으로 잠금을 풀고 고쳐주세요.",{type:'info',duration:5600,action:()=>goToHistory(),actionLabel:'기록 보기'});
+        return arr[dupIdx];
       }else{
-        // 잠긴 원본인데 정산 내용(항목)이 바뀜, 또는 날짜·참여자만 같은 다른 정산은 덮어쓰지 않고 새 기록으로 남긴다.
-        if(dupIdx>=0&&_isHistoryFixed(arr[dupIdx].id)){
-          record.id='hv_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8);
-          record.dedupKeepSeparate=true;
-          record.previousRecordId=arr[dupIdx].id;
-        }
+        // 날짜·참여자만 같거나(우연) 보관함에 없던 '새 정산'은 그대로 새 기록으로 저장한다.
         arr.unshift(record);
         if(!saveHistory(arr))return null;
-        toast(dupIdx>=0?'잠금 원본은 유지하고 새 기록으로 저장했어요 ✓':'기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
+        toast('기록 보관함에 저장됐어요 ✓',{type:'success',action:()=>goToHistory(),actionLabel:'보기'});
       }
     }
     if(hDbxGetToken())hSyncDropbox(true);

@@ -972,9 +972,13 @@ suite('TC22: 입금 기록·잠금 상태 일치 [v6.48]', () => {
     const html=APP._paymentBadgeHtml({done:true,amount:260000,timestamp:'2026-10-28T11:11',account:'우리은행'},246500);
     ['+13,500원 초과','실수령 260,000원','2026.10.28 11:11','우리은행'].forEach(v=>{if(!html.includes(v))throw new Error(v+' 누락');});
   });
-  test('잠긴 원본과 변경본은 서로 다른 기록 ID로 보존', () => {
+  test('같은 그룹의 잠긴 기록을 📌 다시 저장하면 새로 쪼개지 않고 안내한다 [v8.20]', () => {
     const src=APP.saveToHistory.toString();
-    ['hv_','dedupKeepSeparate','previousRecordId'].forEach(v=>{if(!src.includes(v))throw new Error('잠금 버전 분리 로직 누락: '+v);});
+    // 예전엔 잠긴 기록과 항목(지문)이 다르면 hv_ 새 기록으로 포크(dedupKeepSeparate=true)해서
+    // '저장일시만 다른 중복'처럼 보였다(사용자 신고). 이제 포크하지 않고 안내만 한다.
+    if(/dedupKeepSeparate\s*[:=]\s*true/.test(src))throw new Error('잠긴 기록을 아직 새 기록으로 포크함(dedupKeepSeparate=true)');
+    if(src.includes("record.id='hv_"))throw new Error('잠긴 기록 포크(hv_ 새 ID) 로직이 남아 있음');
+    if(!src.includes("'잠긴 기록'"))throw new Error('잠긴 기록 안내 문구 누락');
   });
   test('현재 입금 변경은 보관 기록 동기화 경로를 호출', () => {
     ['pmToggleDone','pmUpdateAmt','pmUpdate'].forEach(name=>{if(!APP[name].toString().includes('_syncCurrentPaymentsToHistory'))throw new Error(name+' 동기화 누락');});
