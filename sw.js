@@ -1,4 +1,4 @@
-const CACHE_NAME = "dutch-pay-v8.32";
+const CACHE_NAME = "dutch-pay-v8.33";
 const STATIC_ASSETS = [
   "./category-icons-1.js",
   "./category-icons-2.js",

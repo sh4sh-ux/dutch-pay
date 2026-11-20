@@ -25,13 +25,14 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v8.32** (2026-11-20) — 작업 브랜치
+**v8.33** (2026-11-20) — 작업 브랜치
 
 > **앱 다이어트 진행 중(수금 탭 제거)**: 수금 탭이 기록보관함과 쌍둥이라 복잡함의 근원 → 단계적으로 역할 분리. **단계1(v8.28)** 정산 탭에 소유자 '입금 현황' 토글. **단계2(v8.29)** 기록보관함에 '기록|통계(전체·월별)' 토글. **단계3a(v8.30, 완료)** 수금 탭 nav 노출 제거(버튼 항상 숨김). **남은 단계 3b**: 죽은 코드 정리 — 수금 렌더 경로(`renderPaymentView`/`renderPaymentBody`/`_pmHistResultsHtml`/`_pmHistoryHtml`/`_renderCard`/`_reRenderPayment`/`_renderDesktopRightInner`·`renderMobileBody`의 payment 분기), 숨은 기록 탭 경로(`renderHistoryView`/`renderHistoryBody`/`_buildHistoryInnerHtml`), 수금 HTML 버튼 3개. **보존(공유)**: `_pmCurrentHtml`(정산 입금현황)·`_pmDashboardHtml`/`_pmMonthlyHtml`/`_pmDashboardStats`(기록보관함 통계)·`pmToggle*`·입금 패널·`_pmFilterByName`/`_pmSetMonthPeopleSort`.
 
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v8.33 | **데스크탑 rail 활성 탭이 오른쪽 패널 내용과 어긋나던 것 수정**(사용자: v8.32 후속 — 화면은 정산 결과인데 rail은 '입력' / 탭의 위치도 자동으로 바뀌어야 하지 않아?) — **원인**: 데스크탑은 왼쪽 패널이 항상 입력이고 오른쪽(`_renderDesktopRightInner`)만 dTab 기준으로 바뀌는데, `dTab==='input'`이라도 지출 있고 선택 전이면 오른쪽에 **정산 결과 미리보기**를 띄움. 그런데 이 분기가 rail(`_syncShellNav`)을 안 건드려 rail은 '입력'에 머물러 **보이는 내용(정산)과 rail(입력)이 불일치**. → `_renderDesktopRightInner`의 **결과 미리보기 분기**(지출 有·선택 無)에 `_syncShellNav('result')`, **편집 분기**(지출 선택=`renderEditor`)와 **빈 상태 분기**(참여자 無·지출 無)에 `_syncShellNav('input')` 추가 → 오른쪽이 정산이면 rail=정산, 편집/빈 상태면 rail=입력으로 **항상 화면과 일치**. 모바일(`renderMobileBody`·mTab)은 불변. 표시 전용·계산 무관, 헤드리스(미리보기→rail result·편집→rail input·에러0) + test 219 통과. |
 | v8.32 | **정산 탭 '입금 현황' 토글이 데스크탑 입력 탭 미리보기 상태에서 반응 안 하던 버그 수정**(사용자: 새로고침 시 화면은 정산인데 탭은 입력, 입금현황 눌러도 반응 없음) — **원인**: 데스크탑은 `dTab==='input'`(지출 선택 전)에도 오른쪽 패널에 `renderResultView`를 **미리보기**로 띄우는데, 토글 재렌더 `_reRenderResult`가 **`dTab==='result'`일 때만** `renderResultView` 호출 → 입력 탭 미리보기(dTab='input')에선 `_setResultTab('pay')`가 아무것도 안 그림. → `_reRenderResult` 데스크탑 분기를 **`_renderDesktopRightInner()`**(현재 dTab 기준 재렌더, input 미리보기면 결과뷰 다시 그림)로 교체. 모바일(mTab==='result'만 결과 표시)은 불변. 표시·재렌더만, 헤드리스(입력탭 미리보기서 토글→입금내역 2행·탭은 input 유지·결과 복귀·콘솔에러0) + test 219 통과. |
 | v8.31 | **기록보관함 요약 '○○ 지출' 금액이 모바일서 '원'만 둘째 줄로 쪼개지던 것 수정**(사용자: 모바일 사진 지적 — 1,119,215원의 '원'이 배지에 밀려 줄바꿈) — `_histMonthNavHtml` 검색 요약 `.hmn-stat-3`의 '○○ 지출' 칸이 `배지들+금액`을 한 줄에 둬서 모바일 폭에서 금액이 쪼개짐. → ①`.hmn-stat-col-val`에 `white-space:nowrap`(금액 안 쪼개짐, 총 지출 포함). ②배지 있을 때만 그 칸을 세로 구조(`.hmn-col-badges` flex-column)로 — `.hmn-col-main`(이름·금액 한 줄, space-between) + `.hmn-stat-badges`(배지들, 금액 아래 줄 wrap). 배지 없으면(정산상태 off) 기존 한 줄 그대로. 표시 전용·계산 무관, 헤드리스(금액 1줄 height 20·배지 아래 줄) + test 219 통과. |
 | v8.30 | **[다이어트 단계3a] 수금 탭 nav 노출 제거**(사용자: 수금 탭 빼기 — 계속 배포하며 진행) — `renderAll`·renderAll동류 2곳에서 수금 버튼(`mTPayment`/`dTPayment`/`dRailPayment`) `_ownerUnlocked?'':'none'` → **항상 `'none'`**(기록 탭 노출은 유지). 입금 체크는 정산 탭 '입금 현황'(단계1), 통계·미수는 기록보관함 통계(단계2)로 이전 완료라 수금 탭 불필요. 수금 렌더 경로(`renderPaymentView` 등)는 접근 불가 상태로 남음(죽은 코드, 단계3b 정리). 헤드리스(소유자 상태서 수금 3버튼 display:none·기록 탭 노출·탭 전환·기록보관함 열기·콘솔 에러0) + test **219 통과**. |
