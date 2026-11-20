@@ -1919,8 +1919,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.35';
-const BUILD_TIME='2026-11-20 19:10';
+const APP_VERSION='v8.36';
+const BUILD_TIME='2026-11-20 19:35';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4345,7 +4345,8 @@ function _renderAllSafe(){
   const mSheet=document.getElementById('mSheet');
   const _skipD=_inp&&rBody&&rBody.contains(ae);
   const _skipM=_inp&&((mBody&&mBody.contains(ae))||(mSheet&&mSheet.contains(ae)));
-  // 수금 탭 제거 (다이어트 단계3, v8.30) — 입금 체크는 정산 탭 '입금 현황', 통계·미수는 기록보관함으로 이전됨. 수금 버튼은 항상 숨김.  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
+  // 수금 탭 제거 (다이어트 단계3, v8.30) — 입금 체크는 정산 탭 '입금 현황', 통계·미수는 기록보관함으로 이전됨. 수금 버튼은 항상 숨김. 기록 탭은 소유자 노출.
+  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
   const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();
   if(!_skipD)renderDesktopRight();
@@ -4355,7 +4356,8 @@ function _renderAllSafe(){
   _updateMobFab();
 }
 function renderAll(skipSave=false){
-  // 수금 탭 제거 (다이어트 단계3, v8.30) — 수금 버튼은 항상 숨김(기록 탭은 소유자 노출 유지).  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
+  // 수금 탭 제거 (다이어트 단계3, v8.30) — 수금 버튼은 항상 숨김(기록 탭은 소유자 노출 유지).
+  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
   const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
   const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
