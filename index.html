@@ -904,7 +904,8 @@ svg{display:block;flex-shrink:0;}
 .saved-badge{margin-top:10px;text-align:center;font-size:13px;color:var(--green);font-weight:600;}
 .settle-saved-row{display:flex;justify-content:flex-end;margin-bottom:6px;}
 .settle-saved-chip{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--green-txt);background:var(--green-bg);border:1px solid color-mix(in srgb,var(--green-txt) 25%,transparent);border-radius:999px;padding:4px 11px;line-height:1;}
-.mob-saved-chip{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--green-txt);background:var(--green-bg);border:1px solid color-mix(in srgb,var(--green-txt) 25%,transparent);border-radius:999px;padding:3px 9px;line-height:1;flex-shrink:0;}
+/* 기록보관함 헤더의 '● 방금 동기화'와 동일 스타일(초록 글씨·점 접두, pill 아님) (v8.40) */
+.mob-saved-chip{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--green);line-height:1.25;white-space:nowrap;flex-shrink:0;}
 /* 정산 탭 기록 보관함 저장 버튼 (상태 반영, v5.74) */
 .hist-save-row{margin-top:16px;display:grid;grid-template-columns:2fr 1fr;gap:8px;}
 .hist-save-btn{width:100%;border:1px solid color-mix(in srgb,var(--blue-txt) 22%,transparent);border-radius:var(--rs);padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--blue-bg);color:var(--blue-txt);transition:opacity .12s,transform .1s;}
@@ -1837,7 +1838,7 @@ svg{display:block;flex-shrink:0;}
     <div class="mob-eyebrow-row">
       <span>DUTCH PAY</span>
       <button class="mob-ver-badge" id="appVersionM"></button>
-      <span class="mob-saved-chip" id="mobSavedChip" style="display:none">✓ 기록보관함 저장됨</span>
+      <span class="mob-saved-chip" id="mobSavedChip" style="display:none">● 기록보관함 저장</span>
     </div>
     <div class="mob-title-row">
       <span class="mob-title" id="mobTitleEl" style="cursor:pointer">더치페이</span>
@@ -1925,8 +1926,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.40';
-const BUILD_TIME='2026-11-20 21:40';
+const APP_VERSION='v8.41';
+const BUILD_TIME='2026-11-20 22:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4455,7 +4456,7 @@ function renderItemLists(){const el=document.getElementById('dItemRows');const l
 
 function updateTotals(){const t=items.reduce((s,it)=>s+(+it.amount||0),0);const neg=t<0;const dEl=document.getElementById('dTotal');dEl.textContent=fmt(t)+'원';dEl.classList.toggle('amt-neg',neg);const mEl=document.getElementById('mTotal');if(mEl){mEl.textContent=fmt(t)+'원';mEl.classList.toggle('amt-neg',neg);}
   // 헤더 '기록보관함 저장됨' 칩 — 현재 정산이 보관함에 저장돼 있으면 전 탭 상단에 표시 (v8.39)
-  const sc=document.getElementById('mobSavedChip');if(sc)sc.style.display=(t&&_isAlreadySaved())?'inline-flex':'none';}
+  const sc=document.getElementById('mobSavedChip');if(sc)sc.style.display=(t&&_isAlreadySaved())?'':'none';}
 
 // 공유 버튼은 렌더 후 스크롤 영역 밖(.right-foot)으로 옮긴다.
 // .right-body 안에 두면 sticky여도 그 콘텐츠 박스 바닥까지만 내려가 패딩만큼 뜬다.
