@@ -181,6 +181,8 @@ svg{display:block;flex-shrink:0;}
 /* 모바일: 상단 헤더(제목)와 겹치지 않게 토스트를 하단 탭바 위로 (v7.39) */
 @media(max-width:700px){
   .toast-container{top:auto;bottom:calc(72px + env(safe-area-inset-bottom,0px) + 14px);}
+  /* 공유 탭은 하단에 고정 '정산 이미지' 버튼바가 있어, 토스트를 그 위로 올려 겹침 방지 (v8.40) */
+  body:has(.mob-body.settle-mode) .toast-container{bottom:calc(72px + env(safe-area-inset-bottom,0px) + 82px);}
   .toast{transform:translateY(16px);}
   .toast.show{transform:translateY(0);}
 }
@@ -1923,8 +1925,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.39';
-const BUILD_TIME='2026-11-20 21:15';
+const APP_VERSION='v8.40';
+const BUILD_TIME='2026-11-20 21:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
