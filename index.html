@@ -1925,8 +1925,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.31';
-const BUILD_TIME='2026-11-20 17:30';
+const APP_VERSION='v8.32';
+const BUILD_TIME='2026-11-20 17:42';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4890,8 +4890,10 @@ function _resultSegHtml(active){
 }
 function _setResultTab(v){_resultTab=v;_reRenderResult();}
 function _reRenderResult(){
+  // 데스크탑은 dTab='input'(선택 전)에도 오른쪽에 정산 결과를 미리보기로 보여줘서, 그 상태서도 입금현황 토글이 동작해야 함.
+  // dTab==='result'로만 재렌더하면 입력 탭 미리보기에선 토글이 반응을 안 함 → _renderDesktopRightInner로 현재 dTab 기준 재렌더 (v8.32)
   if(window.innerWidth<700){if(mTab==='result')renderMobileBody();}
-  else{if(dTab==='result')renderResultView('dREye','dRTitle','dRSub','dRBody');}
+  else{_renderDesktopRightInner();}
 }
 function renderResultView(eyeId,titleId,subId,bodyId){
   const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);const vc=items.filter(it=>+it.amount!==0).length;
