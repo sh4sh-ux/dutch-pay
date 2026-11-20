@@ -1920,8 +1920,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.27';
-const BUILD_TIME='2026-11-20 07:17';
+const APP_VERSION='v8.28';
+const BUILD_TIME='2026-11-20 16:56';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3791,9 +3791,9 @@ function _txnRowsOwnerHtml(txns){
   }).join('');
 }
 
-function _paySummaryHtml(txns){
+function _paySummaryHtml(txns,hideTitle){
   if(!txns.length)return '';
-  return `<div class="pay-summary"><div class="pay-summary-title">입금 현황</div><div class="pay-summary-body" data-txns="${ea(JSON.stringify(txns))}">${_paySummaryBodyHtml(txns)}</div></div>`;
+  return `<div class="pay-summary">${hideTitle?'':'<div class="pay-summary-title">입금 현황</div>'}<div class="pay-summary-body" data-txns="${ea(JSON.stringify(txns))}">${_paySummaryBodyHtml(txns)}</div></div>`;
 }
 
 function _paySummaryBodyHtml(txns){
@@ -3974,13 +3974,14 @@ function _pmSegHtml(){
   return `<div class="pm-seg-row"><button class="pm-seg${_pmHistTab==='current'?' on':''}" onclick="_pmSetTab('current')">이번 정산</button><button class="pm-seg${_pmHistTab==='history'?' on':''}" onclick="_pmSetTab('history')">전체 기록</button></div>`;
 }
 
-function _pmCurrentHtml(txns){
+function _pmCurrentHtml(txns,opts){
+  opts=opts||{};
   const hasItems=items.some(it=>+it.amount!==0);
   const dbxBtn=hDbxGetToken()?'<button class="pm-dbx-btn" onclick="saveSettleToDropbox()">☁️ Dropbox에 이미지 저장</button>':'';
   const _rec=_currentHistoryRecord(),_saved=!!_rec,_fixed=!!(_rec&&_isHistoryFixed(_rec.id)&&_historyLockMatches(_rec));
   const saveBtn=`<button class="pm-save-btn${_saved?' saved':''}" onclick="_saveHistFromResult()">${_saved?'✓ 기록보관함에 저장됨':'📌 기록보관함에 저장'}</button><button class="pm-save-btn lock-action${_fixed?' fixed':''}" style="margin-top:8px" onclick="${_fixed?`unlockHistoryForEdit('${jsa(_rec.id)}')`:'_fixCurrentHistory()'}">${_fixed?LOCK_CLOSED_SVG+' 잠김':LOCK_OPEN_SVG+' 잠금'}</button>`;
   if(!txns.length)return '<div class="empty" style="padding:40px 0"><div class="empty-icon">'+svgEmpty+'</div><p>정산할 입금 내역이 없어요</p></div>'+(hasItems?saveBtn+dbxBtn:'');
-  return _paySummaryHtml(txns)+'<div class="pay-section-title" style="margin-top:18px">입금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>'+saveBtn+dbxBtn;
+  return _paySummaryHtml(txns,opts.hideSummaryTitle)+'<div class="pay-section-title" style="margin-top:18px">입금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>'+saveBtn+dbxBtn;
 }
 
 function _pmHistResultsHtml(){
@@ -4721,10 +4722,13 @@ function renderMobileBody(){
     let html='';const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);const vc=items.filter(it=>+it.amount!==0).length;
     if(!vc){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>금액이 입력된 지출이 없어요</p><button style="margin-top:16px;padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="switchToInputTab()">지출 추가하기</button></div>';return;}
     const txns=calcTxns(paid,owes);
+    const _rp=_resultPayInfo(txns);
+    if(_rp.showPay&&_resultTab==='pay'){el.innerHTML=_resultSegHtml('pay')+_pmCurrentHtml(_rp.myTxns,{hideSummaryTitle:true});return;}
+    const _resSeg=_rp.showPay?_resultSegHtml('result'):'';
     html+=_resultBreakdownHtml(paid,owes,txns);
     if(txns.length){html+=`<div class="pay-section-title">송금 내역</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`;}else{html+=`<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>`;}
     const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0&&!_alcActive(it)?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const uid='mob_'+it.id;const rowClick=_hasReceiptDetail(it)?` onclick="toggleItemReceipt('${uid}',event)"`:'';const chev=_hasReceiptDetail(it)?`<span class="rc-chev" data-rcpt-chev="${uid}"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:'';return `<div class="detail-row"${rowClick}><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱</span>':''}${_alcBadge(it)}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div>${chev}<span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid)}`;}).join('');
-    html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`+_histSaveBtnHtml();el.innerHTML=html;return;
+    html+=`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`+_histSaveBtnHtml();el.innerHTML=_resSeg+html;return;
   }
   if(mTab==='settle'){
     const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);
@@ -4840,6 +4844,22 @@ function _settlementSanity(paid,owes,txns){
 }
 
 
+// 정산 탭 소유자 전용 '입금 현황' 토글 — 수금 '이번 정산' 입금 체크를 정산 탭으로 이전 (v8.28, 단계1)
+// 친구에겐 안 보이고(소유자+내가 받을 송금 있을 때만), 입금 토글은 전부 제자리 패치라 정산 탭에서도 정상 동작.
+let _resultTab='result';
+function _resultPayInfo(txns){
+  const owner=!!(_myName&&people.includes(_myName)&&_ownerUnlocked);
+  const myTxns=owner?txns.filter(t=>t.to===_myName):[];
+  return {owner,myTxns,showPay:owner&&myTxns.length>0};
+}
+function _resultSegHtml(active){
+  return `<div class="pm-seg-row" style="margin-bottom:14px"><button class="pm-seg${active==='result'?' on':''}" onclick="_setResultTab('result')">정산 결과</button><button class="pm-seg${active==='pay'?' on':''}" onclick="_setResultTab('pay')">입금 현황</button></div>`;
+}
+function _setResultTab(v){_resultTab=v;_reRenderResult();}
+function _reRenderResult(){
+  if(window.innerWidth<700){if(mTab==='result')renderMobileBody();}
+  else{if(dTab==='result')renderResultView('dREye','dRTitle','dRSub','dRBody');}
+}
 function renderResultView(eyeId,titleId,subId,bodyId){
   const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);const vc=items.filter(it=>+it.amount!==0).length;
   document.getElementById(eyeId).textContent='정산 결과';
@@ -4852,10 +4872,14 @@ function renderResultView(eyeId,titleId,subId,bodyId){
   document.getElementById(titleId).textContent=title;
   document.getElementById(subId).textContent=subBase;
   const transferTotal=txns.reduce((s,t)=>s+t.amt,0);
+  // 소유자 '입금 현황' 토글 (v8.28)
+  const _rp=_resultPayInfo(txns);
+  if(_rp.showPay&&_resultTab==='pay'){document.getElementById(bodyId).innerHTML=_resultSegHtml('pay')+_pmCurrentHtml(_rp.myTxns,{hideSummaryTitle:true});return;}
+  const _resSeg=_rp.showPay?_resultSegHtml('result'):'';
   const heroHtml=_resultBreakdownHtml(paid,owes,txns);
   const txnSection=txns.length?`<div class="pay-section-title">송금 내역</div><div class="txn-card">${_txnRowsHtml(txns)}</div>`:'<div class="pay-section-title">송금 내역</div><div class="txn-card"><div class="empty" style="padding:24px"><p style="color:var(--green)">모두 정산 완료 ✓</p></div></div>';
   const validItems=items.filter(it=>+it.amount!==0);const detailRows=validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0&&!_alcActive(it)?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const uid='i'+it.id;const rowClick=_hasReceiptDetail(it)?` onclick="toggleItemReceipt('${uid}',event)"`:'';const chev=_hasReceiptDetail(it)?`<span class="rc-chev" data-rcpt-chev="${uid}"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:'';return `<div class="detail-row"${rowClick}><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱</span>':''}${_alcBadge(it)}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div>${chev}<span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid)}`;}).join('');
-  document.getElementById(bodyId).innerHTML=heroHtml+txnSection+`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`+_histSaveBtnHtml();
+  document.getElementById(bodyId).innerHTML=_resSeg+heroHtml+txnSection+`<div class="pay-section-title">지출 내역</div><div class="txn-card">${detailRows}</div>`+_histSaveBtnHtml();
 }
 
 function renderSettleView(eyeId,titleId,subId,bodyId){
