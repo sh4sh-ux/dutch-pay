@@ -1761,9 +1761,6 @@ svg{display:block;flex-shrink:0;}
     <button class="app-rail-btn" id="dRailHistory" type="button" data-dutch-nav="history" data-nav-label="기록 보관함" aria-label="기록 보관함" onclick="goToHistory()" style="display:none">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
-    <button class="app-rail-btn" id="dRailPayment" type="button" data-dutch-nav="payment" data-nav-label="수금" aria-label="수금" onclick="dSetTab('payment')" style="display:none">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="9" cy="5.5" rx="5.5" ry="2.25"/><path d="M3.5 5.5v4c0 1.25 2.45 2.25 5.5 2.25 1.1 0 2.1-.13 2.95-.37M3.5 9.5v4c0 1.25 2.45 2.25 5.5 2.25.72 0 1.4-.06 2.02-.17"/><circle cx="16.5" cy="15.5" r="5"/><path d="m13.85 13.25 1.2 4.5 1.45-3.25 1.45 3.25 1.2-4.5M13.7 14.75h5.6M14 16.1h5"/></svg>
-    </button>
     <button class="app-rail-btn app-rail-menu" type="button" data-nav-label="설정" aria-label="설정 및 데이터 관리" onclick="toggleSetDrawer(this,event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
@@ -1777,7 +1774,6 @@ svg{display:block;flex-shrink:0;}
         <button class="tab on" id="dTInput" onclick="dSetTab('input')">입력</button>
         <button class="tab" id="dTResult" onclick="dSetTab('result')">정산</button>
         <button class="tab" id="dTSettle" onclick="dSetTab('settle')">공유</button>
-        <button class="tab" id="dTPayment" onclick="dSetTab('payment')" style="display:none">수금</button>
       </div>
     </div>
     <div class="left-controls">
@@ -1850,7 +1846,6 @@ svg{display:block;flex-shrink:0;}
     <button class="mob-tab" id="mTResult" data-dutch-nav="result" onclick="mSetTab('result')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>정산</span></button>
     <button class="mob-tab" id="mTSettle" data-dutch-nav="settle" onclick="mSetTab('settle')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>공유</span></button>
     <button class="mob-tab" id="mTHistory" data-dutch-nav="history" aria-label="기록 보관함" onclick="goToHistory()" style="display:none"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>기록</span></button>
-    <button class="mob-tab" id="mTPayment" data-dutch-nav="payment" onclick="mSetTab('payment')" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="9" cy="5.5" rx="5.5" ry="2.25"/><path d="M3.5 5.5v4c0 1.25 2.45 2.25 5.5 2.25 1.1 0 2.1-.13 2.95-.37M3.5 9.5v4c0 1.25 2.45 2.25 5.5 2.25.72 0 1.4-.06 2.02-.17"/><circle cx="16.5" cy="15.5" r="5"/><path d="m13.85 13.25 1.2 4.5 1.45-3.25 1.45 3.25 1.2-4.5M13.7 14.75h5.6M14 16.1h5"/></svg><span>수금</span></button>
   </nav>
   <div class="mob-body" id="mBody"></div>
   <div class="mob-owner-tap" id="mobOwnerTap" onclick="_ownerAreaClick(this,event)">DUTCH PAY <span class="app-version" id="appVersionMob"></span></div>
@@ -1924,8 +1919,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.34';
-const BUILD_TIME='2026-11-20 18:40';
+const APP_VERSION='v8.35';
+const BUILD_TIME='2026-11-20 19:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3823,16 +3818,11 @@ function _paySummaryBodyHtml(txns){
   return `<div class="pay-summary-row"><span class="pay-summary-lbl">총 청구액</span><span class="pay-summary-val">${fmt(totalBilled)}원</span></div><div class="pay-summary-row"><span class="pay-summary-lbl">총 실수령액</span><span class="pay-summary-val${totalReceived>0?' pos':''}">${fmt(totalReceived)}원</span></div><div class="pay-summary-row"><span class="pay-summary-lbl">순 차액</span><span class="pay-summary-val ${net>0?'pos':net<0?'neg':''}">${net>0?'+':''}${fmt(net)}원</span></div><div class="pay-summary-row pay-unpaid-row"><span class="pay-summary-lbl">미입금자</span><div class="pay-unpaid-chips">${unpaidHtml}</div></div>`;
 }
 
-function _pmSetTab(t){_pmHistTab=t;_reRenderPayment();}
-function _pmSetSort(v){_pmHistSort=v;_patchHistResults();}
-function _pmSetFilter(v){_pmHistFilter=v;_patchHistResults();}
-function _pmSetGroup(v){_pmHistGroup=v;_patchHistResults();}
 function _pmSetMonthPeopleSort(v){_pmMonthPeopleSort=v;_reRenderStatsSurface();}
-// 통계(월별/대시보드)는 수금 탭과 기록보관함 양쪽에서 쓰여서, 활성 표면에 맞춰 재렌더 (v8.29)
+// 통계(월별/대시보드) 재렌더 — 기록보관함 드로어 전용 (수금 탭 제거됨, v8.35)
 function _reRenderStatsSurface(){
   const dr=document.getElementById('histDr');
-  if(dr&&dr.classList.contains('open')){_refreshHistDrList();return;}
-  _patchHistResults();
+  if(dr&&dr.classList.contains('open'))_refreshHistDrList();
 }
 function _pmDashSetUnit(u){_pmDashUnit=u;_pmDashShift=0;_patchHistResults();}
 // 지출 추이 바 클릭 → 목록 뷰로 전환 + 그 기간(연/월/일) 기록으로 스크롤·강조 (v8.11: '이 기간 보기' 링크에서만 이동)
@@ -3893,7 +3883,7 @@ function _pmFilterByName(name){
     _refreshHistDrList();const body=document.getElementById('histDrBody');if(body)body.scrollTop=0;
     return;
   }
-  _pmHistSearch=name;const inp=document.querySelector('.pm-search');if(inp){inp.value=name;_chkClear(inp);}_patchHistResults();const mb=document.getElementById('mBody'),db=document.getElementById('dRBody');if(mb)mb.scrollTop=0;if(db)db.scrollTop=0;window.scrollTo(0,0);}
+}
 function _pmShowPayerItems(nm,ym){
   const allRecs=loadHistory();
   const recs=allRecs.filter(r=>(r.dateStart||r.savedAt||'').slice(0,7)===ym);
@@ -3980,29 +3970,9 @@ function _pmShowCategoryItems(catKey){
   document.body.insertAdjacentHTML('beforeend',html);
 }
 function _pmDelRec(id,e){deleteHistoryRecord(id,e);}
-function _reRenderPayment(){if(window.innerWidth<700){const el=document.getElementById('mBody');if(el&&mTab==='payment')renderPaymentBody(el);}else{if(dTab==='payment')renderPaymentView('dREye','dRTitle','dRSub','dRBody');}}
-function _patchHistResults(){const el=document.querySelector('.pm-hist-results');if(!el)return;const openAllRec=el.querySelector('.pm-allrec-card.open');const openAllRecId=openAllRec?openAllRec.dataset.recId:null;const openRec=el.querySelector('.pm-record-card.open');const openRecId=openRec?openRec.dataset.recId:null;const openRecTxn=openRec?openRec.dataset.txnKey:null;el.innerHTML=_pmHistResultsHtml();if(openAllRecId)toggleAllRecCard(openAllRecId);if(openRecId&&openRecTxn)togglePmRecCard(openRecId,openRecTxn);}
-function togglePmRecCard(rid,rkey){const card=document.querySelector(`.pm-record-card[data-rec-id="${CSS.escape(rid)}"]`);if(!card)return;const detail=card.querySelector('.pm-rec-detail');if(!detail)return;const chev=card.querySelector('.pm-record-chev');const isOpen=detail.style.display!=='none';if(isOpen){detail.style.display='none';card.classList.remove('open');if(chev)chev.classList.remove('open');card.querySelector('.pm-hist-edit-panel')?.remove();}else{detail.style.display='block';card.classList.add('open');if(chev)chev.classList.add('open');}}
-function toggleAllRecCard(recId){
-  const card=document.querySelector(`.pm-allrec-card[data-rec-id="${CSS.escape(recId)}"]`);if(!card)return;
-  const next=card.nextElementSibling;
-  if(next&&next.classList.contains('pm-allrec-detail')){next.remove();card.classList.remove('open');const ch=card.querySelector('.pm-allrec-chev');if(ch)ch.textContent='▼';return;}
-  document.querySelectorAll('.pm-allrec-detail').forEach(d=>d.remove());
-  document.querySelectorAll('.pm-allrec-card.open').forEach(c=>{c.classList.remove('open');const ch=c.querySelector('.pm-allrec-chev');if(ch)ch.textContent='▼';});
-  card.classList.add('open');const chev=card.querySelector('.pm-allrec-chev');if(chev)chev.textContent='▲';
-  const rec=loadHistory().find(r=>r.id===recId);if(!rec)return;
-  const txns=_myName?(rec.txns||[]).filter(t=>t.to===_myName):(rec.txns||[]);const pmObj=rec.payments||{};
-  const detail=document.createElement('div');detail.className='pm-allrec-detail';
-  // 기록보관함 카드와 동일하게: 입금 내역 + 공용 foot(_cardFootHtml) (v7.81)
-  const foot=_cardFootHtml(rec);
-  if(!txns.length){detail.innerHTML=_treatBreakdownHtml(rec)+foot;}
-  else{detail.innerHTML='<div class="rc-section-title rc-section-sep">입금 내역</div><div class="rc-txns">'+txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const owner=t.to===_myName;const badge=_paymentBadgeHtml(pm,t.amt,{owner});const rid=ea(recId);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(recId)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+'</div>'+foot;}
-  card.insertAdjacentElement('afterend',detail);
-}
+// 수금 탭 목록 제자리 갱신용이었으나 수금 탭 제거로 대상(.pm-hist-results)이 없어 no-op (라이브 호출부 toggleRcTxnPanel·saveHistory는 그대로 호출, v8.35)
+function _patchHistResults(){}
 
-function _pmSegHtml(){
-  return `<div class="pm-seg-row"><button class="pm-seg${_pmHistTab==='current'?' on':''}" onclick="_pmSetTab('current')">이번 정산</button><button class="pm-seg${_pmHistTab==='history'?' on':''}" onclick="_pmSetTab('history')">전체 기록</button></div>`;
-}
 
 function _pmCurrentHtml(txns,opts){
   opts=opts||{};
@@ -4014,169 +3984,6 @@ function _pmCurrentHtml(txns,opts){
   return _paySummaryHtml(txns,opts.hideSummaryTitle)+'<div class="pay-section-title" style="margin-top:18px">입금 내역</div><div class="txn-card pm-card">'+_txnRowsOwnerHtml(txns)+'</div>'+saveBtn+dbxBtn;
 }
 
-function _pmHistResultsHtml(){
-  const name=_pmHistSearch.trim();
-  if(!name){
-    const allRecs=loadHistory().sort((a,b)=>(b.dateStart||b.savedAt||'').localeCompare(a.dateStart||a.savedAt||''));
-    if(!allRecs.length)return '<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">저장된 정산 기록이 없어요</p></div>';
-    const viewToggle=`<div class="pm-view-toggle"><button class="pm-view-btn${_pmViewMode==='dashboard'?' on':''}" onclick="_pmSetViewMode('dashboard')">대시보드</button><button class="pm-view-btn${_pmViewMode==='list'?' on':''}" onclick="_pmSetViewMode('list')">목록</button><button class="pm-view-btn${_pmViewMode==='monthly'?' on':''}" onclick="_pmSetViewMode('monthly')">월별 통계</button></div>`;
-    if(_pmViewMode==='monthly')return viewToggle+_pmMonthlyHtml(allRecs);
-    if(_pmViewMode==='dashboard')return viewToggle+_pmDashboardHtml(allRecs);
-    const _fhdAll=d=>{const[y,m,day]=(d||'').split('-');return day?`${y}년 ${+m}월 ${+day}일`:(d||'');};
-    const recsHtml=allRecs.map(rec=>{
-      const dateStr=rec.dateStart?_fhdAll(rec.dateStart):(rec.savedAt?rec.savedAt.slice(0,10):'');
-      const txnsList=_myName?(rec.txns||[]).filter(t=>t.to===_myName):(rec.txns||[]);
-      const pmObj=rec.payments||{};
-      const doneCount=txnsList.filter(t=>{const p=pmObj[`${t.from}|${t.to}`]||{};return p.done||p.waived;}).length;
-      const totalCount=txnsList.length;
-      const statusHtml=totalCount===0?''
-        :doneCount===totalCount?`<span class="pm-badge done">✓ 완료</span>`
-        :doneCount===0?`<span class="pm-badge pending">${totalCount}명 미입금</span>`
-        :`<span class="pm-badge pending">${totalCount-doneCount}명 미입금</span>`;
-      const rid=ea(rec.id);
-      const names=(rec.people||[]).join(', ')||rec.groupName||'';
-      const members=(rec.people||[]).join(' · ');
-      // 전체기록 카드도 통일 카드 셸(.rc-*)로 — 단, 확장 상세가 형제로 붙는 아코디언이라
-      // .pm-allrec-card/.pm-allrec-chev 훅은 유지 (toggleAllRecCard 무변경). (v7.78)
-      return `<div class="pm-allrec-card" data-rec-id="${rid}" onclick="toggleAllRecCard('${jsa(rec.id)}')"><div class="pm-allrec-left"><div class="rc-date">${e(dateStr)}</div><div class="rc-name">${e(names)}</div><div class="rc-people">${e(members)}</div></div><div class="pm-allrec-right"><div class="rc-amt-line">${statusHtml}<div class="rc-total">${fmt(rec.total||0)}원</div></div><span class="pm-allrec-chev rc-chevron">▼</span></div></div>`;
-    }).join('');
-    return viewToggle+`<div class="pay-section-title" style="margin-top:8px">전체 기록 · ${allRecs.length}건</div>`+recsHtml;
-  }
-  let allRec=[];try{const raw=localStorage.getItem(HISTORY_KEY);allRec=raw?JSON.parse(raw):[];}catch(ex){}
-  const _txnCards=[];const _billedRecIds=new Set();
-  allRec.forEach(rec=>{
-    (rec.txns||[]).filter(t=>t.from===name).forEach(t=>{
-      const key=`${t.from}|${t.to}`;
-      const pm=(rec.payments||{})[key]||{};
-      const billing=t.amt;
-      const ef=_pmEff(pm,billing);const received=ef.receivedEff;
-      const diff=ef.done?received-billing:null;
-      const isOwnerTxn=!_myName||t.to===_myName;
-      _txnCards.push({rec,key,billing,billedEff:ef.billedEff,received,diff,pm,done:ef.done,waived:ef.waived,isOwnerTxn});
-      _billedRecIds.add(rec.id);
-    });
-  });
-  const _participantCards=[];
-  allRec.forEach(rec=>{
-    if(_billedRecIds.has(rec.id))return;
-    if(!(rec.people||[]).includes(name))return;
-    const treatItems=(rec.items||[]).filter(it=>it.payer===name&&it.isTreat);
-    const treatAmt=treatItems.reduce((s,it)=>s+(+it.amount||0),0);
-    _participantCards.push({rec,key:'__attend__',billing:0,received:0,diff:null,pm:{},done:false,isOwnerTxn:false,isParticipant:true,isTreat:treatAmt>0,treatAmt});
-  });
-  let summaryHtml='';
-  let cards=_pmHistFilter==='unpaid'?_txnCards.filter(c=>!c.done&&!c.waived):[..._txnCards,..._participantCards];
-  if(_pmHistSort==='newest')cards.sort((a,b)=>(b.rec.dateStart||b.rec.savedAt).localeCompare(a.rec.dateStart||a.rec.savedAt));
-  else if(_pmHistSort==='oldest')cards.sort((a,b)=>(a.rec.dateStart||a.rec.savedAt).localeCompare(b.rec.dateStart||b.rec.savedAt));
-  else if(_pmHistSort==='amtDesc')cards.sort((a,b)=>b.billing-a.billing);
-  else if(_pmHistSort==='amtAsc')cards.sort((a,b)=>a.billing-b.billing);
-  // 기간 옵션: 데이터에 있는 년도·월 동적 생성
-  const _periodSet=new Set();
-  cards.forEach(c=>{const ds=c.rec.dateStart||c.rec.savedAt||'';if(ds.length>=4)_periodSet.add(ds.slice(0,4));if(ds.length>=7)_periodSet.add(ds.slice(0,7));});
-  const _pYears=[..._periodSet].filter(p=>p.length===4).sort().reverse();
-  const _pMonths=[..._periodSet].filter(p=>p.length===7).sort().reverse();
-  const periodOptsHtml=`<option value="all"${_pmHistGroup==='all'?' selected':''}>전체 기간</option>`
-    +(_pYears.length?'<option disabled>── 년도</option>':'')+_pYears.map(y=>`<option value="${y}"${_pmHistGroup===y?' selected':''}>${y}년</option>`).join('')
-    +(_pMonths.length?'<option disabled>── 월별</option>':'')+_pMonths.map(m=>{const[y,mo]=m.split('-');return `<option value="${m}"${_pmHistGroup===m?' selected':''}>${y}년 ${+mo}월</option>`;}).join('');
-  const controlsHtml=`<div class="pm-controls"><div class="pm-controls-top"><select class="pm-sort-sel" onchange="_pmSetSort(this.value)"><option value="newest"${_pmHistSort==='newest'?' selected':''}>최신순</option><option value="oldest"${_pmHistSort==='oldest'?' selected':''}>오래된순</option><option value="amtDesc"${_pmHistSort==='amtDesc'?' selected':''}>금액 높은순</option><option value="amtAsc"${_pmHistSort==='amtAsc'?' selected':''}>금액 낮은순</option></select><select class="pm-sort-sel" onchange="_pmSetGroup(this.value)">${periodOptsHtml}</select><div class="pm-filter-chips" style="margin-left:auto"><button class="pm-filter-chip${_pmHistFilter==='all'?' on':''}" onclick="_pmSetFilter('all')">전체</button><button class="pm-filter-chip${_pmHistFilter==='unpaid'?' on':''}" onclick="_pmSetFilter('unpaid')">미수</button></div></div></div>`;
-  // 기간 필터 적용
-  const displayCards=_pmHistGroup==='all'?cards:cards.filter(c=>(c.rec.dateStart||c.rec.savedAt||'').startsWith(_pmHistGroup));
-  const _pLbl=_pmHistGroup==='all'?'총':_pmHistGroup.length===7?(()=>{const[y,mo]=_pmHistGroup.split('-');return `${+mo}월`;})():_pmHistGroup+'년';
-  const meetingCount=new Set(displayCards.map(c=>c.rec.id)).size;
-  const meetingCountHtml=meetingCount?`<span class="pm-meeting-count">${meetingCount}회</span>`:'';
-  const isOwnerSearch=!!(_myName&&name===_myName);
-  if(isOwnerSearch){
-    const _recSet=new Set(displayCards.map(c=>c.rec.id));
-    let ownerBilled=0,ownerReceived=0,ownerSpend=0,ownerTreat=0,ownerWaived=0;
-    allRec.filter(r=>_recSet.has(r.id)).forEach(rec=>{
-      (rec.txns||[]).filter(t=>t.to===name).forEach(t=>{
-        const pm=(rec.payments||{})[`${t.from}|${t.to}`]||{};
-        const ef=_pmEff(pm,t.amt);
-        ownerBilled+=ef.billedEff;ownerReceived+=ef.receivedEff; // 퉁 완전 중립 (v7.06)
-        const amt=+t.amt||0; // 내가 안 받기로 한 금액(전체 퉁+차액 퉁) 합 (v8.23)
-        if(pm.waived)ownerWaived+=amt;
-        else if(pm.done&&pm.shortWaived){const recv=(pm.amount!=null&&pm.amount!=='')?+pm.amount:amt;const sh=amt-recv;if(sh>0)ownerWaived+=sh;}
-      });
-      (rec.items||[]).forEach(it=>{if(it.payer===name){ownerSpend+=(+it.amount||0);if(it.isTreat)ownerTreat+=(+it.amount||0);}});
-    });
-    const ownerNet=ownerReceived-ownerBilled;
-    const ownerUnpaid=ownerBilled-ownerReceived;
-    const ownerNetBadge=ownerBilled===0?'':ownerNet>0?`<span class="pm-net-badge pos">+${fmt(ownerNet)}원 초과</span>`:ownerNet<0?`<span class="pm-net-badge neg">-${fmt(-ownerNet)}원 미수</span>`:`<span class="pm-net-badge zero">✓ 완납</span>`;
-    const ownerActual=ownerSpend-ownerBilled;
-    const ownerSubStats=ownerSpend>0?`<div class="pm-month-stats-row pm-my-stats-row"><div class="pm-mstat"><div class="pm-mstat-lbl">결제</div><div class="pm-mstat-val">${fmt(ownerSpend)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">지출</div><div class="pm-mstat-val blue">${fmt(ownerActual)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">쏜 금액</div><div class="pm-mstat-val amber">${fmt(ownerTreat)}원</div></div></div>`:'';
-    const ownerTreatBadge=ownerTreat>0?`<span class="pm-net-badge treat">한턱 ${fmt(ownerTreat)}원</span>`:'';
-    const ownerWaivedBadge=ownerWaived>0?`<span class="pm-net-badge waived">🤝 ${fmt(ownerWaived)}원 퉁</span>`:'';
-    summaryHtml=`<div class="pm-person-card"><div class="pm-person-name-row"><span class="pm-person-name">${e(name)}</span>${(ownerNetBadge||ownerTreatBadge||ownerWaivedBadge)?`<div class="pm-badge-row">${ownerNetBadge}${ownerTreatBadge}${ownerWaivedBadge}</div>`:''}<div class="pm-head-right">${meetingCountHtml}</div></div>${ownerSubStats}<div class="pm-month-stats-row"><div class="pm-mstat"><div class="pm-mstat-lbl">청구</div><div class="pm-mstat-val">${fmt(ownerBilled)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">수령</div><div class="pm-mstat-val pos">${fmt(ownerReceived)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">미수</div><div class="pm-mstat-val${ownerUnpaid>0?' neg':' mut'}">${ownerUnpaid>0?fmt(ownerUnpaid)+'원':'없음'}</div></div></div></div>`;
-  }else{
-    const _dTxnCards=displayCards.filter(c=>!c.isParticipant&&c.isOwnerTxn);
-    const totalBilled=_dTxnCards.reduce((s,c)=>s+(c.billedEff!=null?c.billedEff:c.billing),0); // 퉁 완전 중립 (v7.06)
-    const totalReceived=_dTxnCards.reduce((s,c)=>s+c.received,0);
-    const totalUnpaid=totalBilled-totalReceived;
-    const net=totalReceived-totalBilled;
-    const netBadge=totalBilled===0?'':net>0?`<span class="pm-net-badge pos">+${fmt(net)}원 초과</span>`:net<0?`<span class="pm-net-badge neg">-${fmt(-net)}원 미수</span>`:`<span class="pm-net-badge zero">✓ 완납</span>`;
-    // 한턱 요약 = 표시된 기록 전체에서 '결제자=이 사람 & 한턱'인 항목 합. 기록 단위로(중복 id 제거) 더해
-    // 소유자 검색(모든 한턱 합산)과 일치시킨다. 예전엔 참석(0원) 카드를 빼서, 그 사람이 나한테 낼 돈이
-    // 없는 모임의 한턱이 요약에서 누락됐다(카드엔 108,000 뜨는데 요약엔 67,000만). (v8.23)
-    const _treatRecSet=new Set(displayCards.map(c=>c.rec.id));
-    const _sumTreatAmt=allRec.filter(r=>_treatRecSet.has(r.id)).reduce((s,rec)=>s+(rec.items||[]).filter(it=>it.payer===name&&it.isTreat).reduce((a,it)=>a+(+it.amount||0),0),0);
-    const treatBadge=_sumTreatAmt>0?`<span class="pm-net-badge treat">한턱 ${fmt(_sumTreatAmt)}원</span>`:'';
-    // 퉁(안 받기로 한 금액) 요약 — 기록보관함 요약과 동일하게 초과/미수·한턱과 나란히 표시(전체 퉁+차액 퉁). (v8.23)
-    const _sumWaived=allRec.filter(r=>_treatRecSet.has(r.id)).reduce((s,rec)=>s+_personSettleWaived(rec,name,_myName),0);
-    const waivedBadge=_sumWaived>0?`<span class="pm-net-badge waived">🤝 ${fmt(_sumWaived)}원 퉁</span>`:'';
-    // 내 한턱 = 이 사람과의 기록에서 '결제자=나(_myName) & 한턱'인 항목 합(그 사람 한턱과 구분, 파랑) (v8.26)
-    const _myTreat=_myName?allRec.filter(r=>_treatRecSet.has(r.id)).reduce((s,rec)=>s+(rec.items||[]).filter(it=>it.payer===_myName&&it.isTreat).reduce((a,it)=>a+(+it.amount||0),0),0):0;
-    const myTreatBadge=_myTreat>0?`<span class="pm-mytreat">내 한턱 ${fmt(_myTreat)}원</span>`:'';
-    summaryHtml=`<div class="pm-person-card"><div class="pm-person-name-row"><span class="pm-person-name">${e(name)}</span>${(netBadge||treatBadge||waivedBadge)?`<div class="pm-badge-row">${netBadge}${treatBadge}${waivedBadge}</div>`:''}<div class="pm-head-right">${myTreatBadge}${meetingCountHtml}</div></div><div class="pm-month-stats-row"><div class="pm-mstat"><div class="pm-mstat-lbl">청구</div><div class="pm-mstat-val">${fmt(totalBilled)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">수령</div><div class="pm-mstat-val pos">${fmt(totalReceived)}원</div></div><div class="pm-mstat"><div class="pm-mstat-lbl">미수</div><div class="pm-mstat-val${totalUnpaid>0?' neg':' mut'}">${totalUnpaid>0?fmt(totalUnpaid)+'원':'없음'}</div></div></div></div>`;
-  }
-  if(!displayCards.length)return summaryHtml+controlsHtml+'<div class="empty" style="padding:30px 0"><p style="color:var(--label3)">해당하는 기록이 없어요</p></div>';
-  const _renderCard=c=>{
-    // 기록보관함 카드(.record-card/.rc-*) 셸을 재사용해 통일 (v7.76).
-    // 토글·수정패널이 쓰는 훅(.pm-record-card/.pm-record-chev/.pm-rec-detail)은 그대로 유지.
-    const fhd=d=>{const[y,m,day]=(d||'').split('-');return day?`${y}년 ${+m}월 ${+day}일`:(d||'');};
-    const dateStr=c.rec.dateStart?fhd(c.rec.dateStart):(c.rec.savedAt||'').slice(0,10);
-    const members=(c.rec.people||[]).join(' · ');
-    const peopleCnt=(c.rec.people||[]).length;
-    let badgeHtml,amtHtml;
-    if(c.isParticipant){
-      badgeHtml=c.isTreat?`<span class="pm-badge treat">한턱 ${fmt(c.treatAmt)}원</span>`:`<span class="pm-badge attend">참석</span>`;
-      amtHtml='<div class="rc-total rc-total-zero">0원</div>';
-    }else{
-      badgeHtml=_paymentBadgeHtml(c.pm,c.billing,{owner:c.isOwnerTxn,badgeOnly:true});
-      amtHtml=`<div class="rc-total">${fmt(c.billing)}원</div>`;
-    }
-    const personTreatAmt=(!c.isParticipant)?(c.rec.items||[]).filter(it=>it.payer===name&&it.isTreat).reduce((s,it)=>s+(+it.amount||0),0):0;
-    const treatLineHtml=personTreatAmt>0?`<span class="pm-net-badge treat">한턱 ${fmt(personTreatAmt)}원</span>`:'';
-    // 내 한턱(파랑): 이 기록에서 내가(_myName) 쏜 한턱 — 그 사람을 검색했을 때만(자기검색 중복 방지) (v8.26)
-    const myTreatAmt=(_myName&&name!==_myName)?(c.rec.items||[]).filter(it=>it.payer===_myName&&it.isTreat).reduce((s,it)=>s+(+it.amount||0),0):0;
-    const myTreatLineHtml=myTreatAmt>0?`<span class="pm-mytreat">내 한턱 ${fmt(myTreatAmt)}원</span>`:'';
-    const recValCls=c.done?(c.diff<0?' neg':' done-clr'):'';
-    const rid=ea(c.rec.id||'');const rkey=ea(c.key||'__attend__');
-    const recItems=(c.rec.items||[]).filter(it=>+it.amount!==0);
-    const itemsHtml=recItems.length?`<div class="pm-rec-items"><div class="pm-rec-items-title">지출 내역</div>${recItems.map(it=>{const uid='rcpt_'+(c.rec.id||'')+'_'+(it.id||'');const memsStr=_orderedMemberList(it.members,it.watchers,c.rec.people||[]).map(e).join(', ');const rowClick=it.receiptText?` onclick="toggleItemReceipt('${uid}',event)" style="cursor:pointer"`:'';const chev=it.receiptText?`<span class="rc-chev" data-rcpt-chev="${uid}"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:'';return `<div class="rc-item-row rc-3line"${rowClick}><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱</span>':''}${_alcBadge(it)}</div><div class="rc-item-meta">${memsStr}</div></div>${chev}<span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid,c.rec.id)}`;}).join('')}</div>`:'';
-    // 입금 내역(입금자별, 탭하면 실수령·금융기관·일시) — 여러 명 기록에서도 누구 입금인지 명확 (v7.80)
-    const recTxns=(c.rec.txns||[]).filter(t=>!_myName||t.to===_myName);
-    const txnsHtml=recTxns.length?`<div class="rc-section-title${recItems.length?' rc-section-sep':''}">입금 내역</div><div class="rc-txns">`+recTxns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(c.rec.payments||{})[tkey]||{};const owner=t.to===_myName;const badge=_paymentBadgeHtml(pm,t.amt,{owner});return `<div class="rc-txn-row clickable" data-rec-id="${ea(c.rec.id||'')}" data-txn-key="${ea(tkey)}" onclick="event.stopPropagation();toggleRcTxnPanel('${jsa(c.rec.id||'')}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+`</div>`:'';
-    const bodyInner=`${itemsHtml}${txnsHtml}`;
-    const bodyHtml=`<div class="rc-body pm-rec-detail" style="display:none">${bodyInner}</div>`;
-    const footHtml=_cardFootHtml(c.rec);
-    return `<div class="record-card pm-record-card" data-rec-id="${rid}" data-txn-key="${rkey}"><div class="rc-hd" onclick="togglePmRecCard('${jsa(c.rec.id||'')}','${jsa(c.key||'__attend__')}')"><div class="rc-meta"><div class="rc-date">${e(dateStr)}</div><div class="rc-name">${e((c.rec.people||[]).join(', ')||c.rec.groupName||'')}</div><div class="rc-people">${e(members)}</div></div><div class="rc-right">${myTreatLineHtml?`<div class="rc-right-grid"><div class="rc-rg-main">${treatLineHtml}${badgeHtml}</div><div class="rc-rg-trail">${amtHtml}</div><div class="rc-rg-main">${myTreatLineHtml}</div><div class="rc-rg-trail"><span class="rc-chevron pm-record-chev">▼</span></div></div>`:`<div class="rc-amt-line">${treatLineHtml}${badgeHtml}${amtHtml}</div><span class="rc-chevron pm-record-chev">▼</span>`}</div></div>${bodyHtml}${footHtml}</div>`;
-  };
-  // 년도 선택 시 월별 그룹, 특정 월/전체 시 flat
-  let cardsHtml='';
-  if(_pmHistGroup.length===4){
-    const grpMap={};
-    displayCards.forEach(c=>{const k=(c.rec.dateStart||c.rec.savedAt||'').slice(0,7);if(!grpMap[k])grpMap[k]=[];grpMap[k].push(c);});
-    cardsHtml=Object.keys(grpMap).sort().reverse().map(k=>{const grp=grpMap[k];const[y,mo]=k.split('-');const tot=grp.reduce((s,c)=>s+c.billing,0);return `<div class="pm-period-hd"><span class="pm-period-label">${y}년 ${+mo}월</span><span class="pm-period-meta">${grp.length}건 · ${fmt(tot)}원 청구</span></div>`+grp.map(_renderCard).join('');}).join('');
-  }else{
-    cardsHtml=displayCards.map(_renderCard).join('');
-  }
-  return summaryHtml+controlsHtml+`<div class="pay-section-title" style="margin-top:14px">정산 기록 · ${displayCards.length}건</div>`+cardsHtml;
-}
-
-function _pmHistoryHtml(){
-  return `<div class="pm-search-wrap"><div class="sinp-rel"><input class="pm-search" type="text" placeholder="이름으로 검색" value="${ea(_pmHistSearch)}" oninput="_pmSearchInput(this.value);_chkClear(this)"/><button class="sinp-clr${_pmHistSearch?' vis':''}" onclick="_clrPmSearch()">✕</button></div></div><div class="pm-hist-results">${_pmHistResultsHtml()}</div>`;
-}
-function _pmSetViewMode(v){_pmViewMode=v;_patchHistResults();}
 function togglePmMonth(ymId){
   const detail=document.getElementById('pmcd_'+ymId);
   const chev=document.querySelector('#pmc_'+ymId+' .pm-month-chev');
@@ -4492,25 +4299,7 @@ function _syncCurrentPaymentsToHistory(syncRemote=true){
   return true;
 }
 
-function renderPaymentView(eyeId,titleId,subId,bodyId){
-  document.getElementById(eyeId).textContent='수금';
-  document.getElementById(titleId).textContent='입금 관리';
-  document.getElementById(subId).textContent='이번 정산 입금 현황과 전체 기록을 확인하세요.';
-  const body=document.getElementById(bodyId);
-  const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
-  _cleanStalePayments(txns);
-  const myTxns=_myName?txns.filter(t=>t.to===_myName):txns;
-  body.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(myTxns):_pmHistoryHtml());
-  if(_pmHistTab==='current')_checkAllPaidAutoSave();
-}
 
-function renderPaymentBody(el){
-  const{paid,owes}=computeShares();const txns=calcTxns(paid,owes);
-  _cleanStalePayments(txns);
-  const myTxns=_myName?txns.filter(t=>t.to===_myName):txns;
-  el.innerHTML=_pmSegHtml()+(_pmHistTab==='current'?_pmCurrentHtml(myTxns):_pmHistoryHtml());
-  if(_pmHistTab==='current')_checkAllPaidAutoSave();
-}
 
 function _updateMobFab(){
   const fab=document.getElementById('mobFab');if(!fab)return;
@@ -4556,9 +4345,7 @@ function _renderAllSafe(){
   const mSheet=document.getElementById('mSheet');
   const _skipD=_inp&&rBody&&rBody.contains(ae);
   const _skipM=_inp&&((mBody&&mBody.contains(ae))||(mSheet&&mSheet.contains(ae)));
-  // 수금 탭 제거 (다이어트 단계3, v8.30) — 입금 체크는 정산 탭 '입금 현황', 통계·미수는 기록보관함으로 이전됨. 수금 버튼은 항상 숨김.
-  ['mTPayment','dTPayment','dRailPayment'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
+  // 수금 탭 제거 (다이어트 단계3, v8.30) — 입금 체크는 정산 탭 '입금 현황', 통계·미수는 기록보관함으로 이전됨. 수금 버튼은 항상 숨김.  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
   const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();
   if(!_skipD)renderDesktopRight();
@@ -4568,9 +4355,7 @@ function _renderAllSafe(){
   _updateMobFab();
 }
 function renderAll(skipSave=false){
-  // 수금 탭 제거 (다이어트 단계3, v8.30) — 수금 버튼은 항상 숨김(기록 탭은 소유자 노출 유지).
-  ['mTPayment','dTPayment','dRailPayment'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
+  // 수금 탭 제거 (다이어트 단계3, v8.30) — 수금 버튼은 항상 숨김(기록 탭은 소유자 노출 유지).  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
   const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
   const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
@@ -4687,7 +4472,7 @@ function _syncShareFoot(){
   if(typeof ResizeObserver==='function'){_footRO=new ResizeObserver(apply);_footRO.observe(lf);}
 }
 function renderDesktopRight(){_renderDesktopRightInner();_syncShareFoot();}
-function _renderDesktopRightInner(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='payment'){renderPaymentView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId&&items.some(i=>i.id===selectedId)){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');_syncShellNav('input');/* 편집 중이면 rail '입력' (v8.33) */return;}if(selectedId)selectedId=null;document.getElementById('dREye').textContent='시작하기';if(!people.length){_syncShellNav('input');document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){_syncShellNav('input');document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{renderResultView('dREye','dRTitle','dRSub','dRBody');document.getElementById('dRSub').textContent='지출을 선택하면 편집 모드로 전환돼요.';_syncShellNav('result');/* 오른쪽이 정산 결과면 rail도 '정산' 활성(지출 선택 전 미리보기) (v8.33) */}}
+function _renderDesktopRightInner(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId&&items.some(i=>i.id===selectedId)){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');_syncShellNav('input');/* 편집 중이면 rail '입력' (v8.33) */return;}if(selectedId)selectedId=null;document.getElementById('dREye').textContent='시작하기';if(!people.length){_syncShellNav('input');document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){_syncShellNav('input');document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{renderResultView('dREye','dRTitle','dRSub','dRBody');document.getElementById('dRSub').textContent='지출을 선택하면 편집 모드로 전환돼요.';_syncShellNav('result');/* 오른쪽이 정산 결과면 rail도 '정산' 활성(지출 선택 전 미리보기) (v8.33) */}}
 
 function renderEditor(id,eyeId,titleId,subId,bodyId){
   const it=items.find(i=>i.id===id);if(!it)return;
@@ -4745,7 +4530,6 @@ function renderEditor(id,eyeId,titleId,subId,bodyId){
 function renderMobileBody(){
   const el=document.getElementById('mBody');if(!el)return;
   el.classList.toggle('settle-mode',mTab==='settle');
-  if(mTab==='payment'){renderPaymentBody(el);return;}
   if(mTab==='result'){
     let html='';const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);const vc=items.filter(it=>+it.amount!==0).length;
     if(!vc){el.innerHTML='<div class="empty" style="padding:60px 0"><div class="empty-icon">'+svgEmpty+'</div><p>금액이 입력된 지출이 없어요</p><button style="margin-top:16px;padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="switchToInputTab()">지출 추가하기</button></div>';return;}
