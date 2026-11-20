@@ -1920,8 +1920,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.28';
-const BUILD_TIME='2026-11-20 16:56';
+const APP_VERSION='v8.29';
+const BUILD_TIME='2026-11-20 17:08';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1936,6 +1936,7 @@ let _coupleNames=(()=>{try{return JSON.parse(localStorage.getItem('dutchpay_coup
 let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_myName===OWNER_NAME;
 let _historySearch='';let _histSearchTypedAt=0;
 let _historySort='newest';
+let _histView='list',_histStatsSub='all'; // 기록보관함 뷰: 기록 | 통계(전체·월별) (v8.29, 다이어트 단계2)
 let _histSettleMode=false;
 let _histDrawerOpen=false,_loadedHistId=null,_editingFixedSourceId=null,_editPrevGroupId=null;
 let _histMonthYear=new Date().getFullYear(),_histMonthMonth=new Date().getMonth()+1,_histMonthAllMode=true;
@@ -3394,12 +3395,21 @@ function _refreshHistMonthView(){
   if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
   if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
 }
+// 기록보관함 뷰 토글 (기록 | 통계) — 정산 탭의 세그와 동일 모양 (v8.29)
+function _setHistView(v){_histView=v;_refreshHistDrList();const b=document.getElementById('histDrBody');if(b)b.scrollTop=0;}
+function _setHistStatsSub(v){_histStatsSub=v;_refreshHistDrList();const b=document.getElementById('histDrBody');if(b)b.scrollTop=0;}
 function _histDrListHtml(recs){
   if(!recs.length)return`<div class="empty" style="padding:40px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>⋯ 메뉴에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
+  const viewSeg=`<div class="pm-seg-row hist-view-seg"><button class="pm-seg${_histView==='list'?' on':''}" onclick="_setHistView('list')">기록</button><button class="pm-seg${_histView==='stats'?' on':''}" onclick="_setHistView('stats')">통계</button></div>`;
+  if(_histView==='stats'){
+    const subSeg=`<div class="pm-seg-row" style="margin-top:8px"><button class="pm-seg${_histStatsSub==='all'?' on':''}" onclick="_setHistStatsSub('all')">전체</button><button class="pm-seg${_histStatsSub==='month'?' on':''}" onclick="_setHistStatsSub('month')">월별</button></div>`;
+    const body=_histStatsSub==='month'?_pmMonthlyHtml(recs):_pmDashboardHtml(recs,{lite:true});
+    return viewSeg+subSeg+body;
+  }
   let filtered=_filterHistoryRecords(recs,_historySearch);
   filtered=_sortHistRecs(filtered,_historySort);
   const noMsg=_historySearch?`'${e(_historySearch)}' 검색 결과가 없어요`:(_histMonthAllMode?'기록이 없어요':'이 달에 저장된 기록이 없어요');
-  return _histMonthNavHtml(recs,filtered)+`<div class="record-list">${filtered.length?filtered.map(_buildRecordCardHtml).join(''):`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">${noMsg}</p></div>`}</div>`;
+  return viewSeg+_histMonthNavHtml(recs,filtered)+`<div class="record-list">${filtered.length?filtered.map(_buildRecordCardHtml).join(''):`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">${noMsg}</p></div>`}</div>`;
 }
 function _refreshHistDrList(){
   const el=document.getElementById('histDrList');if(!el)return;
@@ -3812,7 +3822,13 @@ function _pmSetTab(t){_pmHistTab=t;_reRenderPayment();}
 function _pmSetSort(v){_pmHistSort=v;_patchHistResults();}
 function _pmSetFilter(v){_pmHistFilter=v;_patchHistResults();}
 function _pmSetGroup(v){_pmHistGroup=v;_patchHistResults();}
-function _pmSetMonthPeopleSort(v){_pmMonthPeopleSort=v;_patchHistResults();}
+function _pmSetMonthPeopleSort(v){_pmMonthPeopleSort=v;_reRenderStatsSurface();}
+// 통계(월별/대시보드)는 수금 탭과 기록보관함 양쪽에서 쓰여서, 활성 표면에 맞춰 재렌더 (v8.29)
+function _reRenderStatsSurface(){
+  const dr=document.getElementById('histDr');
+  if(dr&&dr.classList.contains('open')){_refreshHistDrList();return;}
+  _patchHistResults();
+}
 function _pmDashSetUnit(u){_pmDashUnit=u;_pmDashShift=0;_patchHistResults();}
 // 지출 추이 바 클릭 → 목록 뷰로 전환 + 그 기간(연/월/일) 기록으로 스크롤·강조 (v8.11: '이 기간 보기' 링크에서만 이동)
 function _pmDashGotoPeriod(key){
@@ -3863,7 +3879,16 @@ function _pmDashTrendPick(ev){
   if(goto){goto.dataset.k=key;goto.innerHTML=`${e(l)} · ${c}건 목록에서 보기 <span class="pm-dash-lp-goto-arr">→</span>`;goto.style.display='flex';}
 }
 function _pmSearchInput(v){_pmHistSearch=v;_patchHistResults();}
-function _pmFilterByName(name){_pmHistSearch=name;const inp=document.querySelector('.pm-search');if(inp){inp.value=name;_chkClear(inp);}_patchHistResults();const mb=document.getElementById('mBody'),db=document.getElementById('dRBody');if(mb)mb.scrollTop=0;if(db)db.scrollTop=0;window.scrollTo(0,0);}
+function _pmFilterByName(name){
+  // 기록보관함이 열려 있으면 그쪽 '기록' 뷰로 전환 + 그 사람 검색, 아니면 수금 탭 필터 (v8.29)
+  const dr=document.getElementById('histDr');
+  if(dr&&dr.classList.contains('open')){
+    _histView='list';_historySearch=name;_histSearchTypedAt=Date.now();
+    const inp=document.querySelector('.hist-dr-sinp');if(inp){inp.value=name;_chkClear(inp);}
+    _refreshHistDrList();const body=document.getElementById('histDrBody');if(body)body.scrollTop=0;
+    return;
+  }
+  _pmHistSearch=name;const inp=document.querySelector('.pm-search');if(inp){inp.value=name;_chkClear(inp);}_patchHistResults();const mb=document.getElementById('mBody'),db=document.getElementById('dRBody');if(mb)mb.scrollTop=0;if(db)db.scrollTop=0;window.scrollTo(0,0);}
 function _pmShowPayerItems(nm,ym){
   const allRecs=loadHistory();
   const recs=allRecs.filter(r=>(r.dateStart||r.savedAt||'').slice(0,7)===ym);
@@ -4219,7 +4244,8 @@ function _pmDashboardStats(recs){
   const byPerson=Object.keys(personCount).filter(p=>!_myName||p!==_myName).map(p=>({name:p,count:personCount[p],treat:personTreat[p]||0,paid:personPaid[p]||0})).sort((a,b)=>b.count-a.count||b.treat-a.treat);
   return {count,totalSpend,myTreat,totalMine,outstanding,totalBilled,totalReceived,byMonth,byCategory,byPerson,byOutstanding,recPoints};
 }
-function _pmDashboardHtml(allRecs){
+function _pmDashboardHtml(allRecs,opts){
+  opts=opts||{}; // opts.lite: 지출추이·카테고리 제외(기록보관함 통계>전체 = 요약+미수+사람별) (v8.29)
   const s=_pmDashboardStats(allRecs);
   if(!s.count)return '<div class="empty" style="padding:30px 0"><p style="color:var(--label3)">기록이 없어요</p></div>';
   // ① 전체 기간 요약
@@ -4287,7 +4313,7 @@ function _pmDashboardHtml(allRecs){
     <div class="pm-dash-head"><span class="pm-dash-title">사람별 누적</span><span class="pm-dash-sub">함께한 횟수 · 쏜 금액</span></div>
     <div class="pm-dash-ppl-head"><span>이름</span><span>횟수</span><span>쏜 금액</span></div>
     <div class="pm-dash-ppl-list">${pplRows}</div></div>`:'';
-  return `<div class="pm-dash">${summary}${due}${trend}${cats}${people}</div>`;
+  return `<div class="pm-dash">${summary}${due}${opts.lite?'':trend}${opts.lite?'':cats}${people}</div>`;
 }
 function _pmMonthlyHtml(allRecs){
   const months={};
