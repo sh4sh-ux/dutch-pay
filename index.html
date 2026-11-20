@@ -1777,7 +1777,6 @@ svg{display:block;flex-shrink:0;}
         <button class="tab on" id="dTInput" onclick="dSetTab('input')">입력</button>
         <button class="tab" id="dTResult" onclick="dSetTab('result')">정산</button>
         <button class="tab" id="dTSettle" onclick="dSetTab('settle')">공유</button>
-        <button class="tab" id="dTHistory" onclick="dSetTab('history')" style="display:none">기록</button>
         <button class="tab" id="dTPayment" onclick="dSetTab('payment')" style="display:none">수금</button>
       </div>
     </div>
@@ -1925,8 +1924,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.33';
-const BUILD_TIME='2026-11-20 18:10';
+const APP_VERSION='v8.34';
+const BUILD_TIME='2026-11-20 18:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3400,10 +3399,7 @@ function _histMonthFromPick(val){
   updateHistorySearch(q);
 }
 function _refreshHistMonthView(){
-  if(_histDrawerOpen){_refreshHistDrList();return;}
-  if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
-  if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
-}
+  if(_histDrawerOpen){_refreshHistDrList();return;}}
 // 기록보관함 뷰 토글 (기록 | 통계) — 정산 탭의 세그와 동일 모양 (v8.29)
 function _setHistView(v){_histView=v;_refreshHistDrList();const b=document.getElementById('histDrBody');if(b)b.scrollTop=0;}
 function _setHistStatsSub(v){_histStatsSub=v;_refreshHistDrList();const b=document.getElementById('histDrBody');if(b)b.scrollTop=0;}
@@ -4691,7 +4687,7 @@ function _syncShareFoot(){
   if(typeof ResizeObserver==='function'){_footRO=new ResizeObserver(apply);_footRO.observe(lf);}
 }
 function renderDesktopRight(){_renderDesktopRightInner();_syncShareFoot();}
-function _renderDesktopRightInner(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='history'){renderHistoryView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='payment'){renderPaymentView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId&&items.some(i=>i.id===selectedId)){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');_syncShellNav('input');/* 편집 중이면 rail '입력' (v8.33) */return;}if(selectedId)selectedId=null;document.getElementById('dREye').textContent='시작하기';if(!people.length){_syncShellNav('input');document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){_syncShellNav('input');document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{renderResultView('dREye','dRTitle','dRSub','dRBody');document.getElementById('dRSub').textContent='지출을 선택하면 편집 모드로 전환돼요.';_syncShellNav('result');/* 오른쪽이 정산 결과면 rail도 '정산' 활성(지출 선택 전 미리보기) (v8.33) */}}
+function _renderDesktopRightInner(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='payment'){renderPaymentView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId&&items.some(i=>i.id===selectedId)){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');_syncShellNav('input');/* 편집 중이면 rail '입력' (v8.33) */return;}if(selectedId)selectedId=null;document.getElementById('dREye').textContent='시작하기';if(!people.length){_syncShellNav('input');document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){_syncShellNav('input');document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{renderResultView('dREye','dRTitle','dRSub','dRBody');document.getElementById('dRSub').textContent='지출을 선택하면 편집 모드로 전환돼요.';_syncShellNav('result');/* 오른쪽이 정산 결과면 rail도 '정산' 활성(지출 선택 전 미리보기) (v8.33) */}}
 
 function renderEditor(id,eyeId,titleId,subId,bodyId){
   const it=items.find(i=>i.id===id);if(!it)return;
@@ -4749,7 +4745,6 @@ function renderEditor(id,eyeId,titleId,subId,bodyId){
 function renderMobileBody(){
   const el=document.getElementById('mBody');if(!el)return;
   el.classList.toggle('settle-mode',mTab==='settle');
-  if(mTab==='history'){renderHistoryBody(el);return;}
   if(mTab==='payment'){renderPaymentBody(el);return;}
   if(mTab==='result'){
     let html='';const{paid,owes,hasRounding}=computeShares();const total=items.reduce((s,it)=>s+(+it.amount||0),0);const vc=items.filter(it=>+it.amount!==0).length;
@@ -5638,10 +5633,7 @@ function _historyDedupNoticeHtml(){
   return`<div class="hist-dedup-note" role="status"><div class="hist-dedup-copy"><strong>중복 기록 ${n}건을 정리했어요.</strong><br>최신 기록만 유지했으며 필요하면 다시 복원할 수 있어요.</div><div class="hist-dedup-actions"><button class="hist-dedup-btn" onclick="restoreLastHistoryDedup()">되돌리기</button><button class="hist-dedup-btn dismiss" aria-label="중복 정리 알림 닫기" onclick="dismissHistoryDedupNotice()">닫기</button></div></div>`;
 }
 function _refreshHistoryAfterDedupAction(){
-  if(_histDrawerOpen){_refreshHistDrawer();return;}
-  if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
-  if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
-}
+  if(_histDrawerOpen){_refreshHistDrawer();return;}}
 function dismissHistoryDedupNotice(){localStorage.removeItem(HISTORY_DEDUP_AUDIT_KEY);_refreshHistoryAfterDedupAction();}
 function restoreLastHistoryDedup(){
   const audit=_loadHistoryDedupAudit();if(!audit)return;
@@ -5946,10 +5938,7 @@ async function deleteHistoryRecord(id,event){
   toast(fixed?'잠긴 기록이 삭제됐어요 · 안전백업 보관됨':'기록이 삭제됐어요',{type:'success',duration:4000});
   if(hDbxGetToken())hSyncDropbox(true);
   if(typeof _patchHistResults==='function')_patchHistResults();
-  if(_histDrawerOpen){_refreshHistDrList();return;}
-  if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
-  if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
-}
+  if(_histDrawerOpen){_refreshHistDrList();return;}}
 
 function toggleHistoryCard(sid){
   const body=document.getElementById('rcb_'+sid);
@@ -6127,23 +6116,6 @@ function _buildRecordCardHtml(r){
   </div>`;
 }
 
-function _buildHistoryInnerHtml(){
-  const records=loadHistory();
-  let html=`${_historyDedupNoticeHtml()}`;
-  if(!records.length){
-    html+=`<div class="empty" style="padding:60px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>⋯ 메뉴에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
-  }else{
-    const filtered=_filterHistoryRecords(records,_historySearch);
-    html+=_histMonthNavHtml(records,filtered);
-    html+=`<div class="hist-search-wrap"><div class="sinp-rel"><input type="search" class="hist-search" placeholder="상호명, 참여자, 날짜 검색..." value="${e(_historySearch)}" oninput="updateHistorySearch(this.value);_chkClear(this)"><button class="sinp-clr${_historySearch?' vis':''}" onclick="_clrHistSearch()">✕</button></div></div>`;
-    const noMsg=_historySearch?`'${e(_historySearch)}' 검색 결과가 없어요`:(_histMonthAllMode?'기록이 없어요':'이 달에 저장된 기록이 없어요');
-    html+=`<div class="record-list" id="historyRecordList">`;
-    html+=filtered.length?filtered.map(_buildRecordCardHtml).join(''):`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">${noMsg}</p></div>`;
-    html+=`</div>`;
-  }
-  return html;
-}
-
 function _filterHistoryRecords(records,query){
   let recs=records;
   if(!_histMonthAllMode){const ym=`${_histMonthYear}-${String(_histMonthMonth).padStart(2,'0')}`;recs=recs.filter(r=>(r.dateStart||'').startsWith(ym)||(r.dateEnd||'').startsWith(ym));}
@@ -6288,23 +6260,6 @@ function editBannerCancel(){
   _refreshEditBanner();renderAll();
   toast('수정을 취소했어요',{type:'info'});
 }
-function renderHistoryView(eyeId,titleId,subId,bodyId){
-  _hPanelOpen=false;
-  document.getElementById(eyeId).textContent='기록 보관함';
-  document.getElementById(titleId).textContent='정산 기록';
-  document.getElementById(subId).textContent='저장된 더치페이 정산 기록을 확인하세요.';
-  const body=document.getElementById(bodyId);
-  if(body)body.classList.remove('settle-mode');
-  body.innerHTML=_buildHistoryInnerHtml();
-  _updateHSyncInfo();_updateHDbxBadge();
-}
-
-function renderHistoryBody(el){
-  _hPanelOpen=false;
-  el.innerHTML=_buildHistoryInnerHtml();
-  _updateHSyncInfo();_updateHDbxBadge();
-}
-
 // Dropbox (기록 보관함 전용)
 function hDbxGetToken(){return dbxGetToken();}
 
@@ -6443,10 +6398,7 @@ function hDbxDisconnect(){
   if(!confirm('Dropbox 연결을 해제할까요?'))return;
   ['dutchpay_dbx_token','dutchpay_dbx_refresh','dutchpay_dbx_account',DBX_H_LASTSYNC].forEach(k=>localStorage.removeItem(k));
   toast('Dropbox 연결 해제됨');
-  if(_histDrawerOpen){_refreshHistDrawer();return;}
-  if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');
-  if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}
-}
+  if(_histDrawerOpen){_refreshHistDrawer();return;}}
 
 let _hSyncing=false,_hSyncState='',_hSyncDelayTimer=null,_hSyncErrShort='';
 function _syncErrShort(msg){msg=String(msg||'');if(/저장공간|507|insufficient|over_quota/i.test(msg))return '저장공간 가득';if(/요청.*제한|429/i.test(msg))return '요청 제한 · 잠시 후';if(/Failed to fetch|NetworkError|network|offline|load failed/i.test(msg))return '네트워크 오류';return '동기화 실패';}
@@ -6536,7 +6488,6 @@ async function hSyncDropbox(uploadOnly=false){
     localStorage.setItem(DBX_H_LASTSYNC,new Date().toISOString());
     _hSyncState='';
     if(_histDrawerOpen){_refreshHistDrawer();}
-    else{if(dTab==='history')renderHistoryView('dREye','dRTitle','dRSub','dRBody');if(mTab==='history'){const el=document.getElementById('mBody');if(el)renderHistoryBody(el);}}
     // 잠금 원본 백업(교차기기 복원용)은 초록 확보 뒤 best-effort — 실패해도 동기화 상태에 영향 없음.
     try{await _syncFixedArchives(token);}catch(e){}
   }catch(err){_hSyncState='error';_hSyncErrShort=_syncErrShort(err&&err.message);_updateHSyncInfo();toast('동기화 실패: '+err.message,{type:'error'});}
