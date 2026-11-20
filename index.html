@@ -1920,8 +1920,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.29';
-const BUILD_TIME='2026-11-20 17:08';
+const APP_VERSION='v8.30';
+const BUILD_TIME='2026-11-20 17:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4551,9 +4551,8 @@ function _renderAllSafe(){
   const mSheet=document.getElementById('mSheet');
   const _skipD=_inp&&rBody&&rBody.contains(ae);
   const _skipM=_inp&&((mBody&&mBody.contains(ae))||(mSheet&&mSheet.contains(ae)));
-  const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
-  const dTPay=document.getElementById('dTPayment');if(dTPay)dTPay.style.display=_ownerUnlocked?'':'none';
-  const dRPay=document.getElementById('dRailPayment');if(dRPay)dRPay.style.display=_ownerUnlocked?'':'none';
+  // 수금 탭 제거 (다이어트 단계3, v8.30) — 입금 체크는 정산 탭 '입금 현황', 통계·미수는 기록보관함으로 이전됨. 수금 버튼은 항상 숨김.
+  ['mTPayment','dTPayment','dRailPayment'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
   const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();
@@ -4564,9 +4563,8 @@ function _renderAllSafe(){
   _updateMobFab();
 }
 function renderAll(skipSave=false){
-  const mTPay=document.getElementById('mTPayment');if(mTPay)mTPay.style.display=_ownerUnlocked?'':'none';
-  const dTPay=document.getElementById('dTPayment');if(dTPay)dTPay.style.display=_ownerUnlocked?'':'none';
-  const dRPay=document.getElementById('dRailPayment');if(dRPay)dRPay.style.display=_ownerUnlocked?'':'none';
+  // 수금 탭 제거 (다이어트 단계3, v8.30) — 수금 버튼은 항상 숨김(기록 탭은 소유자 노출 유지).
+  ['mTPayment','dTPayment','dRailPayment'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
   const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display=_ownerUnlocked?'':'none';
   renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
