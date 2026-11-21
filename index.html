@@ -1204,6 +1204,9 @@ svg{display:block;flex-shrink:0;}
   .hist-page .hist-head-right{position:absolute;right:calc(34px + var(--hist-sbw,0px));top:28px;display:flex;flex-direction:column;align-items:flex-end;gap:9px;padding:0;}/* 동기화를 eyebrow 줄(top 28)에 위 정렬 — 버튼 높이와 무관하게 위치 고정, 공유 헤더 저장칩과 어느 기기서도 일치 (v8.49). 우측은 스크롤바 폭 보정(v7.99) 유지 */
   .hist-page .hist-head-sync{margin:0;padding:0;text-align:right;}
   .hist-page .hist-dr-body{padding:0 34px 40px;scrollbar-gutter:stable;}/* 스크롤 유무와 무관하게 스크롤바 공간을 항상 비워둬 헤더 동기화·저장칩이 모든 화면서 같은 가로 위치 (v8.50) */
+  /* 공유 본문(.right-body)과 동일한 3px 얇은 스크롤바로 통일 — 기본 15px 스크롤바면 gutter가 15px라 공유(3px)와 12px 어긋남 (v8.51) */
+  .hist-page .hist-dr-body::-webkit-scrollbar{width:3px;}
+  .hist-page .hist-dr-body::-webkit-scrollbar-thumb{background:var(--sep2);border-radius:2px;}
   /* 검색 + 최신순 + 정산상태 한 줄 → 카드가 더 많이 보이게 */
   .hist-page .hist-dr-sinp-wrap{display:flex;gap:8px;align-items:center;overflow:visible;padding:18px 0 10px;flex-wrap:nowrap;background:var(--panel-bg);position:static;}
   .hist-page .sinp-rel{flex:1;min-width:0;}
@@ -1935,8 +1938,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.50';
-const BUILD_TIME='2026-11-21 11:05';
+const APP_VERSION='v8.51';
+const BUILD_TIME='2026-11-21 12:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
