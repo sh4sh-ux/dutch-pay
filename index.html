@@ -243,8 +243,8 @@ svg{display:block;flex-shrink:0;}
 .r-eye{font-size:12px;font-weight:500;color:var(--label3);letter-spacing:.7px;text-transform:uppercase;line-height:1.4;margin-bottom:11px;}
 .r-title{font-size:22px;font-weight:700;letter-spacing:-.4px;}
 .r-sub{font-size:13px;color:var(--label2);margin-top:5px;line-height:1.5;}
-/* 공유(정산) 헤더 '저장' 표시: 기록보관함 헤더 '● 방금 동기화'(.hist-head-sync)와 1px 오차 없이 동일 위치 — top 43/right 34(+본문 스크롤바 보정) (v8.46) */
-.r-saved-chip{position:absolute;top:43px;right:calc(34px + var(--dr-sbw,0px));font-size:12px;font-weight:600;color:var(--green);line-height:1.25;white-space:nowrap;}
+/* 공유(정산) 헤더 '저장' 표시: 기록보관함 헤더 '● 방금 동기화'(.hist-head-sync)와 위치·스타일 1:1 동일 — top 43/right 34(+스크롤바 보정)·12px·weight 400·line-height normal (v8.46, 굵기 400 보정 v8.47) */
+.r-saved-chip{position:absolute;top:43px;right:calc(34px + var(--dr-sbw,0px));font-size:12px;font-weight:400;color:var(--green);white-space:nowrap;}
 .right-body{flex:1;padding:24px 32px;overflow-y:auto;}
 .right-body::-webkit-scrollbar{width:3px;}
 .right-body::-webkit-scrollbar-thumb{background:var(--sep2);border-radius:2px;}
@@ -1935,8 +1935,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.46';
-const BUILD_TIME='2026-11-21 09:10';
+const APP_VERSION='v8.47';
+const BUILD_TIME='2026-11-21 09:35';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
