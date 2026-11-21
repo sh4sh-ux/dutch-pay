@@ -239,10 +239,12 @@ svg{display:block;flex-shrink:0;}
 .foot-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;}
 
 .right{display:flex;flex-direction:column;background:var(--panel-bg);}
-.right-top{padding:28px 32px 20px;border-bottom:1px solid var(--sep);}
+.right-top{padding:28px 32px 20px;border-bottom:1px solid var(--sep);position:relative;}
 .r-eye{font-size:12px;font-weight:500;color:var(--label3);letter-spacing:.7px;text-transform:uppercase;line-height:1.4;margin-bottom:11px;}
 .r-title{font-size:22px;font-weight:700;letter-spacing:-.4px;}
 .r-sub{font-size:13px;color:var(--label2);margin-top:5px;line-height:1.5;}
+/* 공유(정산) 헤더 '저장' 표시: 기록보관함 헤더 '● 방금 동기화'(.hist-head-sync)와 1px 오차 없이 동일 위치 — top 43/right 34(+본문 스크롤바 보정) (v8.46) */
+.r-saved-chip{position:absolute;top:43px;right:calc(34px + var(--dr-sbw,0px));font-size:12px;font-weight:600;color:var(--green);line-height:1.25;white-space:nowrap;}
 .right-body{flex:1;padding:24px 32px;overflow-y:auto;}
 .right-body::-webkit-scrollbar{width:3px;}
 .right-body::-webkit-scrollbar-thumb{background:var(--sep2);border-radius:2px;}
@@ -904,9 +906,6 @@ svg{display:block;flex-shrink:0;}
   .mob-body .share-actions{position:fixed;right:0;bottom:calc(72px + env(safe-area-inset-bottom,0px));left:0;margin:0;padding:12px 16px;background:var(--bg);border-top:1px solid var(--sep);box-shadow:0 -12px 28px rgba(20,25,40,.08);z-index:80;}
 }
 .saved-badge{margin-top:10px;text-align:center;font-size:13px;color:var(--green);font-weight:600;}
-.settle-saved-row{display:flex;justify-content:flex-end;margin-bottom:6px;}
-/* 공유탭 저장 표시: 모바일 헤더 '● 기록보관함 저장'(.mob-saved-chip)과 동일 스타일 — plain 초록 글씨(pill 아님) (v8.45) */
-.settle-saved-chip{font-size:12px;font-weight:600;color:var(--green);line-height:1.25;white-space:nowrap;}
 /* 기록보관함 헤더의 '● 방금 동기화'와 동일 스타일(초록 글씨·점 접두, pill 아님) (v8.40) */
 .mob-saved-chip{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--green);line-height:1.25;white-space:nowrap;flex-shrink:0;}
 /* 정산 탭 기록 보관함 저장 버튼 (상태 반영, v5.74) */
@@ -1832,6 +1831,7 @@ svg{display:block;flex-shrink:0;}
       <div class="r-eye" id="dREye">시작하기</div>
       <div class="r-title" id="dRTitle">참여자와 지출을 추가해보세요</div>
       <div class="r-sub" id="dRSub">왼쪽에서 참여자를 입력하고 지출을 추가하면 정산을 시작할 수 있어요.</div>
+      <div class="r-saved-chip" id="dRSaved" title="기록 보관함에 저장됨 (기기 내 로컬)" style="display:none">● 기록보관함 저장</div>
     </div>
     <div class="right-body" id="dRBody">
       <div class="empty"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="11" y2="16"/></svg></div><p>지출을 선택하거나 추가하면<br>여기서 편집할 수 있어요</p></div>
@@ -1935,8 +1935,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.45';
-const BUILD_TIME='2026-11-21 08:45';
+const APP_VERSION='v8.46';
+const BUILD_TIME='2026-11-21 09:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3331,9 +3331,11 @@ function _refreshHistDrawer(){
 // 헤더 우측(동기화·전체 상세 저장, position:absolute)은 안 밀려 어긋난다(집 PC=클래식 스크롤바, 회사=오버레이라 정상).
 // → 실제 스크롤바 폭을 재서 --hist-sbw로 헤더 우측 오른쪽값에 더해 둘을 정렬 (v7.99)
 function _syncHistHeadInset(){
-  const body=document.getElementById('histDrBody');if(!body)return;
-  const sbw=Math.max(0,body.offsetWidth-body.clientWidth);
-  document.documentElement.style.setProperty('--hist-sbw',sbw+'px');
+  const body=document.getElementById('histDrBody');
+  if(body){const sbw=Math.max(0,body.offsetWidth-body.clientWidth);document.documentElement.style.setProperty('--hist-sbw',sbw+'px');}
+  // 공유(정산) 헤더 저장칩도 본문(#dRBody) 스크롤바 폭만큼 보정해 헤더 우측과 본문 콘텐츠를 정렬 (v8.46, v7.99와 동일 원리)
+  const rb=document.getElementById('dRBody');
+  if(rb){const sbw2=Math.max(0,rb.offsetWidth-rb.clientWidth);document.documentElement.style.setProperty('--dr-sbw',sbw2+'px');}
 }
 window.addEventListener('resize',()=>{try{_syncHistHeadInset();}catch(e){}});
 function _histMonthNavHtml(allRecs,dispRecs){
@@ -4467,7 +4469,9 @@ function renderItemLists(){const el=document.getElementById('dItemRows');const l
 
 function updateTotals(){const t=items.reduce((s,it)=>s+(+it.amount||0),0);const neg=t<0;const dEl=document.getElementById('dTotal');dEl.textContent=fmt(t)+'원';dEl.classList.toggle('amt-neg',neg);const mEl=document.getElementById('mTotal');if(mEl){mEl.textContent=fmt(t)+'원';mEl.classList.toggle('amt-neg',neg);}
   // 헤더 '기록보관함 저장됨' 칩 — 현재 정산이 보관함에 저장돼 있으면 전 탭 상단에 표시 (v8.39)
-  const sc=document.getElementById('mobSavedChip');if(sc)sc.style.display=(t&&_isAlreadySaved())?'':'none';}
+  const saved=!!(t&&_isAlreadySaved());
+  const sc=document.getElementById('mobSavedChip');if(sc)sc.style.display=saved?'':'none';
+  const sc2=document.getElementById('dRSaved');if(sc2)sc2.style.display=saved?'block':'none';}
 
 // 공유 버튼은 렌더 후 스크롤 영역 밖(.right-foot)으로 옮긴다.
 // .right-body 안에 두면 sticky여도 그 콘텐츠 박스 바닥까지만 내려가 패딩만큼 뜬다.
@@ -4493,7 +4497,7 @@ function _syncShareFoot(){
   if(_footRO){_footRO.disconnect();_footRO=null;}
   if(typeof ResizeObserver==='function'){_footRO=new ResizeObserver(apply);_footRO.observe(lf);}
 }
-function renderDesktopRight(){_renderDesktopRightInner();_syncShareFoot();}
+function renderDesktopRight(){_renderDesktopRightInner();_syncShareFoot();requestAnimationFrame(_syncHistHeadInset);}
 function _renderDesktopRightInner(){const body=document.getElementById('dRBody');if(dTab!=='settle'&&body)body.classList.remove('settle-mode');if(dTab==='result'){renderResultView('dREye','dRTitle','dRSub','dRBody');return;}if(dTab==='settle'){renderSettleView('dREye','dRTitle','dRSub','dRBody');return;}if(selectedId&&items.some(i=>i.id===selectedId)){renderEditor(selectedId,'dREye','dRTitle','dRSub','dRBody');_syncRailNav('input');/* 편집 중이면 rail '입력' (v8.33, rail만 v8.43) */return;}if(selectedId)selectedId=null;document.getElementById('dREye').textContent='시작하기';if(!people.length){_syncRailNav('input');document.getElementById('dRTitle').textContent='먼저 참여자를 추가해주세요';document.getElementById('dRSub').textContent='왼쪽 위 "참여자" 영역에 이름을 입력하세요. 쉼표로 여러 명 한 번에 추가할 수 있어요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">1단계</strong> 참여자 입력<br><strong style="color:var(--label3)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else if(!items.length){_syncRailNav('input');document.getElementById('dRTitle').textContent='이제 지출을 추가해보세요';document.getElementById('dRSub').textContent='왼쪽의 + 지출 추가 버튼을 눌러 첫 지출을 입력해보세요.';body.innerHTML=`<div class="empty"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label3)">1단계</strong> 참여자 입력 ✓<br><strong style="color:var(--label2)">2단계</strong> 지출 추가<br><strong style="color:var(--label3)">3단계</strong> 공유 탭에서 이미지 공유</p></div>`;}else{renderResultView('dREye','dRTitle','dRSub','dRBody');document.getElementById('dRSub').textContent='지출을 선택하면 편집 모드로 전환돼요.';_syncRailNav('result');/* 오른쪽이 정산 결과면 rail도 '정산' 활성(지출 선택 전 미리보기) (v8.33, rail만 v8.43) */}}
 
 function renderEditor(id,eyeId,titleId,subId,bodyId){
@@ -4731,10 +4735,9 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const validItems=items.filter(it=>+it.amount!==0);
   const paySection=validItems.length?`<div class="pay-section-title">지출 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0&&!_alcActive(it)?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const uid='i'+it.id;const rowClick=_hasReceiptDetail(it)?` onclick="toggleItemReceipt('${uid}',event)"`:'';const chev=_hasReceiptDetail(it)?`<span class="rc-chev" data-rcpt-chev="${uid}"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row"${rowClick}><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱</span>':''}${_alcBadge(it)}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div>${chev}<span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid)}`;}).join('')}</div>`:'';
   const noticeHtml=txns.length&&hasRounding?'<div class="notice">차액은 결제자에게 우선 부담돼요</div>':'';
-  // 저장 표시를 하단 버튼 아래 → 상단 우측 녹색 칩으로 이동 (v8.37)
-  const savedChip=_isAlreadySaved()?'<div class="settle-saved-row"><span class="settle-saved-chip" title="기록 보관함에 저장됨 (기기 내 로컬)">● 기록보관함 저장</span></div>':'';
+  // 저장 표시는 데스크탑 헤더 칩(#dRSaved, .right-top 우측)으로 이동 — 기록보관함 '● 방금 동기화'와 동일 위치 (v8.46). 본문엔 두지 않음
   const shareBtn=`${_shareBtnsHtml('')}`;
-  body.innerHTML=savedChip+dateRow+hero+txnSection+paySection+noticeHtml+shareBtn;
+  body.innerHTML=dateRow+hero+txnSection+paySection+noticeHtml+shareBtn;
 }
 
 function _pmAcctHtml(key,cur){const ps=['케이뱅크','카카오페이','토스뱅크','우리은행','현금'];if(cur&&!ps.includes(cur))return`<input class="pay-inp" type="text" placeholder="계좌" value="${ea(cur)}" oninput="pmUpdate('${jsa(key)}','account',this.value)"/>`;return`<select class="pay-sel" onchange="if(this.value==='__custom__'){_pmAcctCustom('${jsa(key)}',this)}else pmUpdate('${jsa(key)}','account',this.value)"><option value="">선택</option>${ps.map(p=>`<option value="${ea(p)}"${cur===p?' selected':''}>${p}</option>`).join('')}<option value="__custom__">직접 입력...</option></select>`;}
