@@ -342,7 +342,7 @@ svg{display:block;flex-shrink:0;}
 .txn-row.expandable{cursor:pointer;transition:background .1s;}
 .txn-row.expandable:hover{background:var(--fill);}
 /* 입금완료 행 녹색 그라데이션 제거 — ✓ 초록 체크·'입금완료'로 이미 충분(중복) (v8.42) */
-.txn-row.pm-diff{background:linear-gradient(90deg,rgba(255,59,48,.06) 0%,var(--card) 70%);}
+/* 입금 '부족' 행 빨강 틴트 제거 — 빨강 배지·빨강 금액으로 부족 표시 충분(완료 행 초록 틴트 제거 v8.42와 통일) (v8.45) */
 /* 수취인 구분선(파랑/주황) — 카드 라운드(16px)에 양끝이 잘려 보이던 문제. 좌우 대칭 인셋 + 둥근 끝으로 모서리 곡선을 피함 (v5.70) */
 .txn-group-div{height:1.5px;margin:0 16px;border-radius:1px;}
 .txn-div-owner{background:var(--blue);}
@@ -905,7 +905,8 @@ svg{display:block;flex-shrink:0;}
 }
 .saved-badge{margin-top:10px;text-align:center;font-size:13px;color:var(--green);font-weight:600;}
 .settle-saved-row{display:flex;justify-content:flex-end;margin-bottom:6px;}
-.settle-saved-chip{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--green-txt);background:var(--green-bg);border:1px solid color-mix(in srgb,var(--green-txt) 25%,transparent);border-radius:999px;padding:4px 11px;line-height:1;}
+/* 공유탭 저장 표시: 모바일 헤더 '● 기록보관함 저장'(.mob-saved-chip)과 동일 스타일 — plain 초록 글씨(pill 아님) (v8.45) */
+.settle-saved-chip{font-size:12px;font-weight:600;color:var(--green);line-height:1.25;white-space:nowrap;}
 /* 기록보관함 헤더의 '● 방금 동기화'와 동일 스타일(초록 글씨·점 접두, pill 아님) (v8.40) */
 .mob-saved-chip{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--green);line-height:1.25;white-space:nowrap;flex-shrink:0;}
 /* 정산 탭 기록 보관함 저장 버튼 (상태 반영, v5.74) */
@@ -1934,8 +1935,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.44';
-const BUILD_TIME='2026-11-21 08:20';
+const APP_VERSION='v8.45';
+const BUILD_TIME='2026-11-21 08:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3105,19 +3106,19 @@ function _setPanelHtml(){
   // 기록 보관함 카드
   const histCard=`<div class="set-card"><div class="set-card-title">기록 보관함</div><div class="set-card-rows">`
     +`<button class="set-row" data-action="openHistory"><span class="ic">📋</span>기록 보관함 열기<span class="chev">›</span></button>`
-    +`<button class="set-row" data-action="saveHistory"><span class="ic">📌</span>현재 정산을 기록에 저장<span class="chev">›</span></button>`
-    +`<button class="set-row" data-action="fixHistory"><span class="ic">🔒</span>잠금(원본 고정)<span class="chev">›</span></button>`
+    +`<button class="set-row" data-action="saveHistory"><span class="ic">📌</span>현재 정산을 기록에 저장</button>`
+    +`<button class="set-row" data-action="fixHistory"><span class="ic">🔒</span>잠금(원본 고정)</button>`
     +`<button class="set-row" data-action="setCouples"><span class="ic">💑</span>공유 이미지 커플 설정<span class="chev">›</span></button>`
     +`</div></div>`;
   // 데이터 백업 카드
   const dataCard=`<div class="set-card"><div class="set-card-title">데이터 내보내기</div><div class="set-card-rows">`
-    +`<button class="set-row" data-action="exportCsv"><span class="ic">📄</span>CSV로 저장<span class="chev">›</span></button>`
-    +`<button class="set-row" data-action="export"><span class="ic">💾</span>전체 JSON 백업<span class="chev">›</span></button>`
+    +`<button class="set-row" data-action="exportCsv"><span class="ic">📄</span>CSV로 저장</button>`
+    +`<button class="set-row" data-action="export"><span class="ic">💾</span>전체 JSON 백업</button>`
     +`</div></div>`;
   // 초기화 카드
   const resetCard=`<div class="set-card"><div class="set-card-title">초기화</div><div class="set-card-rows">`
-    +`<button class="set-row danger" data-action="resetCurrent"><span class="ic">↺</span>이번 정산 초기화<span class="chev">›</span></button>`
-    +`<button class="set-row danger" data-action="reset"><span class="ic">🗑</span>전체 초기화<span class="chev">›</span></button>`
+    +`<button class="set-row danger" data-action="resetCurrent"><span class="ic">↺</span>이번 정산 초기화</button>`
+    +`<button class="set-row danger" data-action="reset"><span class="ic">🗑</span>전체 초기화</button>`
     +`</div></div>`;
   return `<div class="set-intro">앱 설정과 데이터를 관리해요.</div>`
     +nameCard+themeCard+dbxCard+histCard+dataCard+resetCard
@@ -4731,7 +4732,7 @@ function renderSettleView(eyeId,titleId,subId,bodyId){
   const paySection=validItems.length?`<div class="pay-section-title">지출 내역</div><div class="txn-card">${validItems.map(it=>{const n=(it.members.length||people.length)||1;const rem=((+it.amount%n)+n)%n;const chip=hasRounding&&rem>0&&!_alcActive(it)?`<button type="button" class="adj-chip" onclick="showRounderPicker(${it.id},this,event)">차액 ${rem}원</button>`:'';const uid='i'+it.id;const rowClick=_hasReceiptDetail(it)?` onclick="toggleItemReceipt('${uid}',event)"`:'';const chev=_hasReceiptDetail(it)?`<span class="rc-chev" data-rcpt-chev="${uid}"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:'';const mems=it.members.length?it.members:people;return `<div class="detail-row"${rowClick}><button type="button" class="pay-ic" aria-label="아이콘 변경" onclick="showIconPicker(${it.id},this,event)">${getIconSvg(it)}</button><div class="detail-info"><div class="detail-main"><span class="detail-name">${e(it.name)||'(이름 없음)'}</span><span class="detail-payer">${e(it.payer)||'결제자 미정'} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱</span>':''}${_alcBadge(it)}${chip}</div><div class="detail-sub"><span class="detail-members">${_itMembersHtml(it)}</span></div></div>${chev}<span class="detail-amt${+it.amount<0?' amt-neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid)}`;}).join('')}</div>`:'';
   const noticeHtml=txns.length&&hasRounding?'<div class="notice">차액은 결제자에게 우선 부담돼요</div>':'';
   // 저장 표시를 하단 버튼 아래 → 상단 우측 녹색 칩으로 이동 (v8.37)
-  const savedChip=_isAlreadySaved()?'<div class="settle-saved-row"><span class="settle-saved-chip" title="기록 보관함에 저장됨 (기기 내 로컬)">✓ 기록보관함 저장됨</span></div>':'';
+  const savedChip=_isAlreadySaved()?'<div class="settle-saved-row"><span class="settle-saved-chip" title="기록 보관함에 저장됨 (기기 내 로컬)">● 기록보관함 저장</span></div>':'';
   const shareBtn=`${_shareBtnsHtml('')}`;
   body.innerHTML=savedChip+dateRow+hero+txnSection+paySection+noticeHtml+shareBtn;
 }
