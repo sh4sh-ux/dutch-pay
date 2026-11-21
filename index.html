@@ -1763,7 +1763,7 @@ svg{display:block;flex-shrink:0;}
 <div class="desktop-app">
   <nav class="app-rail" aria-label="주요 메뉴">
     <button class="app-rail-logo" type="button" aria-label="더치페이 홈" onclick="dSetTab('input')">D</button>
-    <button class="app-rail-btn on" type="button" data-dutch-nav="input" data-nav-label="입력" aria-label="지출 추가" onclick="startNewExpense()">
+    <button class="app-rail-btn on" type="button" data-dutch-nav="input" data-nav-label="입력" aria-label="입력 화면" onclick="goToInput()">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>
     <button class="app-rail-btn" type="button" data-dutch-nav="result" data-nav-label="정산" aria-label="정산" onclick="dSetTab('result')">
@@ -1935,8 +1935,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.47';
-const BUILD_TIME='2026-11-21 09:35';
+const APP_VERSION='v8.48';
+const BUILD_TIME='2026-11-21 10:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2984,7 +2984,8 @@ function showIconPicker(itemId,anchorEl,ev){if(ev){ev.stopPropagation();ev.preve
 function showRounderPicker(itemId,anchorEl,ev){if(ev){ev.stopPropagation();ev.preventDefault();}const _open=document.querySelector('.rounder-pop');const _same=_open&&_open.dataset.itemId===String(itemId);_dismissPops();if(_same)return;const it=items.find(i=>i.id===itemId);if(!it)return;const memOpts=it.members.length?it.members:people;const cur=it.rounderOverride||'';const pop=document.createElement('div');pop.className='rounder-pop';pop.dataset.itemId=String(itemId);pop.innerHTML=`<div class="rounder-pop-hd">차액 부담자</div>`+[{v:'',label:'자동 (결제자 우선)'}].concat(memOpts.map(p=>({v:p,label:e(p)+' 부담'}))).map(o=>`<button class="rounder-opt${cur===o.v?' on':''}" data-val="${ea(o.v)}">${o.label}</button>`).join('');pop.addEventListener('click',ev2=>{ev2.stopPropagation();const btn=ev2.target.closest('.rounder-opt');if(!btn)return;setRounderOverride(itemId,btn.dataset.val);_dismissPops();});document.body.appendChild(pop);const r=anchorEl.getBoundingClientRect();const pr=pop.getBoundingClientRect();let top=r.bottom+window.scrollY+6;if(r.bottom+pr.height+8>window.innerHeight&&r.top-pr.height-6>0){top=r.top+window.scrollY-pr.height-6;pop.classList.add('pop-above');}pop.style.top=top+'px';let left=r.left+window.scrollX;if(left+pr.width>window.innerWidth-8)left=window.innerWidth-pr.width-8;pop.style.left=Math.max(8,left)+'px';_openPopWithBackdrop(pop);}
 
 function addItem(){_reorderMode=false;if(_histDrawerOpen)closeHistDrawer();const isMobile=window.matchMedia('(max-width:700px)').matches;if(!people.length){const inp=isMobile?document.getElementById('mPInp'):document.getElementById('dPInp');if(inp)inp.focus();return;}idc++;items.push({id:idc,name:'',amount:'',payer:(_myName&&people.includes(_myName)?_myName:people[0])||'',members:people.slice(),watchers:[],isTreat:false,receiptText:''});selectedId=idc;_justAddedId=idc;renderAll();if(isMobile){openSheet(idc);setTimeout(()=>{const inp=document.getElementById('sfname');if(inp)inp.focus();},320);}else{setTimeout(()=>{const inp=document.getElementById('fname');if(inp)inp.focus();},60);}}
-function startNewExpense(){_checkAutoDelete();if(_histDrawerOpen)closeHistDrawer();dTab='input';selectedId=null;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n==='input'?' on':'');});_syncShellNav('input');if(!people.length){renderAll();setTimeout(()=>document.getElementById('dPInp')?.focus(),0);return;}addItem();}
+// 레일 '입력' 버튼 — 화면 전환(입력 보기)만 한다. 지출 추가는 '지출 추가' 버튼 전담 (레일이 멋대로 빈 지출을 만들던 것 제거, v8.48)
+function goToInput(){_checkAutoDelete();if(_histDrawerOpen)closeHistDrawer();dTab='input';selectedId=null;['input','result','settle','history','payment'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n==='input'?' on':'');});_syncShellNav('input');renderDesktopRight();if(!people.length)setTimeout(()=>document.getElementById('dPInp')?.focus(),0);}
 
 function removeItem(id){const idx=items.findIndex(it=>it.id===id);if(idx<0)return;const name=items[idx].name||'(이름 없음)';const snap={item:items[idx],idx};items=items.filter(it=>it.id!==id);if(selectedId===id)selectedId=null;closeSheet();renderAll();toast(`'${name}' 삭제됨`,{action:()=>{items.splice(snap.idx,0,snap.item);renderAll();},actionLabel:'되돌리기'});}
 
