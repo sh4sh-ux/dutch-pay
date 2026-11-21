@@ -1938,8 +1938,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.51';
-const BUILD_TIME='2026-11-21 12:30';
+const APP_VERSION='v8.52';
+const BUILD_TIME='2026-11-21 13:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2997,8 +2997,8 @@ function _syncShellNav(t){document.querySelectorAll('[data-dutch-nav]').forEach(
 function _syncRailNav(t){document.querySelectorAll('.app-rail-btn[data-dutch-nav]').forEach(el=>el.classList.toggle('on',el.dataset.dutchNav===t));}
 function switchToInputTab(){if(window.matchMedia('(max-width:700px)').matches){mTab='input';['input','result','settle','history'].forEach(n=>{const el=document.getElementById('mT'+cap(n));if(el)el.className='mob-tab'+(n==='input'?' on':'');});_syncShellNav('input');renderMobileBody();}else{dTab='input';['input','result','settle','history'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n==='input'?' on':'');});_syncShellNav('input');renderDesktopRight();}}
 function _checkAutoDelete(){if(_ufTimer)_flushUpdateField();if(_justAddedId===null)return;const id=_justAddedId;_justAddedId=null;const it=items.find(i=>i.id===id);if(it&&!it.name&&(!it.amount||+it.amount===0)){items=items.filter(i=>i.id!==id);if(selectedId===id)selectedId=null;renderItemLists();refreshMobItems();saveState();}}
-function selectItem(id){_checkAutoDelete();if(_histDrawerOpen)closeHistDrawer();selectedId=id;if(dTab!=='input'){dTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('dT'+cap(n)).className='tab'+(n==='input'?' on':'');});_syncShellNav('input');}renderAll();}
-function selectItemMob(id){_checkAutoDelete();selectedId=id;if(mTab!=='input'){mTab='input';['input','result','settle','history'].forEach(n=>{document.getElementById('mT'+cap(n)).className='mob-tab'+(n==='input'?' on':'');});_syncShellNav('input');renderMobileBody();}openSheet(id);}
+function selectItem(id){_checkAutoDelete();if(_histDrawerOpen)closeHistDrawer();selectedId=id;if(dTab!=='input'){dTab='input';['input','result','settle','history'].forEach(n=>{const el=document.getElementById('dT'+cap(n));if(el)el.className='tab'+(n==='input'?' on':'');});_syncShellNav('input');}renderAll();}/* dTHistory는 v8.34에서 제거 — 다른 탭(공유·정산·드로어)에서 지출 클릭 시 null.className 예외로 renderAll이 안 돌아 두 번 눌러야 했던 것 수정: 다른 함수들과 동일한 null-안전 가드 (v8.52) */
+function selectItemMob(id){_checkAutoDelete();selectedId=id;if(mTab!=='input'){mTab='input';['input','result','settle','history'].forEach(n=>{const el=document.getElementById('mT'+cap(n));if(el)el.className='mob-tab'+(n==='input'?' on':'');});_syncShellNav('input');renderMobileBody();}openSheet(id);}
 
 let _ufTimer=null;
 function _flushUpdateField(){clearTimeout(_ufTimer);_ufTimer=null;saveState();}
