@@ -1203,7 +1203,7 @@ svg{display:block;flex-shrink:0;}
   /* 헤더 우측: 동기화 표시 + 전체 상세 저장 */
   .hist-page .hist-head-right{position:absolute;right:calc(34px + var(--hist-sbw,0px));top:28px;display:flex;flex-direction:column;align-items:flex-end;gap:9px;padding:0;}/* 동기화를 eyebrow 줄(top 28)에 위 정렬 — 버튼 높이와 무관하게 위치 고정, 공유 헤더 저장칩과 어느 기기서도 일치 (v8.49). 우측은 스크롤바 폭 보정(v7.99) 유지 */
   .hist-page .hist-head-sync{margin:0;padding:0;text-align:right;}
-  .hist-page .hist-dr-body{padding:0 34px 40px;}
+  .hist-page .hist-dr-body{padding:0 34px 40px;scrollbar-gutter:stable;}/* 스크롤 유무와 무관하게 스크롤바 공간을 항상 비워둬 헤더 동기화·저장칩이 모든 화면서 같은 가로 위치 (v8.50) */
   /* 검색 + 최신순 + 정산상태 한 줄 → 카드가 더 많이 보이게 */
   .hist-page .hist-dr-sinp-wrap{display:flex;gap:8px;align-items:center;overflow:visible;padding:18px 0 10px;flex-wrap:nowrap;background:var(--panel-bg);position:static;}
   .hist-page .sinp-rel{flex:1;min-width:0;}
@@ -1685,7 +1685,7 @@ svg{display:block;flex-shrink:0;}
 .right-foot:empty{display:none;border-top:none;padding:0;}
 .right-foot .share-actions{position:static;margin:0;padding:0;background:none;border-top:none;box-shadow:none;}
 .right-top{height:var(--desktop-header-h);flex:0 0 var(--desktop-header-h);box-sizing:border-box;padding:28px 34px 21px;}
-.right-body{min-height:0;padding:18px 34px;--share-inline-pad:34px;--share-bottom-pad:26px;}
+.right-body{min-height:0;padding:18px 34px;--share-inline-pad:34px;--share-bottom-pad:26px;scrollbar-gutter:stable;}/* 스크롤 유무와 무관하게 스크롤바 공간 항상 확보 → 저장칩 가로 위치가 기록보관함 동기화와 모든 화면서 동일 (v8.50) */
 .right-body>.pm-seg-row{margin-top:0;} /* 수금 세그먼트 추가 여백 제거 — 모든 탭 콘텐츠 시작을 왼쪽 입력칸(193px) 높이에 통일 (v7.03) */
 .r-title{font-size:24px;letter-spacing:-.6px;line-height:1.2;}
 .expense-editor-card{max-width:920px;padding:20px;background:var(--fill2);border:1px solid var(--sep);border-radius:14px;}
@@ -1935,8 +1935,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.49';
-const BUILD_TIME='2026-11-21 10:35';
+const APP_VERSION='v8.50';
+const BUILD_TIME='2026-11-21 11:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
