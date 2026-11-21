@@ -984,11 +984,17 @@ svg{display:block;flex-shrink:0;}
 .hmn-stat-col-lbl{font-size:13px;font-weight:500;color:var(--label2);flex-shrink:0;}
 .hmn-stat-col-val{font-size:15px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;}
 .hmn-stat-col-right{display:flex;align-items:center;gap:6px;justify-content:flex-end;min-width:0;}
-/* 요약 '○○ 지출' 줄: 금액 안 쪼개지게 + 배지는 금액 아래 줄로 (모바일 넘침 방지, v8.31) */
-.hmn-col-badges{flex-direction:column;align-items:stretch;gap:0;}
-.hmn-col-main{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.hmn-stat-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+/* 요약 '○○ 지출' 줄: 데스크탑=이름·배지·금액 한 줄 / 모바일=이름·금액 한 줄 + 배지 아래 줄 (v8.44) */
+.hmn-col-badges{flex-wrap:wrap;gap:8px;}
+.hmn-stat-badges{display:flex;flex-wrap:wrap;gap:6px;min-width:0;}
 .hmn-stat-badges .hmn-stat-settle+.hmn-stat-settle{margin-left:0;}
+.hmn-col-badges .hmn-stat-col-lbl{order:1;flex-shrink:0;}
+.hmn-col-badges .hmn-stat-badges{order:2;flex:1;}
+.hmn-col-badges .hmn-stat-col-val{order:3;flex-shrink:0;}
+@media(max-width:700px){
+  .hmn-col-badges .hmn-stat-col-val{order:2;margin-left:auto;}
+  .hmn-col-badges .hmn-stat-badges{order:3;flex:0 0 100%;margin-top:4px;}
+}
 .hist-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;}
 .hist-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--label3);padding:5px 10px;border:1px solid var(--sep);background:var(--fill2);border-radius:20px;white-space:nowrap;}
 .hist-badge.connected{color:var(--green-txt);border-color:var(--green);background:var(--green-bg);}
@@ -1928,8 +1934,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.43';
-const BUILD_TIME='2026-11-20 22:55';
+const APP_VERSION='v8.44';
+const BUILD_TIME='2026-11-21 08:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3358,7 +3364,7 @@ function _histMonthNavHtml(allRecs,dispRecs){
     }
     // '○○ 지출' 줄: 배지 있으면 금액 아래 줄로(모바일 금액 쪼개짐 방지), 없으면 기존 한 줄 (v8.31)
     const _jiCol=settleHtml
-      ? `<div class="hmn-stat-col hmn-col-badges"><div class="hmn-col-main"><span class="hmn-stat-col-lbl">${payerLbl} 지출</span><span class="hmn-stat-col-val">${fmt(burdenAmt)}원</span></div><div class="hmn-stat-badges">${settleHtml}</div></div>`
+      ? `<div class="hmn-stat-col hmn-col-badges"><span class="hmn-stat-col-lbl">${payerLbl} 지출</span><div class="hmn-stat-badges">${settleHtml}</div><span class="hmn-stat-col-val">${fmt(burdenAmt)}원</span></div>`
       : `<div class="hmn-stat-col"><span class="hmn-stat-col-lbl">${payerLbl} 지출</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${fmt(burdenAmt)}원</span></div></div>`;
     statHtml=`<div class="hmn-stat-3"><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">모임</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${dispRecs.length}회</span></div></div>${_jiCol}<div class="hmn-stat-col"><span class="hmn-stat-col-lbl">총 지출</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${fmt(total)}원</span></div></div></div>`;
   }else{
