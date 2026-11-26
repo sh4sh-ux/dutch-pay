@@ -1582,6 +1582,23 @@ suite('TC34: 검색 요약 쓴금액 3버킷 _histSpendBreakdown [v8.53]', () =>
     expect(b.me+b.srch+b.etc).toBe(50000);   // 20000 + 30000
     expect(b.srch).toBe(30000);              // 신유철: 한턱 20000 + 분담 10000
   });
+  // 인원 필터: 단둘이=2명, 여럿이=3명+, 전체=다 [v8.58]
+  test('_histGroupFilterRecs — 단둘이(2명)/여럿이(3명+)/전체', () => {
+    const recs=[ex,three]; // ex 2명(조상현·친구), three 3명
+    const duo=APP._histGroupFilterRecs(recs,'duo');
+    expect(duo.length).toBe(1); expect(duo[0].people.length).toBe(2);
+    const multi=APP._histGroupFilterRecs(recs,'multi');
+    expect(multi.length).toBe(1); expect(multi[0].people.length).toBe(3);
+    expect(APP._histGroupFilterRecs(recs,'all').length).toBe(2);
+  });
+  test('인원 필터 후 breakdown 합도 그 부분합과 일치', () => {
+    // 여럿이(three만) → 30,000 / 단둘이(ex만, 친구검색) → 11,000
+    expect(B(APP._histGroupFilterRecs([ex,three],'multi'),'신유철').me
+          +B(APP._histGroupFilterRecs([ex,three],'multi'),'신유철').srch
+          +B(APP._histGroupFilterRecs([ex,three],'multi'),'신유철').etc).toBe(30000);
+    const d=B(APP._histGroupFilterRecs([ex,three],'duo'),'친구');
+    expect(d.me+d.srch+d.etc).toBe(11000);
+  });
 });
 
 }
