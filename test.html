@@ -1250,6 +1250,17 @@ suite('TC26: 정산상태 _personSettleDelta — 내가 받을 돈만 [v7.73]', 
     // done 아니면 차액 퉁 무효
     expect(W({txns:[{from:'신유철',to:'조상현',amt:100000}],payments:{'신유철|조상현':{shortWaived:true,amount:95000}}})).toBe(0);
   });
+  // 차액 퉁은 delta에서 '완납'(0)으로 — '부족'으로 안 잡힘 [v8.54]
+  test('차액 퉁(일부 받고 나머지 퉁) → delta 0(완납), 부족 아님', () => {
+    // 청구 50,000, 49,000 받고 1,000 차액 퉁 → 완납(delta 0), 퉁 1,000은 _personSettleWaived가 표시
+    const r={txns:[{from:'신유철',to:'조상현',amt:50000}],payments:{'신유철|조상현':{done:true,amount:49000,shortWaived:true}}};
+    expect(D(r)).toBe(0);
+    expect(APP._personSettleWaived(r,'신유철','조상현')).toBe(1000);
+  });
+  test('차액 퉁이어도 shortWaived 아니면 일반 부족 그대로', () => {
+    const r={txns:[{from:'신유철',to:'조상현',amt:50000}],payments:{'신유철|조상현':{done:true,amount:49000}}};
+    expect(D(r)).toBe(-1000);
+  });
 });
 
 

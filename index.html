@@ -1948,8 +1948,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.53';
-const BUILD_TIME='2026-11-26 10:25';
+const APP_VERSION='v8.54';
+const BUILD_TIME='2026-11-26 11:10';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3273,7 +3273,11 @@ function _personSettleDelta(r,personName,ownerName){
     const planned=+t.amt||0;
     const hasAmt=pm.amount!=null&&pm.amount!==''&&!isNaN(+pm.amount);
     const actual=pm.done?(hasAmt?+pm.amount:planned):0;
-    delta+=actual-planned;
+    let d=actual-planned;
+    // 차액 퉁(shortWaived): 받은 만큼 받고 모자란 차액은 '안 받기로' → 그 차액은 중립(완납 취급).
+    // _pmEff(v8.11)·_personSettleWaived와 일관되게, 모자란 차액을 delta에서 빼 '부족'으로 안 잡히게 (v8.54)
+    if(pm.done&&pm.shortWaived){const short=planned-actual;if(short>0)d+=short;}
+    delta+=d;
   }
   return found?delta:null;
 }
