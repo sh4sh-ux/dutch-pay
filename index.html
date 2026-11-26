@@ -1955,14 +1955,14 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.63';
-const BUILD_TIME='2026-11-26 17:05';
+const APP_VERSION='v8.64';
+const BUILD_TIME='2026-11-26 18:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
 let payments={};
 let _justAddedId=null;
-let _pmHistTab='current',_pmHistSearch='',_pmHistSort='newest',_pmHistFilter='all',_pmViewMode='list',_pmHistGroup='all',_pmMonthPeopleSort='amt',_pmDashUnit='month',_pmDashShift=0;
+let _pmHistTab='current',_pmHistSearch='',_pmHistSort='newest',_pmHistFilter='all',_pmViewMode='list',_pmHistGroup='all',_pmMonthPeopleSort='amt';
 const _pmMonthsOpen=new Set();
 let _dbxAutoSavedFp='';
 const OWNER_NAME='조상현'; // 내 이름이 소유자명이면 5탭 잠금 해제 없이 자동 해제 (v5.75)
@@ -3488,7 +3488,7 @@ function _histDrListHtml(recs){
   const viewSeg=`<div class="pm-seg-row hist-view-seg"><button class="pm-seg${_histView==='list'?' on':''}" onclick="_setHistView('list')">기록</button><button class="pm-seg${_histView==='stats'?' on':''}" onclick="_setHistView('stats')">통계</button></div>`;
   if(_histView==='stats'){
     const subSeg=`<div class="pm-seg-row" style="margin-top:8px"><button class="pm-seg${_histStatsSub==='all'?' on':''}" onclick="_setHistStatsSub('all')">전체</button><button class="pm-seg${_histStatsSub==='month'?' on':''}" onclick="_setHistStatsSub('month')">월별</button></div>`;
-    const body=_histStatsSub==='month'?_pmMonthlyHtml(recs):_pmDashboardHtml(recs,{lite:true});
+    const body=_histStatsSub==='month'?_pmMonthlyHtml(recs):_pmDashboardHtml(recs);
     return viewSeg+subSeg+body;
   }
   let filtered=_filterHistoryRecords(recs,_historySearch);
@@ -3910,55 +3910,7 @@ function _reRenderStatsSurface(){
   const dr=document.getElementById('histDr');
   if(dr&&dr.classList.contains('open'))_refreshHistDrList();
 }
-function _pmDashSetUnit(u){_pmDashUnit=u;_pmDashShift=0;_patchHistResults();}
-// 지출 추이 바 클릭 → 목록 뷰로 전환 + 그 기간(연/월/일) 기록으로 스크롤·강조 (v8.11: '이 기간 보기' 링크에서만 이동)
-function _pmDashGotoPeriod(key){
-  if(!key)return;
-  _pmViewMode='list';_patchHistResults();
-  const recs=loadHistory().filter(r=>(r.dateStart||r.savedAt||'').startsWith(key)).sort((a,b)=>(b.dateStart||b.savedAt||'').localeCompare(a.dateStart||a.savedAt||''));
-  if(!recs.length)return;
-  setTimeout(()=>{const card=document.querySelector(`.pm-allrec-card[data-rec-id="${CSS.escape(String(recs[0].id))}"]`);if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.classList.add('pm-flash');setTimeout(()=>card.classList.remove('pm-flash'),1600);}},80);
-}
-// 지출 추이 ‹ › 넘김 — dir +1=과거(왼쪽), -1=최근(오른쪽). 한 화면(N칸)씩. (v8.08)
-function _pmDashNav(dir){
-  const unit=(_pmDashUnit==='year'||_pmDashUnit==='day')?_pmDashUnit:'month';
-  const full=_pmBucketPoints(_pmDashboardStats(loadHistory()).recPoints,unit);
-  const N=_pmDashWindowN(unit),maxShift=Math.max(0,full.length-N);
-  _pmDashShift=Math.min(Math.max(0,_pmDashShift+dir*N),maxShift);
-  _patchHistResults();
-}
-// 요약 줄에 한 칸(col)의 날짜·건수·총/내부담을 표기 (col 없으면 기본 합계) (v8.11)
-function _pmDashReadout(sum,col){
-  if(!col){if(sum.dataset.def!=null)sum.innerHTML=sum.dataset.def;return;}
-  const t=+col.dataset.t||0,m=+col.dataset.m||0,c=+col.dataset.c||0,l=col.dataset.l||'';
-  sum.innerHTML=c>0?`${e(l)} · ${c}건 · 총 <b>${fmt(t)}원</b> / 내 부담 <b class="mine">${fmt(m)}원</b>`:`${e(l)} · <span style="color:var(--label3)">기록 없음</span>`;
-}
-// 지출 추이 hover/터치 — 가리킨 칸의 금액을 요약에 미리보기. 떼면 '선택(pick)된 칸'으로 복귀. (v8.08/8.11)
-function _pmDashTrendHover(ev){
-  const plot=ev&&ev.currentTarget?ev.currentTarget:document.querySelector('.pm-dash-lp-plot');if(!plot)return;
-  const wrap=plot.closest('.pm-dash-lp-wrap');const sum=wrap&&wrap.querySelector('.pm-dash-lp-sum');if(!sum)return;
-  const cols=[...plot.querySelectorAll('.pm-dash-lp-col')];
-  const pickKey=plot.dataset.pick||'';
-  const picked=pickKey?cols.find(c=>c.dataset.k===pickKey):null;
-  const toPicked=()=>{cols.forEach(c=>c.classList.toggle('on',c===picked));_pmDashReadout(sum,picked);};
-  if(!ev||ev.type==='pointerleave'){toPicked();return;}
-  const x=ev.clientX;let hit=null;
-  cols.forEach(c=>{const r=c.getBoundingClientRect();if(x>=r.left&&x<=r.right&&c.classList.contains('has-data'))hit=c;});
-  if(!hit){toPicked();return;}
-  cols.forEach(c=>c.classList.toggle('on',c===hit));
-  _pmDashReadout(sum,hit);
-}
-// 지출 추이 바 클릭 = 선택(pick) — 금액 고정 + '이 기간 보기' 링크 노출. 이동은 그 링크에서만. (v8.11)
-function _pmDashTrendPick(ev){
-  const col=ev.currentTarget;if(!col||!col.classList.contains('has-data'))return;
-  const plot=col.closest('.pm-dash-lp-plot');const wrap=plot&&plot.closest('.pm-dash-lp-wrap');if(!wrap)return;
-  const sum=wrap.querySelector('.pm-dash-lp-sum'),goto=wrap.querySelector('.pm-dash-lp-goto');
-  const key=col.dataset.k,c=+col.dataset.c||0,l=col.dataset.l||'';
-  plot.dataset.pick=key;
-  [...plot.querySelectorAll('.pm-dash-lp-col')].forEach(x=>x.classList.toggle('on',x===col));
-  _pmDashReadout(sum,col);
-  if(goto){goto.dataset.k=key;goto.innerHTML=`${e(l)} · ${c}건 목록에서 보기 <span class="pm-dash-lp-goto-arr">→</span>`;goto.style.display='flex';}
-}
+// (대시보드 지출 추이 섹션 핸들러 _pmDashSetUnit·_pmDashGotoPeriod·_pmDashNav·_pmDashReadout·_pmDashTrendHover·_pmDashTrendPick는 수금 탭 제거로 더는 렌더·호출되지 않아 삭제 — 보류됐던 죽은 코드 정리, v8.64)
 function _pmSearchInput(v){_pmHistSearch=v;_patchHistResults();}
 function _pmFilterByName(name){
   // 기록보관함이 열려 있으면 그쪽 '기록' 뷰로 전환 + 그 사람 검색, 아니면 수금 탭 필터 (v8.29)
@@ -4027,34 +3979,7 @@ function _pmShowTreatItems(nm,ym){
   document.body.insertAdjacentHTML('beforeend',html);
 }
 // 대시보드 카테고리 클릭 → 그 카테고리의 전체 항목 내역 모달 (payer 모달과 동일 패턴 재사용) (v8.08)
-function _pmShowCategoryItems(catKey){
-  const allRecs=loadHistory();
-  const items=[];
-  allRecs.forEach(rec=>{
-    const dateStr=(rec.dateStart||rec.savedAt||'').slice(0,10).replace(/-/g,'.');
-    (rec.items||[]).forEach(it=>{
-      if((+it.amount||0)>0&&_catKeyOf(it)===catKey){
-        items.push({name:it.name||'',amount:+it.amount||0,members:it.members||[],watchers:it.watchers||[],people:rec.people||[],date:dateStr,iconSvg:getIconSvg(it),receiptText:it.receiptText||''});
-      }
-    });
-  });
-  items.sort((a,b)=>(b.date||'').localeCompare(a.date||'')); // 최신순
-  const total=items.reduce((s,it)=>s+it.amount,0);
-  const label=CAT_LABEL[catKey]||'기타';
-  document.querySelectorAll('.pm-payer-modal-bg').forEach(el=>el.remove());
-  const pfx=`pcat_${Date.now()}`;
-  const rowsHtml=items.map((it,idx)=>{
-    const memsText=_orderedMemberList(it.members,it.watchers,it.people||[]).join(', ');
-    const uid=`${pfx}_${idx}`;const hasReceipt=!!it.receiptText;
-    const rowClick=hasReceipt?` onclick="toggleItemReceipt('${uid}',event)" style="cursor:pointer"`:'';
-    const chev=hasReceipt?`<span class="rc-chev" data-rcpt-chev="${uid}"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:'';
-    const receiptHtml=hasReceipt?_receiptTableHtml(it,uid):'';
-    const dateHtml=it.date?`<div class="rc-item-meta" style="opacity:.6;font-size:10px;">${it.date}</div>`:'';
-    return `<div class="rc-item-row${idx===items.length-1?' pm-last-row':''}"${rowClick}><span class="pay-ic">${it.iconSvg}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'항목')}</span></div>${memsText?`<div class="rc-item-meta">${e(memsText)}</div>`:''}${dateHtml}</div>${chev}<span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${receiptHtml}`;
-  }).join('');
-  const html=`<div class="pm-payer-modal-bg" onclick="this.remove()"><div class="pm-payer-modal" onclick="event.stopPropagation()"><div class="pm-payer-modal-handle"></div><div class="pm-payer-modal-hd"><div class="pm-payer-modal-name">${e(label)}</div><div class="pm-payer-modal-sub">전체 ${items.length}건 내역</div><button class="pm-payer-modal-close" onclick="this.closest('.pm-payer-modal-bg').remove()">✕</button></div><div class="pm-payer-modal-body">${rowsHtml||'<p style="padding:16px 16px;color:var(--label3);font-size:13px">항목이 없어요</p>'}</div><div class="pm-payer-modal-foot"><span class="pm-payer-modal-foot-lbl">합계</span><span class="pm-payer-modal-foot-amt">${fmt(total)}원</span></div></div></div>`;
-  document.body.insertAdjacentHTML('beforeend',html);
-}
+// (대시보드 카테고리 섹션의 항목 모달 _pmShowCategoryItems는 수금 탭 제거로 더는 렌더·호출되지 않아 삭제 — 죽은 코드 정리, v8.64)
 function _pmDelRec(id,e){deleteHistoryRecord(id,e);}
 // 수금 탭 목록 제자리 갱신용이었으나 수금 탭 제거로 대상(.pm-hist-results)이 없어 no-op (라이브 호출부 toggleRcTxnPanel·saveHistory는 그대로 호출, v8.35)
 function _patchHistResults(){}
@@ -4101,7 +4026,6 @@ function _pmBucketPoints(points,unit){
   else{const d=new Date(minKey+'T00:00:00'),e=new Date(maxKey+'T00:00:00');for(let g=0;d<=e&&g<4000;d.setDate(d.getDate()+1),g++)keys.push(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`);}
   return keys.map(k=>{const v=map[k]||{t:0,m:0,c:0};const lbl=unit==='year'?`${k}`:unit==='month'?`${+k.slice(5)}월`:`${+k.slice(8)}일`;return{key:k,lbl,t:v.t,m:v.m,cnt:v.c};});
 }
-function _pmDashWindowN(unit){return 7;} // 한 화면 7칸(영수증 앱과 동일), ‹ ›로 7칸씩 넘김
 // 대시보드 집계 — 순수 함수(금액 집계라 test.html이 직접 호출해 검증). _myName 기준. (v8.08)
 function _pmDashboardStats(recs){
   recs=recs||[];
@@ -4142,8 +4066,8 @@ function _pmDashboardStats(recs){
   const byPerson=Object.keys(personCount).filter(p=>!_myName||p!==_myName).map(p=>({name:p,count:personCount[p],treat:personTreat[p]||0,paid:personPaid[p]||0})).sort((a,b)=>b.count-a.count||b.treat-a.treat);
   return {count,totalSpend,myTreat,totalMine,outstanding,totalBilled,totalReceived,byMonth,byCategory,byPerson,byOutstanding,recPoints};
 }
-function _pmDashboardHtml(allRecs,opts){
-  opts=opts||{}; // opts.lite: 지출추이·카테고리 제외(기록보관함 통계>전체 = 요약+미수+사람별) (v8.29)
+function _pmDashboardHtml(allRecs){
+  // 기록보관함 통계>전체 = 요약+미수+사람별 (수금 탭 제거로 항상 이 형태, v8.29~8.64)
   const s=_pmDashboardStats(allRecs);
   if(!s.count)return '<div class="empty" style="padding:30px 0"><p style="color:var(--label3)">기록이 없어요</p></div>';
   // ① 전체 기간 요약
@@ -4165,42 +4089,8 @@ function _pmDashboardHtml(allRecs,opts){
     <div class="pm-dash-due-list">${dueRows}</div></div>`
     :`<div class="pm-dash-sec"><div class="pm-dash-head"><span class="pm-dash-title">미수 현황</span></div>
     <div class="pm-dash-allclear">✓ 받을 돈 모두 정산 완료</div></div>`;
-  // ③ 지출 추이 — 영수증 앱식 얇은 2색 세로 바(바 전체=총 지출, 아래 진함=내 부담) + 연/월/일 탭
-  const unit=(_pmDashUnit==='year'||_pmDashUnit==='day')?_pmDashUnit:'month';
-  const full=_pmBucketPoints(s.recPoints,unit);
-  const N=_pmDashWindowN(unit),total=full.length,maxShift=Math.max(0,total-N);
-  const shift=Math.min(Math.max(0,_pmDashShift),maxShift);
-  const end=total-shift,start=Math.max(0,end-N);
-  const buckets=full.slice(start,end);
-  const canOlder=start>0,canNewer=end<total;
-  const peak=Math.max(1,...buckets.map(b=>b.t));
-  const sumT=buckets.reduce((a,b)=>a+b.t,0),sumM=buckets.reduce((a,b)=>a+b.m,0),sumC=buckets.reduce((a,b)=>a+b.cnt,0);
-  const fullLbl=b=>unit==='year'?`${b.key}년`:unit==='month'?`${+b.key.slice(0,4)}년 ${+b.key.slice(5)}월`:`${+b.key.slice(5)}월 ${+b.key.slice(8)}일`;
-  const bars=buckets.map(b=>{const has=b.t>0||b.m>0;const hh=b.t>0?Math.max(3,Math.round(b.t/peak*100)):0;const inner=b.t>0?Math.min(100,Math.max(0,b.m/b.t*100)):0;
-    return `<div class="pm-dash-lp-col${has?' has-data':''}" data-k="${ea(b.key)}" data-t="${b.t}" data-m="${b.m}" data-c="${b.cnt}" data-l="${ea(fullLbl(b))}"${has?` onclick="_pmDashTrendPick(event)"`:''}><div class="pm-dash-lp-bar${has?' has':''}" style="height:${hh}%"><i style="height:${inner}%"></i></div></div>`;}).join('');
-  const xax=buckets.map(b=>`<span>${e(b.lbl)}</span>`).join('');
-  const tabs=[['year','연간'],['month','월별'],['day','일별']].map(([k,l])=>`<button type="button" class="pm-dash-tab${unit===k?' on':''}" onclick="_pmDashSetUnit('${k}')">${l}</button>`).join('');
-  const nav=(canOlder||canNewer)?`<button type="button" class="pm-dash-lp-nav l"${canOlder?' onclick="_pmDashNav(1)"':' disabled'} aria-label="이전">‹</button><button type="button" class="pm-dash-lp-nav r"${canNewer?' onclick="_pmDashNav(-1)"':' disabled'} aria-label="다음">›</button>`:'';
-  const defSum=`${sumC}건 · 총 <b>${fmt(sumT)}원</b> / 내 부담 <b class="mine">${fmt(sumM)}원</b>`;
-  const trend=`<div class="pm-dash-sec">
-    <div class="pm-dash-head"><span class="pm-dash-title">지출 추이</span><div class="pm-dash-tabs">${tabs}</div></div>
-    <div class="pm-dash-lp-wrap">
-      <div class="pm-dash-lp-sum" data-def="${ea(defSum)}">${defSum}</div>
-      ${buckets.length?`<div class="pm-dash-lp-plotwrap">${nav}<div class="pm-dash-lp-plot" onpointermove="_pmDashTrendHover(event)" onpointerdown="_pmDashTrendHover(event)" onpointerleave="_pmDashTrendHover(event)">${bars}</div></div><div class="pm-dash-lp-x">${xax}</div><button type="button" class="pm-dash-lp-goto" style="display:none" onclick="_pmDashGotoPeriod(this.dataset.k)"></button>`:'<div class="pm-dash-lp-empty">기록이 없어요</div>'}
-      <div class="pm-dash-lp-leg"><span><i class="t"></i>총 지출</span><span><i class="m"></i>내 부담</span><em>내 부담 = 더치페이 분담·한턱 반영</em></div>
-    </div></div>`;
-  // ④ 카테고리 분해
-  const catMax=s.byCategory.length?s.byCategory[0].amount:1;
-  const catRows=s.byCategory.map(c=>`<div class="pm-dash-cat-row" onclick="_pmShowCategoryItems('${c.key}')">
-      <span class="pm-dash-cat-ico">${getIconSvg({iconOverride:c.key})}</span>
-      <span class="pm-dash-cat-lbl">${e(CAT_LABEL[c.key]||'기타')}</span>
-      <span class="pm-dash-cat-bar"><span class="pm-dash-cat-fill" style="width:${Math.max(3,Math.round(c.amount/catMax*100))}%"></span></span>
-      <span class="pm-dash-cat-amt">${fmt(c.amount)}<span class="won">원</span></span>
-    </div>`).join('');
-  const cats=s.byCategory.length?`<div class="pm-dash-sec">
-    <div class="pm-dash-head"><span class="pm-dash-title">카테고리</span><span class="pm-dash-sub">상호명 자동분류</span></div>
-    <div class="pm-dash-cat-list">${catRows}</div></div>`:'';
-  // ⑤ 사람별 전체 누적 — 탭하면 그 사람으로 이동
+  // ③ 사람별 전체 누적 — 탭하면 그 사람으로 이동
+  // (지출 추이·카테고리 섹션은 수금 탭 제거로 더는 렌더되지 않아 삭제 — 보류됐던 죽은 코드 정리, v8.64)
   const ppl=s.byPerson.slice(0,12);
   const pplRows=ppl.map(p=>`<div class="pm-dash-ppl-row" onclick="_pmFilterByName('${jsa(p.name)}')">
       <span class="pm-dash-ppl-name">${e(p.name)}</span>
@@ -4211,7 +4101,7 @@ function _pmDashboardHtml(allRecs,opts){
     <div class="pm-dash-head"><span class="pm-dash-title">사람별 누적</span><span class="pm-dash-sub">함께한 횟수 · 쏜 금액</span></div>
     <div class="pm-dash-ppl-head"><span>이름</span><span>횟수</span><span>쏜 금액</span></div>
     <div class="pm-dash-ppl-list">${pplRows}</div></div>`:'';
-  return `<div class="pm-dash">${summary}${due}${opts.lite?'':trend}${opts.lite?'':cats}${people}</div>`;
+  return `<div class="pm-dash">${summary}${due}${people}</div>`;
 }
 function _pmMonthlyHtml(allRecs){
   const months={};
