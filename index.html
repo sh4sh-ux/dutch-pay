@@ -1007,6 +1007,8 @@ svg{display:block;flex-shrink:0;}
 .hmn-spend-val.etc{color:var(--label3);}
 /* 밸런스 배지를 라벨 옆 한 줄로(아래 줄 아님) — 오른쪽 정렬·줄바꿈 없음 (v8.57) */
 .hmn-bal-right{display:flex;align-items:center;gap:6px;justify-content:flex-end;flex-wrap:wrap;min-width:0;}
+/* 인원 필터 세그(전체·단둘이·여럿이) — 월 네비 아래 타이트하게 (v8.58) */
+.hist-group-seg{margin:4px 0 12px;}
 .hist-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;}
 .hist-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--label3);padding:5px 10px;border:1px solid var(--sep);background:var(--fill2);border-radius:20px;white-space:nowrap;}
 .hist-badge.connected{color:var(--green-txt);border-color:var(--green);background:var(--green-bg);}
@@ -1950,8 +1952,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.57';
-const BUILD_TIME='2026-11-26 12:45';
+const APP_VERSION='v8.58';
+const BUILD_TIME='2026-11-26 13:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1967,6 +1969,7 @@ let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unloc
 let _historySearch='';let _histSearchTypedAt=0;
 let _historySort='newest';
 let _histView='list',_histStatsSub='all'; // 기록보관함 뷰: 기록 | 통계(전체·월별) (v8.29, 다이어트 단계2)
+let _histGroupFilter='all'; // 기록 인원 필터: 전체 | 단둘이(2명) | 여럿이(3명+) (v8.58)
 let _histSettleMode=false;
 let _histDrawerOpen=false,_loadedHistId=null,_editingFixedSourceId=null,_editPrevGroupId=null;
 let _histMonthYear=new Date().getFullYear(),_histMonthMonth=new Date().getMonth()+1,_histMonthAllMode=true;
@@ -3429,7 +3432,9 @@ function _histMonthNavHtml(allRecs,dispRecs){
     const statStr=dispRecs.length?`${dispRecs.length}회 모임 · ${fmt(total)}원`:(_histMonthAllMode?'기록이 없어요':'이 달에 기록이 없어요');
     statHtml=`<div class="hmn-stat">${statStr}</div>`;
   }
-  return`<div class="hist-month-nav">${nav}${statHtml}</div>`;
+  // 인원 필터 세그(전체·단둘이·여럿이) — 월 네비 아래, 요약 위 (v8.58)
+  const groupSeg=`<div class="pm-seg-row hist-group-seg"><button class="pm-seg${_histGroupFilter==='all'?' on':''}" onclick="_setHistGroupFilter('all')">전체</button><button class="pm-seg${_histGroupFilter==='duo'?' on':''}" onclick="_setHistGroupFilter('duo')">단둘이</button><button class="pm-seg${_histGroupFilter==='multi'?' on':''}" onclick="_setHistGroupFilter('multi')">여럿이</button></div>`;
+  return`<div class="hist-month-nav">${nav}${groupSeg}${statHtml}</div>`;
 }
 function _histMonthPrev(){
   if(_histMonthAllMode)return;
@@ -3471,6 +3476,9 @@ function _refreshHistMonthView(){
   if(_histDrawerOpen){_refreshHistDrList();return;}}
 // 기록보관함 뷰 토글 (기록 | 통계) — 정산 탭의 세그와 동일 모양 (v8.29)
 function _setHistView(v){_histView=v;_refreshHistDrList();const b=document.getElementById('histDrBody');if(b)b.scrollTop=0;}
+// 기록 인원수 필터 — 단둘이(2명)/여럿이(3명+)/전체 (v8.58)
+function _histGroupFilterRecs(recs,mode){return(recs||[]).filter(r=>{const n=(r.people||[]).length;return mode==='duo'?n===2:mode==='multi'?n>=3:true;});}
+function _setHistGroupFilter(v){_histGroupFilter=v;_refreshHistDrList();const b=document.getElementById('histDrBody');if(b)b.scrollTop=0;}
 function _setHistStatsSub(v){_histStatsSub=v;_refreshHistDrList();const b=document.getElementById('histDrBody');if(b)b.scrollTop=0;}
 function _histDrListHtml(recs){
   if(!recs.length)return`<div class="empty" style="padding:40px 0"><div class="empty-icon">${svgEmpty}</div><p><strong style="color:var(--label2)">아직 저장된 기록이 없어요</strong><br>⋯ 메뉴에서<br>"기록 보관함에 저장"을 눌러보세요.</p></div>`;
@@ -3482,6 +3490,7 @@ function _histDrListHtml(recs){
   }
   let filtered=_filterHistoryRecords(recs,_historySearch);
   filtered=_sortHistRecs(filtered,_historySort);
+  filtered=_histGroupFilterRecs(filtered,_histGroupFilter); // 단둘이/여럿이 인원 필터 — 요약·카드 모두 반영 (v8.58)
   const noMsg=_historySearch?`'${e(_historySearch)}' 검색 결과가 없어요`:(_histMonthAllMode?'기록이 없어요':'이 달에 저장된 기록이 없어요');
   return viewSeg+_histMonthNavHtml(recs,filtered)+`<div class="record-list">${filtered.length?filtered.map(_buildRecordCardHtml).join(''):`<div class="empty" style="padding:40px 0"><p style="color:var(--label3)">${noMsg}</p></div>`}</div>`;
 }
