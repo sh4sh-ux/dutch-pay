@@ -1527,6 +1527,44 @@ suite('TC29: 동기화 병합이 영수증 참조(receiptUrl)를 안 지운다 [
   });
 });
 
+suite('TC34: 검색 요약 쓴금액 3버킷 _histSpendBreakdown [v8.53]', () => {
+  const B=(recs,search)=>APP._histSpendBreakdown(recs,'조상현',search);
+  // 사용자 예시: 11,000 결제, 친구 몫 6,000이나 내가 1,000 퉁 → 친구 실부담 5,000 / 나 6,000
+  const ex={people:['조상현','친구'],total:11000,
+    items:[{amount:10000,payer:'조상현',members:['조상현','친구']},{amount:1000,payer:'조상현',members:['친구']}],
+    txns:[{from:'친구',to:'조상현',amt:6000}],payments:{'친구|조상현':{done:true,amount:5000,shortWaived:true}}};
+  test('퉁은 퉁해준 나에게 귀속 → 나 6,000 / 친구 5,000 / 기타 0', () => {
+    const b=B([ex],'친구');
+    expect(b.me).toBe(6000); expect(b.srch).toBe(5000); expect(b.etc).toBe(0);
+  });
+  test('3버킷 합 = 총 지출(11,000)', () => {
+    const b=B([ex],'친구'); expect(b.me+b.srch+b.etc).toBe(11000);
+  });
+  test('2명 기록이면 hasEtc=false', () => expect(B([ex],'친구').hasEtc).toBe(false));
+  // 한턱: computeShares owes에서 빠지고 결제자가 전액 부담
+  const treat={people:['조상현','신유철'],total:20000,
+    items:[{amount:20000,payer:'신유철',members:['조상현','신유철'],isTreat:true}],txns:[],payments:{}};
+  test('한턱은 결제자(신유철)가 전액 → 검색자 20,000 / 나 0', () => {
+    const b=B([treat],'신유철'); expect(b.srch).toBe(20000); expect(b.me).toBe(0);
+  });
+  // 3명: 이영환은 기타(회색)로, 합 = 총 지출
+  const three={people:['조상현','신유철','이영환'],total:30000,
+    items:[{amount:30000,payer:'조상현',members:['조상현','신유철','이영환']}],txns:[],payments:{}};
+  test('3명 균등분할 → 나 10,000 / 검색자 10,000 / 기타(이영환) 10,000', () => {
+    const b=B([three],'신유철');
+    expect(b.me).toBe(10000); expect(b.srch).toBe(10000); expect(b.etc).toBe(10000);
+    expect(b.hasEtc).toBe(true);
+  });
+  test('3명이어도 3버킷 합 = 총 지출(30,000)', () => {
+    const b=B([three],'신유철'); expect(b.me+b.srch+b.etc).toBe(30000);
+  });
+  test('여러 기록 합산도 합 = 총액 합', () => {
+    const b=B([treat,three],'신유철');
+    expect(b.me+b.srch+b.etc).toBe(50000);   // 20000 + 30000
+    expect(b.srch).toBe(30000);              // 신유철: 한턱 20000 + 분담 10000
+  });
+});
+
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────

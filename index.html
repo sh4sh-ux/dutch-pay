@@ -995,6 +995,16 @@ svg{display:block;flex-shrink:0;}
   .hmn-col-badges .hmn-stat-col-val{order:2;margin-left:auto;}
   .hmn-col-badges .hmn-stat-badges{order:3;flex:0 0 100%;margin-top:4px;}
 }
+/* 검색 요약 쓴금액 3버킷(나 파랑·검색자 주황·기타 회색) + 금액 왼쪽 % (v8.53) */
+.hmn-pct{font-size:12px;font-weight:600;color:var(--label3);font-variant-numeric:tabular-nums;flex-shrink:0;}
+.hmn-spend-lbl{display:inline-flex;align-items:center;gap:6px;}
+.hmn-spend-lbl::before{content:"";width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--label3);}
+.hmn-spend-lbl.me::before{background:var(--blue);}
+.hmn-spend-lbl.srch::before{background:var(--txn-amber);}
+.hmn-spend-val.me{color:var(--blue);}
+.hmn-spend-val.srch{color:var(--txn-amber);}
+.hmn-spend-val.etc{color:var(--label3);}
+.hmn-bal-col .hmn-stat-col-lbl{align-self:flex-start;}
 .hist-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;}
 .hist-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--label3);padding:5px 10px;border:1px solid var(--sep);background:var(--fill2);border-radius:20px;white-space:nowrap;}
 .hist-badge.connected{color:var(--green-txt);border-color:var(--green);background:var(--green-bg);}
@@ -1938,8 +1948,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.52';
-const BUILD_TIME='2026-11-21 13:10';
+const APP_VERSION='v8.53';
+const BUILD_TIME='2026-11-26 09:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3285,6 +3295,32 @@ function _personSettleWaived(r,personName,ownerName){
   }
   return sum;
 }
+// 검색 요약 '총 지출'을 각자 '쓴 금액'(현금 부담)으로 쪼갠다 — 나(owner)·검색자·기타 3버킷. (v8.53)
+// 쓴 금액 = 각자 소비 몫(한턱은 결제자가 전액 부담) − (그 사람이 퉁받은 돈) + (owner가 퉁해준 돈).
+// 퉁은 '안 받기로 한' owner에게 귀속되므로 세 버킷 합은 항상 총 지출과 일치한다.
+function _histSpendBreakdown(recs,ownerName,searchQ){
+  const me=((ownerName!=null?ownerName:_myName)||'').trim();
+  const meL=me.toLowerCase();
+  const q=(searchQ||'').trim().toLowerCase();
+  let meSp=0,srchSp=0,etcSp=0,hasMe=false,hasSrch=false,hasEtc=false;
+  (recs||[]).forEach(r=>{
+    const P=(r.people||[]).slice();if(!P.length)return;
+    const cs=computeShares(P,r.items||[]);
+    const cons={};P.forEach(p=>cons[p]=(cs.owes&&cs.owes[p])||0);
+    // 한턱(isTreat) 항목은 computeShares의 owes에서 빠지고 결제자가 전액 부담
+    (r.items||[]).forEach(it=>{if(it.isTreat&&+it.amount&&P.includes(it.payer))cons[it.payer]=(cons[it.payer]||0)+(+it.amount||0);});
+    // 퉁: 비소유자는 퉁받은 만큼 덜 내고, owner(나)가 그만큼 떠안는다
+    let waivedToMe=0;
+    if(me)P.forEach(p=>{if(p.toLowerCase()!==meL){const w=_personSettleWaived(r,p,me);if(w){cons[p]=(cons[p]||0)-w;waivedToMe+=w;}}});
+    if(me&&waivedToMe){const mk=P.find(p=>p.toLowerCase()===meL);if(mk)cons[mk]=(cons[mk]||0)+waivedToMe;}
+    P.forEach(p=>{const v=cons[p]||0;
+      if(me&&p.toLowerCase()===meL){meSp+=v;hasMe=true;}
+      else if(q&&p.toLowerCase().includes(q)){srchSp+=v;hasSrch=true;}
+      else{etcSp+=v;hasEtc=true;}
+    });
+  });
+  return{me:meSp,srch:srchSp,etc:etcSp,hasMe,hasSrch,hasEtc};
+}
 function _sortHistRecs(recs,sort){
   const a=[...recs];
   if(sort==='oldest')return a.sort((x,y)=>(x.dateStart||'').localeCompare(y.dateStart||''));
@@ -3355,25 +3391,31 @@ function _histMonthNavHtml(allRecs,dispRecs){
   if(_historySearch.trim()&&dispRecs.length){
     const q=_historySearch.trim().toLowerCase();
     const total=dispRecs.reduce((s,r)=>s+(+r.total||0),0);
-    const payerAmt=dispRecs.reduce((s,r)=>s+(r.items||[]).reduce((ss,it)=>ss+((it.payer||'').toLowerCase().includes(q)?(+it.amount||0):0),0),0);
-    const txnOut=dispRecs.reduce((s,r)=>s+(r.txns||[]).reduce((ss,t)=>(t.from||'').toLowerCase().includes(q)?ss+(+t.amt||0):ss,0),0);
-    const txnIn=dispRecs.reduce((s,r)=>s+(r.txns||[]).reduce((ss,t)=>(t.to||'').toLowerCase().includes(q)?ss+(+t.amt||0):ss,0),0);
-    const burdenAmt=payerAmt+txnOut-txnIn;
-    const payerLbl=e(_historySearch.length>5?_historySearch.slice(0,5)+'…':_historySearch);
+    // 쓴 금액 3버킷(나·검색자·기타) — 현금 부담, 한턱·퉁 반영. 합 = 총 지출 (v8.53)
+    const bd=_histSpendBreakdown(dispRecs,_myName,_historySearch.trim());
+    const me=(_myName||'').trim();
+    const meLbl=e(me.length>5?me.slice(0,5)+'…':me)||'나';
+    const srchLbl=e(_historySearch.length>5?_historySearch.slice(0,5)+'…':_historySearch);
+    const buckets=[];
+    if(bd.hasMe)buckets.push({k:'me',lbl:meLbl+' 지출',v:bd.me});
+    if(bd.hasSrch)buckets.push({k:'srch',lbl:srchLbl+' 지출',v:bd.srch});
+    if(bd.hasEtc)buckets.push({k:'etc',lbl:'기타 지출',v:bd.etc});
+    // %는 각자÷총지출(합 100 보정: 가장 큰 버킷이 잔차 흡수)
+    const pcts=buckets.map(b=>total>0?Math.round(b.v/total*100):0);
+    const psum=pcts.reduce((a,c)=>a+c,0);
+    if(buckets.length&&psum!==100&&total>0){let mi=0;buckets.forEach((b,i)=>{if(b.v>buckets[mi].v)mi=i;});pcts[mi]+=100-psum;}
+    const rowsHtml=buckets.map((b,i)=>`<div class="hmn-stat-col"><span class="hmn-stat-col-lbl hmn-spend-lbl ${b.k}">${b.lbl}</span><div class="hmn-stat-col-right"><span class="hmn-pct">${pcts[i]}%</span><span class="hmn-stat-col-val hmn-spend-val ${b.k}">${fmt(b.v)}원</span></div></div>`).join('');
+    // 밸런스 = 검색자와의 정산상태 배지(초과/부족·한턱·퉁) — 정산상태 토글 켜졌을 때만 (v8.53)
     let settleHtml='';
     if(_histSettleMode){
       let totalDelta=0,hasD=false,totalWaived=0,totalTreat=0;
       dispRecs.forEach(r=>{const d=_personSettleDelta(r,_historySearch.trim());if(d!==null){totalDelta+=d;hasD=true;}totalWaived+=_personSettleWaived(r,_historySearch.trim());totalTreat+=(r.items||[]).reduce((a,it)=>a+((it.payer||'').toLowerCase().includes(q)&&it.isTreat?(+it.amount||0):0),0);});
       if(hasD){if(totalDelta>0)settleHtml=`<span class="hmn-stat-settle pos">+${fmt(totalDelta)}원 초과</span>`;else if(totalDelta<0)settleHtml=`<span class="hmn-stat-settle neg">${fmt(-totalDelta)}원 부족</span>`;else settleHtml=`<span class="hmn-stat-settle zero">완납</span>`;}
-      // 한턱도 요약에 — 수금 사람 요약과 기준 통일(그 사람이 결제자인 한턱 합). (v8.23)
       if(totalTreat>0)settleHtml+=`<span class="hmn-stat-settle treat">🎉 ${fmt(totalTreat)}원 한턱</span>`;
       if(totalWaived>0)settleHtml+=`<span class="hmn-stat-settle waived">🤝 ${fmt(totalWaived)}원 퉁</span>`;
     }
-    // '○○ 지출' 줄: 배지 있으면 금액 아래 줄로(모바일 금액 쪼개짐 방지), 없으면 기존 한 줄 (v8.31)
-    const _jiCol=settleHtml
-      ? `<div class="hmn-stat-col hmn-col-badges"><span class="hmn-stat-col-lbl">${payerLbl} 지출</span><div class="hmn-stat-badges">${settleHtml}</div><span class="hmn-stat-col-val">${fmt(burdenAmt)}원</span></div>`
-      : `<div class="hmn-stat-col"><span class="hmn-stat-col-lbl">${payerLbl} 지출</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${fmt(burdenAmt)}원</span></div></div>`;
-    statHtml=`<div class="hmn-stat-3"><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">모임</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${dispRecs.length}회</span></div></div>${_jiCol}<div class="hmn-stat-col"><span class="hmn-stat-col-lbl">총 지출</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${fmt(total)}원</span></div></div></div>`;
+    const balHtml=settleHtml?`<div class="hmn-stat-col hmn-col-badges hmn-bal-col"><span class="hmn-stat-col-lbl">밸런스</span><div class="hmn-stat-badges">${settleHtml}</div></div>`:'';
+    statHtml=`<div class="hmn-stat-3"><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">모임</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${dispRecs.length}회</span></div></div>${rowsHtml}<div class="hmn-stat-col hmn-total-col"><span class="hmn-stat-col-lbl">총 지출</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${fmt(total)}원</span></div></div>${balHtml}</div>`;
   }else{
     const total=dispRecs.reduce((s,r)=>s+(+r.total||0),0);
     const statStr=dispRecs.length?`${dispRecs.length}회 모임 · ${fmt(total)}원`:(_histMonthAllMode?'기록이 없어요':'이 달에 기록이 없어요');
