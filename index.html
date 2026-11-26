@@ -997,6 +997,7 @@ svg{display:block;flex-shrink:0;}
 }
 /* 검색 요약 쓴금액 3버킷(나 파랑·검색자 주황·기타 회색) + 금액 왼쪽 % (v8.53) */
 .hmn-pct{font-size:12px;font-weight:600;color:var(--label3);font-variant-numeric:tabular-nums;flex-shrink:0;}
+.hmn-treat{font-size:12px;font-weight:600;color:var(--txn-amber);font-variant-numeric:tabular-nums;white-space:nowrap;flex-shrink:0;}
 .hmn-spend-lbl{display:inline-flex;align-items:center;gap:6px;}
 .hmn-spend-lbl::before{content:"";width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--label3);}
 .hmn-spend-lbl.me::before{background:var(--blue);}
@@ -1948,8 +1949,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.54';
-const BUILD_TIME='2026-11-26 11:20';
+const APP_VERSION='v8.55';
+const BUILD_TIME='2026-11-26 11:55';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3307,12 +3308,13 @@ function _histSpendBreakdown(recs,ownerName,searchQ){
   const meL=me.toLowerCase();
   const q=(searchQ||'').trim().toLowerCase();
   let meSp=0,srchSp=0,etcSp=0,hasMe=false,hasSrch=false,hasEtc=false;
+  let meTr=0,srchTr=0,etcTr=0;  // 각 버킷이 '쏜' 한턱 합 (결제자 기준) (v8.55)
   (recs||[]).forEach(r=>{
     const P=(r.people||[]).slice();if(!P.length)return;
     const cs=computeShares(P,r.items||[]);
     const cons={};P.forEach(p=>cons[p]=(cs.owes&&cs.owes[p])||0);
-    // 한턱(isTreat) 항목은 computeShares의 owes에서 빠지고 결제자가 전액 부담
-    (r.items||[]).forEach(it=>{if(it.isTreat&&+it.amount&&P.includes(it.payer))cons[it.payer]=(cons[it.payer]||0)+(+it.amount||0);});
+    // 한턱(isTreat) 항목은 computeShares의 owes에서 빠지고 결제자가 전액 부담 + 결제자 버킷에 한턱 합 적립
+    (r.items||[]).forEach(it=>{if(it.isTreat&&+it.amount&&P.includes(it.payer)){const amt=+it.amount||0;cons[it.payer]=(cons[it.payer]||0)+amt;const pl=(it.payer||'').toLowerCase();if(me&&pl===meL)meTr+=amt;else if(q&&pl.includes(q))srchTr+=amt;else etcTr+=amt;}});
     // 퉁: 비소유자는 퉁받은 만큼 덜 내고, owner(나)가 그만큼 떠안는다
     let waivedToMe=0;
     if(me)P.forEach(p=>{if(p.toLowerCase()!==meL){const w=_personSettleWaived(r,p,me);if(w){cons[p]=(cons[p]||0)-w;waivedToMe+=w;}}});
@@ -3323,7 +3325,7 @@ function _histSpendBreakdown(recs,ownerName,searchQ){
       else{etcSp+=v;hasEtc=true;}
     });
   });
-  return{me:meSp,srch:srchSp,etc:etcSp,hasMe,hasSrch,hasEtc};
+  return{me:meSp,srch:srchSp,etc:etcSp,meTreat:meTr,srchTreat:srchTr,etcTreat:etcTr,hasMe,hasSrch,hasEtc};
 }
 function _sortHistRecs(recs,sort){
   const a=[...recs];
@@ -3401,14 +3403,15 @@ function _histMonthNavHtml(allRecs,dispRecs){
     const meLbl=e(me.length>5?me.slice(0,5)+'…':me)||'나';
     const srchLbl=e(_historySearch.length>5?_historySearch.slice(0,5)+'…':_historySearch);
     const buckets=[];
-    if(bd.hasMe)buckets.push({k:'me',lbl:meLbl+' 지출',v:bd.me});
-    if(bd.hasSrch)buckets.push({k:'srch',lbl:srchLbl+' 지출',v:bd.srch});
-    if(bd.hasEtc)buckets.push({k:'etc',lbl:'기타 지출',v:bd.etc});
+    if(bd.hasMe)buckets.push({k:'me',lbl:meLbl+' 지출',v:bd.me,t:bd.meTreat});
+    if(bd.hasSrch)buckets.push({k:'srch',lbl:srchLbl+' 지출',v:bd.srch,t:bd.srchTreat});
+    if(bd.hasEtc)buckets.push({k:'etc',lbl:'기타 지출',v:bd.etc,t:bd.etcTreat});
     // %는 각자÷총지출(합 100 보정: 가장 큰 버킷이 잔차 흡수)
     const pcts=buckets.map(b=>total>0?Math.round(b.v/total*100):0);
     const psum=pcts.reduce((a,c)=>a+c,0);
     if(buckets.length&&psum!==100&&total>0){let mi=0;buckets.forEach((b,i)=>{if(b.v>buckets[mi].v)mi=i;});pcts[mi]+=100-psum;}
-    const rowsHtml=buckets.map((b,i)=>`<div class="hmn-stat-col"><span class="hmn-stat-col-lbl hmn-spend-lbl ${b.k}">${b.lbl}</span><div class="hmn-stat-col-right"><span class="hmn-pct">${pcts[i]}%</span><span class="hmn-stat-col-val hmn-spend-val ${b.k}">${fmt(b.v)}원</span></div></div>`).join('');
+    // 한 줄: 이름 → 🎉한턱 → 비중(%) → 금액 (v8.55)
+    const rowsHtml=buckets.map((b,i)=>`<div class="hmn-stat-col"><span class="hmn-stat-col-lbl hmn-spend-lbl ${b.k}">${b.lbl}</span><div class="hmn-stat-col-right">${b.t>0?`<span class="hmn-treat">🎉 ${fmt(b.t)}</span>`:''}<span class="hmn-pct">${pcts[i]}%</span><span class="hmn-stat-col-val hmn-spend-val ${b.k}">${fmt(b.v)}원</span></div></div>`).join('');
     // 밸런스 = 검색자와의 정산상태 배지(초과/부족·한턱·퉁) — 정산상태 토글 켜졌을 때만 (v8.53)
     let settleHtml='';
     if(_histSettleMode){
