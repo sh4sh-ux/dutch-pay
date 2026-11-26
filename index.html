@@ -1952,8 +1952,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.60';
-const BUILD_TIME='2026-11-26 15:05';
+const APP_VERSION='v8.61';
+const BUILD_TIME='2026-11-26 15:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -5968,9 +5968,11 @@ function _buildRecordCardHtml(r){
         return `<div class="rc-item-row rc-3line"${rowClick}><span class="pay-ic">${getIconSvg(it)}</span><div class="rc-item-info"><div class="rc-item-name-row"><span class="rc-item-name">${e(it.name||'(이름 없음)')}</span><span class="rc-payer-pill">${e(it.payer||'결제자 미정')} 결제</span>${it.isTreat?'<span class="treat-badge">🎉 한턱</span>':''}${_alcBadge(it)}</div><div class="rc-item-meta">${e(mems)}</div></div>${chev}<span class="rc-item-amt${+it.amount<0?' neg':''}">${fmt(+it.amount)}원</span></div>${_receiptTableHtml(it,uid,r.id)}`;
       }).join(''):'';
   const pmObj=r.payments||{};
-  const txnHtml=txns.length
+  const payHtml=txns.length
     ?`<div class="rc-section-title">입금 내역</div><div class="rc-txns">`+txns.map(t=>{const tkey=`${t.from}|${t.to}`;const pm=(pmObj[tkey]||{});const badge=_paymentBadgeHtml(pm,t.amt,{owner:t.to===_myName});const rid=ea(r.id);const rkey=ea(tkey);return `<div class="rc-txn-row clickable" data-rec-id="${rid}" data-txn-key="${rkey}" onclick="toggleRcTxnPanel('${jsa(r.id)}','${jsa(tkey)}')"><div class="rc-txn-left"><div class="rc-txn-people"><span>${e(t.from)}</span>${svgArrowH}<span>${e(t.to)}</span></div>${badge}</div><span class="rc-txn-amt">${fmt(t.amt)}원</span></div>`;}).join('')+`</div>`
-    :_treatBreakdownHtml(r,false);
+    :'';
+  // 한턱 내역을 항상 먼저(있으면) 그린 뒤 입금 내역 — 상세내역 이미지와 동일 순서(지출→한턱→입금). 둘 다 있을 때 한턱이 누락되던 것 수정 (v8.61)
+  const txnHtml=_treatBreakdownHtml(r,false)+payHtml;
   const savedAtStr=(()=>{try{const d=new Date(r.savedAt);return d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e2){return '';}})();
   return `<div class="record-card" data-rec-id="${e(r.id)}">
     <div class="rc-hd" onclick="toggleHistoryCard('${sid}')">
