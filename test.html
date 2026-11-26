@@ -1558,6 +1558,14 @@ suite('TC34: 검색 요약 쓴금액 3버킷 _histSpendBreakdown [v8.53]', () =>
   test('한턱은 결제자(신유철)가 전액 → 검색자 20,000 / 나 0', () => {
     const b=B([treat],'신유철'); expect(b.srch).toBe(20000); expect(b.me).toBe(0);
   });
+  test('한턱 버킷 — 결제자(신유철)가 쏜 한턱 20,000만 srchTreat에, 나·기타 0 [v8.55]', () => {
+    const b=B([treat],'신유철');
+    expect(b.srchTreat).toBe(20000); expect(b.meTreat).toBe(0); expect(b.etcTreat).toBe(0);
+  });
+  test('한턱 없는 기록은 모든 treat 버킷 0', () => {
+    const b=B([ex],'친구');
+    expect(b.srchTreat).toBe(0); expect(b.meTreat).toBe(0); expect(b.etcTreat).toBe(0);
+  });
   // 3명: 이영환은 기타(회색)로, 합 = 총 지출
   const three={people:['조상현','신유철','이영환'],total:30000,
     items:[{amount:30000,payer:'조상현',members:['조상현','신유철','이영환']}],txns:[],payments:{}};
