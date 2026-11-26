@@ -1005,7 +1005,8 @@ svg{display:block;flex-shrink:0;}
 .hmn-spend-val.me{color:var(--blue);}
 .hmn-spend-val.srch{color:var(--txn-amber);}
 .hmn-spend-val.etc{color:var(--label3);}
-.hmn-bal-col .hmn-stat-col-lbl{align-self:flex-start;}
+/* 밸런스 배지를 라벨 옆 한 줄로(아래 줄 아님) — 오른쪽 정렬·줄바꿈 없음 (v8.57) */
+.hmn-bal-right{display:flex;align-items:center;gap:6px;justify-content:flex-end;flex-wrap:wrap;min-width:0;}
 .hist-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;}
 .hist-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--label3);padding:5px 10px;border:1px solid var(--sep);background:var(--fill2);border-radius:20px;white-space:nowrap;}
 .hist-badge.connected{color:var(--green-txt);border-color:var(--green);background:var(--green-bg);}
@@ -1949,8 +1950,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.56';
-const BUILD_TIME='2026-11-26 12:20';
+const APP_VERSION='v8.57';
+const BUILD_TIME='2026-11-26 12:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3421,7 +3422,7 @@ function _histMonthNavHtml(allRecs,dispRecs){
       if(totalTreat>0)settleHtml+=`<span class="hmn-stat-settle treat">🎉 ${fmt(totalTreat)}원 한턱</span>`;
       if(totalWaived>0)settleHtml+=`<span class="hmn-stat-settle waived">🤝 ${fmt(totalWaived)}원 퉁</span>`;
     }
-    const balHtml=settleHtml?`<div class="hmn-stat-col hmn-col-badges hmn-bal-col"><span class="hmn-stat-col-lbl">밸런스</span><div class="hmn-stat-badges">${settleHtml}</div></div>`:'';
+    const balHtml=settleHtml?`<div class="hmn-stat-col hmn-bal-col"><span class="hmn-stat-col-lbl">밸런스</span><div class="hmn-bal-right">${settleHtml}</div></div>`:'';
     statHtml=`<div class="hmn-stat-3"><div class="hmn-stat-col"><span class="hmn-stat-col-lbl">모임</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${dispRecs.length}회</span></div></div>${rowsHtml}<div class="hmn-stat-col hmn-total-col"><span class="hmn-stat-col-lbl">총 지출</span><div class="hmn-stat-col-right"><span class="hmn-stat-col-val">${fmt(total)}원</span></div></div>${balHtml}</div>`;
   }else{
     const total=dispRecs.reduce((s,r)=>s+(+r.total||0),0);
