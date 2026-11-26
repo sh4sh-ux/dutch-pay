@@ -267,7 +267,10 @@ svg{display:block;flex-shrink:0;}
 .chip-watch-lbl{font-size:10px;font-weight:700;margin-left:2px;}
 .treat-toggle{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:10px 14px;font-size:14px;font-family:inherit;background:var(--card);color:var(--label2);cursor:pointer;text-align:left;transition:all .12s;}
 .treat-toggle.on{border-color:#D47000;background:#FFF8EE;color:#D47000;font-weight:600;}
-.treat-badge{font-size:11px;color:#4355E8;font-weight:600;flex-shrink:0;}
+.treat-badge{font-size:11px;color:#E8710A;font-weight:600;flex-shrink:0;}/* 한턱=주황으로 앱 전역 통일 (한턱 내역 pill과 동일 색, v8.63) */
+@media(prefers-color-scheme:dark){.treat-badge{color:#FB923C;}}
+:root[data-theme="dark"] .treat-badge{color:#FB923C;}
+:root[data-theme="light"] .treat-badge{color:#E8710A;}
 .alc-badge{font-size:10px;color:#C77700;font-weight:600;flex-shrink:0;white-space:nowrap;}
 .alc-sec{background:var(--fill);border-radius:var(--rs);padding:12px 14px;}
 .alc-lines{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px;}
@@ -1952,8 +1955,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.62';
-const BUILD_TIME='2026-11-26 16:30';
+const APP_VERSION='v8.63';
+const BUILD_TIME='2026-11-26 17:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
