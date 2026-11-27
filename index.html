@@ -1969,8 +1969,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.71';
-const BUILD_TIME='2026-11-27 15:00';
+const APP_VERSION='v8.72';
+const BUILD_TIME='2026-11-27 15:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3006,7 +3006,7 @@ function removePerson(name){const idx=people.indexOf(name);if(idx<0)return;const
 
 
 
-function setRounderOverride(itemId,value){const it=items.find(i=>i.id===itemId);if(!it)return;it.rounderOverride=value||null;saveState();renderAll();}
+function setRounderOverride(itemId,value){const it=items.find(i=>i.id===itemId);if(!it)return;if(_justAddedId===itemId)_justAddedId=null;/* 차액 부담자 변경=의도적 편집 → 자동삭제 제외(v8.72) */it.rounderOverride=value||null;saveState();renderAll();}
 function setIconOverride(itemId,key){const it=items.find(i=>i.id===itemId);if(!it)return;it.iconOverride=key||null;saveState();renderAll();}
 
 // 팝오버 닫기 — 팝오버·백드롭 모두 제거 (v5.69)
@@ -3034,9 +3034,9 @@ function selectItemMob(id){_checkAutoDelete();selectedId=id;if(mTab!=='input'){m
 
 let _ufTimer=null;
 function _flushUpdateField(){clearTimeout(_ufTimer);_ufTimer=null;saveState();}
-function updateField(id,field,val){const it=items.find(i=>i.id===id);if(!it)return;it[field]=val;if(_justAddedId===id&&(field==='name'||field==='amount')&&val)_justAddedId=null;updateTotals();if(field==='name'){document.getElementById('dREye').textContent='지출 편집';document.getElementById('dRTitle').textContent=val||'새 지출';const mst=document.getElementById('mSheetTitle');if(mst)mst.textContent=val||'새 지출';}if(field==='name'||field==='amount'||field==='payer'){renderItemLists();refreshMobItems();}if(field==='receiptText'||field==='amount'){document.querySelectorAll('[data-alc-host="'+id+'"]').forEach(h=>{h.innerHTML=_receiptDerivedHtml(it);});}clearTimeout(_ufTimer);_ufTimer=setTimeout(_flushUpdateField,600);}
+function updateField(id,field,val){const it=items.find(i=>i.id===id);if(!it)return;it[field]=val;if(_justAddedId===id&&(field==='name'||field==='amount'||field==='payer'||field==='rounderOverride')&&val)_justAddedId=null;/* 결제자/차액부담자도 의도적 편집 → 빈 지출 자동삭제에서 제외(결제자만 바꿨다 사라지던 버그, v8.72) */updateTotals();if(field==='name'){document.getElementById('dREye').textContent='지출 편집';document.getElementById('dRTitle').textContent=val||'새 지출';const mst=document.getElementById('mSheetTitle');if(mst)mst.textContent=val||'새 지출';}if(field==='name'||field==='amount'||field==='payer'){renderItemLists();refreshMobItems();}if(field==='receiptText'||field==='amount'){document.querySelectorAll('[data-alc-host="'+id+'"]').forEach(h=>{h.innerHTML=_receiptDerivedHtml(it);});}clearTimeout(_ufTimer);_ufTimer=setTimeout(_flushUpdateField,600);}
 
-function toggleMember(id,name,btn){const it=items.find(i=>i.id===id);if(!it)return;if(!it.watchers)it.watchers=[];const isIn=it.members.includes(name);const isW=it.watchers.includes(name);if(isIn){// 포함 → 깍두기
+function toggleMember(id,name,btn){const it=items.find(i=>i.id===id);if(!it)return;if(_justAddedId===id)_justAddedId=null;/* 참여자 변경=의도적 편집 → 자동삭제 제외(v8.72) */if(!it.watchers)it.watchers=[];const isIn=it.members.includes(name);const isW=it.watchers.includes(name);if(isIn){// 포함 → 깍두기
 if(it.members.length>1)it.members=it.members.filter(m=>m!==name);else return;it.watchers.push(name);}else if(isW){// 깍두기 → 제외
 it.watchers=it.watchers.filter(w=>w!==name);}else{// 제외 → 포함
 it.members.push(name);}const nowIn=it.members.includes(name);const nowW=it.watchers.includes(name);btn.className='chip'+(nowIn?' on':'')+(nowW?' watch':'');btn.innerHTML=e(name)+(nowW?'<span class="chip-watch-lbl"> 깍두기</span>':'');renderItemLists();refreshMobItems();saveState();}
@@ -5155,7 +5155,7 @@ function removeReceipt(itemId){
   const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(itemId);
   _syncFlushNow();
 }
-function toggleTreat(id){const it=items.find(i=>i.id===id);if(!it)return;it.isTreat=!it.isTreat;saveState();renderAll();const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(id);}
+function toggleTreat(id){const it=items.find(i=>i.id===id);if(!it)return;if(_justAddedId===id)_justAddedId=null;/* 한턱 변경=의도적 편집 → 자동삭제 제외(v8.72) */it.isTreat=!it.isTreat;saveState();renderAll();const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(id);}
 // 술 안 마시는 사람 토글 (noDrink) — 술값 제외 대상
 function toggleNoDrink(id,name){const it=items.find(i=>i.id===id);if(!it)return;if(!Array.isArray(it.noDrink))it.noDrink=[];if(it.noDrink.includes(name))it.noDrink=it.noDrink.filter(x=>x!==name);else it.noDrink.push(name);saveState();renderAll();const sheet=document.getElementById('mSheet');if(sheet&&sheet.classList.contains('open'))renderSheetBody(id);}
 // 술 품목 수동 토글 — 자동 판정을 뒤집어 alcoholOn/alcoholOff(품목명 기준)에 기록
