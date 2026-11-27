@@ -1087,6 +1087,7 @@ svg{display:block;flex-shrink:0;}
 .rc-fix-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#665000;border:1px solid #e1b72f;background:#fff3a6;border-radius:8px;font-weight:700;padding:6px 8px;cursor:pointer;white-space:nowrap;}
 .rc-fix-btn:hover{opacity:.8;}
 .rc-fix-btn.fixed{color:var(--green-txt);border:1px solid #aadcbb;background:var(--green-bg);cursor:pointer;}
+#histDr:not([data-owner="1"]) .rc-fix-btn{display:none;}/* 잠금(봉인)은 소유자 전용 — 친구 기록보관함에선 숨김. _cardFootHtml 출력은 불변(v8.66) */
 /* 잠김은 상태 칩 — 버튼 줄에서 빼 저장일시 옆에(버튼처럼 안 보이게). (v8.15) */
 .rc-lock-tag{display:inline-flex;align-items:center;gap:3px;background:var(--green-bg);color:var(--green-txt);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700;margin-right:7px;vertical-align:middle;white-space:nowrap;}
 /* 수정 중 바 — 하단 고정. 모바일=전체폭 탭 네비 위, 데스크탑=왼쪽 편집 패널 폭에만(전체폭 X, 부담 줄임). (v8.14/8.15) */
@@ -1955,8 +1956,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.65';
-const BUILD_TIME='2026-11-27 10:05';
+const APP_VERSION='v8.66';
+const BUILD_TIME='2026-11-27 10:45';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3093,7 +3094,7 @@ function _fbxCardHtml(){
     const acc=fbxAccountName(); const last=_fbxLastBackupText();
     return `<div class="set-card"><div class="set-card-title">내 데이터 백업</div>`
       +`<div class="set-dbx-status on"><span class="dot"></span>Dropbox 연결됨${acc?`<span class="acc">${e(acc)}</span>`:''}</div>`
-      +`<div class="set-card-note">내 정산 데이터를 내 Dropbox에 백업해요. 폰을 바꾸거나 브라우저를 지워도 복원할 수 있어요.${last?`<br>${e(last)}`:''}</div>`
+      +`<div class="set-card-note">내 정산 데이터와 기록 보관함을 내 Dropbox에 백업해요. 폰을 바꾸거나 브라우저를 지워도 복원할 수 있어요.${last?`<br>${e(last)}`:''}</div>`
       +`<div class="set-btns">`
       +`<button class="set-btn primary" data-action="fbxBackup">지금 백업하기</button>`
       +`<button class="set-btn" data-action="fbxRestore">복원하기</button>`
@@ -3121,7 +3122,13 @@ function _setPanelHtml(){
     +`<button class="set-seg-btn${mode==='dark'?' on':''}" data-action="theme:dark">다크</button>`
     +`</div></div>`;
   if(!_ownerUnlocked){
-    return `<div class="set-intro">앱 설정을 관리해요.</div>${nameCard}${themeCard}${_fbxCardHtml()}<div class="set-ver" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
+    const friendHistCard=`<div class="set-card"><div class="set-card-title">기록 보관함</div>`
+      +`<div class="set-card-note" style="margin-top:6px">완료한 정산을 기록으로 저장하고 언제든 다시 볼 수 있어요.</div>`
+      +`<div class="set-card-rows">`
+      +`<button class="set-row" data-action="openHistory"><span class="ic">📋</span>기록 보관함 열기<span class="chev">›</span></button>`
+      +`<button class="set-row" data-action="saveHistory"><span class="ic">📌</span>현재 정산을 기록에 저장</button>`
+      +`</div></div>`;
+    return `<div class="set-intro">앱 설정을 관리해요.</div>${nameCard}${themeCard}${friendHistCard}${_fbxCardHtml()}<div class="set-ver" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
   }
   // Dropbox 카드
   let dbxCard;
@@ -3214,6 +3221,8 @@ function openHistDrawer(){
   dr.style.transform='';
   _histPlaceDesktop();
   dr.classList.add('open');
+  document.querySelectorAll('.hist-bulk-detail-btn').forEach(bt=>bt.style.display=_ownerUnlocked?'':'none'); // 전체 상세 저장(owner Dropbox)은 친구에게 숨김(v8.66)
+  {const _hd=document.getElementById('histDr');if(_hd)_hd.dataset.owner=_ownerUnlocked?'1':'';} // 잠금 버튼은 CSS로 토글 — _cardFootHtml 출력은 불변(테스트 보존) (v8.66)
   _syncShellNav('history'); // 기록 보관함을 열면 레일/하단 '기록' 탭을 활성 표시 (v7.02)
   // _bindHistPTR 제거 — 다른 탭과 동일하게 전역 PTR(당겨서 reload)이 드로어도 처리 (v7.84)
   const onEnd=()=>{dr.removeEventListener('transitionend',onEnd);if(dr.classList.contains('open'))dr.style.transform='none';};
@@ -4345,8 +4354,8 @@ function _renderAllSafe(){
   const _skipD=_inp&&rBody&&rBody.contains(ae);
   const _skipM=_inp&&((mBody&&mBody.contains(ae))||(mSheet&&mSheet.contains(ae)));
   // 수금 탭 제거 (다이어트 단계3, v8.30) — 입금 체크는 정산 탭 '입금 현황', 통계·미수는 기록보관함으로 이전됨. 수금 버튼은 항상 숨김. 기록 탭은 소유자 노출.
-  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
-  const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display=_ownerUnlocked?'':'none';
+  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display='';  // 기록 보관함은 친구도 사용(v8.66)
+  const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display='';  // 기록 보관함은 친구도 사용(v8.66)
   renderPills();renderItemLists();updateTotals();
   if(!_skipD)renderDesktopRight();
   if(!_skipM)renderMobileBody();
@@ -4356,8 +4365,8 @@ function _renderAllSafe(){
 }
 function renderAll(skipSave=false){
   // 수금 탭 제거 (다이어트 단계3, v8.30) — 수금 버튼은 항상 숨김(기록 탭은 소유자 노출 유지).
-  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display=_ownerUnlocked?'':'none';
-  const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display=_ownerUnlocked?'':'none';
+  const mTHi=document.getElementById('mTHistory');if(mTHi)mTHi.style.display='';  // 기록 보관함은 친구도 사용(v8.66)
+  const dRHi=document.getElementById('dRailHistory');if(dRHi)dRHi.style.display='';  // 기록 보관함은 친구도 사용(v8.66)
   renderPills();renderItemLists();updateTotals();renderDesktopRight();renderMobileBody();refreshGroupSwitcher();
   const di=document.getElementById('meetingDateInp');if(di){di.value=settleDateStart;_dpSync(di);}
   _updateMobFab();try{_refreshEditBanner();}catch(e){}if(!skipSave)saveState();
@@ -6198,8 +6207,8 @@ function fbxGetToken(){return localStorage.getItem(FBX_TOKEN);}
 function fbxAccountName(){try{const a=JSON.parse(localStorage.getItem(FBX_ACCOUNT)||'{}');return a.name||a.email||'';}catch(e2){return '';}}
 // 백업 묶음 만들기 (순수 함수 — test 가능): 이 기기의 내 작업 데이터만 담는다
 function _fbxBuildPayload(){
-  return {app:'dutchpay',kind:'friend-backup',v:1,savedAt:new Date().toISOString(),
-    data:{main:localStorage.getItem(STORAGE_KEY)||'',couple:localStorage.getItem('dutchpay_couple')||'',myName:localStorage.getItem('dutchpay_my_name')||''}};
+  return {app:'dutchpay',kind:'friend-backup',v:2,savedAt:new Date().toISOString(),
+    data:{main:localStorage.getItem(STORAGE_KEY)||'',history:localStorage.getItem(HISTORY_KEY)||'',couple:localStorage.getItem('dutchpay_couple')||'',myName:localStorage.getItem('dutchpay_my_name')||''}};
 }
 // 복원 적용 (순수 함수 — test 가능): 유효한 묶음이면 로컬에 써 넣고 true, 아니면 false
 function _fbxApplyPayload(obj){
@@ -6208,11 +6217,12 @@ function _fbxApplyPayload(obj){
   if(typeof d.main!=='string'||!d.main)return false;           // 메인 데이터 없으면 복원 거부
   try{JSON.parse(d.main);}catch(e2){return false;}             // 깨진 JSON이면 거부
   localStorage.setItem(STORAGE_KEY,d.main);
+  if(typeof d.history==='string'&&d.history){try{if(Array.isArray(JSON.parse(d.history)))localStorage.setItem(HISTORY_KEY,d.history);}catch(e3){}}  // 기록보관함(v2+, 선택)
   if(typeof d.couple==='string'&&d.couple)localStorage.setItem('dutchpay_couple',d.couple);
   if(typeof d.myName==='string')localStorage.setItem('dutchpay_my_name',d.myName);
   return true;
 }
-function _fbxPayloadHash(){const p=_fbxBuildPayload();return (p.data.main||'')+'|'+(p.data.couple||'')+'|'+(p.data.myName||'');}
+function _fbxPayloadHash(){const p=_fbxBuildPayload();return (p.data.main||'')+'|'+(p.data.history||'')+'|'+(p.data.couple||'')+'|'+(p.data.myName||'');}
 async function _fbxRefreshToken(){
   const refresh=localStorage.getItem(FBX_REFRESH);if(!refresh)return null;
   try{const res=await _dbxFetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh,client_id:FBX_APP_KEY})});const data=await res.json();if(data.access_token){localStorage.setItem(FBX_TOKEN,data.access_token);return data.access_token;}return null;}catch(e2){return null;}
