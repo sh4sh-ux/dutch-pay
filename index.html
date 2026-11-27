@@ -798,6 +798,18 @@ svg{display:block;flex-shrink:0;}
 .set-row.danger:hover{color:var(--red);opacity:.8;}
 .set-ver{text-align:center;color:var(--label3);font-size:12px;padding:8px 20px 4px;cursor:pointer;letter-spacing:.3px;}
 .set-ver:hover{color:var(--label2);}
+/* 사용 설명서(접이식) v8.69 */
+.set-help summary{list-style:none;cursor:pointer;font-weight:700;font-size:14px;color:var(--label);display:flex;align-items:center;justify-content:space-between;}
+.set-help summary::-webkit-details-marker{display:none;}
+.set-help-chev{color:var(--label3);transition:transform .2s;font-size:17px;}
+.set-help[open] .set-help-chev{transform:rotate(90deg);}
+.set-help-body{margin-top:12px;font-size:13px;color:var(--label2);line-height:1.65;}
+.set-help-sec{margin-top:13px;}
+.set-help-sec:first-child{margin-top:0;}
+.set-help-sec b{color:var(--label);}
+.set-help-body ol{margin:6px 0 0;padding-left:19px;}
+.set-help-body li{margin:3px 0;}
+.set-help-body p{margin:4px 0 0;}
 @media(max-width:700px){.set-body{padding:16px 16px 24px;} .set-row{padding:14px 2px;font-size:16px;} .set-seg-btn{padding:11px 4px;font-size:14px;}}
 .couple-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;display:flex;align-items:center;justify-content:center;}
 .couple-modal{background:var(--card);border-radius:20px;padding:28px 24px;width:320px;max-width:92vw;}
@@ -1957,8 +1969,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.68';
-const BUILD_TIME='2026-11-27 12:30';
+const APP_VERSION='v8.69';
+const BUILD_TIME='2026-11-27 13:15';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3088,6 +3100,20 @@ function closeSetDrawer(){
 }
 function toggleSetDrawer(anchorEl,ev){if(ev&&ev.stopPropagation)ev.stopPropagation();if(ev&&ev.preventDefault)ev.preventDefault();if(_setDrawerOpen)closeSetDrawer();else openSetDrawer();}
 function _refreshSetDrawer(){if(_setDrawerOpen){const b=document.getElementById('setDrBody');if(b)b.innerHTML=_setPanelHtml();}}
+// 사용 설명서 카드 (접이식, 모두에게 노출) — v8.69
+function _helpCardHtml(){
+  return `<div class="set-card"><details class="set-help"><summary>📖 사용 설명서<span class="set-help-chev">›</span></summary><div class="set-help-body">`
+    +`<div class="set-help-sec"><b>이렇게 쓰면 돼요</b><ol>`
+    +`<li>함께한 사람 이름을 넣어요</li>`
+    +`<li>지출을 추가하고 <b>누가 냈는지</b> 골라요</li>`
+    +`<li><b>정산</b> 탭에서 누가 누구에게 얼마 주면 되는지 나와요</li>`
+    +`<li><b>공유</b> 탭에서 이미지로 저장해 단톡방에 올려요</li>`
+    +`</ol></div>`
+    +`<div class="set-help-sec"><b>👤 '내 이름'을 정하면?</b><p>정산·공유 화면에서 <b>내가 받을·보낼 돈이 파란색으로 맨 위</b>에 떠서 한눈에 보여요.</p></div>`
+    +`<div class="set-help-sec"><b>💑 '커플 설정'이란?</b><p>연인·부부처럼 돈을 같이 쓰는 두 사람을 <b>공유 이미지에서 한 팀으로 합쳐서</b> 보여줘요. (두 사람 각자 금액도 같이 표시돼요)</p></div>`
+    +`<div class="set-help-sec"><b>☁️ '내 데이터 백업'은?</b><p>내 정산 기록을 <b>내 클라우드(Dropbox·Google Drive)에 저장</b>해 둬요. 폰을 바꾸거나 앱을 지워도 <b>'복원하기'로 다시 불러올 수 있어요.</b> (내 것만 저장돼요 — 다른 사람과 안 섞여요)</p></div>`
+    +`</div></details></div>`;
+}
 // 친구용 간편 백업 카드 (소유자 아님일 때만 노출) — v8.65
 function _fbxCardHtml(){
   const fbxOn=!!fbxGetToken(), gbxOn=gbxGetConnected();
@@ -3143,7 +3169,7 @@ function _setPanelHtml(){
       +`<button class="set-row" data-action="openHistory"><span class="ic">📋</span>기록 보관함 열기<span class="chev">›</span></button>`
       +`<button class="set-row" data-action="saveHistory"><span class="ic">📌</span>현재 정산을 기록에 저장</button>`
       +`</div></div>`;
-    return `<div class="set-intro">앱 설정을 관리해요.</div>${nameCard}${themeCard}${friendHistCard}${_fbxCardHtml()}<div class="set-ver" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
+    return `<div class="set-intro">앱 설정을 관리해요.</div>${_helpCardHtml()}${nameCard}${themeCard}${friendHistCard}${_fbxCardHtml()}`;  // 버전 표시는 소유자만(v8.69)
   }
   // Dropbox 카드
   let dbxCard;
@@ -3184,7 +3210,7 @@ function _setPanelHtml(){
     +`<button class="set-row danger" data-action="reset"><span class="ic">🗑</span>전체 초기화</button>`
     +`</div></div>`;
   return `<div class="set-intro">앱 설정과 데이터를 관리해요.</div>`
-    +nameCard+themeCard+dbxCard+histCard+dataCard+resetCard
+    +_helpCardHtml()+nameCard+themeCard+dbxCard+histCard+dataCard+resetCard
     +`<div class="set-ver" data-action="lockOwner">더치페이 ${APP_VERSION} · 🔒 잠금</div>`;
 }
 // 내 이름 인라인 입력 — prompt 없이 저장 (설정 카드, v8.03). setMyName(⋯ 메뉴)의 저장·잠금해제 로직과 동일
