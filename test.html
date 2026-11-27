@@ -249,6 +249,32 @@ suite('TC4: 여러 지출 — 결제자별 직접 정산', () => {
   test('수지 균형', () => assertBalanced());
 });
 
+suite('TC35: 반올림 정합 — 분담액과 송금액 원 단위 정확 일치 (v8.71)', () => {
+  const chk = (ppl, its) => {
+    setup(ppl, its);
+    const { paid, owes } = shares(); const t = txns();
+    const move = {}; ppl.forEach(p => move[p] = 0);
+    t.forEach(x => { move[x.from] -= x.amt; move[x.to] += x.amt; });
+    const bad = ppl.map(p => ({ p, need: (paid[p]||0) - (owes[p]||0), got: move[p] })).filter(x => x.need !== x.got);
+    return { owes, bad };
+  };
+  // 리뷰 예시: A·B 각 10,000 결제, 3명 균등 → 잔여 2원을 한 사람에게 몰지 않고 A·B 1원씩
+  const r1 = chk(['A','B','C'], [{name:'x',amount:10000,payer:'A'},{name:'y',amount:10000,payer:'B'}]);
+  test('잔여 공정 분배(한 사람에게 안 몰림): A·B 6,667 / C 6,666', () => {
+    expect(r1.owes['A']).toBe(6667); expect(r1.owes['B']).toBe(6667); expect(r1.owes['C']).toBe(6666);
+  });
+  test('A·B 각 10,000 — 분담net=송금net 원 단위 정확 일치', () => { if (r1.bad.length) throw new Error('불일치: '+JSON.stringify(r1.bad)); });
+  // 오드 금액 2명 결제 (쌍별 floor로 깨지던 케이스)
+  const r2 = chk(['A','B','C'], [{name:'x',amount:10001,payer:'A'},{name:'y',amount:10001,payer:'B'}]);
+  test('오드 금액 2결제 — 정확 일치', () => { if (r2.bad.length) throw new Error('불일치: '+JSON.stringify(r2.bad)); });
+  // 차수별 참석자 다른 모임
+  const r3 = chk(['A','B','C','D'], [{name:'x',amount:10000,payer:'A',members:['A','B','C']},{name:'y',amount:7000,payer:'B',members:['B','C','D']}]);
+  test('차수별 참석자 다름 — 정확 일치', () => { if (r3.bad.length) throw new Error('불일치: '+JSON.stringify(r3.bad)); });
+  // 7명 균등
+  const r4 = chk(['A','B','C','D','E','F','G'], [{name:'x',amount:10000,payer:'A'}]);
+  test('7명 균등 — 정확 일치', () => { if (r4.bad.length) throw new Error('불일치: '+JSON.stringify(r4.bad)); });
+});
+
 suite('TC5: 1인 정산', () => {
   setup(['혼자'], [{ name:'밥', amount:15000, payer:'혼자' }]);
   const { owes } = shares();

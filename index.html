@@ -1969,8 +1969,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.70';
-const BUILD_TIME='2026-11-27 14:00';
+const APP_VERSION='v8.71';
+const BUILD_TIME='2026-11-27 15:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4655,12 +4655,18 @@ function computeShares(ppl,its){
   let totalFloor=0;const fracParts=[];
   P.forEach(p=>{const f=owesFloat[p]||0;const fl=Math.floor(f);owes[p]=fl;totalFloor+=fl;fracParts.push({p,frac:f-fl});});
   let diff=Math.round(totalAmt-totalFloor);
-  if(diff!==0){fracParts.sort((a,b)=>{const ap=payerSet[a.p]?1:0,bp=payerSet[b.p]?1:0;if(ap!==bp)return bp-ap;return b.frac-a.frac;});if(fracParts.length)owes[fracParts[0].p]+=diff;}
+  if(diff!==0&&fracParts.length){
+    fracParts.sort((a,b)=>{const ap=payerSet[a.p]?1:0,bp=payerSet[b.p]?1:0;if(ap!==bp)return bp-ap;return b.frac-a.frac;});
+    // 잔여 1원씩 분배(최대잔여법·결제자 우선) — 한 사람에게 몰지 않아 분담액이 대칭·공정 (v8.71)
+    const step=diff>0?1:-1;
+    for(let k=0,n2=Math.abs(diff);k<n2;k++)owes[fracParts[k%fracParts.length].p]+=step;
+  }
   return{paid,owes,details,hasRounding:diff!==0};
 }
 
 // calcTxns: 결제자별 채무 직접 정산 — 같은 (채무자, 채권자) 쌍끼리 상계
 function calcTxns(paid,owes){
+  if(!paid||!owes){const _r=computeShares();paid=_r.paid;owes=_r.owes;}  // 인자 없이 불러도 동작(반올림 정합에 분담액 필요, v8.71)
   const dm={};people.forEach(p=>{dm[p]={};});
   items.forEach(it=>{
     if(!it.amount||+it.amount===0||it.isTreat)return;
@@ -4691,7 +4697,31 @@ function calcTxns(paid,owes){
     const amt=Math.floor(dm[debtor][creditor]||0);
     if(amt>0)txns.push({from:debtor,to:creditor,amt});
   }));
+  // 반올림 정합(v8.71): 송금 순액이 분담액(paid−owes)과 원 단위까지 정확히 같게 보정.
+  // 쌍별 floor로 생긴 ±차이를 '더 낼 사람(채무자)→더 받을 사람(채권자)'으로 1원씩 이동.
+  _reconcileTxns(txns,paid,owes);
   return txns;
+}
+// 송금 순액을 분담액 목표(target=paid−owes)에 정확히 맞춘다. 순수 함수(people 전역 기준).
+function _reconcileTxns(txns,paid,owes){
+  const target={},net={};
+  people.forEach(p=>{target[p]=(paid[p]||0)-(owes[p]||0);net[p]=0;});
+  txns.forEach(t=>{net[t.to]+=t.amt;net[t.from]-=t.amt;});
+  const delta={};people.forEach(p=>{delta[p]=target[p]-net[p];}); // delta>0: 더 받아야(채권자), <0: 더 내야(채무자)
+  const key=(f,t)=>f+'\u0000'+t,tmap={};
+  txns.forEach(t=>{tmap[key(t.from,t.to)]=t;});
+  for(const c of people){
+    let guard=0;
+    while(delta[c]>0&&guard++<100000){
+      let d=null;
+      for(const q of people){if(q!==c&&delta[q]<0&&tmap[key(q,c)]){d=q;break;}} // 기존 d→c 송금 우선 보정
+      if(d===null)for(const q of people){if(q!==c&&delta[q]<0){d=q;break;}}      // 없으면 최소 신규 송금
+      if(d===null)break;
+      const k=key(d,c);
+      if(tmap[k])tmap[k].amt+=1;else{const nt={from:d,to:c,amt:1};txns.push(nt);tmap[k]=nt;}
+      delta[c]-=1;delta[d]+=1;
+    }
+  }
 }
 
 // 안전장치(런타임 트립와이어): 정산이 계산될 때마다 '장부가 맞는지' 스스로 점검한다.
