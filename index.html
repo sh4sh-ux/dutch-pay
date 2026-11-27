@@ -757,6 +757,7 @@ svg{display:block;flex-shrink:0;}
 .set-card{background:var(--card);border:1px solid var(--sep);border-radius:16px;padding:16px 16px 14px;}
 .set-card-title{font-size:13px;font-weight:700;color:var(--label);letter-spacing:.2px;margin-bottom:4px;}
 .set-card-note{font-size:12px;color:var(--label2);line-height:1.5;margin-top:10px;}
+.set-card-warn{font-size:12px;color:var(--label);line-height:1.5;margin-top:10px;padding:9px 11px;border-radius:9px;background:var(--fill2);border:1px solid var(--sep);}
 /* 내 이름 필드 */
 .set-field{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:1px solid var(--sep);background:var(--fill2);border-radius:11px;padding:12px 14px;margin-top:10px;cursor:pointer;text-align:left;font-family:inherit;}
 .set-field:hover{border-color:var(--sep2);}
@@ -1977,8 +1978,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.73';
-const BUILD_TIME='2026-11-27 16:20';
+const APP_VERSION='v8.74';
+const BUILD_TIME='2026-11-27 18:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -1987,10 +1988,12 @@ let _justAddedId=null;
 let _pmHistTab='current',_pmHistSearch='',_pmHistSort='newest',_pmHistFilter='all',_pmViewMode='list',_pmHistGroup='all',_pmMonthPeopleSort='amt';
 const _pmMonthsOpen=new Set();
 let _dbxAutoSavedFp='';
-const OWNER_NAME='조상현'; // 내 이름이 소유자명이면 5탭 잠금 해제 없이 자동 해제 (v5.75)
+const OWNER_NAME_HASH=250938938; // 소유자 이름 해시(djb2·실명 비노출) — 내 이름이 이 해시와 같으면 5탭 없이 자동 잠금해제 (v5.75, v8.74 해시화)
+function _hashName(s){s=(s||'').trim().normalize('NFC');let x=5381;for(let i=0;i<s.length;i++){x=((x<<5)+x+s.charCodeAt(i))>>>0;}return x;}
+function _isOwnerName(n){const t=(n||'').trim();return !!t&&_hashName(t)===OWNER_NAME_HASH;}
 let _myName=localStorage.getItem('dutchpay_my_name')||'';
 let _coupleNames=(()=>{try{return JSON.parse(localStorage.getItem('dutchpay_couple')||'[]');}catch(e){return[];}})();
-let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_myName===OWNER_NAME;
+let _ownerTapCount=0,_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_isOwnerName(_myName);
 let _historySearch='';let _histSearchTypedAt=0;
 let _historySort='newest';
 let _histView='list',_histStatsSub='all'; // 기록보관함 뷰: 기록 | 통계(전체·월별) (v8.29, 다이어트 단계2)
@@ -2117,7 +2120,7 @@ function showDataMenu(anchorEl,ev){
     else if(action==='setCouples'){pop.remove();showCoupleSettings();}
     else if(action==='exportCsv'){exportCurrentGroupCsv();pop.remove();}
     else if(action==='export'){exportData();pop.remove();}
-    else if(action==='setMyName'){const n=prompt('더치페이에서 나의 이름을 입력하세요\n(입금 관리에서 나에게 오는 입금만 수정 가능해져요)',_myName);if(n===null)return;_myName=n.trim();localStorage.setItem('dutchpay_my_name',_myName);const _wasUnlocked=_ownerUnlocked;_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_myName===OWNER_NAME;pop.remove();toast(_myName?`내 이름이 "${_myName}"으로 설정됐어요${(!_wasUnlocked&&_ownerUnlocked)?' · 소유자 기능 잠금 해제됨':''}`:'내 이름 설정이 해제됐어요',{type:'success'});renderAll();}
+    else if(action==='setMyName'){const n=prompt('더치페이에서 나의 이름을 입력하세요\n(입금 관리에서 나에게 오는 입금만 수정 가능해져요)',_myName);if(n===null)return;_myName=n.trim();localStorage.setItem('dutchpay_my_name',_myName);const _wasUnlocked=_ownerUnlocked;_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_isOwnerName(_myName);pop.remove();toast(_myName?`내 이름이 "${_myName}"으로 설정됐어요${(!_wasUnlocked&&_ownerUnlocked)?' · 소유자 기능 잠금 해제됨':''}`:'내 이름 설정이 해제됐어요',{type:'success'});renderAll();}
     else if(action==='toggleDark'){_toggleDarkMode();pop.remove();}
     else if(action==='resetCurrent'){resetCurrentSettlement();pop.remove();}
     else if(action==='reset'){resetAllData();pop.remove();}
@@ -3159,7 +3162,8 @@ function _fbxCardHtml(){
   }
   return `<div class="set-card"><div class="set-card-title">내 데이터 백업</div>`
     +`<div class="set-dbx-status"><span class="dot"></span>연결 안 됨</div>`
-    +`<div class="set-card-note">내 클라우드에 연결하면 내 정산 데이터·기록을 백업하고, 폰을 바꾸거나 브라우저를 지워도 복원할 수 있어요. (내 데이터만 — 다른 사람과 섞이지 않아요)</div>`
+    +`<div class="set-card-warn">⚠️ 지금 내 데이터는 <b>이 브라우저에만</b> 저장돼요. 브라우저 기록을 지우거나 폰을 바꾸면 사라질 수 있어요.</div>`
+    +`<div class="set-card-note">아래에서 내 클라우드에 연결하면 내 정산 데이터·기록을 백업하고, 폰을 바꾸거나 브라우저를 지워도 복원할 수 있어요. (내 데이터만 — 다른 사람과 섞이지 않아요)</div>`
     +`<div class="set-btns">`
     +`<button class="set-btn primary" data-action="fbxConnect">Dropbox로 백업 연결</button>`
     +`<button class="set-btn primary" data-action="gbxConnect">Google Drive로 백업 연결</button>`
@@ -3238,7 +3242,7 @@ function updateMyName(val){
   _myName=n;
   localStorage.setItem('dutchpay_my_name',_myName);
   const wasUnlocked=_ownerUnlocked;
-  _ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_myName===OWNER_NAME;
+  _ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_isOwnerName(_myName);
   toast(_myName?`내 이름이 "${_myName}"으로 설정됐어요${(!wasUnlocked&&_ownerUnlocked)?' · 소유자 기능 잠금 해제됨':''}`:'내 이름 설정이 해제됐어요',{type:'success'});
   renderAll();_refreshSetDrawer();
 }
@@ -3264,7 +3268,7 @@ function _settingsAction(action){
   else if(action==='setCouples'){close();showCoupleSettings();}
   else if(action==='exportCsv'){exportCurrentGroupCsv();}
   else if(action==='export'){exportData();}
-  else if(action==='setMyName'){const n=prompt('더치페이에서 나의 이름을 입력하세요\n(입금 관리에서 나에게 오는 입금만 수정 가능해져요)',_myName);if(n===null)return;_myName=n.trim();localStorage.setItem('dutchpay_my_name',_myName);const _wasUnlocked=_ownerUnlocked;_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_myName===OWNER_NAME;toast(_myName?`내 이름이 "${_myName}"으로 설정됐어요${(!_wasUnlocked&&_ownerUnlocked)?' · 소유자 기능 잠금 해제됨':''}`:'내 이름 설정이 해제됐어요',{type:'success'});renderAll();refresh();}
+  else if(action==='setMyName'){const n=prompt('더치페이에서 나의 이름을 입력하세요\n(입금 관리에서 나에게 오는 입금만 수정 가능해져요)',_myName);if(n===null)return;_myName=n.trim();localStorage.setItem('dutchpay_my_name',_myName);const _wasUnlocked=_ownerUnlocked;_ownerUnlocked=!!localStorage.getItem('dutchpay_owner_unlocked')||_isOwnerName(_myName);toast(_myName?`내 이름이 "${_myName}"으로 설정됐어요${(!_wasUnlocked&&_ownerUnlocked)?' · 소유자 기능 잠금 해제됨':''}`:'내 이름 설정이 해제됐어요',{type:'success'});renderAll();refresh();}
   else if(action==='toggleDark'){_toggleDarkMode();refresh();}
   else if(action.indexOf('theme:')===0){const m=action.slice(6);if(m==='system')localStorage.removeItem('dutchpay_dark_mode');else localStorage.setItem('dutchpay_dark_mode',m);_applyDarkMode();refresh();}
   else if(action==='resetCurrent'){close();resetCurrentSettlement();}
@@ -4395,7 +4399,7 @@ function _resultBreakdownHtml(paid,owes,txns){
   if(!ownerName)return'';
   const ownerPaid=paid[ownerName]||0;
   const ownerBurden=owes[ownerName]||0;
-  // 한턱 혜택: '조상현 쏨'처럼 소유자가 쏜 금액만 합산한다(다른 사람이 쏜 한턱은 제외).
+  // 한턱 혜택: '소유자 쏨'처럼 소유자가 쏜 금액만 합산한다(다른 사람이 쏜 한턱은 제외).
   // 라벨(누가 쏨)과 금액(그 사람이 쏜 액수)이 반드시 일치해야 한다.
   const treatTotal=items.filter(it=>it.isTreat&&it.payer===ownerName).reduce((s,it)=>s+(+it.amount||0),0);
   const ownerReceives=txns.filter(t=>t.to===ownerName).reduce((s,t)=>s+t.amt,0);
