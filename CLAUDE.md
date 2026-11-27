@@ -25,7 +25,9 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v8.66** (2026-11-27) — 작업 브랜치
+**v8.67** (2026-11-27) — 작업 브랜치
+
+> **모바일 하단 바에 ⚙️ 설정 탭 추가(v8.67)**: 사용자 지적 — 모바일에서 설정을 열려면 상단 제목/버전을 탭해야 해서 안 직관적(친구가 기록보관함·백업을 발견 못 함). → 하단 바(`.mob-tabs`)에 `#mTSettings`(⚙️설정, `toggleSetDrawer`) 추가 → `입력·정산·공유·기록·설정` 5탭. `_setOutsideHandler` 예외에 `#mTSettings` 추가(토글 더블파이어 방지). 버전 5탭/5연속탭 잠금 해제는 숨은 소유자 스위치로 유지(설정 접근과 분리). 표시/네비게이션 전용·계산 무관, test 230 통과.
 
 > **친구도 자기 기록보관함(v8.66)**: 사용자 선택 "(가) 각자 따로 — 각 친구가 자기 기록보관함". 친구(비소유자)에게도 **기록 보관함 탭 노출 + 정산 저장 + 자기 Dropbox 백업에 기록 포함**. 소유자 전용(잠금·전체상세저장)은 숨김(잠금은 `#histDr:not([data-owner="1"]) .rc-fix-btn{display:none}` CSS로 — `_cardFootHtml` 출력은 불변이라 test 보존 / 전체상세저장은 `openHistDrawer`에서 display 토글). `_fbxBuildPayload`/`_fbxApplyPayload`에 `history`(dutchpay_history) 추가(payload v2, 구형 v1 호환). **저장은 소유자 동기화 무관**(`saveHistory`=순수 localStorage). test 230 통과.
 
@@ -36,6 +38,7 @@ favicon.png / icons/  — 아이콘
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v8.67 | **[모바일 UX] 하단 바에 ⚙️ 설정 탭 추가 — 설정 접근 직관화**(사용자: 모바일에 하단 설정 버튼이 있어야·버전 탭은 안 직관적 / 어떻게 생각해 → 동의·진행) — **원인**: 모바일에서 설정 드로어는 상단 제목(`#mobTitleEl`) 탭으로만 열려 발견성 0 → 특히 v8.65/66으로 설정에 넣은 **기록보관함·백업을 친구가 못 찾음**. → `.mob-tabs`에 `#mTSettings`(톱니 SVG+'설정', `onclick=toggleSetDrawer(this,event)`) 추가 → `입력·정산·공유·기록·설정` 5탭. **토글 더블파이어 방지**: `_setOutsideHandler`(capture 리스너) 예외 목록에 `#mTSettings` 추가 — 안 그러면 열린 상태 재탭 시 바깥클릭 핸들러가 먼저 닫고 `toggleSetDrawer`가 다시 열어 꼬임. **버전 탭(소유자 잠금 해제)은 그대로**(숨은 관리자 스위치, 설정 접근과 별개 — 조상현님은 이름=OWNER_NAME이라 자동 해제). **헤드리스(친구·소유자 각 430px 모바일)**: 5탭 노출·라벨 '설정'·1클릭 열림+설정내용·2클릭 닫힘(토글)·3클릭 재열림·콘솔0. 표시/네비게이션 전용·계산 무관, test **230 통과**. |
 | v8.66 | **[친구도 자기 기록보관함] 친구(비소유자)에게 기록 보관함 개방 + 자기 Dropbox 백업에 기록 포함**(사용자: 친구들도 나와 같이 기록보관함처럼 쓸 수 없나 → 해석 확인 → "(가) 각자 따로 — 각 친구가 자기 기록보관함" 선택) — **배경**: 기록보관함은 `_ownerUnlocked`로 소유자 전용이었음. **헤드리스 감사로 안전 확정**: 친구 맥락에서 드로어 정상 렌더·`saveToHistory()` 저장 작동(`saveHistory`=순수 localStorage, 소유자 Dropbox 동기화 안 건드림)·콘솔0, 소유자 전용으로 노출되는 건 **잠금(🔒)·전체상세저장** 둘뿐. → **개방**: ①기록 nav(`mTHistory`/`dRailHistory`)를 친구에게도 노출(renderAll 2곳 `display=''`) ②설정 드로어 `!_ownerUnlocked` 분기에 '기록 보관함'(열기/저장) 카드 추가(기존 `openHistory`/`saveHistory` 액션 재사용) ③친구 백업(`_fbxBuildPayload`/`_fbxApplyPayload`)에 `history` 포함(payload **v2**, 구형 v1 백업도 호환·`_fbxPayloadHash`도 history 포함). **소유자 전용 숨김**: 잠금은 **CSS**(`#histDr:not([data-owner="1"]) .rc-fix-btn{display:none}` + `openHistDrawer`에서 `#histDr` `data-owner` 세팅)로 숨겨 **`_cardFootHtml` 출력 불변→test.html '잠금 버튼' 검사 보존**(처음엔 JS 가드로 바꿨다가 그 테스트가 비소유자 맥락이라 깨져서 CSS로 교체), 전체상세저장(`.hist-bulk-detail-btn`)은 `openHistDrawer`에서 display 토글. **헤드리스**: 친구 기록탭 노출·설정 카드·드로어 잠금 `display:none`·전체상세저장 숨김·카드 렌더·콘솔0 / 백업 payload v2 history 포함·왕복 복원·v1 호환 / 소유자는 잠금 `display:flex`·전체상세저장 유지. **잠금(봉인 아카이브)은 별도 저장소라 친구 백업 범위 밖**이므로 친구에게 숨기는 게 데이터 일관성에도 맞음. 표시+저장 경로(계산 무관), test **230 통과**. **미세 잔여**: 친구 카드 '이미지' 뷰어 내 '드롭박스 저장'은 owner Dropbox 대상(친구는 연결 안내만 뜸, 무해) — 필요 시 후속. |
 | v8.65 | **[친구용 백업 신설] 친구(비소유자)도 자기 Dropbox에 자기 데이터 백업/복원**(사용자: 무료 배포 후 친구들도 각자 구글드라이브·드롭박스로 독립 백업 가능한지 → 전부 다·섞임/비용 없는지 확인 → Dropbox 앱 키 `3b2b7moorigym7w` 제공 → 지금 주소(A)로 진행) — **배경**: 기존 Dropbox 연동은 '소유자가 앱 키를 직접 입력'하는 구조라 일반 친구는 사용 불가. → **공용 앱 키를 코드에 내장**(PKCE client_id라 공개 안전·비밀 아님)하고, 각 친구가 **자기 Dropbox 계정으로 로그인 → 자기 폴더에만 저장**(`/더치페이 백업/내 정산 데이터.json`). **소유자 동기화 코드 무수정** — 완전 분리된 독립 모듈 `fbx*`(별도 키 `dutchpay_fbx_token/refresh/account/verifier/lastbackup`, 별도 PKCE·`fbxHandleCallback`·`_fbxUpload`/`_fbxDownload`·`_fbxRefreshToken`). **진입점**: 설정 드로어 `!_ownerUnlocked` 분기에 `_fbxCardHtml()` 카드(연결/지금 백업/복원/해제) — 소유자에겐 안 보이고 기존 소유자 Dropbox 카드 유지. **백업 대상**: 친구의 작업 데이터만(`dutchpay_v1`+커플+내이름), 순수 함수 `_fbxBuildPayload`(묶음 생성)/`_fbxApplyPayload`(검증 후 복원, 깨진 JSON·빈 메인 거부). **자동 백업**: `visibilitychange`(앱 백그라운드 전환) 시 변경분(해시 비교)만 조용히 업로드 — 안전망, 수동 '지금 백업'이 기본. **콜백 분기**: 부팅에서 `fbxHandleCallback()`(FBX_VERIFIER 있을 때만 code 소비) → 아니면 기존 `hDbxHandleCallback()`(소유자). **헤드리스**: 친구 카드 렌더·연결버튼·소유자 카드 누수 없음·콘솔0 / 백업→복원 왕복·깨진 묶음 거부·해시 안정 / 비연결 visibilitychange 무해 / 소유자는 친구 카드 안 뜸·기존 카드 유지·콘솔0. 표시+저장 경로(계산 무관), test **230 통과**. **남은 작업(사용자)**: Dropbox 콘솔에서 ①리다이렉트 URI `https://sh4sh-ux.github.io/dutch-pay/` 등록 확인 ②권한 `files.content.read/write` 확인 ③친구 50명+ 시 Production 전환. 이후 구글드라이브 연동(동일 모델). |
 | v8.64 | **[다이어트 보류분 완료] 대시보드 지출추이·카테고리 죽은 코드 정리**(사용자: 기능 점검 후 → 죽은 코드 정리 선택) — CLAUDE.md에 '저위험 아님·보류'로 남아 있던 대시보드 trend/cats 미사용 코드 제거. **근거(조사)**: `_pmDashboardHtml`의 유일한 호출부(line 3491)가 항상 `{lite:true}`라 `trend`·`cats` 분기(`${opts.lite?'':trend}...`)는 **절대 렌더 안 됨** → 그 분기가 참조하던 핸들러들도 죽음. test.html 참조 조사로 안전 범위 확정(6개 UI 핸들러·`_pmShowCategoryItems`·`_pmDashWindowN`·상태변수 2개는 **test 0** → 제거 / `_pmBucketPoints`·`_pmDashboardStats`는 **TC31이 검증** → 보존). → **`_pmDashboardHtml` always-lite 개조**(trend·cats 빌드 블록·opts 제거, 호출부 `_pmDashboardHtml(recs)`) + `_pmDashSetUnit`/`_pmDashGotoPeriod`/`_pmDashNav`/`_pmDashReadout`/`_pmDashTrendHover`/`_pmDashTrendPick`/`_pmShowCategoryItems`/`_pmDashWindowN` 함수 삭제 + `_pmDashUnit`/`_pmDashShift` 상태변수 삭제(약 90줄). **보존**: `_pmBucketPoints`(test-only 순수 함수 안전망)·`_pmDashboardStats`(라이브+test)·`_catKeyOf`(stats가 사용). 고아 CSS는 공유 셀렉터·키프레임 인터리브로 제거 위험 커 보존(미사용 바이트·무해). **헤드리스 검증**: 통계>전체 = `전체 기간·미수 현황·사람별 누적` 3섹션만(지출추이/카테고리 없음)·미수 1행·사람별 2행·월별 토글·목록 복귀 정상·댕글링 참조 0·콘솔에러0. 삭제된 심볼 잔존 참조 0(주석만). test **230 통과**. |
@@ -139,9 +142,9 @@ favicon.png / icons/  — 아이콘
 > 📁 **오래된 버전(v7.35 이하) 변경 이력은 [`CHANGELOG.md`](CHANGELOG.md)에 보관되어 있습니다.** (크레딧 절약을 위해 최근 16개만 여기 유지 — 전체 기록은 손실 없음)
 
 ## 탭 구조
-- 탭바: **입력 / 정산 / 공유 / 기록 / 수금** (기록·수금은 `_ownerUnlocked` 시에만 표시)
-- **기록** nav 버튼은 `goToHistory()`로 기록 보관함 드로어를 엶(탭 전환 아님). ⋯ 메뉴 진입도 유지
-- 친구들에게는 입력·정산·공유만 보임. `_ownerUnlocked`는 5탭 또는 내 이름=조상현(OWNER_NAME) 시 자동
+- 탭바: **입력 / 정산 / 공유 / 기록 / 설정** (수금 탭은 다이어트로 제거 v8.35)
+- **기록**·**설정**은 **친구 포함 모두 노출**(기록=v8.66, 설정 탭=v8.67). 기록은 `goToHistory()`로 기록 보관함 드로어를, 설정(`#mTSettings`)은 `toggleSetDrawer`로 설정 드로어를 엶(둘 다 탭 전환 아님)
+- 친구에게도 **기록보관함·내 데이터 백업**이 열림(v8.65/66). `_ownerUnlocked` 전용으로 남는 것: 잠금(봉인)·전체상세저장·소유자 Dropbox 동기화·수금 통계 등. `_ownerUnlocked`는 내 이름=조상현(OWNER_NAME) 또는 버전 5연속탭 시 자동(숨은 스위치)
 
 ## ⋯ 메뉴 항목 순서 (소유자 잠금 해제 시)
 1. Dropbox 연결/동기화
