@@ -1957,8 +1957,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.67';
-const BUILD_TIME='2026-11-27 11:30';
+const APP_VERSION='v8.68';
+const BUILD_TIME='2026-11-27 12:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3090,8 +3090,8 @@ function toggleSetDrawer(anchorEl,ev){if(ev&&ev.stopPropagation)ev.stopPropagati
 function _refreshSetDrawer(){if(_setDrawerOpen){const b=document.getElementById('setDrBody');if(b)b.innerHTML=_setPanelHtml();}}
 // 친구용 간편 백업 카드 (소유자 아님일 때만 노출) — v8.65
 function _fbxCardHtml(){
-  const connected=!!fbxGetToken();
-  if(connected){
+  const fbxOn=!!fbxGetToken(), gbxOn=gbxGetConnected();
+  if(fbxOn){
     const acc=fbxAccountName(); const last=_fbxLastBackupText();
     return `<div class="set-card"><div class="set-card-title">내 데이터 백업</div>`
       +`<div class="set-dbx-status on"><span class="dot"></span>Dropbox 연결됨${acc?`<span class="acc">${e(acc)}</span>`:''}</div>`
@@ -3102,10 +3102,24 @@ function _fbxCardHtml(){
       +`<button class="set-btn danger" data-action="fbxDisconnect">연결 해제</button>`
       +`</div></div>`;
   }
+  if(gbxOn){
+    const last=_gbxLastBackupText();
+    return `<div class="set-card"><div class="set-card-title">내 데이터 백업</div>`
+      +`<div class="set-dbx-status on"><span class="dot"></span>Google Drive 연결됨</div>`
+      +`<div class="set-card-note">내 정산 데이터와 기록 보관함을 내 Google Drive(앱 전용 폴더)에 백업해요. 폰을 바꾸거나 브라우저를 지워도 복원할 수 있어요.${last?`<br>${e(last)}`:''}</div>`
+      +`<div class="set-btns">`
+      +`<button class="set-btn primary" data-action="gbxBackup">지금 백업하기</button>`
+      +`<button class="set-btn" data-action="gbxRestore">복원하기</button>`
+      +`<button class="set-btn danger" data-action="gbxDisconnect">연결 해제</button>`
+      +`</div></div>`;
+  }
   return `<div class="set-card"><div class="set-card-title">내 데이터 백업</div>`
     +`<div class="set-dbx-status"><span class="dot"></span>연결 안 됨</div>`
-    +`<div class="set-card-note">내 Dropbox에 연결하면 내 정산 데이터를 백업하고, 폰을 바꾸거나 브라우저를 지워도 복원할 수 있어요. (내 데이터만 — 다른 사람과 섞이지 않아요)</div>`
-    +`<div class="set-btns"><button class="set-btn primary" data-action="fbxConnect">Dropbox로 백업 연결</button></div></div>`;
+    +`<div class="set-card-note">내 클라우드에 연결하면 내 정산 데이터·기록을 백업하고, 폰을 바꾸거나 브라우저를 지워도 복원할 수 있어요. (내 데이터만 — 다른 사람과 섞이지 않아요)</div>`
+    +`<div class="set-btns">`
+    +`<button class="set-btn primary" data-action="fbxConnect">Dropbox로 백업 연결</button>`
+    +`<button class="set-btn primary" data-action="gbxConnect">Google Drive로 백업 연결</button>`
+    +`</div></div>`;
 }
 function _setPanelHtml(){
   const dbxConnected=!!dbxGetToken();
@@ -3191,6 +3205,10 @@ function _settingsAction(action){
   else if(action==='fbxBackup'){fbxBackupNow(false);}
   else if(action==='fbxRestore'){close();fbxRestore();}
   else if(action==='fbxDisconnect'){fbxDisconnect();}
+  else if(action==='gbxConnect'){gbxConnect();}
+  else if(action==='gbxBackup'){gbxBackupNow(false);}
+  else if(action==='gbxRestore'){close();gbxRestore();}
+  else if(action==='gbxDisconnect'){gbxDisconnect();}
   else if(action==='dbxImportOld'){close();importFromOldLocation();}
   else if(action==='dbxRename'){close();_dbxRenameExistingFiles();}
   else if(action==='dbxOrganizeSettle'){close();_dbxOrganizeSettlementImages();}
@@ -6309,6 +6327,127 @@ document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState!=='hidden'||!fbxGetToken())return;
   const h=_fbxPayloadHash();if(h===_fbxLastHash)return;
   fbxBackupNow(true);
+});
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ══════════ 친구용 간편 백업 — Google Drive (각자 자기 Drive 앱 전용 폴더) v8.68 ══════════
+// Google Identity Services(GIS) 토큰 방식 — 비밀키 없이 브라우저에서 토큰 발급(공개 안전).
+// drive.appdata 스코프 = 앱 전용 숨김 폴더(appDataFolder)에만 접근, 유저마다 격리.
+// 백업 묶음 포맷은 Dropbox와 동일(_fbxBuildPayload/_fbxApplyPayload 재사용).
+const GBX_CLIENT_ID='394202263736-mvc8heedurtlplf6rbhfhb6uufm7vot0.apps.googleusercontent.com';
+const GBX_SCOPE='https://www.googleapis.com/auth/drive.appdata';
+const GBX_FILE_NAME='dutchpay-backup.json';
+const GBX_TOKEN='dutchpay_gbx_token',GBX_EXPIRY='dutchpay_gbx_expiry',GBX_CONNECTED='dutchpay_gbx_connected',GBX_LASTBK='dutchpay_gbx_lastbackup';
+let _gbxBackingUp=false,_gbxLastHash='',_gbxGisPromise=null,_gbxTokenClient=null,_gbxTokenResolve=null,_gbxTokenReject=null;
+function gbxGetConnected(){return localStorage.getItem(GBX_CONNECTED)==='1';}
+function _gbxCachedToken(){const t=localStorage.getItem(GBX_TOKEN),e=parseInt(localStorage.getItem(GBX_EXPIRY)||'0',10);return (t&&e&&Date.now()<e)?t:null;}
+function _gbxLastBackupText(){
+  const t=parseInt(localStorage.getItem(GBX_LASTBK)||'0',10);if(!t)return '';
+  const diff=Date.now()-t,m=Math.floor(diff/60000),h=Math.floor(m/60),d=Math.floor(h/24);
+  if(d>0)return `마지막 백업 ${d}일 전`;if(h>0)return `마지막 백업 ${h}시간 전`;if(m>0)return `마지막 백업 ${m}분 전`;return '방금 백업됨';
+}
+function _gbxLoadGis(){
+  if(_gbxGisPromise)return _gbxGisPromise;
+  _gbxGisPromise=new Promise((resolve,reject)=>{
+    if(window.google&&google.accounts&&google.accounts.oauth2)return resolve();
+    const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.defer=true;
+    s.onload=()=>{let n=0;const chk=()=>{if(window.google&&google.accounts&&google.accounts.oauth2)resolve();else if(n++<60)setTimeout(chk,100);else reject(new Error('Google 로그인 모듈 로드 실패'));};chk();};
+    s.onerror=()=>reject(new Error('Google 스크립트를 불러오지 못했어요(네트워크 확인)'));
+    document.head.appendChild(s);
+  });
+  return _gbxGisPromise;
+}
+async function _gbxInitClient(){
+  await _gbxLoadGis();
+  if(_gbxTokenClient)return _gbxTokenClient;
+  _gbxTokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:GBX_CLIENT_ID,scope:GBX_SCOPE,
+    callback:(resp)=>{
+      if(resp&&resp.access_token){
+        localStorage.setItem(GBX_TOKEN,resp.access_token);
+        localStorage.setItem(GBX_EXPIRY,String(Date.now()+((resp.expires_in?resp.expires_in*1000:3600000)-60000)));
+        localStorage.setItem(GBX_CONNECTED,'1');
+        if(_gbxTokenResolve){_gbxTokenResolve(resp.access_token);}
+      }else if(_gbxTokenReject){_gbxTokenReject(new Error((resp&&resp.error)||'토큰 발급 실패'));}
+      _gbxTokenResolve=null;_gbxTokenReject=null;
+    },
+    error_callback:(err)=>{if(_gbxTokenReject)_gbxTokenReject(new Error((err&&(err.message||err.type))||'인증이 취소됐어요'));_gbxTokenResolve=null;_gbxTokenReject=null;}
+  });
+  return _gbxTokenClient;
+}
+async function _gbxGetToken(interactive){
+  const cached=_gbxCachedToken();if(cached)return cached;
+  const client=await _gbxInitClient();
+  return new Promise((resolve,reject)=>{
+    _gbxTokenResolve=resolve;_gbxTokenReject=reject;
+    try{client.requestAccessToken({prompt:interactive?'consent':''});}catch(e){_gbxTokenResolve=null;_gbxTokenReject=null;reject(e);}
+  });
+}
+async function _gbxFindFile(token){
+  const q=encodeURIComponent("name='"+GBX_FILE_NAME+"' and trashed=false");
+  const res=await _dbxFetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name)&q='+q,{headers:{Authorization:'Bearer '+token}});
+  if(!res.ok)return null;
+  try{const d=await res.json();return (d.files&&d.files[0])?d.files[0].id:null;}catch(e){return null;}
+}
+async function _gbxUpload(token,content){
+  const fileId=await _gbxFindFile(token);
+  if(fileId){
+    const res=await _dbxFetch('https://www.googleapis.com/upload/drive/v3/files/'+fileId+'?uploadType=media',{method:'PATCH',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:content});
+    return res.ok;
+  }
+  const boundary='dutchpay'+Date.now();
+  const meta=JSON.stringify({name:GBX_FILE_NAME,parents:['appDataFolder']});
+  const body='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+'\r\n--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+content+'\r\n--'+boundary+'--';
+  const res=await _dbxFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'multipart/related; boundary='+boundary},body});
+  return res.ok;
+}
+async function _gbxDownload(token){
+  const fileId=await _gbxFindFile(token);if(!fileId)return null;
+  const res=await _dbxFetch('https://www.googleapis.com/drive/v3/files/'+fileId+'?alt=media',{headers:{Authorization:'Bearer '+token}});
+  if(!res.ok)return null;
+  try{return JSON.parse(await res.text());}catch(e){return null;}
+}
+async function gbxConnect(){
+  try{toast('Google 로그인 중…');await _gbxGetToken(true);toast('Google Drive에 연결됐어요! 자동으로 백업할게요.',{type:'success'});await gbxBackupNow(true);_refreshSetDrawer();}
+  catch(e){toast('연결 실패/취소: '+(e&&e.message||e),{type:'error',duration:5000});}
+}
+async function gbxBackupNow(silent){
+  if(!gbxGetConnected()){if(!silent)toast('먼저 Google Drive에 연결해주세요',{type:'error'});return false;}
+  if(_gbxBackingUp)return false;_gbxBackingUp=true;
+  try{
+    const token=await _gbxGetToken(!silent);
+    const ok=await _gbxUpload(token,JSON.stringify(_fbxBuildPayload()));
+    if(ok){localStorage.setItem(GBX_LASTBK,Date.now().toString());_gbxLastHash=_fbxPayloadHash();if(!silent)toast('백업됐어요 ✓',{type:'success',duration:3000});_refreshSetDrawer();}
+    else if(!silent)toast('백업 실패 · 잠시 후 다시 시도해주세요',{type:'error'});
+    return ok;
+  }catch(e){if(!silent)toast('백업 실패: '+(e&&e.message||e),{type:'error'});return false;}
+  finally{_gbxBackingUp=false;}
+}
+async function gbxRestore(){
+  if(!gbxGetConnected()){toast('먼저 Google Drive에 연결해주세요',{type:'error'});return;}
+  try{
+    toast('백업 불러오는 중…');
+    const token=await _gbxGetToken(true);
+    const obj=await _gbxDownload(token);
+    if(!obj){toast('백업이 없거나 불러오지 못했어요',{type:'error'});return;}
+    if(!confirm('클라우드 백업으로 이 기기의 현재 데이터를 덮어쓸까요?\n(지금 이 기기의 내용은 사라져요)'))return;
+    if(_fbxApplyPayload(obj)){toast('복원됐어요 · 새로고침할게요',{type:'success'});setTimeout(()=>location.reload(),700);}
+    else toast('백업 형식이 올바르지 않아 복원하지 못했어요',{type:'error'});
+  }catch(e){toast('복원 실패: '+(e&&e.message||e),{type:'error'});}
+}
+function gbxDisconnect(){
+  if(!confirm('Google Drive 연결을 해제할까요?\n(백업 파일은 당신의 Google Drive에 그대로 남아요)'))return;
+  const t=localStorage.getItem(GBX_TOKEN);
+  try{if(t&&window.google&&google.accounts&&google.accounts.oauth2)google.accounts.oauth2.revoke(t);}catch(e){}
+  [GBX_TOKEN,GBX_EXPIRY,GBX_CONNECTED,GBX_LASTBK].forEach(k=>localStorage.removeItem(k));
+  _gbxLastHash='';
+  toast('연결 해제됨');_refreshSetDrawer();
+}
+// 앱 백그라운드 전환 시, 유효한 토큰이 남아 있으면(제스처 불필요) 변경분만 조용히 백업 — 안전망
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='hidden'||!gbxGetConnected()||!_gbxCachedToken())return;
+  const h=_fbxPayloadHash();if(h===_gbxLastHash)return;
+  gbxBackupNow(true);
 });
 // ══════════════════════════════════════════════════════════════════════════════
 
