@@ -1883,6 +1883,7 @@ svg{display:block;flex-shrink:0;}
     <button class="mob-tab" id="mTResult" data-dutch-nav="result" onclick="mSetTab('result')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>정산</span></button>
     <button class="mob-tab" id="mTSettle" data-dutch-nav="settle" onclick="mSetTab('settle')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="1.7"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>공유</span></button>
     <button class="mob-tab" id="mTHistory" data-dutch-nav="history" aria-label="기록 보관함" onclick="goToHistory()" style="display:none"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>기록</span></button>
+    <button class="mob-tab" id="mTSettings" aria-label="설정 및 데이터 관리" onclick="toggleSetDrawer(this,event)"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l1.7-1.3-1.8-3.1-2 .8a7.6 7.6 0 0 0-1.7-1l-.3-2.1H9.7l-.3 2.1a7.6 7.6 0 0 0-1.7 1l-2-.8-1.8 3.1L5.6 11a7.6 7.6 0 0 0 0 2l-1.7 1.3 1.8 3.1 2-.8a7.6 7.6 0 0 0 1.7 1l.3 2.1h4.6l.3-2.1a7.6 7.6 0 0 0 1.7-1l2 .8 1.8-3.1L19.4 13Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>설정</span></button>
   </nav>
   <div class="mob-body" id="mBody"></div>
   <div class="mob-owner-tap" id="mobOwnerTap" onclick="_ownerAreaClick(this,event)">DUTCH PAY <span class="app-version" id="appVersionMob"></span></div>
@@ -1956,8 +1957,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.66';
-const BUILD_TIME='2026-11-27 10:45';
+const APP_VERSION='v8.67';
+const BUILD_TIME='2026-11-27 11:30';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3068,7 +3069,7 @@ function _ensureSetDr(){
 function _setPlaceDesktop(){_placeRightDrawer(document.getElementById('setDr'));}
 function _setResizeHandler(){if(_setDrawerOpen)_setPlaceDesktop();}
 function _setEscHandler(e){if(e.key==='Escape'&&_setDrawerOpen)closeSetDrawer();}
-function _setOutsideHandler(e){const dr=document.getElementById('setDr');if(!dr||dr.contains(e.target))return;if(e.target.closest('.app-rail-menu,.mob-owner-tap,#mobTitleEl,#appVersionM'))return;closeSetDrawer();}
+function _setOutsideHandler(e){const dr=document.getElementById('setDr');if(!dr||dr.contains(e.target))return;if(e.target.closest('.app-rail-menu,.mob-owner-tap,#mobTitleEl,#appVersionM,#mTSettings'))return;closeSetDrawer();}
 function openSetDrawer(){
   const dr=_ensureSetDr();_setDrawerOpen=true;
   document.getElementById('setDrBody').innerHTML=_setPanelHtml();
