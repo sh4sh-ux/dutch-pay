@@ -1955,8 +1955,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.64';
-const BUILD_TIME='2026-11-26 18:20';
+const APP_VERSION='v8.65';
+const BUILD_TIME='2026-11-27 10:05';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3086,6 +3086,25 @@ function closeSetDrawer(){
 }
 function toggleSetDrawer(anchorEl,ev){if(ev&&ev.stopPropagation)ev.stopPropagation();if(ev&&ev.preventDefault)ev.preventDefault();if(_setDrawerOpen)closeSetDrawer();else openSetDrawer();}
 function _refreshSetDrawer(){if(_setDrawerOpen){const b=document.getElementById('setDrBody');if(b)b.innerHTML=_setPanelHtml();}}
+// 친구용 간편 백업 카드 (소유자 아님일 때만 노출) — v8.65
+function _fbxCardHtml(){
+  const connected=!!fbxGetToken();
+  if(connected){
+    const acc=fbxAccountName(); const last=_fbxLastBackupText();
+    return `<div class="set-card"><div class="set-card-title">내 데이터 백업</div>`
+      +`<div class="set-dbx-status on"><span class="dot"></span>Dropbox 연결됨${acc?`<span class="acc">${e(acc)}</span>`:''}</div>`
+      +`<div class="set-card-note">내 정산 데이터를 내 Dropbox에 백업해요. 폰을 바꾸거나 브라우저를 지워도 복원할 수 있어요.${last?`<br>${e(last)}`:''}</div>`
+      +`<div class="set-btns">`
+      +`<button class="set-btn primary" data-action="fbxBackup">지금 백업하기</button>`
+      +`<button class="set-btn" data-action="fbxRestore">복원하기</button>`
+      +`<button class="set-btn danger" data-action="fbxDisconnect">연결 해제</button>`
+      +`</div></div>`;
+  }
+  return `<div class="set-card"><div class="set-card-title">내 데이터 백업</div>`
+    +`<div class="set-dbx-status"><span class="dot"></span>연결 안 됨</div>`
+    +`<div class="set-card-note">내 Dropbox에 연결하면 내 정산 데이터를 백업하고, 폰을 바꾸거나 브라우저를 지워도 복원할 수 있어요. (내 데이터만 — 다른 사람과 섞이지 않아요)</div>`
+    +`<div class="set-btns"><button class="set-btn primary" data-action="fbxConnect">Dropbox로 백업 연결</button></div></div>`;
+}
 function _setPanelHtml(){
   const dbxConnected=!!dbxGetToken();
   // 내 이름 카드
@@ -3102,7 +3121,7 @@ function _setPanelHtml(){
     +`<button class="set-seg-btn${mode==='dark'?' on':''}" data-action="theme:dark">다크</button>`
     +`</div></div>`;
   if(!_ownerUnlocked){
-    return `<div class="set-intro">앱 설정을 관리해요.</div>${nameCard}${themeCard}<div class="set-ver" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
+    return `<div class="set-intro">앱 설정을 관리해요.</div>${nameCard}${themeCard}${_fbxCardHtml()}<div class="set-ver" data-action="unlockTap">더치페이 ${APP_VERSION}</div>`;
   }
   // Dropbox 카드
   let dbxCard;
@@ -3160,6 +3179,10 @@ function updateMyName(val){
 function _settingsAction(action){
   const close=()=>closeSetDrawer(),refresh=()=>_refreshSetDrawer();
   if(action==='dbxAction'){if(dbxGetToken()){dbxResolveRoot().then(()=>{syncFromDropbox();hSyncDropbox();});toast('Dropbox 동기화 중...');}else{close();showDbxConnect();}}
+  else if(action==='fbxConnect'){fbxConnect();}
+  else if(action==='fbxBackup'){fbxBackupNow(false);}
+  else if(action==='fbxRestore'){close();fbxRestore();}
+  else if(action==='fbxDisconnect'){fbxDisconnect();}
   else if(action==='dbxImportOld'){close();importFromOldLocation();}
   else if(action==='dbxRename'){close();_dbxRenameExistingFiles();}
   else if(action==='dbxOrganizeSettle'){close();_dbxOrganizeSettlementImages();}
@@ -6164,6 +6187,120 @@ async function hDbxHandleCallback(){
 }
 
 
+// ══════════ 친구용 간편 백업 (각자 자기 Dropbox에 자기 데이터만) v8.65 ══════════
+// 소유자 동기화(dbx*/hDbx*)와 완전히 분리된 독립 경로. 별도 localStorage 키 사용.
+// 앱 키(FBX_APP_KEY)는 PKCE client_id라 공개돼도 안전(비밀 아님).
+const FBX_APP_KEY='3b2b7moorigym7w';
+const FBX_TOKEN='dutchpay_fbx_token',FBX_REFRESH='dutchpay_fbx_refresh',FBX_ACCOUNT='dutchpay_fbx_account',FBX_VERIFIER='dutchpay_fbx_verifier',FBX_LASTBK='dutchpay_fbx_lastbackup';
+const FBX_FILE='/더치페이 백업/내 정산 데이터.json';
+let _fbxBackingUp=false,_fbxLastHash='';
+function fbxGetToken(){return localStorage.getItem(FBX_TOKEN);}
+function fbxAccountName(){try{const a=JSON.parse(localStorage.getItem(FBX_ACCOUNT)||'{}');return a.name||a.email||'';}catch(e2){return '';}}
+// 백업 묶음 만들기 (순수 함수 — test 가능): 이 기기의 내 작업 데이터만 담는다
+function _fbxBuildPayload(){
+  return {app:'dutchpay',kind:'friend-backup',v:1,savedAt:new Date().toISOString(),
+    data:{main:localStorage.getItem(STORAGE_KEY)||'',couple:localStorage.getItem('dutchpay_couple')||'',myName:localStorage.getItem('dutchpay_my_name')||''}};
+}
+// 복원 적용 (순수 함수 — test 가능): 유효한 묶음이면 로컬에 써 넣고 true, 아니면 false
+function _fbxApplyPayload(obj){
+  if(!obj||obj.app!=='dutchpay'||obj.kind!=='friend-backup'||!obj.data)return false;
+  const d=obj.data;
+  if(typeof d.main!=='string'||!d.main)return false;           // 메인 데이터 없으면 복원 거부
+  try{JSON.parse(d.main);}catch(e2){return false;}             // 깨진 JSON이면 거부
+  localStorage.setItem(STORAGE_KEY,d.main);
+  if(typeof d.couple==='string'&&d.couple)localStorage.setItem('dutchpay_couple',d.couple);
+  if(typeof d.myName==='string')localStorage.setItem('dutchpay_my_name',d.myName);
+  return true;
+}
+function _fbxPayloadHash(){const p=_fbxBuildPayload();return (p.data.main||'')+'|'+(p.data.couple||'')+'|'+(p.data.myName||'');}
+async function _fbxRefreshToken(){
+  const refresh=localStorage.getItem(FBX_REFRESH);if(!refresh)return null;
+  try{const res=await _dbxFetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh,client_id:FBX_APP_KEY})});const data=await res.json();if(data.access_token){localStorage.setItem(FBX_TOKEN,data.access_token);return data.access_token;}return null;}catch(e2){return null;}
+}
+async function _fbxUpload(token,content){
+  const arg=JSON.stringify({path:FBX_FILE,mode:'overwrite',autorename:false,mute:true}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
+  const res=await _dbxFetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/octet-stream','Dropbox-API-Arg':arg},body:content});
+  if(res.status===401){const t=await _fbxRefreshToken();if(t)return _fbxUpload(t,content);}
+  return res.ok;
+}
+async function _fbxDownload(token){
+  const arg=JSON.stringify({path:FBX_FILE}).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,'0')}`);
+  const res=await _dbxFetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Dropbox-API-Arg':arg}});
+  if(res.status===401){const t=await _fbxRefreshToken();if(t)return _fbxDownload(t);return null;}
+  if(res.status===409)return null;    // 파일 없음(첫 복원 등)
+  if(!res.ok)return null;
+  try{return JSON.parse(await res.text());}catch(e2){return null;}
+}
+async function fbxConnect(){
+  let verifier,challenge;
+  try{verifier=_hRandomStr(64);challenge=await _hSha256b64url(verifier);localStorage.setItem(FBX_VERIFIER,verifier);}
+  catch(err){toast('연결 준비 실패: '+(err&&err.message||err),{type:'error',duration:5000});return;}
+  const redirectUri=location.origin+location.pathname;
+  const params=new URLSearchParams({client_id:FBX_APP_KEY,redirect_uri:redirectUri,response_type:'code',code_challenge:challenge,code_challenge_method:'S256',token_access_type:'offline'});
+  toast('Dropbox로 이동 중…');
+  location.href=`https://www.dropbox.com/oauth2/authorize?${params}`;
+}
+// 콜백 — 친구 플로우(FBX_VERIFIER 존재)일 때만 code를 소비하고 true 반환. 아니면 소유자 핸들러로 넘긴다.
+async function fbxHandleCallback(){
+  const params=new URLSearchParams(location.search);
+  const code=params.get('code');
+  const verifier=localStorage.getItem(FBX_VERIFIER);
+  if(!code||!verifier)return false;
+  history.replaceState({},'',location.pathname);
+  localStorage.removeItem(FBX_VERIFIER);
+  const redirectUri=location.origin+location.pathname;
+  try{
+    const res=await fetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({code,grant_type:'authorization_code',client_id:FBX_APP_KEY,redirect_uri:redirectUri,code_verifier:verifier})});
+    const data=await res.json();
+    if(data.error)throw new Error(data.error_description||data.error);
+    localStorage.setItem(FBX_TOKEN,data.access_token);
+    if(data.refresh_token)localStorage.setItem(FBX_REFRESH,data.refresh_token);
+    try{const acRes=await fetch('https://api.dropboxapi.com/2/users/get_current_account',{method:'POST',headers:{Authorization:`Bearer ${data.access_token}`}});const ac=await acRes.json();localStorage.setItem(FBX_ACCOUNT,JSON.stringify({name:ac.name?.display_name||'',email:ac.email||''}));}catch(e2){}
+    toast('Dropbox에 연결됐어요! 자동으로 백업할게요.',{type:'success'});
+    await fbxBackupNow(true);          // 연결 직후 1회 백업
+    _refreshSetDrawer();
+  }catch(err){toast('연결 실패: '+(err&&err.message||err),{type:'error'});}
+  return true;
+}
+async function fbxBackupNow(silent){
+  const token=fbxGetToken();if(!token){if(!silent)toast('먼저 Dropbox에 연결해주세요',{type:'error'});return false;}
+  if(_fbxBackingUp)return false;_fbxBackingUp=true;
+  try{
+    const ok=await _fbxUpload(token,JSON.stringify(_fbxBuildPayload()));
+    if(ok){localStorage.setItem(FBX_LASTBK,Date.now().toString());_fbxLastHash=_fbxPayloadHash();if(!silent)toast('백업됐어요 ✓',{type:'success',duration:3000});_refreshSetDrawer();}
+    else if(!silent)toast('백업 실패 · 잠시 후 다시 시도해주세요',{type:'error'});
+    return ok;
+  }catch(e2){if(!silent)toast('백업 실패 · 네트워크를 확인해주세요',{type:'error'});return false;}
+  finally{_fbxBackingUp=false;}
+}
+async function fbxRestore(){
+  const token=fbxGetToken();if(!token){toast('먼저 Dropbox에 연결해주세요',{type:'error'});return;}
+  toast('백업 불러오는 중…');
+  const obj=await _fbxDownload(token);
+  if(!obj){toast('백업이 없거나 불러오지 못했어요',{type:'error'});return;}
+  if(!confirm('클라우드 백업으로 이 기기의 현재 데이터를 덮어쓸까요?\n(지금 이 기기의 내용은 사라져요)'))return;
+  if(_fbxApplyPayload(obj)){toast('복원됐어요 · 새로고침할게요',{type:'success'});setTimeout(()=>location.reload(),700);}
+  else toast('백업 형식이 올바르지 않아 복원하지 못했어요',{type:'error'});
+}
+function fbxDisconnect(){
+  if(!confirm('Dropbox 연결을 해제할까요?\n(백업 파일은 당신의 Dropbox에 그대로 남아요)'))return;
+  [FBX_TOKEN,FBX_REFRESH,FBX_ACCOUNT,FBX_VERIFIER,FBX_LASTBK].forEach(k=>localStorage.removeItem(k));
+  _fbxLastHash='';
+  toast('연결 해제됨');_refreshSetDrawer();
+}
+function _fbxLastBackupText(){
+  const t=parseInt(localStorage.getItem(FBX_LASTBK)||'0',10);if(!t)return '';
+  const diff=Date.now()-t,m=Math.floor(diff/60000),h=Math.floor(m/60),d=Math.floor(h/24);
+  if(d>0)return `마지막 백업 ${d}일 전`;if(h>0)return `마지막 백업 ${h}시간 전`;if(m>0)return `마지막 백업 ${m}분 전`;return '방금 백업됨';
+}
+// 앱을 백그라운드로 보낼 때(다른 앱 전환·잠금) 변경분이 있으면 조용히 백업 — 안전망(수동 버튼이 기본)
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='hidden'||!fbxGetToken())return;
+  const h=_fbxPayloadHash();if(h===_fbxLastHash)return;
+  fbxBackupNow(true);
+});
+// ══════════════════════════════════════════════════════════════════════════════
+
 function hDbxDisconnect(){
   if(!confirm('Dropbox 연결을 해제할까요?'))return;
   ['dutchpay_dbx_token','dutchpay_dbx_refresh','dutchpay_dbx_account',DBX_H_LASTSYNC].forEach(k=>localStorage.removeItem(k));
@@ -7216,7 +7353,7 @@ document.querySelectorAll('.app-rail [data-nav-label]').forEach(btn=>{
 })();
 _updateSyncBadge();
 if(dbxGetToken())dbxResolveRoot().then(()=>syncFromDropbox()).then(()=>pullReceiptDbInbox());
-hDbxHandleCallback().then(async()=>{if(hDbxGetToken()){await dbxResolveRoot();hSyncDropbox();}});
+fbxHandleCallback().then(fbxHandled=>{if(fbxHandled)return;return hDbxHandleCallback().then(async()=>{if(hDbxGetToken()){await dbxResolveRoot();hSyncDropbox();}});});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{try{navigator.serviceWorker.register('sw.js').then(reg=>{reg.update();reg.addEventListener('updatefound',()=>{const nw=reg.installing;if(!nw)return;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller)toast('새 버전이 있어요',{action:()=>location.reload(),actionLabel:'새로고침',duration:10000});});});}).catch(()=>{});}catch(e){}});}
 </script>
 <script src="./category-grid.js"></script>
