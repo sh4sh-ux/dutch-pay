@@ -1978,8 +1978,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.74';
-const BUILD_TIME='2026-11-27 18:30';
+const APP_VERSION='v8.75';
+const BUILD_TIME='2026-11-27 19:40';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -2578,7 +2578,7 @@ function _showSyncConflictUI(conflicts,mergedGroups,remoteCurrentId,mergedDelete
   const choices={};conflicts.forEach(c=>{choices[c.id]='local';});
   function _scFmtDate(iso){if(!iso)return '';try{const d=new Date(iso);return d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
   function _scFmtGroup(g){const items=(g.data&&g.data.items)||[];const total=items.reduce((s,it)=>s+(+it.amount||0),0);const ppl=((g.data&&g.data.people)||[]).join(', ')||g.name||'그룹';return{ppl,cnt:items.length,total:fmt(total)+'원',at:_scFmtDate(g.updatedAt)};}
-  const cards=conflicts.map(c=>{const l=_scFmtGroup(c.local),r=_scFmtGroup(c.remote);return `<div class="sc-card" data-cid="${e(c.id)}"><div class="sc-card-title">${e(c.local.name||c.id)}</div><div class="sc-versions"><button class="sc-ver sc-local on" onclick="_scPick(${ja(c.id)},'local')"><div class="sc-ver-hd">📱 이 기기</div><div class="sc-ver-sub">${e(l.ppl)}</div><div class="sc-ver-row"><span>${l.cnt}건</span><span>${l.total}</span></div><div class="sc-ver-at">${e(l.at)}</div></button><button class="sc-ver sc-remote" onclick="_scPick(${ja(c.id)},'remote')"><div class="sc-ver-hd">☁ Dropbox</div><div class="sc-ver-sub">${e(r.ppl)}</div><div class="sc-ver-row"><span>${r.cnt}건</span><span>${r.total}</span></div><div class="sc-ver-at">${e(r.at)}</div></button></div></div>`;}).join('');
+  const cards=conflicts.map(c=>{const l=_scFmtGroup(c.local),r=_scFmtGroup(c.remote);return `<div class="sc-card" data-cid="${e(c.id)}"><div class="sc-card-title">${e(l.ppl||c.local.name||c.id)}</div><div class="sc-versions"><button class="sc-ver sc-local on" onclick="_scPick(${ja(c.id)},'local')"><div class="sc-ver-hd">📱 이 기기</div><div class="sc-ver-sub">${e(l.ppl)}</div><div class="sc-ver-row"><span>${l.cnt}건</span><span>${l.total}</span></div><div class="sc-ver-at">${e(l.at)}</div></button><button class="sc-ver sc-remote" onclick="_scPick(${ja(c.id)},'remote')"><div class="sc-ver-hd">☁ Dropbox</div><div class="sc-ver-sub">${e(r.ppl)}</div><div class="sc-ver-row"><span>${r.cnt}건</span><span>${r.total}</span></div><div class="sc-ver-at">${e(r.at)}</div></button></div></div>`;}).join('');
   const ov=document.createElement('div');ov.id='syncConflictOv';ov.className='sc-overlay';
   ov.innerHTML=`<div class="sc-modal"><div class="sc-hd">⚠️ 동기화 충돌</div><div class="sc-desc">두 기기에서 같은 그룹을 동시에 수정했어요.<br>유지할 버전을 선택해주세요.</div>${cards}<button class="sc-confirm" onclick="_scConfirm()">선택 완료</button></div>`;
   document.body.appendChild(ov);
