@@ -1969,8 +1969,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.69';
-const BUILD_TIME='2026-11-27 13:15';
+const APP_VERSION='v8.70';
+const BUILD_TIME='2026-11-27 14:00';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3102,7 +3102,7 @@ function toggleSetDrawer(anchorEl,ev){if(ev&&ev.stopPropagation)ev.stopPropagati
 function _refreshSetDrawer(){if(_setDrawerOpen){const b=document.getElementById('setDrBody');if(b)b.innerHTML=_setPanelHtml();}}
 // 사용 설명서 카드 (접이식, 모두에게 노출) — v8.69
 function _helpCardHtml(){
-  return `<div class="set-card"><details class="set-help"><summary>📖 사용 설명서<span class="set-help-chev">›</span></summary><div class="set-help-body">`
+  return `<div class="set-card"><details class="set-help"><summary>📖 사용 설명서<span class="set-help-chev">›</span></summary><div class="set-help-body" onclick="this.closest('details').open=false">`
     +`<div class="set-help-sec"><b>이렇게 쓰면 돼요</b><ol>`
     +`<li>함께한 사람 이름을 넣어요</li>`
     +`<li>지출을 추가하고 <b>누가 냈는지</b> 골라요</li>`
@@ -3937,10 +3937,10 @@ function _txnRowsHtml(txns){
   if(!txns.length)return'';
   const groups=_groupTxnsByRecipient(txns,_myName);
   const multi=groups.length>1; // 수취인 그룹이 2개 이상일 때만 색상 구분선 표시 (구분할 대상이 있을 때만) (v5.73)
-  return groups.map(group=>{
+  return groups.map((group,gi)=>{
     const cls=group.isOwner?'txn-div-owner':'txn-div-other';
     const rows=group.txns.map(t=>`<div class="txn-row"><div class="txn-people"><span class="txn-from">${e(t.from)}</span><span class="txn-arr">${svgArrow}</span><span class="txn-to">${e(t.to)}</span></div><span class="txn-amt">${fmt(t.amt)}원</span></div>`).join('');
-    return`${multi?`<div class="txn-group-div ${cls}"></div>`:''}${rows}`;
+    return`${(multi&&gi>0)?`<div class="txn-group-div ${cls}"></div>`:''}${rows}`;  // 첫 그룹(내 수취) 위 선은 생략 — 그룹 사이 구분선만(v8.70)
   }).join('');
 }
 
@@ -6649,7 +6649,7 @@ async function generateSettleCanvas(){
   const HEADER_H=118,SECTION_LABEL_H=58,SECTION_GAP=56,COUPLE_GAP=24,TOTAL_CARD_H=245,TXN_ROW_H=108,ITEM_ROW_H=152,EMPTY_CARD_H=132,BOTTOM_PAD=60,NOTICE_H=52,FOOTER_H=80;
   const txnGroups=_groupTxnsByRecipient(normalTxns,_myName),DIV_H=3;
   const _multiG=txnGroups.length>1; // 수취인 그룹 2개 이상일 때만 색상 구분선 (v5.73)
-  const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+(_multiG?txnGroups.length*DIV_H:0)):EMPTY_CARD_H;
+  const txnCardH=normalTxns.length?(normalTxns.length*TXN_ROW_H+(_multiG?(txnGroups.length-1)*DIV_H:0)):EMPTY_CARD_H;
   const coupleCardH=coupleTxnRows.length?coupleTxnRows.length*TXN_ROW_H:0;
   const coupleSection=coupleCardH?(COUPLE_GAP+coupleCardH):0;
   const itemCardH=validItems.length?validItems.length*ITEM_ROW_H:EMPTY_CARD_H;
@@ -6716,8 +6716,8 @@ async function generateSettleCanvas(){
   }else{
     let curY=y;
     ctx.save();roundRectPath(ctx,cardX,y,cardW,txnCardH,28);ctx.clip();
-    txnGroups.forEach(group=>{
-      if(_multiG){ctx.fillStyle=group.isOwner?C.blue:C.amber;roundRectPath(ctx,cardX+34,curY,cardW-68,DIV_H,DIV_H/2);ctx.fill();curY+=DIV_H;}
+    txnGroups.forEach((group,gi)=>{
+      if(_multiG&&gi>0){ctx.fillStyle=group.isOwner?C.blue:C.amber;roundRectPath(ctx,cardX+34,curY,cardW-68,DIV_H,DIV_H/2);ctx.fill();curY+=DIV_H;}  // 첫 그룹 위 선 생략(v8.70)
       group.txns.forEach((t,ri)=>{
         drawTxnRow(t,curY,TXN_ROW_H);
         curY+=TXN_ROW_H;

@@ -25,7 +25,9 @@ favicon.png / icons/  — 아이콘
 ```
 
 ## 현재 버전
-**v8.69** (2026-11-27) — 작업 브랜치
+**v8.70** (2026-11-27) — 작업 브랜치
+
+> **송금 첫 그룹(내 수취) 위 파란 구분선 제거 + 사용 설명서 아무 곳이나 탭하면 접힘(v8.70)**: 사용자 — ①공유 이미지 송금에서 '내가 받을' 그룹 위 파란 선이 이질감 ②설명서는 아무 곳이나 눌러도 접히게. → ①Option B 색 구분선을 **그룹 사이에만**(첫 그룹 위 생략): 화면 `_txnRowsHtml`(`multi&&gi>0`)·이미지 `generateSettleCanvas`(`_multiG&&gi>0`, 높이 예약도 `(len-1)*DIV_H`). 내 수취 그룹(항상 첫째)은 위 선 없음·그룹 사이 주황선 유지(금액 파랑 텍스트로 여전히 구분). ②`_helpCardHtml` 본문에 `onclick="this.closest('details').open=false"`(summary는 native 토글). 표시 전용·계산 무관, test 230 통과.
 
 > **설정에 사용 설명서 추가 + 버전 표시 소유자 전용(v8.69)**: 사용자 요청 — ①버전 표시는 친구에게 불필요 ②설정에 초등학생도 이해할 간략한 사용법. → `_setPanelHtml`에 접이식(`<details>`) **`_helpCardHtml()`** 추가(모두 노출, 기본 접힘): 기본 사용법 4단계·👤내 이름(정산/공유에서 내 돈 파랑·맨 위)·💑커플 설정(공유 이미지서 두 사람 한 팀 합산)·☁️백업(클라우드 저장·복원). **친구 설정에서 버전 줄(`set-ver`·`unlockTap`) 제거** — 소유자는 유지(🔒잠금). **소유자 잠금 해제는 이름=조상현(`updateMyName`)으로 유지**(버전 5탭 없이도). 표시 전용·계산 무관, test 230 통과.
 
@@ -42,6 +44,7 @@ favicon.png / icons/  — 아이콘
 ## 버전 히스토리 요약
 | 버전 | 주요 변경 |
 |------|-----------|
+| v8.70 | **[다듬기] 송금 첫 그룹(내 수취) 위 파란 구분선 제거 + 사용 설명서 아무 곳이나 탭하면 접힘**(사용자: 공유 이미지 송금에서 '내가 받을' 그룹 위 파란 선이 이질감·빼도 될 듯 / 설명서는 아무 곳이나 눌러도 접히게) — **①파란 선**: Option B 색 구분선(수취 그룹 시작마다 선, 내 수취=파랑·그외=주황)이 **내 수취 그룹이 항상 첫째라 파란 선이 송금 카드 맨 위**에 떠 이질적이었음. → **첫 그룹 위 선만 생략**(그룹 사이 선만): 화면 `_txnRowsHtml` `multi?`→`(multi&&gi>0)?`(인덱스 추가), 이미지 `generateSettleCanvas` 구분선 루프 `_multiG`→`_multiG&&gi>0`(forEach에 gi) + 높이 예약 `txnGroups.length*DIV_H`→`(txnGroups.length-1)*DIV_H`. 내 수취 그룹은 금액 파랑 텍스트로 여전히 구분됨. **②설명서 접힘**: `_helpCardHtml` 본문 div에 `onclick="this.closest('details').open=false"` 추가(열린 상태서 본문 아무 곳이나 탭하면 접힘, summary는 native 토글 유지). **헤드리스**: 2그룹 송금→구분선 1개(주황만·파랑 없음)·맨 위 선 없음·행 4개 유지 / 단일 그룹→선 0 / 설명서 본문 클릭→open=false / 공유 이미지 생성 에러0(2160×2522) / 콘솔0. 표시 전용·계산 무관, test **230 통과**. |
 | v8.69 | **[설정 UX] 사용 설명서 추가 + 버전 표시 소유자 전용**(사용자: 버전 표시는 나 빼곤 불필요 / 설정에 초등학생도 이해할 간략한 사용설명서 — 커플 설정이 뭔지, 내 정보 입력하면 어떻게 되는지 등) — ①**`_helpCardHtml()`**(접이식 `<details>`, 모두 노출·기본 접힘) 신설: **이렇게 쓰면 돼요**(사람 추가→지출+결제자→정산 탭→공유 탭 4단계)·**👤'내 이름'을 정하면?**(정산·공유에서 내가 받을·보낼 돈 파랑·맨 위)·**💑'커플 설정'이란?**(연인·부부를 공유 이미지서 한 팀으로 합산, 각자 금액도 표시)·**☁️'내 데이터 백업'은?**(클라우드 저장·복원·안 섞임). `_setPanelHtml` 친구·소유자 양쪽 intro 다음에 삽입. CSS `.set-help*`(summary 마커 제거·chev 회전). ②**버전 표시 소유자 전용**: 친구 분기에서 `set-ver`(버전·`unlockTap` 5탭) 제거, 소유자 분기는 `set-ver`(버전·🔒잠금) 유지. **소유자 잠금 해제는 `updateMyName('조상현')`으로 유지**(버전 5탭 없이도 이름 설정 시 자동) — ⋯ 메뉴·`#mobOwnerTap`에도 unlockTap 남아 있어 경로 보존. **헤드리스**: 친구=버전 없음·도움말 카드 펼침 동작·커플/내이름/백업 텍스트 포함 / 이름=조상현 입력→소유자 전환·버전 다시 표시·🔒잠금·도움말 유지 / 콘솔0. 표시 전용·계산 무관, test **230 통과**. |
 | v8.68 | **[구글드라이브 백업 연동] 친구가 자기 Google Drive 앱 전용 폴더에 백업/복원**(사용자: 구글드라이브 연동 부탁해 → Google Cloud Console에서 OAuth Client ID 발급·제공) — Dropbox(`fbx*`)와 **별개 독립 모듈 `gbx*`**. **GIS(Google Identity Services) 토큰 방식**: `_gbxLoadGis`(on-demand 스크립트 로드 `accounts.google.com/gsi/client`) → `google.accounts.oauth2.initTokenClient({client_id:GBX_CLIENT_ID, scope:'...drive.appdata', callback})` → `requestAccessToken`. **비밀키 없음**(공개 Client ID `394202263736-...apps.googleusercontent.com` 내장, 공개 안전). 저장은 **Drive REST API**: `_gbxFindFile`(appDataFolder에서 name 검색)·`_gbxUpload`(있으면 PATCH media, 없으면 multipart POST에 `parents:['appDataFolder']`)·`_gbxDownload`(alt=media). **백업 묶음 `_fbxBuildPayload`/`_fbxApplyPayload` 재사용**(main+history+couple+myName, payload v2) — 새 코드는 전송·인증만. 토큰 캐시 `GBX_TOKEN/EXPIRY/CONNECTED/LASTBK`. **구글 한계(토큰 ~1h·리프레시 없음)**: `_gbxGetToken`이 유효 캐시 있으면 반환, 없으면 `requestAccessToken`(prompt `consent`=첫 연결/`''`=재발급, 제스처 필요). **visibilitychange 자동백업은 `_gbxCachedToken()` 유효할 때만**(제스처 불필요 케이스만, 아니면 skip). 설정 `_fbxCardHtml`을 **양쪽 제공자**로 확장(미연결=Dropbox+Google 버튼 2개 / fbx 연결=Dropbox 카드 / gbx 연결=Google 카드, fbx 우선). `_settingsAction`에 gbx 4액션 추가. **헤드리스**: 미연결 2버튼·gbx 함수 존재·콘솔0 / Google 연결 카드(백업·복원·해제·마지막백업)·Dropbox 버튼 숨김 / payload v2 재사용 / fbx 우선순위. test **230 통과**(실제 GIS 팝업·Drive 업로드는 실기기 검증 — Dropbox와 동일). **Google Console 설정(사용자 완료)**: 프로젝트 Dutch Pay·Drive API 사용·동의화면 External+게시·웹 클라이언트 JS원본 `https://sh4sh-ux.github.io`·스코프 drive.appdata. |
 | v8.67 | **[모바일 UX] 하단 바에 ⚙️ 설정 탭 추가 — 설정 접근 직관화**(사용자: 모바일에 하단 설정 버튼이 있어야·버전 탭은 안 직관적 / 어떻게 생각해 → 동의·진행) — **원인**: 모바일에서 설정 드로어는 상단 제목(`#mobTitleEl`) 탭으로만 열려 발견성 0 → 특히 v8.65/66으로 설정에 넣은 **기록보관함·백업을 친구가 못 찾음**. → `.mob-tabs`에 `#mTSettings`(톱니 SVG+'설정', `onclick=toggleSetDrawer(this,event)`) 추가 → `입력·정산·공유·기록·설정` 5탭. **토글 더블파이어 방지**: `_setOutsideHandler`(capture 리스너) 예외 목록에 `#mTSettings` 추가 — 안 그러면 열린 상태 재탭 시 바깥클릭 핸들러가 먼저 닫고 `toggleSetDrawer`가 다시 열어 꼬임. **버전 탭(소유자 잠금 해제)은 그대로**(숨은 관리자 스위치, 설정 접근과 별개 — 조상현님은 이름=OWNER_NAME이라 자동 해제). **헤드리스(친구·소유자 각 430px 모바일)**: 5탭 노출·라벨 '설정'·1클릭 열림+설정내용·2클릭 닫힘(토글)·3클릭 재열림·콘솔0. 표시/네비게이션 전용·계산 무관, test **230 통과**. |
@@ -312,11 +315,10 @@ groups = [{
 - `calcTxns()`: float 누적 → `Math.floor` (두 함수 일관성 유지)
 - `Math.round` 사용 금지 (금액 계산 시)
 
-## 색상 구분선 (Option B, v4.x~)
-- 모든 수취인 그룹 시작에 3px 수평 구분선
-- 내 수취 그룹(_myName)을 날짜/계산 순서와 무관하게 항상 먼저 배치
-- 조상현 (_myName) → `--blue` / 그 외 → `--txn-amber`
-- 적용: `_txnRowsHtml()`, `generateSettleCanvas()` 송금 카드
+## 색상 구분선 (Option B, v4.x~ / v8.70 수정)
+- 수취인 그룹 **사이**에만 구분선(첫 그룹 위는 생략 — 맨 위 파란 선 이질감, v8.70). 구분선 색은 그 아래 그룹 기준: 내 수취=`--blue`, 그외=`--txn-amber`(실제로 내 수취 그룹이 항상 첫째라 남는 선은 대개 주황)
+- 내 수취 그룹(_myName)을 날짜/계산 순서와 무관하게 항상 먼저 배치(금액 파랑 텍스트로 구분)
+- 적용: `_txnRowsHtml()`(`gi>0`), `generateSettleCanvas()`(`gi>0`) 송금 카드
 
 ## 작업 규칙
 - 버전은 변경마다 **v4.X+1**로 올림 (v1.X 형식 사용 금지)
