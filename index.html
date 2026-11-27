@@ -810,6 +810,14 @@ svg{display:block;flex-shrink:0;}
 .set-help-body ol{margin:6px 0 0;padding-left:19px;}
 .set-help-body li{margin:3px 0;}
 .set-help-body p{margin:4px 0 0;}
+/* 사용 설명서 확장(v8.73) */
+.set-help-lead{margin:0 0 2px;color:var(--label);font-weight:600;}
+.set-help-h{color:var(--label);font-size:13.5px;display:block;margin-bottom:5px;}
+.set-help-ex{margin:0 0 7px;padding:7px 10px;background:var(--fill);border-radius:8px;font-size:12px;color:var(--label3);line-height:1.55;}
+.set-help-body ul.set-help-tips{margin:7px 0 0;padding-left:0;list-style:none;}
+.set-help-body ul.set-help-tips li{margin:7px 0;padding-left:13px;position:relative;}
+.set-help-body ul.set-help-tips li::before{content:"·";position:absolute;left:3px;color:var(--label3);font-weight:700;}
+.set-help-body code{background:var(--fill);border-radius:5px;padding:1px 5px;font-size:12px;font-family:inherit;color:var(--label);}
 @media(max-width:700px){.set-body{padding:16px 16px 24px;} .set-row{padding:14px 2px;font-size:16px;} .set-seg-btn{padding:11px 4px;font-size:14px;}}
 .couple-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;display:flex;align-items:center;justify-content:center;}
 .couple-modal{background:var(--card);border-radius:20px;padding:28px 24px;width:320px;max-width:92vw;}
@@ -1969,8 +1977,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.72';
-const BUILD_TIME='2026-11-27 15:45';
+const APP_VERSION='v8.73';
+const BUILD_TIME='2026-11-27 16:20';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -3103,15 +3111,25 @@ function _refreshSetDrawer(){if(_setDrawerOpen){const b=document.getElementById(
 // 사용 설명서 카드 (접이식, 모두에게 노출) — v8.69
 function _helpCardHtml(){
   return `<div class="set-card"><details class="set-help"><summary>📖 사용 설명서<span class="set-help-chev">›</span></summary><div class="set-help-body" onclick="this.closest('details').open=false">`
-    +`<div class="set-help-sec"><b>이렇게 쓰면 돼요</b><ol>`
-    +`<li>함께한 사람 이름을 넣어요</li>`
-    +`<li>지출을 추가하고 <b>누가 냈는지</b> 골라요</li>`
-    +`<li><b>정산</b> 탭에서 누가 누구에게 얼마 주면 되는지 나와요</li>`
-    +`<li><b>공유</b> 탭에서 이미지로 저장해 단톡방에 올려요</li>`
-    +`</ol></div>`
-    +`<div class="set-help-sec"><b>👤 '내 이름'을 정하면?</b><p>정산·공유 화면에서 <b>내가 받을·보낼 돈이 파란색으로 맨 위</b>에 떠서 한눈에 보여요.</p></div>`
-    +`<div class="set-help-sec"><b>💑 '커플 설정'이란?</b><p>연인·부부처럼 돈을 같이 쓰는 두 사람을 <b>공유 이미지에서 한 팀으로 합쳐서</b> 보여줘요. (두 사람 각자 금액도 같이 표시돼요)</p></div>`
-    +`<div class="set-help-sec"><b>☁️ '내 데이터 백업'은?</b><p>내 정산 기록을 <b>내 클라우드(Dropbox·Google Drive)에 저장</b>해 둬요. 폰을 바꾸거나 앱을 지워도 <b>'복원하기'로 다시 불러올 수 있어요.</b> (내 것만 저장돼요 — 다른 사람과 안 섞여요)</p></div>`
+    +`<p class="set-help-lead">지출마다 <b>누가 결제했고 누가 함께 나눌지</b> 넣으면, 누가 누구에게 얼마 보낼지 계산해줘요.</p>`
+    +`<div class="set-help-sec"><b class="set-help-h">처음이라면 이렇게</b>`
+      +`<p class="set-help-ex">예) 민수·지영·현우가 저녁(민수 결제 60,000원), 뒤에 민수·지영만 카페(지영 결제 12,000원)</p>`
+      +`<ol>`
+      +`<li><b>참여자</b> 칸에 <code>민수, 지영, 현우</code> → <b>추가</b> (쉼표로 한 번에)</li>`
+      +`<li><b>＋ 지출 추가</b>로 한 건씩: 저녁(결제자 민수·셋이 나눔) / 카페(결제자 지영). 카페엔 안 간 <b>현우를 빼요</b></li>`
+      +`<li><b>정산</b>을 누르면 송금 내역: 지영→민수 14,000 · 현우→민수 20,000 (주고받을 돈을 상계해 한 번에)</li>`
+      +`<li><b>공유 → 정산 이미지</b>로 카톡 공유. 다시 볼 모임은 <b>기록 보관함에 저장</b></li>`
+      +`</ol></div>`
+    +`<div class="set-help-sec"><b class="set-help-h">모임에서 자주 쓰는 기능</b><ul class="set-help-tips">`
+      +`<li><b>"2차는 내가 쏠게!"</b> → 그 지출에서 <b>🎉 한턱 쏨</b> 켜기 (남에게 청구 안 됨)</li>`
+      +`<li><b>"같이 있었지만 돈은 안 받아"</b> → 그 사람을 <b>깍두기</b>로 (참석 표시·부담금은 빠짐)</li>`
+      +`<li><b>"술 안 마신 사람은 술값 빼줘"</b> → 지출에 <b>술값·안 마신 사람</b> 지정 (음식은 같이, 술값은 마신 사람끼리)</li>`
+      +`<li><b>"1원이 남아요"</b> → 화면의 <b>차액</b>을 눌러 부담할 사람 바꾸기 (기본=결제자 우선)</li>`
+      +`<li><b>"내 송금만 빨리 보고 싶어"</b> → 아래 <b>내 이름</b>을 모임에 넣은 이름과 똑같이</li>`
+      +`</ul></div>`
+    +`<div class="set-help-sec"><b class="set-help-h">👤 '내 이름'을 정하면?</b><p>정산·공유에서 내가 받을·보낼 돈이 <b>파란색으로 맨 위</b>에 떠 한눈에 보여요.</p></div>`
+    +`<div class="set-help-sec"><b class="set-help-h">💑 '커플 설정'이란?</b><p>연인·부부처럼 돈을 같이 쓰는 두 사람을 <b>공유 이미지에서 한 팀으로 합쳐서</b> 보여줘요. (각자 금액도 같이 표시)</p></div>`
+    +`<div class="set-help-sec"><b class="set-help-h">☁️ 휴대폰 바꾸기 전엔</b><p><b>내 데이터 백업</b>에서 Dropbox·Google Drive 연결 → <b>지금 백업하기</b>. 새 기기에선 같은 계정 연결 후 <b>복원하기</b>. (내 것만 저장돼요 — 다른 사람과 안 섞임)</p></div>`
     +`</div></details></div>`;
 }
 // 친구용 간편 백업 카드 (소유자 아님일 때만 노출) — v8.65
