@@ -1978,8 +1978,8 @@ svg{display:block;flex-shrink:0;}
 <script src="./category-icons-3.js"></script>
 <script src="./category-icons-4.js"></script>
 <script>
-const APP_VERSION='v8.75';
-const BUILD_TIME='2026-11-27 19:40';
+const APP_VERSION='v8.76';
+const BUILD_TIME='2026-11-28 01:15';
 window.diag=()=>{const r={version:APP_VERSION,build:BUILD_TIME,groupCards:document.querySelectorAll('.group-card').length,groupActs:document.querySelectorAll('.group-card-acts').length,sw:navigator.serviceWorker.controller?.scriptURL?.split('/').pop()||'none'};console.table(r);caches.keys().then(k=>console.log('caches:',k));return r;};
 
 let people=[],items=[],idc=0,selectedId=null;
@@ -4677,11 +4677,16 @@ function computeShares(ppl,its){
   let totalFloor=0;const fracParts=[];
   P.forEach(p=>{const f=owesFloat[p]||0;const fl=Math.floor(f);owes[p]=fl;totalFloor+=fl;fracParts.push({p,frac:f-fl});});
   let diff=Math.round(totalAmt-totalFloor);
-  if(diff!==0&&fracParts.length){
-    fracParts.sort((a,b)=>{const ap=payerSet[a.p]?1:0,bp=payerSet[b.p]?1:0;if(ap!==bp)return bp-ap;return b.frac-a.frac;});
-    // 잔여 1원씩 분배(최대잔여법·결제자 우선) — 한 사람에게 몰지 않아 분담액이 대칭·공정 (v8.71)
-    const step=diff>0?1:-1;
-    for(let k=0,n2=Math.abs(diff);k<n2;k++)owes[fracParts[k%fracParts.length].p]+=step;
+  if(diff!==0){
+    if(_myName&&P.includes(_myName)){
+      // 반올림 잔여는 소유자(호스트)가 전부 부담 — 친구에게 1원이 붙지 않게 (v8.76)
+      owes[_myName]+=diff;
+    }else if(fracParts.length){
+      fracParts.sort((a,b)=>{const ap=payerSet[a.p]?1:0,bp=payerSet[b.p]?1:0;if(ap!==bp)return bp-ap;return b.frac-a.frac;});
+      // 소유자 미설정·미참여 시: 잔여 1원씩 분배(최대잔여법·결제자 우선) — 한 사람에게 몰지 않아 대칭·공정 (v8.71)
+      const step=diff>0?1:-1;
+      for(let k=0,n2=Math.abs(diff);k<n2;k++)owes[fracParts[k%fracParts.length].p]+=step;
+    }
   }
   return{paid,owes,details,hasRounding:diff!==0};
 }
