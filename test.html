@@ -275,6 +275,37 @@ suite('TC35: 반올림 정합 — 분담액과 송금액 원 단위 정확 일�
   test('7명 균등 — 정확 일치', () => { if (r4.bad.length) throw new Error('불일치: '+JSON.stringify(r4.bad)); });
 });
 
+suite('TC36: 반올림 잔여를 소유자가 부담 (v8.76)', () => {
+  // 소유자(_myName)가 참여자면 합산 후 남는 잔여 차액을 소유자가 전부 떠안는다.
+  // (설정/미참여 시엔 기존 최대잔여법·결제자 우선으로 폴백 — 기존 235개 테스트는 _myName=''이라 불변)
+  const compute = (ppl, its, me) => {
+    APP.__test.setMyName(me); setup(ppl, its);
+    const { paid, owes } = shares(); const t = txns();
+    APP.__test.setMyName('');   // 다음 suite에 영향 없게 복원
+    const move = {}; ppl.forEach(p => move[p] = 0);
+    t.forEach(x => { move[x.from] -= x.amt; move[x.to] += x.amt; });
+    const bad = ppl.map(p => ({ p, need: (paid[p]||0) - (owes[p]||0), got: move[p] })).filter(x => x.need !== x.got);
+    return { owes, bad };
+  };
+  // 소유자 C가 잔여 부담 (옛 규칙이면 결제자 A가 가져감)
+  const c1 = compute(['A','B','C'], [{name:'x',amount:10000,payer:'A'}], 'C');
+  test('소유자(C)가 잔여 부담 → C 3,334 / A·B 3,333', () => {
+    expect(c1.owes['C']).toBe(3334); expect(c1.owes['A']).toBe(3333); expect(c1.owes['B']).toBe(3333);
+  });
+  test('소유자 부담해도 분담net=송금net 정확 일치', () => { if (c1.bad.length) throw new Error('불일치: '+JSON.stringify(c1.bad)); });
+  // 소유자 끝자리 0.00이어도 잔여 부담 (실제 조상현 시나리오 축소판 — 옛 규칙은 결제자 X에게 갔음)
+  const c2 = compute(['Host','X','Y','Z'], [{name:'a',amount:12000,payer:'Host'},{name:'b',amount:10000,payer:'X',members:['X','Y','Z']}], 'Host');
+  test('소유자 끝자리 0이어도 잔여 부담 → Host 3,001 / X·Y·Z 6,333', () => {
+    expect(c2.owes['Host']).toBe(3001); expect(c2.owes['X']).toBe(6333); expect(c2.owes['Y']).toBe(6333); expect(c2.owes['Z']).toBe(6333);
+  });
+  test('case2 분담net=송금net 정확 일치', () => { if (c2.bad.length) throw new Error('불일치: '+JSON.stringify(c2.bad)); });
+  // 소유자가 이 정산 미참여 → 폴백(기존 최대잔여법·결제자 우선)
+  const c3 = compute(['A','B','C'], [{name:'x',amount:10000,payer:'A'}], 'Zzz');
+  test('소유자 미참여 → 폴백: 결제자 A가 잔여(A 3,334)', () => {
+    expect(c3.owes['A']).toBe(3334); expect(c3.owes['B']).toBe(3333); expect(c3.owes['C']).toBe(3333);
+  });
+});
+
 suite('TC5: 1인 정산', () => {
   setup(['혼자'], [{ name:'밥', amount:15000, payer:'혼자' }]);
   const { owes } = shares();
